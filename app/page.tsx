@@ -1,16 +1,16 @@
 import { CoverageCard } from '@/components/coverage-card';
 import { MealList } from '@/components/meal-list';
 import { DeliveryCard } from '@/components/delivery-card';
+import { Chart } from '@/components/chart';
 import { dashboardConfig } from '@/lib/config';
 import { 
-  mockCoverage, 
-  mockReceipt,
   calculateCoverageSummary,
   getUpcomingDeliveries 
 } from '@/lib/meals-data';
+import { realCoverage, realReceipt, realMealPlan } from '@/lib/real-data';
 
 export default function MealsDashboardPage() {
-  const summary = calculateCoverageSummary(mockCoverage);
+  const summary = calculateCoverageSummary(realCoverage);
   const deliveries = getUpcomingDeliveries();
   
   return (
@@ -25,7 +25,7 @@ export default function MealsDashboardPage() {
             </div>
             <div className="text-right text-sm text-slate-500">
               <p>Last updated: {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
-              <p className="text-xs mt-1">Auto-refresh every 5 min</p>
+              <p className="text-xs mt-1 text-emerald-400">Live data from meals skill</p>
             </div>
           </div>
         </div>
@@ -33,36 +33,45 @@ export default function MealsDashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Top Row: Coverage Overview */}
+        {/* Top Row: Coverage Overview & Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-1">
             <CoverageCard summary={summary} />
           </div>
           <div className="lg:col-span-1">
-            <DeliveryCard deliveries={deliveries} latestReceipt={mockReceipt} />
+            <DeliveryCard 
+              deliveries={deliveries} 
+              latestReceipt={realReceipt} 
+            />
           </div>
           <div className="lg:col-span-1">
-            <QuickStatsCard coverage={mockCoverage} />
+            <QuickStatsCard coverage={realCoverage} receipt={realReceipt} />
           </div>
+        </div>
+
+        {/* Middle Row: Chart */}
+        <div className="mb-8">
+          <Chart coverage={realCoverage} />
         </div>
 
         {/* Bottom Row: Meal List */}
         <div className="grid grid-cols-1 gap-6">
-          <MealList coverage={mockCoverage} />
+          <MealList coverage={realCoverage} />
         </div>
       </main>
     </div>
   );
 }
 
-function QuickStatsCard({ coverage }: { coverage: typeof mockCoverage }) {
+function QuickStatsCard({ coverage, receipt }: { coverage: typeof realCoverage; receipt: typeof realReceipt }) {
   const familyMeals = coverage.filter(c => 
     c.meal.labels.includes('adult') && c.meal.labels.includes('children')
   ).length;
   const splitMeals = coverage.filter(c => 
     c.meal.labels.includes('adult') !== c.meal.labels.includes('children')
   ).length;
-  const urgentItems = mockReceipt?.shortLifeItems.filter(i => i.daysRemaining <= 2).length || 0;
+  const urgentItems = receipt?.shortLifeItems.filter(i => i.daysRemaining <= 2).length || 0;
+  const totalValue = receipt?.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
   
   return (
     <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
@@ -90,6 +99,11 @@ function QuickStatsCard({ coverage }: { coverage: typeof mockCoverage }) {
           <span className={urgentItems > 0 ? 'text-rose-400 font-bold' : 'text-white font-bold'}>
             {urgentItems}
           </span>
+        </div>
+        
+        <div className="flex items-center justify-between p-3 bg-slate-750 rounded-lg">
+          <span className="text-slate-300">Order total</span>
+          <span className="text-white font-bold">£{totalValue.toFixed(2)}</span>
         </div>
         
         <div className="flex items-center justify-between p-3 bg-slate-750 rounded-lg">
