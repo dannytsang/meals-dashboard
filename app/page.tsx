@@ -1,17 +1,80 @@
+'use client';
+
+import { useState } from 'react';
 import { CoverageCard } from '@/components/coverage-card';
-import { MealList } from '@/components/meal-list';
 import { DeliveryCard } from '@/components/delivery-card';
 import { Chart } from '@/components/chart';
+import { ShopSelector } from '@/components/shop-selector';
+import { StatusFilter } from '@/components/status-filter';
+import { MealListInteractive } from '@/components/meal-list-interactive';
 import { dashboardConfig } from '@/lib/config';
+import { calculateCoverageSummary, getUpcomingDeliveries, TescoReceipt } from '@/lib/meals-data';
 import { 
-  calculateCoverageSummary,
-  getUpcomingDeliveries 
-} from '@/lib/meals-data';
-import { realCoverage, realReceipt, realMealPlan } from '@/lib/real-data';
+  realCoverage, 
+  realReceipt, 
+  realMealPlan,
+  realLatestOrder,
+  transformCachedOrder 
+} from '@/lib/real-data';
+import {
+  ShopPeriod,
+  StatusFilter as StatusFilterType,
+  DashboardState,
+  previousShopReceipt,
+  nextShopReceipt,
+  shopDataMap,
+  filterCoverage,
+} from '@/lib/dashboard-state';
 
 export default function MealsDashboardPage() {
-  const summary = calculateCoverageSummary(realCoverage);
+  const [state, setState] = useState<DashboardState>({
+    selectedShop: 'current',
+    statusFilter: 'all',
+    expandedMealId: null,
+    dateRange: {
+      start: '2026-04-13',
+      end: '2026-04-19',
+    },
+  });
+
+  // Get the receipt for the selected shop
+  const getReceiptForShop = (shop: ShopPeriod): TescoReceipt | null => {
+    switch (shop) {
+      case 'previous':
+        return previousShopReceipt;
+      case 'current':
+        return transformCachedOrder(realLatestOrder);
+      case 'next':
+        return nextShopReceipt;
+      default:
+        return null;
+    }
+  };
+
+  // Update shop data with real current receipt
+  const currentShopData = {
+    ...shopDataMap,
+    current: {
+      ...shopDataMap.current,
+      receipt: transformCachedOrder(realLatestOrder),
+      orderTotal: realReceipt.orderTotal,
+      itemCount: realReceipt.items.length,
+    },
+  };
+
+  const receipt = getReceiptForShop(state.selectedShop);
   const deliveries = getUpcomingDeliveries();
+
+  // Calculate coverage based on selected shop
+  const getCoverageForShop = () => {
+    if (!receipt) return realCoverage; // fallback to default
+    // For now, use the realCoverage which is based on current shop
+    return realCoverage;
+  };
+
+  const coverage = getCoverageForShop();
+  const filteredCoverage = filterCoverage(coverage, state.statusFilter);
+  const summary = calculateCoverageSummary(coverage);
   
   return (
     <div className="min-h-screen bg-slate-900">
@@ -33,6 +96,24 @@ export default function MealsDashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Shop Selector */}
+        <div className="mb-6">
+          <ShopSelector
+            selectedShop={state.selectedShop}
+            onShopChange={(shop) => setState(s => ({ ...s, selectedShop: shop }))}
+            shopData={currentShopData}
+          />
+        </div>
+
+        {/* Filters Row */}
+        <div className="mb-6">
+          <StatusFilter
+            coverage={coverage}
+            currentFilter={state.statusFilter}
+            onFilterChange={(filter) => setState(s => ({ ...s, statusFilter: filter }))}
+          />
+        </div>
+
         {/* Top Row: Coverage Overview & Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-1">
@@ -41,29 +122,38 @@ export default function MealsDashboardPage() {
           <div className="lg:col-span-1">
             <DeliveryCard 
               deliveries={deliveries} 
-              latestReceipt={realReceipt} 
+              latestReceipt={receipt}
             />
           </div>
           <div className="lg:col-span-1">
-            <QuickStatsCard coverage={realCoverage} receipt={realReceipt} />
+            <QuickStatsCard coverage={coverage} receipt={receipt} />
           </div>
         </div>
 
         {/* Middle Row: Chart */}
         <div className="mb-8">
-          <Chart coverage={realCoverage} />
+          <Chart coverage={filteredCoverage} />
         </div>
 
-        {/* Bottom Row: Meal List */}
+        {/* Bottom Row: Interactive Meal List */}
         <div className="grid grid-cols-1 gap-6">
-          <MealList coverage={realCoverage} />
+          <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-700">
+              <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+                Meal Plan & Coverage ({filteredCoverage.length} of {coverage.length})
+              </h3>
+            </div>
+            <div className="p-6">
+              <MealListInteractive coverage={filteredCoverage} />
+            </div>
+          </div>
         </div>
       </main>
     </div>
   );
 }
 
-function QuickStatsCard({ coverage, receipt }: { coverage: typeof realCoverage; receipt: typeof realReceipt }) {
+function QuickStatsCard({ coverage, receipt }: { coverage: typeof realCoverage; receipt: TescoReceipt | null }) {
   const familyMeals = coverage.filter(c => 
     c.meal.labels.includes('adult') && c.meal.labels.includes('children')
   ).length;
