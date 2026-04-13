@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { HistoricalTrends } from '@/components/historical-trends';
 import { Chart } from '@/components/chart';
@@ -247,169 +247,166 @@ export default function MealsDashboardPage() {
                 </span>
               </div>
 
-              {/* Calendar Grid */}
-              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.5rem' }}>
-                {/* Days Header Row */}
-                <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 1fr', gap: '0.5rem' }}>
-                  <div /> {/* Spacer for meal type column */}
-                  {days.map(({ date, isToday }) => {
-                    const dayCoverage = coverageByDate[date] || [];
-                    const avgPct = dayCoverage.length > 0 
-                      ? Math.round(dayCoverage.reduce((s, c) => s + c.coverageScore, 0) / dayCoverage.length)
-                      : 0;
-                    const dayColor = avgPct >= 80 ? 'var(--accent-emerald)' : avgPct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)';
-                    const hasMeals = dayCoverage.length > 0;
-                    
-                    return (
-                      <div key={date} style={{ 
-                        textAlign: 'center' as const,
-                        padding: '0.75rem 0.25rem',
-                        borderRadius: '10px',
-                        backgroundColor: isToday ? `${dayColor}25` : 'var(--bg-tertiary)',
-                        border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
-                      }}>
-                        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: '4px' }}>
-                          {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
-                        </p>
-                        <p style={{ fontSize: '22px', fontWeight: 'bold', color: hasMeals ? dayColor : 'var(--text-secondary)' }}>
-                          {new Date(date).getDate()}
-                        </p>
-                        <p style={{ fontSize: '11px', fontWeight: '600', color: hasMeals ? dayColor : 'var(--text-secondary)', marginTop: '2px' }}>
-                          {hasMeals ? `${avgPct}%` : '—'}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Meals by Type Rows */}
-                {['breakfast', 'lunch', 'dinner'].map(mealType => {
-                  const isCollapsed = collapsedMealTypes.has(mealType);
-                  const hasMeals = mealTypesWithMeals.has(mealType);
-                  
-                  return (
-                    <div key={mealType} style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.5rem' }}>
-                      {/* Meal Type Header - Clickable */}
-                      <div 
-                        onClick={() => hasMeals && toggleMealType(mealType)}
-                        style={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 1fr', 
-                          gap: '0.5rem',
-                          padding: '0.75rem 0',
-                          borderTop: '1px solid var(--border-color)',
-                          cursor: hasMeals ? 'pointer' : 'default',
-                          opacity: hasMeals ? 1 : 0.5,
-                          alignItems: 'center'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {isCollapsed ? (
-                            <ChevronRight style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
-                          ) : (
-                            <ChevronDown style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
-                          )}
-                          <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
-                            {mealType}
-                          </span>
-                          {!hasMeals && (
-                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>(No meals)</span>
-                          )}
-                        </div>
-                        {/* Placeholder cells for alignment */}
-                        {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {isCollapsed ? (
-                              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{isCollapsed ? 'Show' : 'Hide'}</span>
-                            ) : null}
-                          </div>
-                        ))}
-                      </div>
+              {/* Calendar Grid - Table for proper column alignment */}
+              <div style={{ width: '100%', overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, minWidth: '650px' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '70px', padding: '0.75rem 0.5rem', backgroundColor: 'transparent' }} />
+                      {days.map(({ date, isToday }) => {
+                        const dayCoverage = coverageByDate[date] || [];
+                        const avgPct = dayCoverage.length > 0 
+                          ? Math.round(dayCoverage.reduce((s, c) => s + c.coverageScore, 0) / dayCoverage.length)
+                          : 0;
+                        const dayColor = avgPct >= 80 ? 'var(--accent-emerald)' : avgPct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)';
+                        const hasMeals = dayCoverage.length > 0;
+                        
+                        return (
+                          <th key={date} style={{ 
+                            textAlign: 'center' as const,
+                            padding: '0.75rem 0.25rem',
+                            borderRadius: '10px',
+                            backgroundColor: isToday ? `${dayColor}25` : 'var(--bg-tertiary)',
+                            border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
+                          }}>
+                            <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                              {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
+                            </p>
+                            <p style={{ fontSize: '22px', fontWeight: 'bold', color: hasMeals ? dayColor : 'var(--text-secondary)' }}>
+                              {new Date(date).getDate()}
+                            </p>
+                            <p style={{ fontSize: '11px', fontWeight: '600', color: hasMeals ? dayColor : 'var(--text-secondary)', marginTop: '2px' }}>
+                              {hasMeals ? `${avgPct}%` : '—'}
+                            </p>
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {['breakfast', 'lunch', 'dinner'].map(mealType => {
+                      const isCollapsed = collapsedMealTypes.has(mealType);
+                      const hasMeals = mealTypesWithMeals.has(mealType);
                       
-                      {/* Meal Rows - Only show if not collapsed */}
-                      {!isCollapsed && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 1fr', gap: '0.5rem', paddingBottom: '0.75rem' }}>
-                          <div /> {/* Spacer */}
-                          {days.map(({ date }) => {
-                            const dayMeals = (coverageByDate[date] || []).filter(c => {
-                              const m = c.meal.content.toLowerCase();
-                              if (mealType === 'breakfast') return m.includes('breakfast') || m.includes('cereal');
-                              if (mealType === 'lunch') return m.includes('lunch') || m.includes('sandwich');
-                              return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
-                            });
-                            
-                            const meal = dayMeals[0];
-                            
-                            return (
-                              <div key={date} style={{ 
-                                padding: '0.6rem 0.25rem', 
-                                borderRadius: '8px', 
-                                backgroundColor: 'var(--bg-tertiary)',
-                                display: 'flex',
-                                flexDirection: 'column' as const,
-                                justifyContent: 'center',
-                                minHeight: '65px'
-                              }}>
-                                {meal ? (
-                                  <>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-                                      <span 
-                                        style={{ 
-                                          width: '18px', 
-                                          height: '18px', 
-                                          borderRadius: '50%', 
-                                          display: 'flex', 
-                                          alignItems: 'center', 
-                                          justifyContent: 'center', 
-                                          fontSize: '10px', 
-                                          color: 'white', 
-                                          backgroundColor: getStatusColor(meal.status, meal.coverageScore),
-                                          flexShrink: 0
-                                        }}
-                                      >
-                                        {meal.status === 'covered' ? '✓' : meal.status === 'partial' ? '◧' : '✗'}
-                                      </span>
-                                      <p style={{ 
-                                        fontSize: '12px', 
-                                        fontWeight: '600', 
-                                        color: 'var(--text-primary)', 
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap',
-                                        flex: 1
-                                      }} title={meal.meal.content}>
-                                        {meal.meal.content}
-                                      </p>
-                                    </div>
-                                    {meal.meal.labels && meal.meal.labels.length > 0 && (
-                                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px', marginBottom: '2px' }}>
-                                        {meal.meal.labels.slice(0, 2).map((label: string, idx: number) => (
-                                          <span 
-                                            key={idx}
-                                            style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontWeight: '500' }}
-                                          >
-                                            {label}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    )}
-                                    <p style={{ fontSize: '10px', fontWeight: '700', color: getStatusColor(meal.status, meal.coverageScore) }}>
-                                      {meal.coverageScore}%
-                                    </p>
-                                  </>
+                      return (
+                        <Fragment key={mealType}>
+                          {/* Meal Type Header Row */}
+                          <tr 
+                            onClick={() => hasMeals && toggleMealType(mealType)}
+                            style={{ cursor: hasMeals ? 'pointer' : 'default', opacity: hasMeals ? 1 : 0.5 }}
+                          >
+                            <td style={{ 
+                              padding: '0.75rem 0.5rem',
+                              borderTop: '1px solid var(--border-color)',
+                              verticalAlign: 'middle'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                {isCollapsed ? (
+                                  <ChevronRight style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
                                 ) : (
-                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '500' }}>
-                                    —
-                                  </div>
+                                  <ChevronDown style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
                                 )}
+                                <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                                  {mealType}
+                                </span>
                               </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                            </td>
+                            <td colSpan={7} style={{ 
+                              padding: '0.75rem 0.25rem',
+                              borderTop: '1px solid var(--border-color)',
+                              textAlign: 'right'
+                            }}>
+                              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                                {!hasMeals ? '(No meals)' : isCollapsed ? 'Show' : 'Hide'}
+                              </span>
+                            </td>
+                          </tr>
+                          
+                          {/* Meal Cells Row */}
+                          {!isCollapsed && (
+                            <tr>
+                              <td style={{ width: '70px', padding: '0.5rem 0.5rem', verticalAlign: 'top' }} />
+                              {days.map(({ date }) => {
+                                const dayMeals = (coverageByDate[date] || []).filter(c => {
+                                  const m = c.meal.content.toLowerCase();
+                                  if (mealType === 'breakfast') return m.includes('breakfast') || m.includes('cereal');
+                                  if (mealType === 'lunch') return m.includes('lunch') || m.includes('sandwich');
+                                  return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
+                                });
+                                
+                                const meal = dayMeals[0];
+                                
+                                return (
+                                  <td key={date} style={{ padding: '0.5rem 0.25rem', verticalAlign: 'top' }}>
+                                    <div style={{ 
+                                      padding: '0.6rem 0.25rem', 
+                                      borderRadius: '8px', 
+                                      backgroundColor: 'var(--bg-tertiary)',
+                                      minHeight: '65px'
+                                    }}>
+                                      {meal ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '4px' }}>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <span 
+                                              style={{ 
+                                                width: '18px', 
+                                                height: '18px', 
+                                                borderRadius: '50%', 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                justifyContent: 'center', 
+                                                fontSize: '10px', 
+                                                color: 'white', 
+                                                backgroundColor: getStatusColor(meal.status, meal.coverageScore),
+                                                flexShrink: 0
+                                              }}
+                                            >
+                                              {meal.status === 'covered' ? '✓' : meal.status === 'partial' ? '◧' : '✗'}
+                                            </span>
+                                            <p style={{ 
+                                              fontSize: '12px', 
+                                              fontWeight: '600', 
+                                              color: 'var(--text-primary)', 
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis',
+                                              whiteSpace: 'nowrap',
+                                              flex: 1
+                                            }} title={meal.meal.content}>
+                                              {meal.meal.content}
+                                            </p>
+                                          </div>
+                                          {meal.meal.labels && meal.meal.labels.length > 0 && (
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
+                                              {meal.meal.labels.slice(0, 2).map((label: string, idx: number) => (
+                                                <span 
+                                                  key={idx}
+                                                  style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontWeight: '500' }}
+                                                >
+                                                  {label}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+                                          <p style={{ fontSize: '10px', fontWeight: '700', color: getStatusColor(meal.status, meal.coverageScore) }}>
+                                            {meal.coverageScore}%
+                                          </p>
+                                        </div>
+                                      ) : (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '65px', color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '500' }}>
+                                          —
+                                        </div>
+                                      )}
+                                    </div>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
