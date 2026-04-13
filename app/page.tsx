@@ -436,9 +436,10 @@ export default function MealsDashboardPage() {
                                     if (mealType === 'lunch') return m.includes('lunch') || m.includes('sandwich');
                                     return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
                                   });
-                                  const meal = dayMeals[0];
-                                  if (!meal) return <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>—</span>;
-                                  const barColor = getStatusColor(meal.status, meal.coverageScore);
+                                  if (dayMeals.length === 0) return <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>—</span>;
+                                  // Show count or first meal coverage
+                                  const avgCoverage = Math.round(dayMeals.reduce((sum, m) => sum + m.coverageScore, 0) / dayMeals.length);
+                                  const barColor = getStatusColor(dayMeals[0].status, avgCoverage);
                                   return (
                                     <div style={{
                                       padding: '0.4rem 0.5rem',
@@ -451,7 +452,10 @@ export default function MealsDashboardPage() {
                                       minHeight: '50px',
                                       gap: '0.25rem'
                                     }}>
-                                      <span style={{ fontSize: '11px', fontWeight: '600', color: 'white' }}>{meal.coverageScore}%</span>
+                                      {dayMeals.length > 1 && (
+                                        <span style={{ fontSize: '10px', fontWeight: '700', color: 'white' }}>{dayMeals.length} meals</span>
+                                      )}
+                                      <span style={{ fontSize: '11px', fontWeight: '600', color: 'white' }}>{avgCoverage}%</span>
                                     </div>
                                   );
                                 })()}
@@ -471,55 +475,72 @@ export default function MealsDashboardPage() {
                                   return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
                                 });
                                 
-                                const meal = dayMeals[0];
-                                const barColor = meal ? getStatusColor(meal.status, meal.coverageScore) : 'transparent';
-                                
                                 return (
                                   <td key={date} style={{ 
                                     padding: '0.75rem 0.5rem',
                                     borderLeft: '1px solid var(--border-color)',
                                     borderBottom: '1px solid var(--border-color)',
-                                    verticalAlign: 'middle' as const
+                                    verticalAlign: 'top' as const
                                   }}>
-                                    {meal ? (
-                                      <div 
-                                        onClick={() => setSelectedMeal(selectedMeal === meal.meal.content ? null : meal.meal.content)}
-                                        style={{ 
-                                          padding: '0.75rem 0.75rem',
-                                          borderRadius: '6px',
-                                          backgroundColor: barColor,
-                                          display: 'flex',
-                                          flexDirection: 'column',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          gap: '0.35rem',
-                                          minHeight: '80px',
-                                          boxSizing: 'border-box',
-                                          cursor: 'pointer',
-                                          outline: selectedMeal === meal.meal.content ? '3px solid white' : 'none',
-                                          outlineOffset: '2px'
-                                        }}>
-                                        <span style={{ 
-                                          fontSize: '12px', 
-                                          fontWeight: '600', 
-                                          color: 'white',
-                                          textAlign: 'center',
-                                          lineHeight: '1.2',
-                                          display: '-webkit-box',
-                                          WebkitLineClamp: 2,
-                                          WebkitBoxOrient: 'vertical',
-                                          overflow: 'hidden'
-                                        }}>
-                                          {meal.meal.content}
-                                        </span>
-                                        <span style={{ 
-                                          fontSize: '10px', 
-                                          fontWeight: '700', 
-                                          color: 'white',
-                                          flexShrink: 0
-                                        }}>
-                                          {meal.coverageScore}%
-                                        </span>
+                                    {dayMeals.length > 0 ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                        {dayMeals.map((meal, idx) => {
+                                          const barColor = getStatusColor(meal.status, meal.coverageScore);
+                                          return (
+                                            <div 
+                                              key={idx}
+                                              onClick={() => setSelectedMeal(selectedMeal === meal.meal.content ? null : meal.meal.content)}
+                                              style={{ 
+                                                padding: '0.5rem 0.5rem',
+                                                borderRadius: '6px',
+                                                backgroundColor: barColor,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '0.2rem',
+                                                minHeight: '50px',
+                                                boxSizing: 'border-box',
+                                                cursor: 'pointer',
+                                                outline: selectedMeal === meal.meal.content ? '3px solid white' : 'none',
+                                                outlineOffset: '2px'
+                                              }}>
+                                              <span style={{ 
+                                                fontSize: '10px', 
+                                                fontWeight: '600', 
+                                                color: 'white',
+                                                textAlign: 'center',
+                                                lineHeight: '1.2',
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden'
+                                              }}>
+                                                {meal.meal.content}
+                                              </span>
+                                              {meal.meal.labels && meal.meal.labels.length > 0 && (
+                                                <span style={{
+                                                  fontSize: '8px',
+                                                  fontWeight: '600',
+                                                  padding: '1px 4px',
+                                                  borderRadius: '3px',
+                                                  backgroundColor: 'rgba(255,255,255,0.25)',
+                                                  color: 'white'
+                                                }}>
+                                                  {meal.meal.labels.join(', ')}
+                                                </span>
+                                              )}
+                                              <span style={{ 
+                                                fontSize: '9px', 
+                                                fontWeight: '700', 
+                                                color: 'white',
+                                                flexShrink: 0
+                                              }}>
+                                                {meal.coverageScore}%
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     ) : (
                                       <span style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>—</span>
