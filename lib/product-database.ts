@@ -34,7 +34,7 @@ export const productDatabase: Record<string, ProductInfo> = {
     description: 'Fresh British blueberries, perfect for breakfast cereals, yoghurts or as a healthy snack.',
     storage: 'Refrigerate and consume within 5 days. Wash before use.',
     preparation: 'Ready to eat. Wash thoroughly before consuming.',
-    image: 'https://images.openfoodfacts.org/images/products/000/000/326/6038/front_en.5.400.jpg',
+    image: '',
     nutrition: 'Per 100g: Energy 44kcal, Protein 0.7g, Carbohydrates 9g, Fat 0.3g'
   },
   'tesco strawberries': {
@@ -74,7 +74,7 @@ export const productDatabase: Record<string, ProductInfo> = {
     description: 'Fresh free range eggs from British farms. Great for breakfast, baking or cooking.',
     storage: 'Store in a cool, dry place. Best before date shown on packaging.',
     preparation: 'Cook thoroughly before consumption. See packaging for cooking times.',
-    image: 'https://images.openfoodfacts.org/images/products/505/114/015/0457/front_en.22.400.jpg',
+    image: '',
     nutrition: 'Per 100g: Energy 143kcal, Protein 12.5g, Carbohydrates 0.7g, Fat 10g'
   },
   'tesco all rounder potatoes': {
@@ -98,7 +98,7 @@ export const productDatabase: Record<string, ProductInfo> = {
     description: 'Fresh British celery, perfect for salads, soups and snacking.',
     storage: 'Refrigerate and consume within 5 days.',
     preparation: 'Wash thoroughly before use. Can be eaten raw or cooked.',
-    image: 'https://images.openfoodfacts.org/images/products/000/000/348/8805/front_en.3.400.jpg',
+    image: '',
     nutrition: 'Per 100g: Energy 16kcal, Protein 0.7g, Carbohydrates 3g, Fat 0.2g'
   },
   'tesco organic celery': {
@@ -114,7 +114,7 @@ export const productDatabase: Record<string, ProductInfo> = {
     description: 'Crisp and refreshing iceberg lettuce, perfect for salads and burgers.',
     storage: 'Refrigerate and consume within 5 days.',
     preparation: 'Wash thoroughly. Cut into pieces or eat whole.',
-    image: 'https://images.openfoodfacts.org/images/products/000/001/001/0488/front_en.11.400.jpg',
+    image: '',
     nutrition: 'Per 100g: Energy 14kcal, Protein 0.9g, Carbohydrates 2.9g, Fat 0.1g'
   },
   'tesco red peppers': {
@@ -162,7 +162,7 @@ export const productDatabase: Record<string, ProductInfo> = {
     description: 'Sweet and juicy seedless grapes, perfect for snacking or lunchboxes.',
     storage: 'Refrigerate and consume within 7 days.',
     preparation: 'Ready to eat. Wash before consuming.',
-    image: 'https://images.openfoodfacts.org/images/products/000/001/006/6140/front_en.28.400.jpg',
+    image: '',
     nutrition: 'Per 100g: Energy 67kcal, Protein 0.6g, Carbohydrates 17g, Fat 0.4g'
   },
   'jammie dodgers biscuits': {
@@ -210,7 +210,7 @@ export const productDatabase: Record<string, ProductInfo> = {
     description: 'Smoky gammon steak topped with melted cheese and pineapple.',
     storage: 'Keep refrigerated. Consume by the use-by date.',
     preparation: 'Pan-fry or grill for 6-8 minutes each side. Serve hot.',
-    image: 'https://images.openfoodfacts.org/images/products/505/426/974/5610/front_en.3.400.jpg',
+    image: '',
     nutrition: 'Per 100g: Energy 165kcal, Protein 18g, Carbohydrates 5g, Fat 8g'
   },
   'tesco pork loin joint': {
@@ -258,7 +258,7 @@ export const productDatabase: Record<string, ProductInfo> = {
     description: 'Refreshing green juice blend with apple, spinach, kale and ginger.',
     storage: 'Keep refrigerated. Consume within 5 days of opening.',
     preparation: 'Ready to drink. Shake well before consuming.',
-    image: 'https://images.openfoodfacts.org/images/products/503/886/213/6181/front_en.24.400.jpg',
+    image: '',
     nutrition: 'Per 100ml: Energy 28kcal, Protein 0.5g, Carbohydrates 6g, Fat 0g'
   }
 };
