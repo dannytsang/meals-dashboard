@@ -17,11 +17,10 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
 
   const dates = Object.keys(coverageByDate).sort();
   
-  // Get week bounds
+  // Generate array of all days in range
   const startDate = dates[0] ? new Date(dates[0]) : new Date();
   const endDate = dates[dates.length - 1] ? new Date(dates[dates.length - 1]) : new Date();
   
-  // Generate array of all days in range
   const days: string[] = [];
   const current = new Date(startDate);
   while (current <= endDate) {
@@ -45,14 +44,14 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
 
   return (
     <div className="card overflow-hidden">
-      <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
-        <h2 className="text-sm font-medium text-[var(--text-primary)]">📅 WEEK VIEW</h2>
+      <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border-color)' }}>
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">📅 WEEK VIEW</h2>
       </div>
       
       <div className="overflow-x-auto">
-        <div className="min-w-[600px]">
+        <div className="min-w-[600px] p-4">
           {/* Header with dates */}
-          <div className="grid gap-2 p-3" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)` }}>
+          <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: `100px repeat(${days.length}, 1fr)` }}>
             <div /> {/* Empty cell for meal type column */}
             {days.map(date => {
               const dayData = coverageByDate[date];
@@ -60,22 +59,31 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
                 ? Math.round(dayData.reduce((s, c) => s + c.coverageScore, 0) / dayData.length) 
                 : 0;
               const isToday = date === new Date().toISOString().split('T')[0];
+              const dayColor = coveragePct >= 80 ? 'var(--accent-emerald)' : coveragePct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)';
               
               return (
                 <div key={date} className="text-center">
-                  <p className="text-[10px] text-[var(--text-muted)] uppercase">
+                  <p className="text-xs text-[var(--text-muted)] uppercase mb-1">
                     {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
                   </p>
-                  <p className={`text-sm font-bold ${isToday ? 'ring-2 ring-[var(--accent-blue)] rounded-full w-7 h-7 flex items-center justify-center mx-auto' : ''}`}
-                    style={{ color: coveragePct >= 80 ? 'var(--accent-emerald)' : coveragePct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>
-                    {new Date(date).getDate()}
-                  </p>
-                  <div className="w-full h-1 rounded-full mt-1 overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  <div 
+                    className="w-12 h-12 rounded-full flex items-center justify-center mx-auto"
+                    style={{ 
+                      backgroundColor: isToday ? `${dayColor}20` : 'var(--bg-tertiary)',
+                      border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
+                    }}
+                  >
+                    <span className="text-lg font-bold" style={{ color: dayColor }}>
+                      {new Date(date).getDate()}
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full mt-2 overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                     <div 
-                      className="h-full rounded-full"
-                      style={{ width: `${coveragePct}%`, backgroundColor: getStatusColor('', coveragePct) }}
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${coveragePct}%`, backgroundColor: dayColor }}
                     />
                   </div>
+                  <p className="text-xs font-medium mt-1" style={{ color: dayColor }}>{coveragePct}%</p>
                 </div>
               );
             })}
@@ -85,11 +93,11 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
           {['breakfast', 'lunch', 'dinner'].map(mealType => (
             <div 
               key={mealType} 
-              className="grid gap-2 p-3 pt-0 items-start"
-              style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)`, borderTop: '1px solid var(--border-color)' }}
+              className="grid gap-3 items-start py-3"
+              style={{ gridTemplateColumns: `100px repeat(${days.length}, 1fr)`, borderTop: '1px solid var(--border-color)' }}
             >
               <div className="pt-2">
-                <p className="text-xs text-[var(--text-muted)] capitalize">{mealType}</p>
+                <p className="text-sm text-[var(--text-muted)] capitalize">{mealType}</p>
               </div>
               
               {days.map(date => {
@@ -103,20 +111,20 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
                 const meal = dayMeals[0];
                 
                 return (
-                  <div key={date} className="min-h-[60px] p-1.5 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  <div key={date} className="min-h-[70px] p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                     {meal ? (
-                      <div className="flex items-start gap-1">
-                        <span className="text-xs">{getMealTypeEmoji(meal.meal.content)}</span>
+                      <div className="flex items-start gap-1.5">
+                        <span className="text-sm">{getMealTypeEmoji(meal.meal.content)}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] leading-tight text-[var(--text-primary)] truncate" title={meal.meal.content}>
+                          <p className="text-xs leading-tight text-[var(--text-primary)] truncate" title={meal.meal.content}>
                             {meal.meal.content}
                           </p>
-                          <div className="flex items-center gap-1 mt-0.5">
+                          <div className="flex items-center gap-1 mt-1">
                             <span 
-                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              className="w-2 h-2 rounded-full shrink-0"
                               style={{ backgroundColor: getStatusColor(meal.status, meal.coverageScore) }}
                             />
-                            <span className="text-[9px] truncate" style={{ color: getStatusColor(meal.status, meal.coverageScore) }}>
+                            <span className="text-[10px] font-medium" style={{ color: getStatusColor(meal.status, meal.coverageScore) }}>
                               {meal.coverageScore}%
                             </span>
                           </div>
