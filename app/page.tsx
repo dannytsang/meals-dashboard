@@ -222,10 +222,10 @@ export default function MealsDashboardPage() {
         </div>
 
         {/* Two Column Layout */}
-        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' as const : 'column' as const, gap: '1.5rem', alignItems: 'flex-start' as const }}>
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '1.5rem', alignItems: 'stretch' as const }}>
           
-          {/* Left Column - Week Calendar */}
-          <div style={{ ...cardStyle, flex: isDesktop ? '1 1 65%' : '0 0 auto', display: 'flex', flexDirection: 'column' as const, alignItems: 'stretch' as const }}>
+          {/* Full Width Calendar */}
+          <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column' as const, alignItems: 'stretch' as const }}>
             <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border-color)' }}>
               <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>📅 WEEK MEALS</h2>
             </div>
@@ -345,9 +345,32 @@ export default function MealsDashboardPage() {
                                 {!hasMeals && (
                                   <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>No meals</span>
                                 )}
-                                {hasMeals && isCollapsed && (
-                                  <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Show</span>
-                                )}
+                                {hasMeals && isCollapsed && (() => {
+                                  const dayMeals = (coverageByDate[date] || []).filter(c => {
+                                    const m = c.meal.content.toLowerCase();
+                                    if (mealType === 'breakfast') return m.includes('breakfast') || m.includes('cereal');
+                                    if (mealType === 'lunch') return m.includes('lunch') || m.includes('sandwich');
+                                    return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
+                                  });
+                                  const meal = dayMeals[0];
+                                  if (!meal) return <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>—</span>;
+                                  const barColor = getStatusColor(meal.status, meal.coverageScore);
+                                  return (
+                                    <div style={{
+                                      padding: '0.4rem 0.5rem',
+                                      borderRadius: '6px',
+                                      backgroundColor: barColor,
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      minHeight: '50px',
+                                      gap: '0.25rem'
+                                    }}>
+                                      <span style={{ fontSize: '11px', fontWeight: '600', color: 'white' }}>{meal.coverageScore}%</span>
+                                    </div>
+                                  );
+                                })()}
                               </td>
                             ))}
                           </tr>
@@ -426,8 +449,8 @@ export default function MealsDashboardPage() {
             </div>
           </div>
 
-          {/* Right Column */}
-          <div style={{ flex: isDesktop ? '1 1 35%' : '0 0 auto', display: 'flex', flexDirection: 'column' as const, gap: '1rem' }}>
+          {/* Order Items Section */}
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '1rem' }}>
             
             {/* Categories with Filter */}
             <div style={{ ...cardStyle, padding: '1rem' }}>
