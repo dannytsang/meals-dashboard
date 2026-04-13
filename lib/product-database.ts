@@ -264,30 +264,28 @@ export const productDatabase: Record<string, ProductInfo> = {
 };
 
 /**
- * Find product info by name (stricter matching)
+ * Find product info by name - ONLY exact substring matches
+ * No word-based fallback to avoid wrong matches
  */
 export function findProductInfo(itemName: string): ProductInfo | null {
   const normalizedItem = itemName.toLowerCase().trim();
   
-  // Direct match (exact key)
+  // 1. Direct exact key match
   if (productDatabase[normalizedItem]) {
     return productDatabase[normalizedItem];
   }
   
-  // Strict matching: require at least one significant word to match
-  // and be at least 4 characters long to avoid 2-3 letter mismatches
-  const stopWords = new Set(['tesco', 'the', 'and', 'or', 'with', 'for', 'of', 'in', 'a', 'an']);
+  // 2. Substring match: key must appear contiguously in item name
+  // Sort keys by length (longest first) to prefer more specific matches
+  const sortedKeys = Object.keys(productDatabase).sort((a, b) => b.length - a.length);
   
-  for (const [key, product] of Object.entries(productDatabase)) {
-    const itemWords = normalizedItem.split(/[\s,]+/).filter(w => w.length >= 4 && !stopWords.has(w));
-    const keyWords = key.split(/[\s,]+/).filter(w => w.length >= 4 && !stopWords.has(w));
-    
-    // Check if any significant word matches exactly (in either direction)
-    const hasMatch = itemWords.some(iw => keyWords.some(kw => kw === iw || kw.includes(iw) || iw.includes(kw)));
-    if (hasMatch) {
-      return product;
+  for (const key of sortedKeys) {
+    if (normalizedItem.includes(key)) {
+      return productDatabase[key];
     }
   }
   
+  // 3. No fallback matching - don't try word-based or partial matching
+  // This prevents wrong products from being suggested
   return null;
 }
