@@ -11,30 +11,30 @@ interface MealListInteractiveProps {
 const statusConfig = {
   covered: {
     icon: CheckCircle2,
-    color: 'text-emerald-400',
-    bgColor: 'bg-emerald-500/10',
-    borderColor: 'border-emerald-500/20',
+    color: 'var(--accent-emerald)',
+    bgColor: 'var(--accent-emerald-bg)',
+    borderColor: 'var(--accent-emerald-border)',
     label: 'Covered',
   },
   partial: {
     icon: AlertCircle,
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/20',
+    color: 'var(--accent-amber)',
+    bgColor: 'var(--accent-amber-bg)',
+    borderColor: 'var(--accent-amber-border)',
     label: 'Partial',
   },
   missing: {
     icon: XCircle,
-    color: 'text-rose-400',
-    bgColor: 'bg-rose-500/10',
-    borderColor: 'border-rose-500/20',
+    color: 'var(--accent-rose)',
+    bgColor: 'var(--accent-rose-bg)',
+    borderColor: 'var(--accent-rose-border)',
     label: 'Missing',
   },
   unknown: {
     icon: HelpCircle,
-    color: 'text-slate-400',
-    bgColor: 'bg-slate-500/10',
-    borderColor: 'border-slate-500/20',
+    color: 'var(--text-muted)',
+    bgColor: 'var(--bg-tertiary)',
+    borderColor: 'var(--border-color)',
     label: 'Unknown',
   },
 };
@@ -65,67 +65,114 @@ function MealCard({ item }: { item: MealCoverage }) {
   const Icon = config.icon;
   
   return (
-    <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+    <div 
+      className="rounded-lg border overflow-hidden transition-all hover:shadow-md"
+      style={{ 
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--border-color)'
+      }}
+    >
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-6 py-4 flex items-start gap-4 hover:bg-slate-750 transition-colors text-left"
+        className="w-full px-5 py-4 flex items-start gap-4 text-left transition-colors"
+        style={{ backgroundColor: 'transparent' }}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
       >
-        <div className={`p-2 rounded-lg ${config.bgColor} ${config.borderColor} border`}>
-          <Icon className={`w-5 h-5 ${config.color}`} />
+        <div 
+          className="p-2 rounded-lg border"
+          style={{ backgroundColor: config.bgColor, borderColor: config.borderColor }}
+        >
+          <Icon className="w-5 h-5" style={{ color: config.color }} />
         </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <h4 className="text-white font-medium truncate">{item.meal.content}</h4>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${config.bgColor} ${config.color} border ${config.borderColor}`}>
+            <h4 className="text-[var(--text-primary)] font-medium truncate">{item.meal.content}</h4>
+            <span 
+              className="text-xs px-2 py-0.5 rounded-full border"
+              style={{ 
+                backgroundColor: config.bgColor, 
+                color: config.color, 
+                borderColor: config.borderColor 
+              }}
+            >
               {config.label}
             </span>
             {item.meal.labels.includes('adult') && item.meal.labels.includes('children') && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+              <span 
+                className="text-xs px-2 py-0.5 rounded-full border"
+                style={{ backgroundColor: 'var(--accent-blue-bg)', color: 'var(--accent-blue)', borderColor: 'transparent' }}
+              >
                 Family
               </span>
             )}
             {item.meal.labels.includes('adult') && !item.meal.labels.includes('children') && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <span 
+                className="text-xs px-2 py-0.5 rounded-full border"
+                style={{ backgroundColor: 'var(--accent-purple-bg)', color: 'var(--accent-purple)', borderColor: 'transparent' }}
+              >
                 Adults
               </span>
             )}
             {item.meal.labels.includes('children') && !item.meal.labels.includes('adult') && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-400 border border-pink-500/20">
+              <span 
+                className="text-xs px-2 py-0.5 rounded-full border"
+                style={{ backgroundColor: 'var(--accent-pink-bg)', color: 'var(--accent-pink)', borderColor: 'transparent' }}
+              >
                 Kids
               </span>
             )}
           </div>
           
-          <p className="text-slate-400 text-sm mt-1">{formatDate(item.meal.date)}</p>
+          <p className="text-[var(--text-secondary)] text-sm mt-1">{formatDate(item.meal.date)}</p>
         </div>
         
         <div className="flex items-center gap-3">
-          <span className={`text-xl font-bold ${config.color}`}>{item.coverageScore}%</span>
-          <div className={`p-1 rounded ${expanded ? 'bg-slate-600' : 'bg-slate-700'}`}>
+          <span 
+            className="text-xl font-bold"
+            style={{ color: config.color }}
+          >
+            {item.coverageScore}%
+          </span>
+          <div 
+            className="p-1 rounded transition-colors"
+            style={{ backgroundColor: 'var(--bg-tertiary)' }}
+          >
             {expanded ? (
-              <ChevronUp className="w-4 h-4 text-slate-300" />
+              <ChevronUp className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
             ) : (
-              <ChevronDown className="w-4 h-4 text-slate-300" />
+              <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
             )}
           </div>
         </div>
       </button>
       
       {expanded && (
-        <div className="px-6 pb-4 pt-0 border-t border-slate-700 mt-0">
+        <div 
+          className="px-5 pb-4 pt-0 mt-0"
+          style={{ borderTop: '1px solid var(--border-color)' }}
+        >
           <div className="pt-4 space-y-4">
             {item.matchedItems.length > 0 && (
               <div>
-                <p className="text-xs text-slate-500 mb-2 flex items-center gap-2">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                <p 
+                  className="text-xs mb-2 flex items-center gap-2"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <CheckCircle2 className="w-3 h-3" style={{ color: 'var(--accent-emerald)' }} />
                   Matched items ({item.matchedItems.length})
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {item.matchedItems.map((matched, idx) => (
                     <span 
                       key={idx}
-                      className="text-sm px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
+                      className="text-sm px-3 py-1.5 rounded-lg border"
+                      style={{ 
+                        backgroundColor: 'var(--accent-emerald-bg)', 
+                        color: 'var(--accent-emerald)', 
+                        borderColor: 'var(--accent-emerald-border)'
+                      }}
                     >
                       {matched}
                     </span>
@@ -136,15 +183,23 @@ function MealCard({ item }: { item: MealCoverage }) {
             
             {item.missingItems.length > 0 && (
               <div>
-                <p className="text-xs text-slate-500 mb-2 flex items-center gap-2">
-                  <XCircle className="w-3 h-3 text-rose-400" />
+                <p 
+                  className="text-xs mb-2 flex items-center gap-2"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <XCircle className="w-3 h-3" style={{ color: 'var(--accent-rose)' }} />
                   Missing items ({item.missingItems.length})
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {item.missingItems.map((missing, idx) => (
                     <span 
                       key={idx}
-                      className="text-sm px-3 py-1 rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/20"
+                      className="text-sm px-3 py-1.5 rounded-lg border"
+                      style={{ 
+                        backgroundColor: 'var(--accent-rose-bg)', 
+                        color: 'var(--accent-rose)', 
+                        borderColor: 'var(--accent-rose-border)'
+                      }}
                     >
                       {missing}
                     </span>
@@ -154,12 +209,18 @@ function MealCard({ item }: { item: MealCoverage }) {
             )}
             
             {item.notes && (
-              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <p className="text-sm text-amber-300">{item.notes}</p>
+              <div 
+                className="p-3 rounded-lg border"
+                style={{ 
+                  backgroundColor: 'var(--accent-amber-bg)', 
+                  borderColor: 'var(--accent-amber-border)'
+                }}
+              >
+                <p className="text-sm" style={{ color: 'var(--accent-amber)' }}>{item.notes}</p>
               </div>
             )}
             
-            <div className="text-xs text-slate-500">
+            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
               Task ID: {item.meal.id}
             </div>
           </div>
@@ -170,7 +231,6 @@ function MealCard({ item }: { item: MealCoverage }) {
 }
 
 export function MealListInteractive({ coverage }: MealListInteractiveProps) {
-  // Group by date
   const groupedMeals = coverage.reduce((acc, item) => {
     const date = item.meal.date;
     if (!acc[date]) {
@@ -181,6 +241,12 @@ export function MealListInteractive({ coverage }: MealListInteractiveProps) {
   }, {} as Record<string, MealCoverage[]>);
 
   const sortedDates = Object.keys(groupedMeals).sort();
+  
+  const getAvgColor = (avg: number) => {
+    if (avg >= 80) return 'var(--accent-emerald)';
+    if (avg >= 50) return 'var(--accent-amber)';
+    return 'var(--accent-rose)';
+  };
   
   return (
     <div className="space-y-6">
@@ -211,14 +277,15 @@ export function MealListInteractive({ coverage }: MealListInteractiveProps) {
         return (
           <div key={date}>
             <div className="flex items-center gap-3 mb-3">
-              <h3 className="text-white font-medium">{dateLabel}</h3>
-              <span className="text-xs text-slate-500">({meals.length} meal{meals.length > 1 ? 's' : ''})</span>
-              <div className="flex-1 h-px bg-slate-700" />
-              <span className={`text-sm font-medium ${
-                avgCoverage >= 80 ? 'text-emerald-400' :
-                avgCoverage >= 50 ? 'text-amber-400' :
-                'text-rose-400'
-              }`}>
+              <h3 className="text-[var(--text-primary)] font-medium">{dateLabel}</h3>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                ({meals.length} meal{meals.length > 1 ? 's' : ''})
+              </span>
+              <div className="flex-1 h-px" style={{ backgroundColor: 'var(--border-color)' }} />
+              <span 
+                className="text-sm font-medium"
+                style={{ color: getAvgColor(avgCoverage) }}
+              >
                 {avgCoverage}% avg
               </span>
             </div>

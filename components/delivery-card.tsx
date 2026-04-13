@@ -13,20 +13,20 @@ export function DeliveryCard({ deliveries, latestReceipt }: DeliveryCardProps) {
   const nextDelivery = deliveries[1];
   
   return (
-    <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-      <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
+    <div className="card p-6">
+      <h3 className="text-sm font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-4">
         Deliveries
       </h3>
       
       {latestReceipt && (
-        <div className="mb-6 p-4 bg-slate-750 rounded-lg border border-slate-700">
+        <div className="mb-4 p-4 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-emerald-500/10 rounded-lg">
-              <Package className="w-5 h-5 text-emerald-400" />
+            <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--accent-emerald-bg)' }}>
+              <Package className="w-5 h-5" style={{ color: 'var(--accent-emerald)' }} />
             </div>
             <div>
-              <p className="text-white font-medium">Latest Delivery</p>
-              <p className="text-slate-400 text-sm">
+              <p className="text-[var(--text-primary)] font-medium">Latest Delivery</p>
+              <p className="text-[var(--text-secondary)] text-sm">
                 {new Date(latestReceipt.deliveryDate).toLocaleDateString('en-GB', { 
                   weekday: 'long', 
                   day: 'numeric', 
@@ -36,28 +36,24 @@ export function DeliveryCard({ deliveries, latestReceipt }: DeliveryCardProps) {
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
-              <p className="text-slate-500">Order Total</p>
-              <p className="text-white font-medium">£{latestReceipt.orderTotal.toFixed(2)}</p>
+              <p className="text-[var(--text-muted)]">Order Total</p>
+              <p className="text-[var(--text-primary)] font-medium">£{latestReceipt.orderTotal.toFixed(2)}</p>
             </div>
             <div>
-              <p className="text-slate-500">Items</p>
-              <p className="text-white font-medium">{latestReceipt.items.length}</p>
+              <p className="text-[var(--text-muted)]">Items</p>
+              <p className="text-[var(--text-primary)] font-medium">{latestReceipt.items.length}</p>
             </div>
             <div>
-              <p className="text-slate-500">Slot</p>
-              <p className="text-white font-medium">{latestReceipt.deliverySlot}</p>
-            </div>
-            <div>
-              <p className="text-slate-500">Order #</p>
-              <p className="text-slate-300">{latestReceipt.orderNumber}</p>
+              <p className="text-[var(--text-muted)]">Slot</p>
+              <p className="text-[var(--text-primary)] font-medium">{latestReceipt.deliverySlot}</p>
             </div>
           </div>
           
           {latestReceipt.substitutions.length > 0 && (
-            <div className="mt-4 p-3 bg-amber-500/10 rounded border border-amber-500/20">
-              <div className="flex items-center gap-2 text-amber-400">
+            <div className="mt-4 p-3 rounded border" style={{ backgroundColor: 'var(--accent-amber-bg)', borderColor: 'var(--accent-amber-border)' }}>
+              <div className="flex items-center gap-2" style={{ color: 'var(--accent-amber)' }}>
                 <AlertTriangle className="w-4 h-4" />
                 <span className="text-sm font-medium">
                   {latestReceipt.substitutions.length} substitution{latestReceipt.substitutions.length > 1 ? 's' : ''}
@@ -68,16 +64,18 @@ export function DeliveryCard({ deliveries, latestReceipt }: DeliveryCardProps) {
           
           {latestReceipt.shortLifeItems.length > 0 && (
             <div className="mt-3">
-              <p className="text-xs text-slate-500 mb-2">Short life items:</p>
+              <p className="text-xs text-[var(--text-muted)] mb-2">Short life items:</p>
               <div className="space-y-1">
                 {latestReceipt.shortLifeItems.map((item, idx) => (
                   <div 
                     key={idx}
-                    className={`flex justify-between text-sm px-2 py-1 rounded ${
-                      item.daysRemaining <= 1 ? 'bg-rose-500/10 text-rose-400' : 
-                      item.daysRemaining <= 3 ? 'bg-amber-500/10 text-amber-400' : 
-                      'bg-slate-700 text-slate-300'
-                    }`}
+                    className="flex justify-between text-sm px-2 py-1 rounded"
+                    style={{
+                      backgroundColor: item.daysRemaining <= 1 ? 'var(--accent-rose-bg)' : 
+                                      item.daysRemaining <= 3 ? 'var(--accent-amber-bg)' : 'var(--bg-tertiary)',
+                      color: item.daysRemaining <= 1 ? 'var(--accent-rose)' : 
+                             item.daysRemaining <= 3 ? 'var(--accent-amber)' : 'var(--text-secondary)'
+                    }}
                   >
                     <span>{item.name}</span>
                     <span>{item.daysRemaining} day{item.daysRemaining > 1 ? 's' : ''}</span>
@@ -90,14 +88,14 @@ export function DeliveryCard({ deliveries, latestReceipt }: DeliveryCardProps) {
       )}
       
       {nextDelivery && (
-        <div className="p-4 bg-slate-750 rounded-lg border border-slate-700">
+        <div className="p-4 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-color)]">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <Truck className="w-5 h-5 text-blue-400" />
+            <div className="p-2 rounded-lg" style={{ backgroundColor: 'var(--accent-blue-bg)' }}>
+              <Truck className="w-5 h-5" style={{ color: 'var(--accent-blue)' }} />
             </div>
             <div className="flex-1">
-              <p className="text-white font-medium">Next Delivery</p>
-              <p className="text-slate-400 text-sm">
+              <p className="text-[var(--text-primary)] font-medium">Next Delivery</p>
+              <p className="text-[var(--text-secondary)] text-sm">
                 {new Date(nextDelivery.date).toLocaleDateString('en-GB', { 
                   weekday: 'long', 
                   day: 'numeric', 
@@ -106,25 +104,25 @@ export function DeliveryCard({ deliveries, latestReceipt }: DeliveryCardProps) {
               </p>
             </div>
             <div className="text-right">
-              <Clock className="w-4 h-4 text-slate-500 ml-auto mb-1" />
-              <p className="text-slate-300 text-sm">{nextDelivery.slot}</p>
+              <Clock className="w-4 h-4 text-[var(--text-muted)] ml-auto mb-1" />
+              <p className="text-[var(--text-secondary)] text-sm">{nextDelivery.slot}</p>
             </div>
           </div>
           
           {nextDelivery.orderTotal > 0 ? (
-            <div className="mt-3 pt-3 border-t border-slate-700">
+            <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Current total</span>
-                <span className="text-white font-medium">£{nextDelivery.orderTotal.toFixed(2)}</span>
+                <span className="text-[var(--text-muted)]">Current total</span>
+                <span className="text-[var(--text-primary)] font-medium">£{nextDelivery.orderTotal.toFixed(2)}</span>
               </div>
               {nextDelivery.orderTotal < 50 && (
-                <p className="text-xs text-amber-400 mt-1">
+                <p className="text-xs text-[var(--accent-amber)] mt-1">
                   £{(50 - nextDelivery.orderTotal).toFixed(2)} more for free delivery
                 </p>
               )}
             </div>
           ) : (
-            <p className="text-xs text-slate-500 mt-3">
+            <p className="text-xs text-[var(--text-muted)] mt-3">
               No items in basket yet
             </p>
           )}

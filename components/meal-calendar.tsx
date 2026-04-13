@@ -12,32 +12,45 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export function MealCalendar({ coverage }: MealCalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 3, 13)); // April 13, 2026
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 3, 13));
   
-  // Get meals for a specific date
   const getMealsForDate = (date: Date): MealCoverage[] => {
     const dateStr = date.toISOString().split('T')[0];
     return coverage.filter(c => c.meal.date === dateStr);
   };
   
-  // Check if date is in the meal plan range
-  const isInRange = (date: Date): boolean => {
-    const dateStr = date.toISOString().split('T')[0];
-    return coverage.some(c => c.meal.date === dateStr);
-  };
-  
-  // Get status color for a date
-  const getStatusColor = (date: Date): string => {
+  const getStatusStyles = (date: Date) => {
     const meals = getMealsForDate(date);
-    if (meals.length === 0) return 'bg-slate-800';
+    if (meals.length === 0) {
+      return {
+        bg: 'var(--bg-secondary)',
+        border: 'var(--border-color)',
+        dot: 'var(--text-muted)'
+      };
+    }
     
     const avgCoverage = meals.reduce((sum, m) => sum + m.coverageScore, 0) / meals.length;
-    if (avgCoverage >= 80) return 'bg-emerald-500/20 border-emerald-500/40';
-    if (avgCoverage >= 50) return 'bg-amber-500/20 border-amber-500/40';
-    return 'bg-rose-500/20 border-rose-500/40';
+    if (avgCoverage >= 80) {
+      return {
+        bg: 'var(--accent-emerald-bg)',
+        border: 'var(--accent-emerald)',
+        dot: 'var(--accent-emerald)'
+      };
+    }
+    if (avgCoverage >= 50) {
+      return {
+        bg: 'var(--accent-amber-bg)',
+        border: 'var(--accent-amber)',
+        dot: 'var(--accent-amber)'
+      };
+    }
+    return {
+      bg: 'var(--accent-rose-bg)',
+      border: 'var(--accent-rose)',
+      dot: 'var(--accent-rose)'
+    };
   };
   
-  // Navigation
   const prevWeek = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(newDate.getDate() - 7);
@@ -50,12 +63,11 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
     setCurrentDate(newDate);
   };
   
-  // Get dates for current week view
   const getWeekDates = (): Date[] => {
     const dates: Date[] = [];
     const startOfWeek = new Date(currentDate);
     const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
     startOfWeek.setDate(diff);
     
     for (let i = 0; i < 7; i++) {
@@ -70,33 +82,40 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
   const monthYear = MONTHS[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
   
   return (
-    <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+    <div className="card overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+      <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
+        <h3 className="text-sm font-medium text-[var(--text-secondary)] uppercase tracking-wider">
           Meal Calendar
         </h3>
         <div className="flex items-center gap-4">
           <button 
             onClick={prevWeek}
-            className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-lg border border-[var(--border-color)] hover:border-[var(--border-light)] transition-all"
+            style={{ backgroundColor: 'var(--bg-tertiary)' }}
           >
-            <ChevronLeft className="w-5 h-5 text-slate-400" />
+            <ChevronLeft className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
           </button>
-          <span className="text-white font-medium min-w-[140px] text-center">{monthYear}</span>
+          <span className="text-[var(--text-primary)] font-medium min-w-[140px] text-center">
+            {monthYear}
+          </span>
           <button 
             onClick={nextWeek}
-            className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-lg border border-[var(--border-color)] hover:border-[var(--border-light)] transition-all"
+            style={{ backgroundColor: 'var(--bg-tertiary)' }}
           >
-            <ChevronRight className="w-5 h-5 text-slate-400" />
+            <ChevronRight className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
           </button>
         </div>
       </div>
       
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-slate-700">
+      <div className="grid grid-cols-7 border-b border-[var(--border-color)]">
         {DAYS.map(day => (
-          <div key={day} className="px-2 py-3 text-center text-xs font-medium text-slate-500 uppercase">
+          <div 
+            key={day} 
+            className="px-2 py-3 text-center text-xs font-medium text-[var(--text-muted)] uppercase"
+          >
             {day}
           </div>
         ))}
@@ -107,38 +126,50 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
         {weekDates.map((date, idx) => {
           const meals = getMealsForDate(date);
           const isToday = date.toDateString() === new Date().toDateString();
-          const statusColor = getStatusColor(date);
+          const styles = getStatusStyles(date);
           
           return (
             <div 
               key={idx}
-              className={`min-h-[100px] p-2 border-b border-r border-slate-700 last:border-r-0 ${statusColor}`}
+              className="min-h-[100px] p-3 border-b border-r border-[var(--border-color)] last:border-r-0 transition-all"
+              style={{ 
+                backgroundColor: styles.bg,
+                borderLeftWidth: idx === 0 ? '0' : '1px',
+                borderLeftColor: idx > 0 ? 'var(--border-color)' : 'transparent'
+              }}
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-sm font-medium ${isToday ? 'text-emerald-400' : 'text-slate-300'}`}>
+              <div className="flex items-center justify-between mb-3">
+                <span 
+                  className="text-sm font-medium"
+                  style={{ color: isToday ? 'var(--accent-emerald)' : 'var(--text-primary)' }}
+                >
                   {date.getDate()}
                 </span>
                 {isToday && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span 
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: 'var(--accent-emerald)' }}
+                  />
                 )}
               </div>
               
-              {/* Meal count indicator */}
               {meals.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-400">
-                    {meals.length} meal{meals.length > 1 ? 's' : ''}
-                  </p>
-                  {/* Mini coverage bar */}
-                  <div className="w-full bg-slate-600 rounded-full h-1">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
                     <div 
-                      className={`h-1 rounded-full ${
-                        meals.some(m => m.status === 'covered') ? 'bg-emerald-500' :
-                        meals.some(m => m.status === 'partial') ? 'bg-amber-500' :
-                        'bg-rose-500'
-                      }`}
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: styles.dot }}
+                    />
+                    <span className="text-xs text-[var(--text-tertiary)]">
+                      {meals.length} meal{meals.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="w-full rounded-full h-1.5 overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                    <div 
+                      className="h-full rounded-full transition-all duration-500"
                       style={{ 
-                        width: `${meals.reduce((sum, m) => sum + m.coverageScore, 0) / meals.length}%` 
+                        width: `${meals.reduce((sum, m) => sum + m.coverageScore, 0) / meals.length}%`,
+                        backgroundColor: styles.dot
                       }}
                     />
                   </div>
@@ -150,18 +181,18 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
       </div>
       
       {/* Legend */}
-      <div className="px-6 py-3 bg-slate-750 flex items-center gap-6 text-xs">
+      <div className="px-6 py-3 flex items-center gap-6 text-xs" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-emerald-500/40" />
-          <span className="text-slate-400">High coverage (80%+)</span>
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--accent-emerald)', opacity: 0.4 }} />
+          <span className="text-[var(--text-tertiary)]">High (80%+)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-amber-500/40" />
-          <span className="text-slate-400">Medium coverage (50-79%)</span>
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--accent-amber)', opacity: 0.4 }} />
+          <span className="text-[var(--text-tertiary)]">Medium (50-79%)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded bg-rose-500/40" />
-          <span className="text-slate-400">Low coverage (&lt;50%)</span>
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--accent-rose)', opacity: 0.4 }} />
+          <span className="text-[var(--text-tertiary)]">Low (&lt;50%)</span>
         </div>
       </div>
     </div>

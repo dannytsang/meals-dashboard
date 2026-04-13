@@ -1,63 +1,74 @@
 'use client';
 
-import type { StatusFilter } from '@/lib/dashboard-state';
-import { getFilterStats } from '@/lib/dashboard-state';
+import { CircleCheck, CircleAlert, CircleX, CircleHelp } from 'lucide-react';
 import { MealCoverage } from '@/lib/meals-data';
-import { CheckCircle2, AlertCircle, XCircle, HelpCircle } from 'lucide-react';
+import { StatusFilter as StatusFilterType } from '@/lib/dashboard-state';
 
 interface StatusFilterProps {
   coverage: MealCoverage[];
-  currentFilter: StatusFilter;
-  onFilterChange: (filter: StatusFilter) => void;
+  currentFilter: StatusFilterType;
+  onFilterChange: (filter: StatusFilterType) => void;
 }
 
-const filterConfig: Record<StatusFilter, { 
-  label: string; 
-  icon: typeof CheckCircle2;
-  color: string;
-  bgColor: string;
-}> = {
-  all: { label: 'All', icon: null as unknown as typeof CheckCircle2, color: 'text-white', bgColor: 'bg-slate-600' },
-  covered: { label: 'Covered', icon: CheckCircle2, color: 'text-emerald-400', bgColor: 'bg-emerald-500/20' },
-  partial: { label: 'Partial', icon: AlertCircle, color: 'text-amber-400', bgColor: 'bg-amber-500/20' },
-  missing: { label: 'Missing', icon: XCircle, color: 'text-rose-400', bgColor: 'bg-rose-500/20' },
-  unknown: { label: 'Unknown', icon: HelpCircle, color: 'text-slate-400', bgColor: 'bg-slate-500/20' },
-};
+const filters: { key: StatusFilterType; label: string; icon: typeof CircleCheck }[] = [
+  { key: 'all', label: 'All', icon: CircleCheck },
+  { key: 'covered', label: 'Covered', icon: CircleCheck },
+  { key: 'partial', label: 'Partial', icon: CircleAlert },
+  { key: 'missing', label: 'Missing', icon: CircleX },
+  { key: 'unknown', label: 'Unknown', icon: CircleHelp },
+];
 
 export function StatusFilter({ coverage, currentFilter, onFilterChange }: StatusFilterProps) {
-  const stats = getFilterStats(coverage);
-  const filters: StatusFilter[] = ['all', 'covered', 'partial', 'missing', 'unknown'];
+  const getCounts = () => {
+    const counts: Record<string, number> = { all: coverage.length };
+    coverage.forEach(c => {
+      counts[c.status] = (counts[c.status] || 0) + 1;
+    });
+    return counts;
+  };
+  
+  const counts = getCounts();
   
   return (
-    <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-      <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">
+    <div className="card p-4">
+      <h3 className="text-sm font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-3">
         Filter by Status
       </h3>
       <div className="flex flex-wrap gap-2">
-        {filters.map((filter) => {
-          const config = filterConfig[filter];
-          const count = stats[filter];
-          const isSelected = currentFilter === filter;
+        {filters.map(({ key, label, icon: Icon }) => {
+          const count = counts[key] || 0;
+          const isSelected = currentFilter === key;
           
           return (
             <button
-              key={filter}
-              onClick={() => onFilterChange(filter)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
-                isSelected
-                  ? `${config.bgColor} border-transparent`
-                  : 'bg-slate-750 border-slate-700 hover:border-slate-600'
-              }`}
+              key={key}
+              onClick={() => onFilterChange(key)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-all"
+              style={{
+                backgroundColor: isSelected ? 'var(--bg-tertiary)' : 'transparent',
+                borderColor: isSelected ? 'var(--border-light)' : 'var(--border-color)',
+              }}
             >
-              {filter !== 'all' && (
-                <config.icon className={`w-4 h-4 ${isSelected ? config.color : 'text-slate-400'}`} />
-              )}
-              <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                {config.label}
+              <Icon 
+                className="w-4 h-4" 
+                style={{ 
+                  color: isSelected ? 'var(--accent-emerald)' : 'var(--text-tertiary)',
+                  opacity: isSelected ? 1 : 0.6
+                }} 
+              />
+              <span 
+                className="text-sm font-medium"
+                style={{ color: isSelected ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
+              >
+                {label}
               </span>
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                isSelected ? 'bg-slate-600 text-white' : 'bg-slate-700 text-slate-400'
-              }`}>
+              <span 
+                className="text-xs px-1.5 py-0.5 rounded"
+                style={{ 
+                  backgroundColor: isSelected ? 'var(--bg-tertiary)' : 'var(--bg-tertiary)',
+                  color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)'
+                }}
+              >
                 {count}
               </span>
             </button>

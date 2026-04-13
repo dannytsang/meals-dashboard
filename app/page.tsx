@@ -9,6 +9,9 @@ import { StatusFilter } from '@/components/status-filter';
 import { MealListInteractive } from '@/components/meal-list-interactive';
 import { MealCalendar } from '@/components/meal-calendar';
 import { ExpiryTimeline } from '@/components/expiry-timeline';
+import { GroceryMatch } from '@/components/grocery-match';
+import { MealPlanTimeline } from '@/components/meal-plan-timeline';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { dashboardConfig } from '@/lib/config';
 import { calculateCoverageSummary, getUpcomingDeliveries, TescoReceipt } from '@/lib/meals-data';
 import { 
@@ -66,23 +69,26 @@ export default function MealsDashboardPage() {
 
   const receipt = getReceiptForShop(state.selectedShop);
   const deliveries = getUpcomingDeliveries();
-  const coverage = realCoverage; // Using realCoverage for now
+  const coverage = realCoverage;
   const filteredCoverage = filterCoverage(coverage, state.statusFilter);
   const summary = calculateCoverageSummary(coverage);
   
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen gradient-mesh-dark">
       {/* Header */}
-      <header className="bg-slate-800 border-b border-slate-700">
+      <header className="bg-[var(--bg-secondary)] border-b border-[var(--border-color)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-white">{dashboardConfig.name}</h1>
-              <p className="text-slate-400 mt-1">{dashboardConfig.description}</p>
+              <h1 className="text-2xl font-bold text-[var(--text-primary)]">{dashboardConfig.name}</h1>
+              <p className="text-[var(--text-secondary)] mt-1">{dashboardConfig.description}</p>
             </div>
-            <div className="text-right text-sm text-slate-500">
-              <p>Last updated: {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
-              <p className="text-xs mt-1 text-emerald-400">Live data from meals skill</p>
+            <div className="flex items-center gap-4">
+              <div className="text-right text-sm text-[var(--text-muted)]">
+                <p>Last updated: {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
+                <p className="text-xs mt-1 text-[var(--accent-emerald)]">Live data from meals skill</p>
+              </div>
+              <ThemeToggle />
             </div>
           </div>
         </div>
@@ -108,8 +114,8 @@ export default function MealsDashboardPage() {
           />
         </div>
 
-        {/* Top Row: Coverage Overview & Delivery Info */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Top Row: Coverage Overview & Delivery Info & Grocery */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
           <div className="lg:col-span-1">
             <CoverageCard summary={summary} />
           </div>
@@ -122,6 +128,14 @@ export default function MealsDashboardPage() {
           <div className="lg:col-span-1">
             <ExpiryTimeline receipt={receipt} />
           </div>
+          <div className="lg:col-span-1">
+            <GroceryMatch coverage={filteredCoverage} receipt={receipt} />
+          </div>
+        </div>
+
+        {/* Meal Plan Timeline */}
+        <div className="mb-6">
+          <MealPlanTimeline coverage={filteredCoverage} />
         </div>
 
         {/* Calendar View */}
@@ -136,15 +150,13 @@ export default function MealsDashboardPage() {
 
         {/* Bottom Row: Interactive Meal List */}
         <div className="grid grid-cols-1 gap-6">
-          <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-700">
-              <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+          <div className="card p-6">
+            <div className="px-6 py-4 border-b border-[var(--border-color)] mb-4">
+              <h3 className="text-sm font-medium text-[var(--text-secondary)] uppercase tracking-wider">
                 Meal Plan & Coverage ({filteredCoverage.length} of {coverage.length})
               </h3>
             </div>
-            <div className="p-6">
-              <MealListInteractive coverage={filteredCoverage} />
-            </div>
+            <MealListInteractive coverage={filteredCoverage} />
           </div>
         </div>
       </main>
