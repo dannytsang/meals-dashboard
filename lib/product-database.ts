@@ -113,7 +113,7 @@ export const productDatabase: Record<string, ProductInfo> = {
     name: 'Tesco Iceberg Lettuce 200G',
     description: 'Crisp and refreshing iceberg lettuce, perfect for salads and burgers.',
     storage: 'Refrigerate and consume within 5 days.',
-    preparation: 'Wash thoroughly.撕成小块或整片食用。',
+    preparation: 'Wash thoroughly. Cut into pieces or eat whole.',
     image: 'https://digitalcontent.api.tesco.com/v2/media/ghs/lettuce/iceberg.jpg',
     nutrition: 'Per 100g: Energy 14kcal, Protein 0.9g, Carbohydrates 2.9g, Fat 0.1g'
   },
@@ -190,12 +190,12 @@ export const productDatabase: Record<string, ProductInfo> = {
     nutrition: 'Per 100g: Energy 357kcal, Protein 12g, Carbohydrates 72g, Fat 1.5g'
   },
   'aunt bessie maple thyme glazed carrots': {
-    name: 'Aunt Bessie's Maple & Thyme Glazed Carrots 500g',
-    description: 'Sweet and flavourful carrots with a maple and thyme glaze. Ready in minutes.',
-    storage: 'Keep frozen. Defrost thoroughly before cooking.',
-    preparation: 'Oven 200°C: 25-30 mins. Microwave: 8-10 mins.',
-    image: 'https://digitalcontent.api.tesco.com/v2/media/ghs/aunt-bessie/carrots.jpg',
-    nutrition: 'Per 100g: Energy 86kcal, Protein 1.2g, Carbohydrates 14g, Fat 2.5g'
+    name: "Aunt Bessie's Maple & Thyme Glazed Carrots 500g",
+    description: "Sweet and flavourful carrots with a maple and thyme glaze. Ready in minutes.",
+    storage: "Keep frozen. Defrost thoroughly before cooking.",
+    preparation: "Oven 200C: 25-30 mins. Microwave: 8-10 mins.",
+    image: "https://digitalcontent.api.tesco.com/v2/media/ghs/aunt-bessie/carrots.jpg",
+    nutrition: "Per 100g: Energy 86kcal, Protein 1.2g, Carbohydrates 14g, Fat 2.5g"
   },
   'tesco fire pit beef steaks': {
     name: 'Tesco Fire Pit 2 Salt & Pepper Beef Steaks 200G',
