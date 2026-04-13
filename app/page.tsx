@@ -84,6 +84,30 @@ export default function MealsDashboardPage() {
   };
   
   // Fetch product info from local database + Open Food Facts for images
+  // Get category icon for placeholder display
+  const getCategoryIcon = (itemName: string): string => {
+    const name = itemName.toLowerCase();
+    if (name.includes('strawberr') || name.includes('blueberr') || name.includes('raspberr') || name.includes('blackberr') || name.includes('grape')) return '🍇';
+    if (name.includes('apple') || name.includes('banana') || name.includes('fruit')) return '🍎';
+    if (name.includes('tomato') || name.includes('pepper') || name.includes('cucumber') || name.includes('celery') || name.includes('lettuce') || name.includes('salad') || name.includes('carrot')) return '🥕';
+    if (name.includes('broccoli') || name.includes('spinach') || name.includes('kale')) return '🥦';
+    if (name.includes('chicken') || name.includes('beef') || name.includes('pork') || name.includes('gammon') || name.includes('steak') || name.includes('bacon') || name.includes('ham') || name.includes('sausage') || name.includes('meat')) return '🥩';
+    if (name.includes('fish') || name.includes('salmon') || name.includes('tuna')) return '🐟';
+    if (name.includes('milk') || name.includes('cheese') || name.includes('yoghurt') || name.includes('butter') || name.includes('cream')) return '🧀';
+    if (name.includes('egg')) return '🥚';
+    if (name.includes('bread') || name.includes('pizza') || name.includes('pasta') || name.includes('noodle')) return '🍞';
+    if (name.includes('rice') || name.includes('risotto')) return '🍚';
+    if (name.includes('potato')) return '🥔';
+    if (name.includes('juice') || name.includes('smoothie') || name.includes('drink')) return '🧃';
+    if (name.includes('water') || name.includes('sparkling')) return '💧';
+    if (name.includes('coffee') || name.includes('tea')) return '☕';
+    if (name.includes('frozen') || name.includes('microwave')) return '🧊';
+    if (name.includes('biscuit') || name.includes('cookie') || name.includes('cake') || name.includes('chocolate') || name.includes('sweet')) return '🍪';
+    if (name.includes('popcorn')) return '🍿';
+    if (name.includes('salad') || name.includes('bowl')) return '🥗';
+    return '📦';
+  };
+
   const fetchProductInfo = async (itemName: string) => {
     setLoadingProduct(true);
     setProductInfo(null);
@@ -898,7 +922,7 @@ export default function MealsDashboardPage() {
                   </div>
                 ) : (
                   <div style={{ textAlign: 'center', marginBottom: '1rem', padding: '2rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '48px' }}>📦</span>
+                    <span style={{ fontSize: '64px' }}>{selectedItem ? getCategoryIcon(selectedItem.name) : '📦'}</span>
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Product image not available</p>
                   </div>
                 )}
