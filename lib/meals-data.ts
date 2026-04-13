@@ -158,12 +158,14 @@ export function calculateCoverageSummary(coverage: MealCoverage[]): CoverageSumm
 
 export function getUpcomingDeliveries(): DeliveryWindow[] {
   // Return the next delivery based on real order data
-  // The realLatestOrder was delivered on April 10, 2026
-  // Next delivery would be based on subscription or next order
-  const today = new Date().toISOString().split('T')[0];
+  // The realLatestOrder was delivered on April 10, 2026 (Friday)
+  // Weekly delivery schedule - next deliveries would be:
+  // - Tuesday April 14 (based on subscription pattern)
+  // - Friday April 17 (week after last delivery)
   const todayStr = '2026-04-13';
   
   return [
     { date: '2026-04-14', slot: 'Evening', orderTotal: 128.15, status: 'pending' },
+    { date: '2026-04-17', slot: 'Evening', orderTotal: 128.15, status: 'scheduled' },
   ];
 }

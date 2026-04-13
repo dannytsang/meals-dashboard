@@ -24,6 +24,8 @@ export default function MealsDashboardPage() {
   const [selectedItem, setSelectedItem] = useState<{name: string, price: number, quantity: number} | null>(null);
   const [productInfo, setProductInfo] = useState<{description: string, storage: string, nutrition: string, image: string} | null>(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
+  const [showCount, setShowCount] = useState(20);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   
@@ -129,6 +131,15 @@ export default function MealsDashboardPage() {
       setProductInfo({ description: 'Unable to fetch product information', storage: '', nutrition: '', image: '' });
     }
     setLoadingProduct(false);
+  };
+  
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSelectedCategories(new Set());
+    setMatchedFilter('all');
+    setSelectedMeal(null);
+    setMaxPrice(null);
+    setShowCount(20);
   };
   
   const displayItems = unmatchedItems.filter(item => {
@@ -607,7 +618,24 @@ export default function MealsDashboardPage() {
               </div>
               
               {/* Matched/Unmatched/Meal Filter */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center', alignItems: 'center' }}>
+                {(matchedFilter !== 'all' || selectedMeal || selectedCategories.size > 0 || maxPrice !== null) && (
+                  <button
+                    onClick={clearAllFilters}
+                    style={{
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: '8px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      border: '1px solid var(--border-color)',
+                      cursor: 'pointer',
+                      backgroundColor: 'var(--bg-tertiary)',
+                      color: 'var(--text-secondary)'
+                    }}
+                  >
+                    Clear All
+                  </button>
+                )}
                 <button
                   onClick={() => { setMatchedFilter(matchedFilter === 'matched' ? 'all' : 'matched'); setSelectedMeal(null); }}
                   style={{ 
@@ -717,10 +745,10 @@ export default function MealsDashboardPage() {
               {/* Items List */}
               <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                 <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
-                  {selectedCategories.size === 0 ? 'All' : Array.from(selectedCategories).join(', ')} Items ({displayItems.length})
+                  {selectedCategories.size === 0 && matchedFilter === 'all' && !selectedMeal ? 'All' : 'Filtered'} Items ({showCount > displayItems.length ? displayItems.length : showCount}/{displayItems.length})
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.25rem' }}>
-                  {displayItems.slice(0, 30).map((item, idx) => (
+                  {displayItems.slice(0, showCount).map((item, idx) => (
                     <div key={idx} 
                       onClick={() => { setSelectedItem({ name: item.name, price: item.price || 0, quantity: item.quantity }); fetchProductInfo(item.name); }}
                       style={{ 
@@ -749,10 +777,24 @@ export default function MealsDashboardPage() {
                     </div>
                   ))}
                 </div>
-                {displayItems.length > 20 && (
-                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.5rem' }}>
-                    +{displayItems.length - 20} more items
-                  </p>
+                {displayItems.length > showCount && (
+                  <button 
+                    onClick={() => setShowCount(prev => prev + 20)}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem',
+                      marginTop: '0.5rem',
+                      borderRadius: '6px',
+                      border: '1px dashed var(--border-color)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-secondary)',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Load {Math.min(20, displayItems.length - showCount)} more ({displayItems.length - showCount} remaining)
+                  </button>
                 )}
               </div>
             </div>
