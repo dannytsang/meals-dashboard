@@ -21,6 +21,7 @@ export default function MealsDashboardPage() {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   
   useEffect(() => {
     const checkWidth = () => setIsDesktop(window.innerWidth >= 1024);
@@ -48,9 +49,14 @@ export default function MealsDashboardPage() {
 
   const categories = Object.keys(itemsByCategory).sort();
   
-  const displayItems = selectedCategory 
-    ? unmatchedItems.filter(item => (item.category || 'Pantry') === selectedCategory)
-    : unmatchedItems;
+  // Get max price from items
+  const maxItemPrice = unmatchedItems.length > 0 ? Math.max(...unmatchedItems.map(i => i.price || 0)) : 10;
+  
+  const displayItems = unmatchedItems.filter(item => {
+    const catMatch = !selectedCategory || (item.category || 'Pantry') === selectedCategory;
+    const priceMatch = maxPrice === null || (item.price || 0) <= maxPrice;
+    return catMatch && priceMatch;
+  });
 
   // Group coverage by date
   const coverageByDate: Record<string, typeof coverage> = {};
@@ -436,6 +442,34 @@ export default function MealsDashboardPage() {
                 ))}
               </div>
               
+              {/* Price Filter */}
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '600' }}>
+                    Max Price
+                  </p>
+                  <p style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                    {maxPrice !== null ? `£${maxPrice.toFixed(2)}` : 'Any'}
+                  </p>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max={Math.ceil(maxItemPrice)}
+                  step="0.50"
+                  value={maxPrice !== null ? maxPrice : Math.ceil(maxItemPrice)}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setMaxPrice(val >= Math.ceil(maxItemPrice) ? null : val);
+                  }}
+                  style={{ width: '100%', cursor: 'pointer' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  <span>£0</span>
+                  <span>£{Math.ceil(maxItemPrice)}</span>
+                </div>
+              </div>
+              
               {/* Items List */}
               <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                 <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
@@ -460,7 +494,12 @@ export default function MealsDashboardPage() {
                         }} />
                         <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '500' }}>{item.name}</span>
                       </div>
-                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>×{item.quantity}</span>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>×{item.quantity}</span>
+                        {item.price !== undefined && (
+                          <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>£{item.price.toFixed(2)}</p>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
