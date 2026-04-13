@@ -83,18 +83,38 @@ export function transformCachedOrder(order: CachedOrder): TescoReceipt {
       daysRemaining: item.name.toLowerCase().includes('berry') || 
                      item.name.toLowerCase().includes('lettuce') ? 2 : 5,
     }));
-
+  
+  // Map items with categories
+  const getCategory = (itemName: string): string => {
+    const name = itemName.toLowerCase();
+    if (name.includes('chicken') || name.includes('beef') || name.includes('pork') || 
+        name.includes('gammon') || name.includes('steak') || name.includes('bacon') || 
+        name.includes('ham') || name.includes('sausage')) return 'Meat';
+    if (name.includes('milk') || name.includes('yoghurt') || name.includes('cheese') || 
+        name.includes('cream') || name.includes('butter') || name.includes('eggs')) return 'Dairy';
+    if (name.includes('strawberr') || name.includes('raspberr') || name.includes('blueberr') || 
+        name.includes('blackberr') || name.includes('grape') || name.includes('tomato') || 
+        name.includes('cucumber') || name.includes('celery') || name.includes('pepper') || 
+        name.includes('lettuce') || name.includes('potato') || name.includes('broccoli')) return 'Fresh';
+    if (name.includes('frozen') || name.includes('microwave')) return 'Frozen';
+    if (name.includes('bread') || name.includes('pizza') || name.includes('pasta') || 
+        name.includes('biscuit')) return 'Bakery';
+    if (name.includes('juice') || name.includes('drink')) return 'Beverages';
+    return 'Pantry';
+  };
+  
   return {
     orderNumber: order.order_number || 'Unknown',
     deliveryDate: order.delivery_date || order.email_date,
-    deliverySlot: 'Evening', // Not available in cache
+    deliverySlot: 'Evening',
     orderTotal: totalPrice,
     items: order.items.map(item => ({
       name: item.name,
       quantity: item.quantity,
       price: item.price,
+      category: getCategory(item.name),
     })),
-    substitutions: [], // Would need to fetch from separate source
+    substitutions: [],
     unavailable: [],
     shortLifeItems,
   };
