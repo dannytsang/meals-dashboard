@@ -20,7 +20,8 @@ export default function MealsDashboardPage() {
 
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
-  const [showOnlyUnmatched, setShowOnlyUnmatched] = useState(false);
+  const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
+  const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   
@@ -66,11 +67,29 @@ export default function MealsDashboardPage() {
   // Get max price from items
   const maxItemPrice = unmatchedItems.length > 0 ? Math.max(...unmatchedItems.map(i => i.price || 0)) : 10;
   
+  // Get matched items for a specific meal
+  const getMatchedItemsForMeal = (mealContent: string) => {
+    const mealCoverage = coverage.find(c => c.meal.content === mealContent);
+    return mealCoverage?.matchedItems || [];
+  };
+  
   const displayItems = unmatchedItems.filter(item => {
     const catMatch = selectedCategories.size === 0 || selectedCategories.has(item.category || 'Pantry');
     const priceMatch = maxPrice === null || (item.price || 0) <= maxPrice;
-    const unmatchedMatch = !showOnlyUnmatched || trulyUnmatchedItems.includes(item);
-    return catMatch && priceMatch && unmatchedMatch;
+    
+    // Matched/unmatched filter
+    const isUnmatched = trulyUnmatchedItems.includes(item);
+    const isMatched = !isUnmatched;
+    const matchedMatch = matchedFilter === 'all' || 
+      (matchedFilter === 'matched' && isMatched) || 
+      (matchedFilter === 'unmatched' && isUnmatched);
+    
+    // Meal filter - if a meal is selected, show only items that match that meal
+    const mealMatch = !selectedMeal || getMatchedItemsForMeal(selectedMeal).some(m => 
+      m.toLowerCase() === item.name.toLowerCase() || item.name.toLowerCase().includes(m.toLowerCase())
+    );
+    
+    return catMatch && priceMatch && matchedMatch && mealMatch;
   });
 
   // Group coverage by date
@@ -197,7 +216,8 @@ export default function MealsDashboardPage() {
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Meals Covered</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{covered}/{coverage.length}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)', cursor: 'pointer' }} onClick={() => { setMatchedFilter(matchedFilter === 'matched' ? 'all' : 'matched'); setSelectedMeal(null); }}>{covered}/{coverage.length}</p>
+            {matchedFilter === 'matched' && <p style={{ fontSize: '9px', color: 'var(--accent-emerald)', fontWeight: '600', marginTop: '2px' }}>Filtered</p>}
           </div>
 
           <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
@@ -207,7 +227,8 @@ export default function MealsDashboardPage() {
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unmatched</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{unmatchedItems.length}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)', cursor: 'pointer' }} onClick={() => { setMatchedFilter(matchedFilter === 'unmatched' ? 'all' : 'unmatched'); setSelectedMeal(null); }}>{unmatchedItems.length}</p>
+            {matchedFilter === 'unmatched' && <p style={{ fontSize: '9px', color: 'var(--accent-rose)', fontWeight: '600', marginTop: '2px' }}>Filtered</p>}
           </div>
 
           <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
@@ -398,18 +419,23 @@ export default function MealsDashboardPage() {
                                     verticalAlign: 'middle' as const
                                   }}>
                                     {meal ? (
-                                      <div style={{ 
-                                        padding: '0.75rem 0.75rem',
-                                        borderRadius: '6px',
-                                        backgroundColor: barColor,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '0.35rem',
-                                        minHeight: '80px',
-                                        boxSizing: 'border-box'
-                                      }}>
+                                      <div 
+                                        onClick={() => setSelectedMeal(selectedMeal === meal.meal.content ? null : meal.meal.content)}
+                                        style={{ 
+                                          padding: '0.75rem 0.75rem',
+                                          borderRadius: '6px',
+                                          backgroundColor: barColor,
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          gap: '0.35rem',
+                                          minHeight: '80px',
+                                          boxSizing: 'border-box',
+                                          cursor: 'pointer',
+                                          outline: selectedMeal === meal.meal.content ? '3px solid white' : 'none',
+                                          outlineOffset: '2px'
+                                        }}>
                                         <span style={{ 
                                           fontSize: '12px', 
                                           fontWeight: '600', 
@@ -459,7 +485,7 @@ export default function MealsDashboardPage() {
               {/* Category Pills */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center' }}>
                 <button
-                  onClick={() => setSelectedCategories(new Set())}
+                  onClick={() => { setSelectedCategories(new Set()); setMatchedFilter('all'); setSelectedMeal(null); }}
                   style={{ 
                     padding: '0.4rem 0.8rem', 
                     borderRadius: '20px', 
@@ -468,9 +494,9 @@ export default function MealsDashboardPage() {
                     border: '1px solid',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
-                    backgroundColor: selectedCategories.size === 0 ? 'var(--accent-blue)' : 'var(--bg-tertiary)',
-                    borderColor: selectedCategories.size === 0 ? 'var(--accent-blue)' : 'var(--border-color)',
-                    color: selectedCategories.size === 0 ? 'white' : 'var(--text-secondary)'
+                    backgroundColor: selectedCategories.size === 0 && matchedFilter === 'all' && !selectedMeal ? 'var(--accent-blue)' : 'var(--bg-tertiary)',
+                    borderColor: selectedCategories.size === 0 && matchedFilter === 'all' && !selectedMeal ? 'var(--accent-blue)' : 'var(--border-color)',
+                    color: selectedCategories.size === 0 && matchedFilter === 'all' && !selectedMeal ? 'white' : 'var(--text-secondary)'
                   }}
                 >
                   All
@@ -503,24 +529,77 @@ export default function MealsDashboardPage() {
                     {cat} ({itemsByCategory[cat]?.length || 0})
                   </button>
                 ))}
+              </div>
+              
+              {/* Matched/Unmatched/Meal Filter */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center' }}>
                 <button
-                  onClick={() => setShowOnlyUnmatched(!showOnlyUnmatched)}
+                  onClick={() => { setMatchedFilter(matchedFilter === 'matched' ? 'all' : 'matched'); setSelectedMeal(null); }}
                   style={{ 
                     padding: '0.4rem 0.8rem', 
-                    borderRadius: '20px', 
+                    borderRadius: '8px', 
                     fontSize: '11px',
                     fontWeight: '600',
-                    border: '1px solid',
+                    border: '2px solid',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
-                    backgroundColor: showOnlyUnmatched ? 'var(--accent-rose)' : 'var(--bg-tertiary)',
-                    borderColor: showOnlyUnmatched ? 'var(--accent-rose)' : 'var(--border-color)',
-                    color: showOnlyUnmatched ? 'white' : 'var(--text-secondary)'
+                    backgroundColor: matchedFilter === 'matched' ? 'var(--accent-emerald)' : 'transparent',
+                    borderColor: matchedFilter === 'matched' ? 'var(--accent-emerald)' : 'var(--accent-emerald)',
+                    color: matchedFilter === 'matched' ? 'white' : 'var(--accent-emerald)'
                   }}
                 >
-                  Unmatched ({trulyUnmatchedItems.length})
+                  ✓ Matched ({unmatchedItems.length - trulyUnmatchedItems.length})
+                </button>
+                <button
+                  onClick={() => { setMatchedFilter(matchedFilter === 'unmatched' ? 'all' : 'unmatched'); setSelectedMeal(null); }}
+                  style={{ 
+                    padding: '0.4rem 0.8rem', 
+                    borderRadius: '8px', 
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    border: '2px dashed',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    backgroundColor: matchedFilter === 'unmatched' ? 'var(--accent-rose)' : 'transparent',
+                    borderColor: matchedFilter === 'unmatched' ? 'var(--accent-rose)' : 'var(--accent-rose)',
+                    color: matchedFilter === 'unmatched' ? 'white' : 'var(--accent-rose)'
+                  }}
+                >
+                  ✗ Unmatched ({trulyUnmatchedItems.length})
                 </button>
               </div>
+              
+              {/* Active Meal Filter Indicator */}
+              {selectedMeal && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Filtering by:</span>
+                  <span style={{ 
+                    padding: '0.25rem 0.6rem', 
+                    borderRadius: '6px', 
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    backgroundColor: 'var(--accent-emerald)',
+                    color: 'white'
+                  }}>
+                    {selectedMeal}
+                  </span>
+                  <button 
+                    onClick={() => setSelectedMeal(null)}
+                    style={{ 
+                      padding: '0.2rem 0.4rem', 
+                      borderRadius: '4px', 
+                      fontSize: '10px',
+                      fontWeight: '600',
+                      backgroundColor: 'var(--bg-tertiary)',
+                      color: 'var(--text-secondary)',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
               
               {/* Category Legend */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem', padding: '0.5rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px', justifyContent: 'center' }}>
