@@ -20,6 +20,7 @@ export default function MealsDashboardPage() {
   });
 
   const [isDesktop, setIsDesktop] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   useEffect(() => {
     const checkWidth = () => setIsDesktop(window.innerWidth >= 1024);
@@ -35,12 +36,22 @@ export default function MealsDashboardPage() {
   const summary = calculateCoverageSummary(coverage);
   
   const covered = coverage.filter(c => c.status === 'covered').length;
-  const unmatchedItems = receipt 
-    ? receipt.items.filter(item => {
-        const itemLower = item.name.toLowerCase();
-        return !coverage.some(c => c.meal.content.toLowerCase().includes(itemLower));
-      }).slice(0, 10)
-    : [];
+  const unmatchedItems = receipt?.items || [];
+
+  // Group items by category
+  const itemsByCategory: Record<string, typeof unmatchedItems> = {};
+  unmatchedItems.forEach(item => {
+    const cat = item.category || 'Pantry';
+    if (!itemsByCategory[cat]) itemsByCategory[cat] = [];
+    itemsByCategory[cat].push(item);
+  });
+
+  const categories = Object.keys(itemsByCategory).sort();
+  
+  // Filter to show items in selected category (or all unmatched if none selected)
+  const displayItems = selectedCategory 
+    ? unmatchedItems.filter(item => (item.category || 'Pantry') === selectedCategory)
+    : unmatchedItems;
 
   // Group coverage by date
   const coverageByDate: Record<string, typeof coverage> = {};
@@ -51,8 +62,8 @@ export default function MealsDashboardPage() {
   });
   
   // Always show full week (Mon-Sun)
-  const startDate = '2026-04-13'; // Monday
-  const endDate = '2026-04-19';   // Sunday
+  const startDate = '2026-04-13';
+  const endDate = '2026-04-19';
   
   const days: { date: string; isToday: boolean }[] = [];
   const current = new Date(startDate);
@@ -69,11 +80,20 @@ export default function MealsDashboardPage() {
     return 'var(--accent-rose)';
   };
 
-  // Layout styles
   const cardStyle = {
     backgroundColor: 'var(--bg-secondary)',
     border: '1px solid var(--border-color)',
     borderRadius: '12px',
+  };
+
+  const categoryColors: Record<string, string> = {
+    Fresh: 'var(--accent-emerald)',
+    Dairy: 'var(--accent-blue)',
+    Meat: 'var(--accent-rose)',
+    Bakery: 'var(--accent-amber)',
+    Frozen: 'var(--accent-cyan)',
+    Pantry: 'var(--accent-purple)',
+    Beverages: 'var(--accent-pink)',
   };
 
   return (
@@ -91,102 +111,62 @@ export default function MealsDashboardPage() {
       {/* Main Content */}
       <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem 1rem' }}>
         
-        {/* Stats Row */}
+        {/* Stats Row - 5 stats in a row */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.5rem' }}>
-          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' as const }}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <div style={{ 
-                width: '40px', 
-                height: '40px', 
-                borderRadius: '10px', // Match card corners
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                backgroundColor: 'var(--accent-emerald-bg)' 
-              }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Order total</p>
-            <p style={{ fontSize: '22px', fontWeight: 'bold', color: 'var(--text-primary)' }}>£{receipt?.orderTotal.toFixed(2) || '—'}</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>ORDER TOTAL</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>£{receipt?.orderTotal.toFixed(2) || '—'}</p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' as const }}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <div style={{ 
-                width: '40px', 
-                height: '40px', 
-                borderRadius: '10px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                backgroundColor: 'var(--accent-blue-bg)' 
-              }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-blue-bg)' }}>
                 <Calendar style={{ width: '20px', height: '20px', color: 'var(--accent-blue)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Delivery</p>
-            <p style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>DELIVERY</p>
+            <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {deliveries[0] ? new Date(deliveries[0].date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}
             </p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' as const }}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <div style={{ 
-                width: '40px', 
-                height: '40px', 
-                borderRadius: '10px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                backgroundColor: 'var(--accent-emerald-bg)' 
-              }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Meals covered</p>
-            <p style={{ fontSize: '22px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{covered}/{coverage.length}</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>MEALS COVERED</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{covered}/{coverage.length}</p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' as const }}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <div style={{ 
-                width: '40px', 
-                height: '40px', 
-                borderRadius: '10px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                backgroundColor: 'var(--accent-rose-bg)' 
-              }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-rose-bg)' }}>
                 <X style={{ width: '20px', height: '20px', color: 'var(--accent-rose)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Unmatched</p>
-            <p style={{ fontSize: '22px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{unmatchedItems.length}</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>UNMATCHED</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{unmatchedItems.length}</p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' as const }}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)', minWidth: '140px', textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-              <div style={{ 
-                width: '40px', 
-                height: '40px', 
-                borderRadius: '10px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                backgroundColor: summary.coveragePercentage >= 80 ? 'var(--accent-emerald-bg)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' 
-              }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: summary.coveragePercentage >= 80 ? 'var(--accent-emerald-bg)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' }}>
                 <TrendingUp style={{ width: '20px', height: '20px', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Coverage</p>
-            <p style={{ fontSize: '22px', fontWeight: 'bold', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{summary.coveragePercentage}%</p>
+            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>COVERAGE</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{summary.coveragePercentage}%</p>
           </div>
         </div>
 
-        {/* Two Column Layout - Equal height */}
+        {/* Two Column Layout */}
         <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' as const : 'column' as const, gap: '1.5rem', alignItems: 'stretch' as const }}>
           
           {/* Left Column - Week Calendar */}
@@ -213,7 +193,7 @@ export default function MealsDashboardPage() {
                       textAlign: 'center' as const,
                       padding: '0.75rem 0.5rem',
                       borderRadius: '10px',
-                      backgroundColor: isToday ? `${dayColor}20` : hasMeals ? 'var(--bg-tertiary)' : 'var(--bg-tertiary)',
+                      backgroundColor: isToday ? `${dayColor}20` : 'var(--bg-tertiary)',
                       border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
                     }}>
                       <p style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
@@ -342,37 +322,95 @@ export default function MealsDashboardPage() {
           {/* Right Column */}
           <div style={{ flex: isDesktop ? '1 1 35%' : '0 0 auto', display: 'flex', flexDirection: 'column' as const, gap: '1rem' }}>
             
-            {/* Unmatched Groceries */}
-            {unmatchedItems.length > 0 && (
-              <div className="card" style={{ padding: '1rem' }}>
-                <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>
-                  📦 UNMATCHED ({unmatchedItems.length})
-                </h2>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
-                  {unmatchedItems.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.6rem', borderRadius: '6px', backgroundColor: 'var(--bg-tertiary)' }}>
-                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--text-muted)' }} />
-                      <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{item.name}</span>
+            {/* Categories with Filter */}
+            <div style={{ ...cardStyle, padding: '1rem' }}>
+              <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>🛒 ORDER ITEMS BY CATEGORY</h2>
+              
+              {/* Category Pills */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem', justifyContent: 'center' }}>
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  style={{ 
+                    padding: '0.4rem 0.8rem', 
+                    borderRadius: '20px', 
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    border: '1px solid',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    backgroundColor: selectedCategory === null ? 'var(--accent-blue)' : 'var(--bg-tertiary)',
+                    borderColor: selectedCategory === null ? 'var(--accent-blue)' : 'var(--border-color)',
+                    color: selectedCategory === null ? 'white' : 'var(--text-secondary)'
+                  }}
+                >
+                  All ({unmatchedItems.length})
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                    style={{ 
+                      padding: '0.4rem 0.8rem', 
+                      borderRadius: '20px', 
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      border: '1px solid',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      backgroundColor: selectedCategory === cat ? (categoryColors[cat] || 'var(--accent-blue)') : 'var(--bg-tertiary)',
+                      borderColor: selectedCategory === cat ? (categoryColors[cat] || 'var(--accent-blue)') : 'var(--border-color)',
+                      color: selectedCategory === cat ? 'white' : 'var(--text-secondary)'
+                    }}
+                  >
+                    {cat} ({itemsByCategory[cat]?.length || 0})
+                  </button>
+                ))}
+              </div>
+              
+              {/* Items List */}
+              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                  {selectedCategory || 'All'} Items ({displayItems.length})
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.4rem' }}>
+                  {displayItems.slice(0, 20).map((item, idx) => (
+                    <div key={idx} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.6rem', 
+                      borderRadius: '8px', 
+                      backgroundColor: 'var(--bg-tertiary)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ 
+                          width: '8px', 
+                          height: '8px', 
+                          borderRadius: '50%', 
+                          backgroundColor: categoryColors[item.category || 'Pantry'] || 'var(--text-muted)'
+                        }} />
+                        <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{item.name}</span>
+                      </div>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>×{item.quantity}</span>
                     </div>
                   ))}
                 </div>
+                {displayItems.length > 20 && (
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>
+                    +{displayItems.length - 20} more items
+                  </p>
+                )}
               </div>
-            )}
-
-            {/* Grocery Categories */}
-            <div className="card" style={{ padding: '1rem', flex: 1 }}>
-              <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>🛒 CATEGORIES</h2>
-              <GroceryMatch coverage={filteredCoverage} receipt={receipt} />
             </div>
 
             {/* Trends */}
-            <div className="card" style={{ padding: '1rem' }}>
+            <div style={{ ...cardStyle, padding: '1rem' }}>
               <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>📊 TRENDS</h2>
               <HistoricalTrends currentCoverage={summary.coveragePercentage} />
             </div>
 
             {/* Chart */}
-            <div className="card" style={{ padding: '1rem' }}>
+            <div style={{ ...cardStyle, padding: '1rem' }}>
               <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>📈 CHART</h2>
               <Chart coverage={filteredCoverage} />
             </div>
