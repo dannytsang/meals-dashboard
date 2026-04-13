@@ -748,7 +748,7 @@ export default function MealsDashboardPage() {
                         <span style={{ fontSize: '11px', color: 'var(--text-primary)', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                        <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>×{item.quantity}</span>
+                        <span style={{ fontSize: '9px', color: 'var(--text-secondary)' }}>×{item.quantity} @ £{(item.price || 0).toFixed(2)}</span>
                         <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-primary)' }}>£{((item.price || 0) * item.quantity).toFixed(2)}</span>
                       </div>
                     </div>
