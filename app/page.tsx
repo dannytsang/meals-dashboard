@@ -7,6 +7,8 @@ import { Chart } from '@/components/chart';
 import { ShopSelector } from '@/components/shop-selector';
 import { StatusFilter } from '@/components/status-filter';
 import { MealListInteractive } from '@/components/meal-list-interactive';
+import { MealCalendar } from '@/components/meal-calendar';
+import { ExpiryTimeline } from '@/components/expiry-timeline';
 import { dashboardConfig } from '@/lib/config';
 import { calculateCoverageSummary, getUpcomingDeliveries, TescoReceipt } from '@/lib/meals-data';
 import { 
@@ -64,15 +66,7 @@ export default function MealsDashboardPage() {
 
   const receipt = getReceiptForShop(state.selectedShop);
   const deliveries = getUpcomingDeliveries();
-
-  // Calculate coverage based on selected shop
-  const getCoverageForShop = () => {
-    if (!receipt) return realCoverage; // fallback to default
-    // For now, use the realCoverage which is based on current shop
-    return realCoverage;
-  };
-
-  const coverage = getCoverageForShop();
+  const coverage = realCoverage; // Using realCoverage for now
   const filteredCoverage = filterCoverage(coverage, state.statusFilter);
   const summary = calculateCoverageSummary(coverage);
   
@@ -114,8 +108,8 @@ export default function MealsDashboardPage() {
           />
         </div>
 
-        {/* Top Row: Coverage Overview & Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Top Row: Coverage Overview & Delivery Info */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-1">
             <CoverageCard summary={summary} />
           </div>
@@ -126,12 +120,17 @@ export default function MealsDashboardPage() {
             />
           </div>
           <div className="lg:col-span-1">
-            <QuickStatsCard coverage={coverage} receipt={receipt} />
+            <ExpiryTimeline receipt={receipt} />
           </div>
         </div>
 
+        {/* Calendar View */}
+        <div className="mb-6">
+          <MealCalendar coverage={filteredCoverage} />
+        </div>
+
         {/* Middle Row: Chart */}
-        <div className="mb-8">
+        <div className="mb-6">
           <Chart coverage={filteredCoverage} />
         </div>
 
@@ -149,60 +148,6 @@ export default function MealsDashboardPage() {
           </div>
         </div>
       </main>
-    </div>
-  );
-}
-
-function QuickStatsCard({ coverage, receipt }: { coverage: typeof realCoverage; receipt: TescoReceipt | null }) {
-  const familyMeals = coverage.filter(c => 
-    c.meal.labels.includes('adult') && c.meal.labels.includes('children')
-  ).length;
-  const splitMeals = coverage.filter(c => 
-    c.meal.labels.includes('adult') !== c.meal.labels.includes('children')
-  ).length;
-  const urgentItems = receipt?.shortLifeItems.filter(i => i.daysRemaining <= 2).length || 0;
-  const totalValue = receipt?.items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
-  
-  return (
-    <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-      <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">
-        Quick Stats
-      </h3>
-      
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-3 bg-slate-750 rounded-lg">
-          <span className="text-slate-300">Family meals</span>
-          <span className="text-white font-bold">{familyMeals}</span>
-        </div>
-        
-        <div className="flex items-center justify-between p-3 bg-slate-750 rounded-lg">
-          <span className="text-slate-300">Split meals</span>
-          <span className="text-white font-bold">{splitMeals}</span>
-        </div>
-        
-        <div className={`flex items-center justify-between p-3 rounded-lg ${
-          urgentItems > 0 ? 'bg-rose-500/10 border border-rose-500/20' : 'bg-slate-750'
-        }`}>
-          <span className={urgentItems > 0 ? 'text-rose-400' : 'text-slate-300'}>
-            Urgent items
-          </span>
-          <span className={urgentItems > 0 ? 'text-rose-400 font-bold' : 'text-white font-bold'}>
-            {urgentItems}
-          </span>
-        </div>
-        
-        <div className="flex items-center justify-between p-3 bg-slate-750 rounded-lg">
-          <span className="text-slate-300">Order total</span>
-          <span className="text-white font-bold">£{totalValue.toFixed(2)}</span>
-        </div>
-        
-        <div className="flex items-center justify-between p-3 bg-slate-750 rounded-lg">
-          <span className="text-slate-300">Planned days</span>
-          <span className="text-white font-bold">
-            {new Set(coverage.map(c => c.meal.date)).size}
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
