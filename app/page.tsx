@@ -8,6 +8,7 @@ import { calculateCoverageSummary, getUpcomingDeliveries } from '@/lib/meals-dat
 import { realCoverage, realLatestOrder, transformCachedOrder } from '@/lib/real-data';
 import { DashboardState, filterCoverage } from '@/lib/dashboard-state';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
+import { findProductInfo } from '@/lib/product-database';
 
 export default function MealsDashboardPage() {
   const [state] = useState<DashboardState>({
@@ -81,55 +82,31 @@ export default function MealsDashboardPage() {
     });
   };
   
-  // Fetch product info from Tesco
+  // Fetch product info from local database
   const fetchProductInfo = async (itemName: string) => {
     setLoadingProduct(true);
     setProductInfo(null);
-    try {
-      // Search Tesco for the product
-      const searchQuery = encodeURIComponent(itemName);
-      const searchUrl = `https://www.tesco.com/groceries/en-GB/search?query=${searchQuery}`;
-      
-      // Use a CORS proxy to fetch the search page
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(searchUrl)}`;
-      const response = await fetch(proxyUrl);
-      const html = await response.text();
-      
-      // Parse the HTML to find product links
-      const productLinkMatch = html.match(/href="(\/groceries\/en-GB\/products\/\d+)"/);
-      
-      if (productLinkMatch) {
-        const productUrl = `https://www.tesco.com${productLinkMatch[1]}`;
-        const productProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(productUrl)}`;
-        const productResponse = await fetch(productProxyUrl);
-        const productHtml = await productResponse.text();
-        
-        // Extract image
-        const imageMatch = productHtml.match(/"image":"([^"]+)"/) || productHtml.match(/<img[^>]+src="([^">]+tesco[^">]+)"/i);
-        const image = imageMatch ? imageMatch[1].replace(/\\&amp;/g, '&') : '';
-        
-        // Extract description
-        const descMatch = productHtml.match(/"description":"([^"]+)"/) || productHtml.match(/<p class="product-description"[^>]*>([^<]+)<\/p>/i);
-        const description = descMatch ? descMatch[1].replace(/\\&amp;/g, '&') : 'No description available';
-        
-        // Extract storage info
-        const storageMatch = productHtml.match(/(?:Storage and preparation|Keep refrigerated|Store in.*?):[^.]+\.?/i) ||
-                           productHtml.match(/"storageInstructions":"([^"]+)"/i);
-        const storage = storageMatch ? storageMatch[0].replace(/\\&amp;/g, '&') : 'No storage information available';
-        
-        // Extract nutrition - look for a table or JSON data
-        const nutritionMatch = productHtml.match(/"nutritions":\{[^}]+\}/) || 
-                              productHtml.match(/<table[^>]*class="[^"]*nutrition[^"]*"[^>]*>[\s\S]*?<\/table>/);
-        const nutrition = nutritionMatch ? 'Nutrition info available - click to view full details' : 'Nutritional information not available';
-        
-        setProductInfo({ description, storage, nutrition, image });
-      } else {
-        setProductInfo({ description: 'Product not found on Tesco', storage: '', nutrition: '', image: '' });
-      }
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      setProductInfo({ description: 'Unable to fetch product information', storage: '', nutrition: '', image: '' });
+    
+    // Simulate a brief loading for UX
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const product = findProductInfo(itemName);
+    if (product) {
+      setProductInfo({
+        description: product.description,
+        storage: product.storage,
+        nutrition: product.nutrition,
+        image: product.image
+      });
+    } else {
+      setProductInfo({
+        description: 'Product information not available in database.',
+        storage: 'Check packaging for storage instructions.',
+        nutrition: 'Nutrition information not available.',
+        image: ''
+      });
     }
+    
     setLoadingProduct(false);
   };
   
