@@ -125,18 +125,6 @@ export default function MealsDashboardPage() {
     Beverages: 'var(--accent-pink)',
   };
 
-  const statCardStyle = {
-    ...cardStyle,
-    padding: '1rem',
-    flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)',
-    minWidth: '140px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    justifyContent: 'center',
-    alignItems: 'center',
-    textAlign: 'center' as const,
-  };
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Header */}
@@ -152,57 +140,57 @@ export default function MealsDashboardPage() {
       {/* Main Content */}
       <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem 1rem' }}>
         
-        {/* Stats Row - 5 stats in a row */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.5rem' }}>
-          <div style={statCardStyle}>
+        {/* Stats Row - 5 stats in a row with fixed layout */}
+        <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '0.75rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>Order Total</p>
+            <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Order Total</p>
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>£{receipt?.orderTotal.toFixed(2) || '—'}</p>
           </div>
 
-          <div style={statCardStyle}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-blue-bg)' }}>
                 <Calendar style={{ width: '20px', height: '20px', color: 'var(--accent-blue)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>Delivery</p>
+            <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Delivery</p>
             <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {deliveries[0] ? new Date(deliveries[0].date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}
             </p>
           </div>
 
-          <div style={statCardStyle}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>Meals Covered</p>
+            <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Meals Covered</p>
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{covered}/{coverage.length}</p>
           </div>
 
-          <div style={statCardStyle}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-rose-bg)' }}>
                 <X style={{ width: '20px', height: '20px', color: 'var(--accent-rose)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>Unmatched</p>
+            <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unmatched</p>
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{unmatchedItems.length}</p>
           </div>
 
-          <div style={statCardStyle}>
+          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: summary.coveragePercentage >= 80 ? 'var(--accent-emerald-bg)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' }}>
                 <TrendingUp style={{ width: '20px', height: '20px', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }} />
               </div>
             </div>
-            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>Coverage</p>
+            <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Coverage</p>
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{summary.coveragePercentage}%</p>
           </div>
         </div>
@@ -221,15 +209,15 @@ export default function MealsDashboardPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
                   <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--accent-emerald)' }} />
-                  <span style={{ color: 'var(--text-secondary)' }}>Covered</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>Covered</span>
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
                   <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--accent-amber)' }} />
-                  <span style={{ color: 'var(--text-secondary)' }}>Partial</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>Partial</span>
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
                   <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--accent-rose)' }} />
-                  <span style={{ color: 'var(--text-secondary)' }}>Missing</span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>Missing</span>
                 </span>
               </div>
 
@@ -250,16 +238,16 @@ export default function MealsDashboardPage() {
                       textAlign: 'center' as const,
                       padding: '0.75rem 0.5rem',
                       borderRadius: '10px',
-                      backgroundColor: isToday ? `${dayColor}20` : 'var(--bg-tertiary)',
+                      backgroundColor: isToday ? `${dayColor}25` : 'var(--bg-tertiary)',
                       border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
                     }}>
-                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                      <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: '4px' }}>
                         {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
                       </p>
-                      <p style={{ fontSize: '18px', fontWeight: 'bold', color: hasMeals ? dayColor : 'var(--text-muted)' }}>
+                      <p style={{ fontSize: '22px', fontWeight: 'bold', color: hasMeals ? dayColor : 'var(--text-secondary)' }}>
                         {new Date(date).getDate()}
                       </p>
-                      <p style={{ fontSize: '10px', fontWeight: '500', color: hasMeals ? dayColor : 'var(--text-muted)', marginTop: '2px' }}>
+                      <p style={{ fontSize: '11px', fontWeight: '600', color: hasMeals ? dayColor : 'var(--text-secondary)', marginTop: '2px' }}>
                         {hasMeals ? `${avgPct}%` : '—'}
                       </p>
                     </div>
@@ -276,27 +264,27 @@ export default function MealsDashboardPage() {
                   <div key={mealType}>
                     {/* Meal Type Header - Clickable to expand/collapse */}
                     <div 
-                      onClick={() => toggleMealType(mealType)}
+                      onClick={() => hasMeals && toggleMealType(mealType)}
                       style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '0.5rem',
-                        padding: '0.75rem 0',
+                        padding: '1rem 0',
                         borderTop: '1px solid var(--border-color)',
                         cursor: hasMeals ? 'pointer' : 'default',
                         opacity: hasMeals ? 1 : 0.5
                       }}
                     >
                       {isCollapsed ? (
-                        <ChevronRight style={{ width: '16px', height: '16px', color: 'var(--text-muted)' }} />
+                        <ChevronRight style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
                       ) : (
-                        <ChevronDown style={{ width: '16px', height: '16px', color: 'var(--text-muted)' }} />
+                        <ChevronDown style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
                       )}
-                      <p style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                        {mealType} {hasMeals ? '' : '(no meals planned)'}
+                      <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                        {mealType}
                       </p>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                        {isCollapsed ? 'Expand' : 'Collapse'}
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: 'auto', fontWeight: '500' }}>
+                        {isCollapsed ? 'Show' : 'Hide'}
                       </span>
                     </div>
                     
@@ -346,8 +334,8 @@ export default function MealsDashboardPage() {
                                         {meal.status === 'covered' ? '✓' : meal.status === 'partial' ? '◧' : '✗'}
                                       </span>
                                       <p style={{ 
-                                        fontSize: '11px', 
-                                        fontWeight: '500', 
+                                        fontSize: '12px', 
+                                        fontWeight: '600', 
                                         color: 'var(--text-primary)', 
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
@@ -362,19 +350,19 @@ export default function MealsDashboardPage() {
                                         {meal.meal.labels.slice(0, 2).map((label: string, idx: number) => (
                                           <span 
                                             key={idx}
-                                            style={{ fontSize: '8px', padding: '1px 4px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+                                            style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontWeight: '500' }}
                                           >
                                             {label}
                                           </span>
                                         ))}
                                       </div>
                                     )}
-                                    <p style={{ fontSize: '9px', fontWeight: '500', color: getStatusColor(meal.status, meal.coverageScore) }}>
+                                    <p style={{ fontSize: '10px', fontWeight: '700', color: getStatusColor(meal.status, meal.coverageScore) }}>
                                       {meal.coverageScore}%
                                     </p>
                                   </>
                                 ) : (
-                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', fontSize: '14px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '500' }}>
                                     —
                                   </div>
                                 )}
@@ -405,7 +393,7 @@ export default function MealsDashboardPage() {
                     padding: '0.4rem 0.8rem', 
                     borderRadius: '20px', 
                     fontSize: '11px',
-                    fontWeight: '500',
+                    fontWeight: '600',
                     border: '1px solid',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
@@ -424,7 +412,7 @@ export default function MealsDashboardPage() {
                       padding: '0.4rem 0.8rem', 
                       borderRadius: '20px', 
                       fontSize: '11px',
-                      fontWeight: '500',
+                      fontWeight: '600',
                       border: '1px solid',
                       cursor: 'pointer',
                       transition: 'all 0.15s',
@@ -443,14 +431,14 @@ export default function MealsDashboardPage() {
                 {categories.map(cat => (
                   <span key={cat} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: categoryColors[cat] || 'var(--text-muted)' }} />
-                    <span style={{ color: 'var(--text-secondary)' }}>{cat}</span>
+                    <span style={{ color: 'var(--text-secondary)', fontWeight: '500' }}>{cat}</span>
                   </span>
                 ))}
               </div>
               
               {/* Items List */}
               <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
                   {selectedCategory || 'All'} Items ({displayItems.length})
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.4rem' }}>
@@ -470,14 +458,14 @@ export default function MealsDashboardPage() {
                           borderRadius: '50%', 
                           backgroundColor: categoryColors[item.category || 'Pantry'] || 'var(--text-muted)'
                         }} />
-                        <span style={{ fontSize: '12px', color: 'var(--text-primary)' }}>{item.name}</span>
+                        <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '500' }}>{item.name}</span>
                       </div>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>×{item.quantity}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>×{item.quantity}</span>
                     </div>
                   ))}
                 </div>
                 {displayItems.length > 20 && (
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.5rem' }}>
+                  <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.5rem' }}>
                     +{displayItems.length - 20} more items
                   </p>
                 )}
@@ -500,7 +488,7 @@ export default function MealsDashboardPage() {
       </main>
 
       {/* Footer */}
-      <footer style={{ textAlign: 'center', padding: '1rem', fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)' }}>
+      <footer style={{ textAlign: 'center', padding: '1rem', fontSize: '12px', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)' }}>
         Last updated: {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
       </footer>
     </div>
