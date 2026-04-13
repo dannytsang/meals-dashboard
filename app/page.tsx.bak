@@ -249,7 +249,7 @@ export default function MealsDashboardPage() {
 
               {/* Days Header */}
               <div style={{ display: 'grid', gridTemplateColumns: '50px repeat(7, 1fr)', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                <div style={{ width: '50px' }} />
+                <div /> {/* Spacer */}
                 {days.map(({ date, isToday }) => {
                   const dayCoverage = coverageByDate[date] || [];
                   const avgPct = dayCoverage.length > 0 
@@ -289,64 +289,57 @@ export default function MealsDashboardPage() {
                   <div key={mealType}>
                     {/* Meal Type Header */}
                     <div 
+                      onClick={() => hasMeals && toggleMealType(mealType)}
                       style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '0.5rem',
                         padding: '1rem 0',
                         borderTop: '1px solid var(--border-color)',
+                        cursor: hasMeals ? 'pointer' : 'default',
                         opacity: hasMeals ? 1 : 0.5
                       }}
                     >
+                      {isCollapsed ? (
+                        <ChevronRight style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
+                      ) : (
+                        <ChevronDown style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
+                      )}
                       <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
                         {mealType}
                       </p>
                       {!hasMeals && (
                         <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>(No meals)</span>
                       )}
-                      {hasMeals && (
-                        <>
-                          {isCollapsed ? (
-                            <ChevronRight style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
-                          ) : (
-                            <ChevronDown style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
-                          )}
-                          <span 
-                            onClick={() => toggleMealType(mealType)}
-                            style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: 'auto', fontWeight: '500', cursor: 'pointer' }}
-                          >
-                            {isCollapsed ? 'Show' : 'Hide'}
-                          </span>
-                        </>
-                      )}
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: 'auto', fontWeight: '500' }}>
+                        {isCollapsed ? 'Show' : 'Hide'}
+                      </span>
                     </div>
                     
                     {/* Meal Rows - Only show if not collapsed */}
                     {!isCollapsed && (
                       <div style={{ display: 'grid', gridTemplateColumns: '50px repeat(7, 1fr)', gap: '0.5rem', paddingBottom: '0.75rem' }}>
-                        <div style={{ width: '50px' }} />
-                        <div style={{ display: 'contents' }}>
-                          {days.map(({ date }) => {
-                            const dayMeals = (coverageByDate[date] || []).filter(c => {
-                              const m = c.meal.content.toLowerCase();
-                              if (mealType === 'breakfast') return m.includes('breakfast') || m.includes('cereal');
-                              if (mealType === 'lunch') return m.includes('lunch') || m.includes('sandwich');
-                              return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
-                            });
-                            
-                            const meal = dayMeals[0];
-                            
-                            return (
-                              <div key={date} style={{ 
-                                width: `${100 / 7}%`, 
-                                padding: '0.6rem 0.25rem', 
-                                borderRadius: '8px', 
-                                backgroundColor: 'var(--bg-tertiary)',
-                                display: 'flex',
-                                flexDirection: 'column' as const,
-                                justifyContent: 'center',
-                                minHeight: '65px'
-                              }}>
+                        <div /> {/* Spacer */}
+                        {days.map(({ date }) => {
+                          const dayMeals = (coverageByDate[date] || []).filter(c => {
+                            const m = c.meal.content.toLowerCase();
+                            if (mealType === 'breakfast') return m.includes('breakfast') || m.includes('cereal');
+                            if (mealType === 'lunch') return m.includes('lunch') || m.includes('sandwich');
+                            return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
+                          });
+                          
+                          const meal = dayMeals[0];
+                          
+                          return (
+                            <div key={date} style={{ 
+                              padding: '0.6rem 0.25rem', 
+                              borderRadius: '8px', 
+                              backgroundColor: 'var(--bg-tertiary)',
+                              display: 'flex',
+                              flexDirection: 'column' as const,
+                              justifyContent: 'center',
+                              minHeight: '65px'
+                            }}>
                                 {meal ? (
                                   <>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
