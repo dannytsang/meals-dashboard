@@ -866,7 +866,7 @@ export default function MealsDashboardPage() {
               </div>
             ) : productInfo ? (
               <div>
-                {productInfo.image && (
+                {productInfo.image ? (
                   <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                     <img 
                       src={productInfo.image} 
@@ -874,6 +874,11 @@ export default function MealsDashboardPage() {
                       style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px' }}
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', marginBottom: '1rem', padding: '2rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '48px' }}>📦</span>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Product image not available</p>
                   </div>
                 )}
                 
