@@ -21,6 +21,9 @@ export default function MealsDashboardPage() {
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<{name: string, price: number, quantity: number} | null>(null);
+  const [productInfo, setProductInfo] = useState<{description: string, storage: string, nutrition: string, image: string} | null>(null);
+  const [loadingProduct, setLoadingProduct] = useState(false);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   
@@ -74,6 +77,58 @@ export default function MealsDashboardPage() {
       const itemWords = item.name.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
       return itemWords.some(iw => mealWords.some(mw => mw.includes(iw) || iw.includes(mw)));
     });
+  };
+  
+  // Fetch product info from Tesco
+  const fetchProductInfo = async (itemName: string) => {
+    setLoadingProduct(true);
+    setProductInfo(null);
+    try {
+      // Search Tesco for the product
+      const searchQuery = encodeURIComponent(itemName);
+      const searchUrl = `https://www.tesco.com/groceries/en-GB/search?query=${searchQuery}`;
+      
+      // Use a CORS proxy to fetch the search page
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(searchUrl)}`;
+      const response = await fetch(proxyUrl);
+      const html = await response.text();
+      
+      // Parse the HTML to find product links
+      const productLinkMatch = html.match(/href="(\/groceries\/en-GB\/products\/\d+)"/);
+      
+      if (productLinkMatch) {
+        const productUrl = `https://www.tesco.com${productLinkMatch[1]}`;
+        const productProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(productUrl)}`;
+        const productResponse = await fetch(productProxyUrl);
+        const productHtml = await productResponse.text();
+        
+        // Extract image
+        const imageMatch = productHtml.match(/"image":"([^"]+)"/) || productHtml.match(/<img[^>]+src="([^">]+tesco[^">]+)"/i);
+        const image = imageMatch ? imageMatch[1].replace(/\\&amp;/g, '&') : '';
+        
+        // Extract description
+        const descMatch = productHtml.match(/"description":"([^"]+)"/) || productHtml.match(/<p class="product-description"[^>]*>([^<]+)<\/p>/i);
+        const description = descMatch ? descMatch[1].replace(/\\&amp;/g, '&') : 'No description available';
+        
+        // Extract storage info
+        const storageMatch = productHtml.match(/(?:Storage and preparation|Keep refrigerated|Store in.*?):[^.]+\.?/i) ||
+                           productHtml.match(/"storageInstructions":"([^"]+)"/i);
+        const storage = storageMatch ? storageMatch[0].replace(/\\&amp;/g, '&') : 'No storage information available';
+        
+        // Extract nutrition - look for a table or JSON data
+        const nutritionMatch = productHtml.match(/"nutritions":\{[^}]+\}/) || 
+                              productHtml.match(/<table[^>]*class="[^"]*nutrition[^"]*"[^>]*>[\s\S]*?<\/table>/);
+        const nutrition = nutritionMatch ? 'Nutrition info available - click to view full details' : 'Nutritional information not available';
+        
+        setProductInfo({ description, storage, nutrition, image });
+      } else {
+        setProductInfo({ description: 'Product not found on Tesco', storage: '', nutrition: '', image: '' });
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      setProductInfo({ description: 'Unable to fetch product information', storage: '', nutrition: '', image: '' });
+    }
+    setLoadingProduct(false);
   };
   
   const displayItems = unmatchedItems.filter(item => {
@@ -666,14 +721,17 @@ export default function MealsDashboardPage() {
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.25rem' }}>
                   {displayItems.slice(0, 30).map((item, idx) => (
-                    <div key={idx} style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
-                      padding: '0.3rem 0.5rem', 
-                      borderRadius: '6px', 
-                      backgroundColor: 'var(--bg-tertiary)'
-                    }}>
+                    <div key={idx} 
+                      onClick={() => { setSelectedItem({ name: item.name, price: item.price || 0, quantity: item.quantity }); fetchProductInfo(item.name); }}
+                      style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        padding: '0.3rem 0.5rem', 
+                        borderRadius: '6px', 
+                        backgroundColor: 'var(--bg-tertiary)',
+                        cursor: 'pointer'
+                      }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 1, minWidth: 0 }}>
                         <span style={{ 
                           width: '6px', 
@@ -684,8 +742,9 @@ export default function MealsDashboardPage() {
                         }} />
                         <span style={{ fontSize: '11px', color: 'var(--text-primary)', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                       </div>
-                      <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '0.5rem' }}>
+                      <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '0.5rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                         <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>×{item.quantity}</span>
+                        <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-primary)' }}>£{((item.price || 0) * item.quantity).toFixed(2)}</span>
                       </div>
                     </div>
                   ))}
@@ -711,6 +770,96 @@ export default function MealsDashboardPage() {
       <footer style={{ textAlign: 'center', padding: '1rem', fontSize: '12px', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)' }}>
         Last updated: {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
       </footer>
+      
+      {/* Product Modal */}
+      {selectedItem && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem'
+          }}
+          onClick={() => { setSelectedItem(null); setProductInfo(null); }}
+        >
+          <div 
+            style={{
+              backgroundColor: 'var(--bg-secondary)',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '80vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0, flex: 1 }}>{selectedItem.name}</h3>
+              <button 
+                onClick={() => { setSelectedItem(null); setProductInfo(null); }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  padding: '0 0 0 1rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            {loadingProduct ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <p style={{ color: 'var(--text-secondary)' }}>Loading product info...</p>
+              </div>
+            ) : productInfo ? (
+              <div>
+                {productInfo.image && (
+                  <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                    <img 
+                      src={productInfo.image} 
+                      alt={selectedItem.name}
+                      style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px' }}
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </div>
+                )}
+                
+                <div style={{ marginBottom: '1rem' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Description</h4>
+                  <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{productInfo.description}</p>
+                </div>
+                
+                {productInfo.storage && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Storage & Preparation</h4>
+                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{productInfo.storage}</p>
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Price</span>
+                  <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>£{(selectedItem.price * selectedItem.quantity).toFixed(2)}</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <p style={{ color: 'var(--text-secondary)' }}>Unable to load product information.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
