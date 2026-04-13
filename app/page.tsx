@@ -290,14 +290,12 @@ export default function MealsDashboardPage() {
                               {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
                             </span>
                             <span style={{ 
-                              fontSize: '12px', 
+                              fontSize: '14px', 
                               fontWeight: 'bold', 
                               color: hasMeals ? 'var(--text-primary)' : 'var(--text-secondary)',
-                              position: 'absolute' as const,
-                              top: '2px',
-                              right: '4px'
+                              display: 'block'
                             }}>
-                              {new Date(date).getDate()}
+                              {new Date(date).getDate()} {new Date(date).toLocaleDateString('en-GB', { month: 'short' }).toUpperCase()}
                             </span>
                           </th>
                         );
@@ -371,31 +369,35 @@ export default function MealsDashboardPage() {
                                 
                                 return (
                                   <td key={date} style={{ 
-                                    padding: '0.4rem 0.35rem',
+                                    padding: '0.75rem 0.5rem',
                                     borderLeft: '1px solid var(--border-color)',
                                     borderBottom: '1px solid var(--border-color)',
                                     verticalAlign: 'middle' as const
                                   }}>
                                     {meal ? (
                                       <div style={{ 
-                                        padding: '0.5rem 0.6rem',
+                                        padding: '0.75rem 0.75rem',
                                         borderRadius: '6px',
                                         backgroundColor: barColor,
                                         display: 'flex',
+                                        flexDirection: 'column',
                                         alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        gap: '0.5rem',
-                                        minWidth: '0'
+                                        justifyContent: 'center',
+                                        gap: '0.35rem',
+                                        minHeight: '80px',
+                                        boxSizing: 'border-box'
                                       }}>
                                         <span style={{ 
-                                          fontSize: '11px', 
+                                          fontSize: '12px', 
                                           fontWeight: '600', 
                                           color: 'white',
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                          whiteSpace: 'nowrap',
-                                          flex: 1
-                                        }} title={meal.meal.content}>
+                                          textAlign: 'center',
+                                          lineHeight: '1.2',
+                                          display: '-webkit-box',
+                                          WebkitLineClamp: 2,
+                                          WebkitBoxOrient: 'vertical',
+                                          overflow: 'hidden'
+                                        }}>
                                           {meal.meal.content}
                                         </span>
                                         <span style={{ 
@@ -408,7 +410,7 @@ export default function MealsDashboardPage() {
                                         </span>
                                       </div>
                                     ) : (
-                                      <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>—</span>
+                                      <span style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>—</span>
                                     )}
                                   </td>
                                 );
