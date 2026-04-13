@@ -20,6 +20,7 @@ export default function MealsDashboardPage() {
 
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showOnlyUnmatched, setShowOnlyUnmatched] = useState(false);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   
@@ -39,6 +40,19 @@ export default function MealsDashboardPage() {
   const covered = coverage.filter(c => c.status === 'covered').length;
   const unmatchedItems = receipt?.items || [];
 
+  // Identify unmatched items (items that don't match any meal)
+  const matchedItemNames = new Set<string>();
+  coverage.forEach(c => {
+    matchedItemNames.add(c.meal.content.toLowerCase());
+    c.matchedItems.forEach(name => matchedItemNames.add(name.toLowerCase()));
+  });
+  
+  const trulyUnmatchedItems = unmatchedItems.filter(item => {
+    const itemLower = item.name.toLowerCase();
+    return !matchedItemNames.has(itemLower) && 
+           !coverage.some(c => c.meal.content.toLowerCase().includes(itemLower));
+  });
+
   // Group items by category
   const itemsByCategory: Record<string, typeof unmatchedItems> = {};
   unmatchedItems.forEach(item => {
@@ -55,7 +69,8 @@ export default function MealsDashboardPage() {
   const displayItems = unmatchedItems.filter(item => {
     const catMatch = !selectedCategory || (item.category || 'Pantry') === selectedCategory;
     const priceMatch = maxPrice === null || (item.price || 0) <= maxPrice;
-    return catMatch && priceMatch;
+    const unmatchedMatch = !showOnlyUnmatched || trulyUnmatchedItems.includes(item);
+    return catMatch && priceMatch && unmatchedMatch;
   });
 
   // Group coverage by date
@@ -146,9 +161,9 @@ export default function MealsDashboardPage() {
       {/* Main Content */}
       <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem 1rem' }}>
         
-        {/* Stats Row - 5 stats in a row with fixed layout */}
-        <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '0.75rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
-          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+        {/* Stats Row - responsive wrapping */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
@@ -158,7 +173,7 @@ export default function MealsDashboardPage() {
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>£{receipt?.orderTotal.toFixed(2) || '—'}</p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-blue-bg)' }}>
                 <Calendar style={{ width: '20px', height: '20px', color: 'var(--accent-blue)' }} />
@@ -170,7 +185,7 @@ export default function MealsDashboardPage() {
             </p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
@@ -180,7 +195,7 @@ export default function MealsDashboardPage() {
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{covered}/{coverage.length}</p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-rose-bg)' }}>
                 <X style={{ width: '20px', height: '20px', color: 'var(--accent-rose)' }} />
@@ -190,7 +205,7 @@ export default function MealsDashboardPage() {
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{unmatchedItems.length}</p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '1rem', flex: '1 1 0', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: summary.coveragePercentage >= 80 ? 'var(--accent-emerald-bg)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' }}>
                 <TrendingUp style={{ width: '20px', height: '20px', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }} />
@@ -430,6 +445,23 @@ export default function MealsDashboardPage() {
                     {cat} ({itemsByCategory[cat]?.length || 0})
                   </button>
                 ))}
+                <button
+                  onClick={() => setShowOnlyUnmatched(!showOnlyUnmatched)}
+                  style={{ 
+                    padding: '0.4rem 0.8rem', 
+                    borderRadius: '20px', 
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    border: '1px solid',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    backgroundColor: showOnlyUnmatched ? 'var(--accent-rose)' : 'var(--bg-tertiary)',
+                    borderColor: showOnlyUnmatched ? 'var(--accent-rose)' : 'var(--border-color)',
+                    color: showOnlyUnmatched ? 'white' : 'var(--text-secondary)'
+                  }}
+                >
+                  Unmatched ({trulyUnmatchedItems.length})
+                </button>
               </div>
               
               {/* Category Legend */}
