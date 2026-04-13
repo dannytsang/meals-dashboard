@@ -26,6 +26,7 @@ export default function MealsDashboardPage() {
   const [productInfo, setProductInfo] = useState<{description: string, storage: string, nutrition: string, image: string} | null>(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [showCount, setShowCount] = useState(20);
+  const [labelFilter, setLabelFilter] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
@@ -117,6 +118,7 @@ export default function MealsDashboardPage() {
     setSelectedMeal(null);
     setMaxPrice(null);
     setShowCount(20);
+    setLabelFilter(null);
   };
   
   const displayItems = unmatchedItems.filter(item => {
@@ -617,7 +619,7 @@ export default function MealsDashboardPage() {
               
               {/* Matched/Unmatched/Meal Filter */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center', alignItems: 'center' }}>
-                {(matchedFilter !== 'all' || selectedMeal || selectedCategories.size > 0 || maxPrice !== null) && (
+                {(matchedFilter !== 'all' || selectedMeal || selectedCategories.size > 0 || maxPrice !== null || labelFilter) && (
                   <button
                     onClick={clearAllFilters}
                     style={{
