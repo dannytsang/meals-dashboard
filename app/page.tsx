@@ -1,46 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { CoverageCard } from '@/components/coverage-card';
-import { DeliveryCard } from '@/components/delivery-card';
-import { Chart } from '@/components/chart';
-import { ShopSelector } from '@/components/shop-selector';
-import { StatusFilter } from '@/components/status-filter';
-import { MealListInteractive } from '@/components/meal-list-interactive';
-import { MealCalendar } from '@/components/meal-calendar';
-import { ExpiryTimeline } from '@/components/expiry-timeline';
-import { GroceryMatch } from '@/components/grocery-match';
-import { MealPlanTimeline } from '@/components/meal-plan-timeline';
+import { useState } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { MealCalendar } from '@/components/meal-calendar';
+import { GroceryMatch } from '@/components/grocery-match';
 import { MissingItems } from '@/components/missing-items';
-import { WeeklySummary } from '@/components/weekly-summary';
-import { WeeklyCost } from '@/components/weekly-cost';
 import { HistoricalTrends } from '@/components/historical-trends';
-import { ToggleSection } from '@/components/collapsible';
+import { MealPlanTimeline } from '@/components/meal-plan-timeline';
+import { Chart } from '@/components/chart';
+import { MealListInteractive } from '@/components/meal-list-interactive';
 import { dashboardConfig } from '@/lib/config';
 import { calculateCoverageSummary, getUpcomingDeliveries, TescoReceipt } from '@/lib/meals-data';
 import { realCoverage, realReceipt, realLatestOrder, transformCachedOrder } from '@/lib/real-data';
-import { ShopPeriod, DashboardState, previousShopReceipt, nextShopReceipt, shopDataMap, filterCoverage } from '@/lib/dashboard-state';
-import { Menu, X, LayoutGrid, List, Calendar, TrendingUp, ShoppingCart, AlertTriangle, PieChart } from 'lucide-react';
-
-interface Section {
-  id: string;
-  label: string;
-  icon: typeof LayoutGrid;
-}
-
-const sections: Section[] = [
-  { id: 'overview', label: 'Overview', icon: LayoutGrid },
-  { id: 'deliveries', label: 'Deliveries', icon: ShoppingCart },
-  { id: 'expiry', label: 'Short-Life', icon: AlertTriangle },
-  { id: 'shopping', label: 'Shopping List', icon: ShoppingCart },
-  { id: 'trends', label: 'Trends', icon: TrendingUp },
-  { id: 'categories', label: 'Categories', icon: PieChart },
-  { id: 'timeline', label: 'Timeline', icon: List },
-  { id: 'calendar', label: 'Calendar', icon: Calendar },
-  { id: 'chart', label: 'Coverage Chart', icon: TrendingUp },
-  { id: 'meals', label: 'Meal List', icon: List },
-];
+import { DashboardState, filterCoverage } from '@/lib/dashboard-state';
+import { Check, X, AlertTriangle, ShoppingCart, Calendar, TrendingUp } from 'lucide-react';
 
 export default function MealsDashboardPage() {
   const [state, setState] = useState<DashboardState>({
@@ -50,330 +23,261 @@ export default function MealsDashboardPage() {
     dateRange: { start: '2026-04-13', end: '2026-04-19' },
   });
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [visibleSections, setVisibleSections] = useState<Set<string>>(
-    new Set(['overview', 'deliveries', 'timeline', 'meals'])
-  );
-  const [compactView, setCompactView] = useState(true);
-
-  const getReceiptForShop = (shop: ShopPeriod): TescoReceipt | null => {
-    switch (shop) {
-      case 'previous': return previousShopReceipt;
-      case 'current': return transformCachedOrder(realLatestOrder);
-      case 'next': return nextShopReceipt;
-      default: return null;
-    }
-  };
-
-  const currentShopData = {
-    ...shopDataMap,
-    current: {
-      ...shopDataMap.current,
-      receipt: transformCachedOrder(realLatestOrder),
-      orderTotal: realReceipt.orderTotal,
-      itemCount: realReceipt.items.length,
-    },
-  };
-
-  const receipt = getReceiptForShop(state.selectedShop);
+  const receipt = transformCachedOrder(realLatestOrder);
   const deliveries = getUpcomingDeliveries();
   const coverage = realCoverage;
   const filteredCoverage = filterCoverage(coverage, state.statusFilter);
   const summary = calculateCoverageSummary(coverage);
+  
+  const covered = coverage.filter(c => c.status === 'covered').length;
+  const partial = coverage.filter(c => c.status === 'partial').length;
+  const missing = coverage.filter(c => c.status === 'missing').length;
 
-  const toggleSection = (id: string) => {
-    const newVisible = new Set(visibleSections);
-    if (newVisible.has(id)) {
-      newVisible.delete(id);
-    } else {
-      newVisible.add(id);
+  // Coverage bar (visual, not ASCII)
+  const totalDays = 7;
+  const coverageByDate: Record<string, { covered: number; total: number; hasDelivery?: boolean }> = {};
+  
+  coverage.forEach(c => {
+    const date = c.meal.date;
+    if (!coverageByDate[date]) {
+      coverageByDate[date] = { covered: 0, total: 0, hasDelivery: deliveries.some(d => d.date === date) };
     }
-    setVisibleSections(newVisible);
-  };
+    coverageByDate[date].total += 1;
+    if (c.status === 'covered') coverageByDate[date].covered += 1;
+  });
+  
+  const dates = Object.keys(coverageByDate).sort();
+  const avgCoverage = dates.length > 0 
+    ? Math.round(dates.reduce((sum, d) => sum + (coverageByDate[d].covered / coverageByDate[d].total) * 100, 0) / dates.length)
+    : 0;
 
-  const toggleAllSections = (show: boolean) => {
-    if (show) {
-      setVisibleSections(new Set(sections.map(s => s.id)));
-    } else {
-      setVisibleSections(new Set(['overview', 'meals']));
-    }
-  };
+  // Unmatched groceries (items that didn't match any meal)
+  const unmatchedItems = receipt 
+    ? receipt.items.filter(item => {
+        const itemLower = item.name.toLowerCase();
+        return !coverage.some(c => 
+          c.meal.content.toLowerCase().includes(itemLower)
+        );
+      }).slice(0, 8)
+    : [];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Header */}
       <header 
-        className="sticky top-0 z-50 px-3 py-2"
+        className="sticky top-0 z-50 px-4 py-3"
         style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}
       >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="p-2 rounded-lg lg:hidden"
-              style={{ backgroundColor: 'var(--bg-tertiary)' }}
-            >
-              <Menu className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
-            </button>
-            <h1 className="text-lg font-bold text-[var(--text-primary)]">{dashboardConfig.name}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCompactView(!compactView)}
-              className="p-1.5 rounded-lg text-xs"
-              style={{ 
-                backgroundColor: compactView ? 'var(--accent-emerald-bg)' : 'var(--bg-tertiary)',
-                color: compactView ? 'var(--accent-emerald)' : 'var(--text-muted)'
-              }}
-              title={compactView ? 'Expand view' : 'Compact view'}
-            >
-              {compactView ? 'Compact' : 'Expanded'}
-            </button>
-            <ThemeToggle />
-          </div>
+        <div className="flex items-center justify-between max-w-5xl mx-auto">
+          <h1 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+            🍽️ {dashboardConfig.name}
+          </h1>
+          <ThemeToggle />
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-3 py-4">
-        {/* Shop Selector */}
-        <div className="mb-3">
-          <ShopSelector
-            selectedShop={state.selectedShop}
-            onShopChange={(shop) => setState(s => ({ ...s, selectedShop: shop }))}
-            shopData={currentShopData}
-          />
-        </div>
-
-        {/* Filter pills - compact horizontal scroll */}
-        <div className="mb-4 overflow-x-auto">
-          <div className="flex gap-2 pb-1">
-            {['all', 'covered', 'partial', 'missing', 'unknown'].map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setState(s => ({ ...s, statusFilter: filter as any }))}
-                className="px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-fast"
-                style={{
-                  backgroundColor: state.statusFilter === filter ? 'var(--accent-emerald)' : 'var(--bg-tertiary)',
-                  color: state.statusFilter === filter ? 'white' : 'var(--text-secondary)',
-                  border: '1px solid var(--border-color)'
-                }}
-              >
-                {filter.charAt(0).toUpperCase() + filter.slice(1)}
-              </button>
-            ))}
+      <main className="max-w-5xl mx-auto px-4 py-4 space-y-4">
+        {/* Coverage Summary - mimics meals check header */}
+        <div className="card overflow-hidden">
+          <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
+            <h2 className="text-sm font-medium text-[var(--text-primary)]">MEALS CHECK</h2>
           </div>
-        </div>
-
-        {/* Section Toggle Bar (Desktop) */}
-        <div className="hidden lg:flex flex-wrap gap-2 mb-4 p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
-          <button
-            onClick={() => toggleAllSections(true)}
-            className="px-2 py-1 text-xs rounded"
-            style={{ backgroundColor: 'var(--accent-blue-bg)', color: 'var(--accent-blue)' }}
-          >
-            Show All
-          </button>
-          <button
-            onClick={() => toggleAllSections(false)}
-            className="px-2 py-1 text-xs rounded"
-            style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}
-          >
-            Hide All
-          </button>
-          <div className="flex-1" />
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => toggleSection(section.id)}
-              className="flex items-center gap-1 px-2 py-1 rounded text-xs transition-fast"
-              style={{
-                backgroundColor: visibleSections.has(section.id) ? 'var(--accent-emerald-bg)' : 'var(--bg-tertiary)',
-                color: visibleSections.has(section.id) ? 'var(--accent-emerald)' : 'var(--text-muted)'
-              }}
-            >
-              <section.icon className="w-3 h-3" />
-              {section.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Mobile Section Quick Toggle */}
-        <div className="lg:hidden mb-4 flex gap-2 overflow-x-auto pb-1">
-          {sections.slice(0, 5).map((section) => (
-            <button
-              key={section.id}
-              onClick={() => toggleSection(section.id)}
-              className="flex items-center gap-1 px-2 py-1 rounded text-xs whitespace-nowrap"
-              style={{
-                backgroundColor: visibleSections.has(section.id) ? 'var(--accent-emerald-bg)' : 'var(--bg-tertiary)',
-                color: visibleSections.has(section.id) ? 'var(--accent-emerald)' : 'var(--text-muted)',
-                border: '1px solid var(--border-color)'
-              }}
-            >
-              <section.icon className="w-3 h-3" />
-            </button>
-          ))}
-        </div>
-
-        {/* Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {/* Overview Section */}
-          {visibleSections.has('overview') && (
-            <div className="md:col-span-2 lg:col-span-1">
-              <CoverageCard summary={summary} />
-            </div>
-          )}
-
-          {/* Deliveries Section */}
-          {visibleSections.has('deliveries') && (
-            <div>
-              <DeliveryCard deliveries={deliveries} latestReceipt={receipt} />
-            </div>
-          )}
-
-          {/* Expiry Section */}
-          {visibleSections.has('expiry') && (
-            <div>
-              <ExpiryTimeline receipt={receipt} />
-            </div>
-          )}
-
-          {/* Shopping List Section */}
-          {visibleSections.has('shopping') && (
-            <div>
-              <MissingItems coverage={filteredCoverage} />
-            </div>
-          )}
-
-          {/* Trends Section */}
-          {visibleSections.has('trends') && (
-            <div>
-              <HistoricalTrends currentCoverage={summary.coveragePercentage} />
-            </div>
-          )}
-
-          {/* Categories Section */}
-          {visibleSections.has('categories') && (
-            <div>
-              <GroceryMatch coverage={filteredCoverage} receipt={receipt} />
-            </div>
-          )}
-
-          {/* Weekly Cost */}
-          {visibleSections.has('overview') && (
-            <div>
-              <WeeklyCost coverage={filteredCoverage} receipt={receipt} deliveries={deliveries} />
-            </div>
-          )}
-        </div>
-
-        {/* Timeline - Full Width */}
-        {visibleSections.has('timeline') && (
-          <div className="mt-4">
-            <MealPlanTimeline coverage={filteredCoverage} />
-          </div>
-        )}
-
-        {/* Calendar - Full Width */}
-        {visibleSections.has('calendar') && (
-          <div className="mt-4">
-            <MealCalendar coverage={filteredCoverage} />
-          </div>
-        )}
-
-        {/* Chart - Full Width */}
-        {visibleSections.has('chart') && (
-          <div className="mt-4">
-            <Chart coverage={filteredCoverage} />
-          </div>
-        )}
-
-        {/* Meal List - Full Width */}
-        {visibleSections.has('meals') && (
-          <div className="mt-4">
-            <div className="card p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">
-                  Meals ({filteredCoverage.length}/{coverage.length})
-                </h3>
-                <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                  <span style={{ color: 'var(--accent-emerald)' }}>●</span> Covered
-                  <span style={{ color: 'var(--accent-amber)' }}>●</span> Partial
-                  <span style={{ color: 'var(--accent-rose)' }}>●</span> Missing
-                </div>
+          
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[var(--accent-emerald)]" />
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">Order total</p>
+                <p className="text-sm font-bold text-[var(--text-primary)]">£{receipt?.orderTotal.toFixed(2) || '—'}</p>
               </div>
-              <MealListInteractive coverage={filteredCoverage} />
-            </div>
-          </div>
-        )}
-
-        {/* Summary Stats */}
-        {visibleSections.has('overview') && (
-          <div className="mt-4">
-            <WeeklySummary coverage={filteredCoverage} receipt={receipt} />
-          </div>
-        )}
-      </main>
-
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div 
-          className="fixed inset-0 z-50 lg:hidden"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-          onClick={() => setMobileMenuOpen(false)}
-        >
-          <div 
-            className="absolute right-0 top-0 bottom-0 w-64 p-4 overflow-y-auto"
-            style={{ backgroundColor: 'var(--bg-secondary)', borderLeft: '1px solid var(--border-color)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-[var(--text-primary)]">Sections</h2>
-              <button onClick={() => setMobileMenuOpen(false)}>
-                <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
-              </button>
             </div>
             
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[var(--accent-blue)]" />
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">Delivery</p>
+                <p className="text-sm font-bold text-[var(--text-primary)]">
+                  {deliveries[0] ? new Date(deliveries[0].date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-[var(--accent-emerald)]" />
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">Meals covered</p>
+                <p className="text-sm font-bold text-[var(--text-primary)]">{covered}/{coverage.length}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <X className="w-4 h-4 text-[var(--accent-rose)]" />
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">Unmatched groceries</p>
+                <p className="text-sm font-bold text-[var(--text-primary)]">{unmatchedItems.length}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[var(--accent-amber)]" />
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">Coverage</p>
+                <p className="text-sm font-bold" style={{ color: avgCoverage >= 80 ? 'var(--accent-emerald)' : avgCoverage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>
+                  {avgCoverage}%
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-[var(--accent-amber)]" />
+              <div>
+                <p className="text-xs text-[var(--text-muted)]">Suggested</p>
+                <p className="text-xs font-medium text-[var(--text-secondary)]">
+                  {missing > 2 ? 'Order soon' : missing > 0 ? 'Get missing items' : 'All good'}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Coverage Bar - Visual (not ASCII) */}
+          <div className="px-4 pb-3">
+            <p className="text-xs text-[var(--text-muted)] mb-2">
+              📅 DAY COVERAGE: {covered}/{coverage.length}
+            </p>
+            <div className="flex gap-1">
+              {dates.map(date => {
+                const dayData = coverageByDate[date];
+                const pct = Math.round((dayData.covered / dayData.total) * 100);
+                const color = pct >= 80 ? 'var(--accent-emerald)' : pct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)';
+                return (
+                  <div key={date} className="flex-1 text-center">
+                    <div 
+                      className="h-8 rounded-sm relative overflow-hidden"
+                      style={{ backgroundColor: 'var(--bg-tertiary)' }}
+                    >
+                      <div 
+                        className="absolute bottom-0 left-0 right-0 transition-all"
+                        style={{ height: `${pct}%`, backgroundColor: color }}
+                      />
+                      {dayData.hasDelivery && (
+                        <div className="absolute top-0 left-0 right-0 h-1" style={{ backgroundColor: 'var(--accent-blue)' }} />
+                      )}
+                    </div>
+                    <p className="text-[10px] mt-1 text-[var(--text-muted)]">
+                      {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
+                    </p>
+                    <p className="text-[10px] font-medium" style={{ color }}>{pct}%</p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-[var(--text-muted)] mt-2">
+              Legend: <span style={{ color: 'var(--accent-emerald)' }}>●</span> covered <span style={{ color: 'var(--accent-amber)' }}>●</span> partial <span style={{ color: 'var(--accent-rose)' }}>●</span> missing <span style={{ color: 'var(--accent-blue)' }}>─</span> delivery
+            </p>
+          </div>
+        </div>
+
+        {/* Week Calendar */}
+        <MealCalendar coverage={coverage} />
+
+        {/* Meals List */}
+        <div className="card overflow-hidden">
+          <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-color)' }}>
+            <h2 className="text-sm font-medium text-[var(--text-primary)]">📋 MEALS</h2>
+            <div className="flex gap-2 text-xs">
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent-emerald)' }} />
+                <span style={{ color: 'var(--text-muted)' }}>Covered</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent-amber)' }} />
+                <span style={{ color: 'var(--text-muted)' }}>Partial</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--accent-rose)' }} />
+                <span style={{ color: 'var(--text-muted)' }}>Missing</span>
+              </span>
+            </div>
+          </div>
+          <div className="p-2">
+            <MealListInteractive coverage={filteredCoverage} />
+          </div>
+        </div>
+
+        {/* Unmatched Groceries */}
+        {unmatchedItems.length > 0 && (
+          <div className="card overflow-hidden">
+            <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
+              <h2 className="text-sm font-medium text-[var(--text-primary)]">
+                📦 UNMATCHED GROCERIES ({unmatchedItems.length})
+              </h2>
+            </div>
+            <div className="p-3 space-y-1">
+              {unmatchedItems.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between py-1.5 px-2 rounded" 
+                  style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--text-muted)' }} />
+                    <span className="text-sm text-[var(--text-primary)]">{item.name}</span>
+                  </div>
+                  <span className="text-xs text-[var(--text-muted)]">No meal matched</span>
+                </div>
+              ))}
+              {unmatchedItems.length === 8 && receipt && receipt.items.length > 8 && (
+                <p className="text-xs text-center text-[var(--text-muted)] pt-2">
+                  +{receipt.items.length - 8} more items
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Additional Sections - Collapsed by default on mobile */}
+        <details className="card overflow-hidden">
+          <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]">
+            🛒 Grocery Categories
+          </summary>
+          <div className="p-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+            <GroceryMatch coverage={filteredCoverage} receipt={receipt} />
+          </div>
+        </details>
+
+        <details className="card overflow-hidden">
+          <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]">
+            📊 Trends & History
+          </summary>
+          <div className="p-4 border-t space-y-4" style={{ borderColor: 'var(--border-color)' }}>
+            <HistoricalTrends currentCoverage={summary.coveragePercentage} />
+            <Chart coverage={filteredCoverage} />
+          </div>
+        </details>
+
+        <details className="card overflow-hidden">
+          <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]">
+            🛍️ Deliveries
+          </summary>
+          <div className="p-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+            {/* Simple delivery list */}
             <div className="space-y-2">
-              <button
-                onClick={() => toggleAllSections(true)}
-                className="w-full text-left px-3 py-2 text-xs rounded"
-                style={{ backgroundColor: 'var(--accent-blue-bg)', color: 'var(--accent-blue)' }}
-              >
-                Show All Sections
-              </button>
-              <button
-                onClick={() => toggleAllSections(false)}
-                className="w-full text-left px-3 py-2 text-xs rounded"
-                style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-muted)' }}
-              >
-                Hide All Sections
-              </button>
-              
-              <div className="border-t border-[var(--border-color)] pt-2 mt-2" />
-              
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => {
-                    toggleSection(section.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded"
-                  style={{
-                    backgroundColor: visibleSections.has(section.id) ? 'var(--accent-emerald-bg)' : 'var(--bg-tertiary)',
-                    color: visibleSections.has(section.id) ? 'var(--accent-emerald)' : 'var(--text-secondary)'
-                  }}
-                >
-                  <section.icon className="w-4 h-4" />
-                  {section.label}
-                </button>
+              {deliveries.slice(0, 3).map((d, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  <div>
+                    <p className="text-sm font-medium text-[var(--text-primary)]">
+                      {new Date(d.date).toLocaleDateString('en-GB', { weekday: 'long', month: 'short', day: 'numeric' })}
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)]">{d.slot || 'Evening slot'}</p>
+                  </div>
+                  {d.orderTotal > 0 && (
+                    <p className="text-sm font-bold" style={{ color: 'var(--accent-emerald)' }}>£{d.orderTotal.toFixed(2)}</p>
+                  )}
+                </div>
               ))}
             </div>
           </div>
-        </div>
-      )}
+        </details>
+      </main>
 
       {/* Footer */}
       <footer className="text-center py-3 text-xs" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)' }}>

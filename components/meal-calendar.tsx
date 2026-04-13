@@ -1,198 +1,137 @@
 'use client';
 
 import { MealCoverage } from '@/lib/meals-data';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
 
 interface MealCalendarProps {
   coverage: MealCoverage[];
 }
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
 export function MealCalendar({ coverage }: MealCalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 3, 13));
+  // Group coverage by date
+  const coverageByDate: Record<string, MealCoverage[]> = {};
+  coverage.forEach(c => {
+    const date = c.meal.date;
+    if (!coverageByDate[date]) coverageByDate[date] = [];
+    coverageByDate[date].push(c);
+  });
+
+  const dates = Object.keys(coverageByDate).sort();
   
-  const getMealsForDate = (date: Date): MealCoverage[] => {
-    const dateStr = date.toISOString().split('T')[0];
-    return coverage.filter(c => c.meal.date === dateStr);
+  // Get week bounds
+  const startDate = dates[0] ? new Date(dates[0]) : new Date();
+  const endDate = dates[dates.length - 1] ? new Date(dates[dates.length - 1]) : new Date();
+  
+  // Generate array of all days in range
+  const days: string[] = [];
+  const current = new Date(startDate);
+  while (current <= endDate) {
+    days.push(current.toISOString().split('T')[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
+  const getStatusColor = (status: string, score: number) => {
+    if (status === 'covered' || score >= 80) return 'var(--accent-emerald)';
+    if (status === 'partial' || score >= 50) return 'var(--accent-amber)';
+    return 'var(--accent-rose)';
   };
-  
-  const getStatusStyles = (date: Date) => {
-    const meals = getMealsForDate(date);
-    if (meals.length === 0) {
-      return {
-        bg: 'var(--bg-secondary)',
-        border: 'var(--border-color)',
-        dot: 'var(--text-muted)'
-      };
-    }
-    
-    const avgCoverage = meals.reduce((sum, m) => sum + m.coverageScore, 0) / meals.length;
-    if (avgCoverage >= 80) {
-      return {
-        bg: 'var(--accent-emerald-bg)',
-        border: 'var(--accent-emerald)',
-        dot: 'var(--accent-emerald)'
-      };
-    }
-    if (avgCoverage >= 50) {
-      return {
-        bg: 'var(--accent-amber-bg)',
-        border: 'var(--accent-amber)',
-        dot: 'var(--accent-amber)'
-      };
-    }
-    return {
-      bg: 'var(--accent-rose-bg)',
-      border: 'var(--accent-rose)',
-      dot: 'var(--accent-rose)'
-    };
+
+  const getMealTypeEmoji = (mealContent: string) => {
+    const lower = mealContent.toLowerCase();
+    if (lower.includes('breakfast') || lower.includes('cereal')) return '🌅';
+    if (lower.includes('lunch')) return '☀️';
+    if (lower.includes('dinner') || lower.includes('tea')) return '🌙';
+    return '🍽️';
   };
-  
-  const prevWeek = () => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() - 7);
-    setCurrentDate(newDate);
-  };
-  
-  const nextWeek = () => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() + 7);
-    setCurrentDate(newDate);
-  };
-  
-  const getWeekDates = (): Date[] => {
-    const dates: Date[] = [];
-    const startOfWeek = new Date(currentDate);
-    const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
-    startOfWeek.setDate(diff);
-    
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + i);
-      dates.push(date);
-    }
-    return dates;
-  };
-  
-  const weekDates = getWeekDates();
-  const monthYear = MONTHS[currentDate.getMonth()] + ' ' + currentDate.getFullYear();
-  
+
   return (
     <div className="card overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
-        <h3 className="text-sm font-medium text-[var(--text-secondary)] uppercase tracking-wider">
-          Meal Calendar
-        </h3>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={prevWeek}
-            className="p-2 rounded-lg border border-[var(--border-color)] hover:border-[var(--border-light)] transition-all"
-            style={{ backgroundColor: 'var(--bg-tertiary)' }}
-          >
-            <ChevronLeft className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
-          </button>
-          <span className="text-[var(--text-primary)] font-medium min-w-[140px] text-center">
-            {monthYear}
-          </span>
-          <button 
-            onClick={nextWeek}
-            className="p-2 rounded-lg border border-[var(--border-color)] hover:border-[var(--border-light)] transition-all"
-            style={{ backgroundColor: 'var(--bg-tertiary)' }}
-          >
-            <ChevronRight className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
-          </button>
-        </div>
+      <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
+        <h2 className="text-sm font-medium text-[var(--text-primary)]">📅 WEEK VIEW</h2>
       </div>
       
-      {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-[var(--border-color)]">
-        {DAYS.map(day => (
-          <div 
-            key={day} 
-            className="px-2 py-3 text-center text-xs font-medium text-[var(--text-muted)] uppercase"
-          >
-            {day}
-          </div>
-        ))}
-      </div>
-      
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7">
-        {weekDates.map((date, idx) => {
-          const meals = getMealsForDate(date);
-          const isToday = date.toDateString() === new Date().toDateString();
-          const styles = getStatusStyles(date);
-          
-          return (
-            <div 
-              key={idx}
-              className="min-h-[100px] p-3 border-b border-r border-[var(--border-color)] last:border-r-0 transition-all"
-              style={{ 
-                backgroundColor: styles.bg,
-                borderLeftWidth: idx === 0 ? '0' : '1px',
-                borderLeftColor: idx > 0 ? 'var(--border-color)' : 'transparent'
-              }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <span 
-                  className="text-sm font-medium"
-                  style={{ color: isToday ? 'var(--accent-emerald)' : 'var(--text-primary)' }}
-                >
-                  {date.getDate()}
-                </span>
-                {isToday && (
-                  <span 
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: 'var(--accent-emerald)' }}
-                  />
-                )}
-              </div>
+      <div className="overflow-x-auto">
+        <div className="min-w-[600px]">
+          {/* Header with dates */}
+          <div className="grid gap-2 p-3" style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)` }}>
+            <div /> {/* Empty cell for meal type column */}
+            {days.map(date => {
+              const dayData = coverageByDate[date];
+              const coveragePct = dayData 
+                ? Math.round(dayData.reduce((s, c) => s + c.coverageScore, 0) / dayData.length) 
+                : 0;
+              const isToday = date === new Date().toISOString().split('T')[0];
               
-              {meals.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5">
+              return (
+                <div key={date} className="text-center">
+                  <p className="text-[10px] text-[var(--text-muted)] uppercase">
+                    {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
+                  </p>
+                  <p className={`text-sm font-bold ${isToday ? 'ring-2 ring-[var(--accent-blue)] rounded-full w-7 h-7 flex items-center justify-center mx-auto' : ''}`}
+                    style={{ color: coveragePct >= 80 ? 'var(--accent-emerald)' : coveragePct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>
+                    {new Date(date).getDate()}
+                  </p>
+                  <div className="w-full h-1 rounded-full mt-1 overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
                     <div 
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: styles.dot }}
-                    />
-                    <span className="text-xs text-[var(--text-tertiary)]">
-                      {meals.length} meal{meals.length > 1 ? 's' : ''}
-                    </span>
-                  </div>
-                  <div className="w-full rounded-full h-1.5 overflow-hidden" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                    <div 
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{ 
-                        width: `${meals.reduce((sum, m) => sum + m.coverageScore, 0) / meals.length}%`,
-                        backgroundColor: styles.dot
-                      }}
+                      className="h-full rounded-full"
+                      style={{ width: `${coveragePct}%`, backgroundColor: getStatusColor('', coveragePct) }}
                     />
                   </div>
                 </div>
-              )}
+              );
+            })}
+          </div>
+
+          {/* Meals rows */}
+          {['breakfast', 'lunch', 'dinner'].map(mealType => (
+            <div 
+              key={mealType} 
+              className="grid gap-2 p-3 pt-0 items-start"
+              style={{ gridTemplateColumns: `80px repeat(${days.length}, 1fr)`, borderTop: '1px solid var(--border-color)' }}
+            >
+              <div className="pt-2">
+                <p className="text-xs text-[var(--text-muted)] capitalize">{mealType}</p>
+              </div>
+              
+              {days.map(date => {
+                const dayMeals = coverageByDate[date]?.filter(c => {
+                  const m = c.meal.content.toLowerCase();
+                  if (mealType === 'breakfast') return m.includes('breakfast') || m.includes('cereal');
+                  if (mealType === 'lunch') return m.includes('lunch') || m.includes('sandwich');
+                  return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
+                }) || [];
+                
+                const meal = dayMeals[0];
+                
+                return (
+                  <div key={date} className="min-h-[60px] p-1.5 rounded" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                    {meal ? (
+                      <div className="flex items-start gap-1">
+                        <span className="text-xs">{getMealTypeEmoji(meal.meal.content)}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] leading-tight text-[var(--text-primary)] truncate" title={meal.meal.content}>
+                            {meal.meal.content}
+                          </p>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span 
+                              className="w-1.5 h-1.5 rounded-full shrink-0"
+                              style={{ backgroundColor: getStatusColor(meal.status, meal.coverageScore) }}
+                            />
+                            <span className="text-[9px] truncate" style={{ color: getStatusColor(meal.status, meal.coverageScore) }}>
+                              {meal.coverageScore}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <span className="text-[var(--text-muted)]">—</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
-      
-      {/* Legend */}
-      <div className="px-6 py-3 flex items-center gap-6 text-xs" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--accent-emerald)', opacity: 0.4 }} />
-          <span className="text-[var(--text-tertiary)]">High (80%+)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--accent-amber)', opacity: 0.4 }} />
-          <span className="text-[var(--text-tertiary)]">Medium (50-79%)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ backgroundColor: 'var(--accent-rose)', opacity: 0.4 }} />
-          <span className="text-[var(--text-tertiary)]">Low (&lt;50%)</span>
+          ))}
         </div>
       </div>
     </div>
