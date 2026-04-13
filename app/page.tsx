@@ -247,85 +247,89 @@ export default function MealsDashboardPage() {
                 </span>
               </div>
 
-              {/* Days Header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '50px repeat(7, 1fr)', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                <div style={{ width: '50px' }} />
-                {days.map(({ date, isToday }) => {
-                  const dayCoverage = coverageByDate[date] || [];
-                  const avgPct = dayCoverage.length > 0 
-                    ? Math.round(dayCoverage.reduce((s, c) => s + c.coverageScore, 0) / dayCoverage.length)
-                    : 0;
-                  const dayColor = avgPct >= 80 ? 'var(--accent-emerald)' : avgPct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)';
-                  const hasMeals = dayCoverage.length > 0;
+              {/* Calendar Grid */}
+              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.5rem' }}>
+                {/* Days Header Row */}
+                <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 1fr', gap: '0.5rem' }}>
+                  <div /> {/* Spacer for meal type column */}
+                  {days.map(({ date, isToday }) => {
+                    const dayCoverage = coverageByDate[date] || [];
+                    const avgPct = dayCoverage.length > 0 
+                      ? Math.round(dayCoverage.reduce((s, c) => s + c.coverageScore, 0) / dayCoverage.length)
+                      : 0;
+                    const dayColor = avgPct >= 80 ? 'var(--accent-emerald)' : avgPct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)';
+                    const hasMeals = dayCoverage.length > 0;
+                    
+                    return (
+                      <div key={date} style={{ 
+                        textAlign: 'center' as const,
+                        padding: '0.75rem 0.25rem',
+                        borderRadius: '10px',
+                        backgroundColor: isToday ? `${dayColor}25` : 'var(--bg-tertiary)',
+                        border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
+                      }}>
+                        <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                          {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
+                        </p>
+                        <p style={{ fontSize: '22px', fontWeight: 'bold', color: hasMeals ? dayColor : 'var(--text-secondary)' }}>
+                          {new Date(date).getDate()}
+                        </p>
+                        <p style={{ fontSize: '11px', fontWeight: '600', color: hasMeals ? dayColor : 'var(--text-secondary)', marginTop: '2px' }}>
+                          {hasMeals ? `${avgPct}%` : '—'}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Meals by Type Rows */}
+                {['breakfast', 'lunch', 'dinner'].map(mealType => {
+                  const isCollapsed = collapsedMealTypes.has(mealType);
+                  const hasMeals = mealTypesWithMeals.has(mealType);
                   
                   return (
-                    <div key={date} style={{ 
-                      textAlign: 'center' as const,
-                      padding: '0.75rem 0.25rem',
-                      borderRadius: '10px',
-                      backgroundColor: isToday ? `${dayColor}25` : 'var(--bg-tertiary)',
-                      border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
-                    }}>
-                      <p style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'uppercase', marginBottom: '4px' }}>
-                        {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
-                      </p>
-                      <p style={{ fontSize: '22px', fontWeight: 'bold', color: hasMeals ? dayColor : 'var(--text-secondary)' }}>
-                        {new Date(date).getDate()}
-                      </p>
-                      <p style={{ fontSize: '11px', fontWeight: '600', color: hasMeals ? dayColor : 'var(--text-secondary)', marginTop: '2px' }}>
-                        {hasMeals ? `${avgPct}%` : '—'}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Meals by Type */}
-              {['breakfast', 'lunch', 'dinner'].map(mealType => {
-                const isCollapsed = collapsedMealTypes.has(mealType);
-                const hasMeals = mealTypesWithMeals.has(mealType);
-                
-                return (
-                  <div key={mealType}>
-                    {/* Meal Type Header */}
-                    <div 
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '0.5rem',
-                        padding: '1rem 0',
-                        borderTop: '1px solid var(--border-color)',
-                        opacity: hasMeals ? 1 : 0.5
-                      }}
-                    >
-                      <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
-                        {mealType}
-                      </p>
-                      {!hasMeals && (
-                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>(No meals)</span>
-                      )}
-                      {hasMeals && (
-                        <>
+                    <div key={mealType} style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.5rem' }}>
+                      {/* Meal Type Header - Clickable */}
+                      <div 
+                        onClick={() => hasMeals && toggleMealType(mealType)}
+                        style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 1fr', 
+                          gap: '0.5rem',
+                          padding: '0.75rem 0',
+                          borderTop: '1px solid var(--border-color)',
+                          cursor: hasMeals ? 'pointer' : 'default',
+                          opacity: hasMeals ? 1 : 0.5,
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           {isCollapsed ? (
                             <ChevronRight style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
                           ) : (
                             <ChevronDown style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
                           )}
-                          <span 
-                            onClick={() => toggleMealType(mealType)}
-                            style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: 'auto', fontWeight: '500', cursor: 'pointer' }}
-                          >
-                            {isCollapsed ? 'Show' : 'Hide'}
+                          <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                            {mealType}
                           </span>
-                        </>
-                      )}
-                    </div>
-                    
-                    {/* Meal Rows - Only show if not collapsed */}
-                    {!isCollapsed && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '50px repeat(7, 1fr)', gap: '0.5rem', paddingBottom: '0.75rem' }}>
-                        <div style={{ width: '50px' }} />
-                        <div style={{ display: 'contents' }}>
+                          {!hasMeals && (
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>(No meals)</span>
+                          )}
+                        </div>
+                        {/* Placeholder cells for alignment */}
+                        {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {isCollapsed ? (
+                              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{isCollapsed ? 'Show' : 'Hide'}</span>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Meal Rows - Only show if not collapsed */}
+                      {!isCollapsed && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 1fr', gap: '0.5rem', paddingBottom: '0.75rem' }}>
+                          <div /> {/* Spacer */}
                           {days.map(({ date }) => {
                             const dayMeals = (coverageByDate[date] || []).filter(c => {
                               const m = c.meal.content.toLowerCase();
@@ -338,7 +342,6 @@ export default function MealsDashboardPage() {
                             
                             return (
                               <div key={date} style={{ 
-                                width: `${100 / 7}%`, 
                                 padding: '0.6rem 0.25rem', 
                                 borderRadius: '8px', 
                                 backgroundColor: 'var(--bg-tertiary)',
@@ -403,11 +406,11 @@ export default function MealsDashboardPage() {
                             );
                           })}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
