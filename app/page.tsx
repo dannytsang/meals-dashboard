@@ -19,7 +19,7 @@ export default function MealsDashboardPage() {
   });
 
   const [isDesktop, setIsDesktop] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [showOnlyUnmatched, setShowOnlyUnmatched] = useState(false);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
@@ -67,7 +67,7 @@ export default function MealsDashboardPage() {
   const maxItemPrice = unmatchedItems.length > 0 ? Math.max(...unmatchedItems.map(i => i.price || 0)) : 10;
   
   const displayItems = unmatchedItems.filter(item => {
-    const catMatch = !selectedCategory || (item.category || 'Pantry') === selectedCategory;
+    const catMatch = selectedCategories.size === 0 || selectedCategories.has(item.category || 'Pantry');
     const priceMatch = maxPrice === null || (item.price || 0) <= maxPrice;
     const unmatchedMatch = !showOnlyUnmatched || trulyUnmatchedItems.includes(item);
     return catMatch && priceMatch && unmatchedMatch;
@@ -161,9 +161,14 @@ export default function MealsDashboardPage() {
       {/* Main Content */}
       <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem 1rem' }}>
         
-        {/* Stats Row - responsive wrapping */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
-          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+        {/* Stats Row - responsive grid */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isDesktop ? 'repeat(5, 1fr)' : 'repeat(2, 1fr)',
+          gap: '0.5rem', 
+          marginBottom: '1.5rem'
+        }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
@@ -173,7 +178,7 @@ export default function MealsDashboardPage() {
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>£{receipt?.orderTotal.toFixed(2) || '—'}</p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-blue-bg)' }}>
                 <Calendar style={{ width: '20px', height: '20px', color: 'var(--accent-blue)' }} />
@@ -185,7 +190,7 @@ export default function MealsDashboardPage() {
             </p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
@@ -195,7 +200,7 @@ export default function MealsDashboardPage() {
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{covered}/{coverage.length}</p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-rose-bg)' }}>
                 <X style={{ width: '20px', height: '20px', color: 'var(--accent-rose)' }} />
@@ -205,7 +210,7 @@ export default function MealsDashboardPage() {
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{unmatchedItems.length}</p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '0.75rem', flex: isDesktop ? '1 1 calc(20% - 0.5rem)' : '1 1 calc(50% - 0.5rem)', minWidth: '130px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: summary.coveragePercentage >= 80 ? 'var(--accent-emerald-bg)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' }}>
                 <TrendingUp style={{ width: '20px', height: '20px', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }} />
@@ -244,7 +249,7 @@ export default function MealsDashboardPage() {
 
               {/* Days Header */}
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                <div style={{ width: '90px', flexShrink: 0 }} />
+                <div style={{ width: '50px', flexShrink: 0 }} />
                 {days.map(({ date, isToday }) => {
                   const dayCoverage = coverageByDate[date] || [];
                   const avgPct = dayCoverage.length > 0 
@@ -312,7 +317,7 @@ export default function MealsDashboardPage() {
                     {/* Meal Rows - Only show if not collapsed */}
                     {!isCollapsed && (
                       <div style={{ display: 'flex', gap: '0.5rem', paddingBottom: '0.75rem' }}>
-                        <div style={{ width: '90px', flexShrink: 0 }} />
+                        <div style={{ width: '50px', flexShrink: 0 }} />
                         <div style={{ display: 'flex', gap: '0.5rem', flex: 1 }}>
                           {days.map(({ date }) => {
                             const dayMeals = (coverageByDate[date] || []).filter(c => {
@@ -407,9 +412,9 @@ export default function MealsDashboardPage() {
               <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>🛒 ORDER ITEMS BY CATEGORY</h2>
               
               {/* Category Pills */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center' }}>
                 <button
-                  onClick={() => setSelectedCategory(null)}
+                  onClick={() => setSelectedCategories(new Set())}
                   style={{ 
                     padding: '0.4rem 0.8rem', 
                     borderRadius: '20px', 
@@ -418,17 +423,25 @@ export default function MealsDashboardPage() {
                     border: '1px solid',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
-                    backgroundColor: selectedCategory === null ? 'var(--accent-blue)' : 'var(--bg-tertiary)',
-                    borderColor: selectedCategory === null ? 'var(--accent-blue)' : 'var(--border-color)',
-                    color: selectedCategory === null ? 'white' : 'var(--text-secondary)'
+                    backgroundColor: selectedCategories.size === 0 ? 'var(--accent-blue)' : 'var(--bg-tertiary)',
+                    borderColor: selectedCategories.size === 0 ? 'var(--accent-blue)' : 'var(--border-color)',
+                    color: selectedCategories.size === 0 ? 'white' : 'var(--text-secondary)'
                   }}
                 >
-                  All ({unmatchedItems.length})
+                  All
                 </button>
                 {categories.map(cat => (
                   <button
                     key={cat}
-                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                    onClick={() => {
+                      const newCats = new Set(selectedCategories);
+                      if (newCats.has(cat)) {
+                        newCats.delete(cat);
+                      } else {
+                        newCats.add(cat);
+                      }
+                      setSelectedCategories(newCats);
+                    }}
                     style={{ 
                       padding: '0.4rem 0.8rem', 
                       borderRadius: '20px', 
@@ -437,9 +450,9 @@ export default function MealsDashboardPage() {
                       border: '1px solid',
                       cursor: 'pointer',
                       transition: 'all 0.15s',
-                      backgroundColor: selectedCategory === cat ? (categoryColors[cat] || 'var(--accent-blue)') : 'var(--bg-tertiary)',
-                      borderColor: selectedCategory === cat ? (categoryColors[cat] || 'var(--accent-blue)') : 'var(--border-color)',
-                      color: selectedCategory === cat ? 'white' : 'var(--text-secondary)'
+                      backgroundColor: selectedCategories.has(cat) ? (categoryColors[cat] || 'var(--accent-blue)') : 'var(--bg-tertiary)',
+                      borderColor: selectedCategories.has(cat) ? (categoryColors[cat] || 'var(--accent-blue)') : 'var(--border-color)',
+                      color: selectedCategories.has(cat) ? 'white' : 'var(--text-secondary)'
                     }}
                   >
                     {cat} ({itemsByCategory[cat]?.length || 0})
@@ -503,34 +516,32 @@ export default function MealsDashboardPage() {
               </div>
               
               {/* Items List */}
-              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
                 <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', fontWeight: '600' }}>
-                  {selectedCategory || 'All'} Items ({displayItems.length})
+                  {selectedCategories.size === 0 ? 'All' : Array.from(selectedCategories).join(', ')} Items ({displayItems.length})
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.4rem' }}>
-                  {displayItems.slice(0, 20).map((item, idx) => (
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '0.25rem' }}>
+                  {displayItems.slice(0, 30).map((item, idx) => (
                     <div key={idx} style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
                       justifyContent: 'space-between',
-                      padding: '0.5rem 0.6rem', 
-                      borderRadius: '8px', 
+                      padding: '0.3rem 0.5rem', 
+                      borderRadius: '6px', 
                       backgroundColor: 'var(--bg-tertiary)'
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 1, minWidth: 0 }}>
                         <span style={{ 
-                          width: '8px', 
-                          height: '8px', 
+                          width: '6px', 
+                          height: '6px', 
                           borderRadius: '50%', 
-                          backgroundColor: categoryColors[item.category || 'Pantry'] || 'var(--text-muted)'
+                          backgroundColor: categoryColors[item.category || 'Pantry'] || 'var(--text-muted)',
+                          flexShrink: 0
                         }} />
-                        <span style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: '500' }}>{item.name}</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-primary)', fontWeight: '500', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>×{item.quantity}</span>
-                        {item.price !== undefined && (
-                          <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>£{item.price.toFixed(2)}</p>
-                        )}
+                      <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '0.5rem' }}>
+                        <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>×{item.quantity}</span>
                       </div>
                     </div>
                   ))}
