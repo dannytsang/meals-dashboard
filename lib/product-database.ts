@@ -260,6 +260,69 @@ export const productDatabase: Record<string, ProductInfo> = {
     preparation: 'Ready to drink. Shake well before consuming.',
     image: '',
     nutrition: 'Per 100ml: Energy 28kcal, Protein 0.5g, Carbohydrates 6g, Fat 0g'
+  },
+
+  'crosta & mollica stromboli spicy salami sourdough pizza': {
+    name: 'Crosta & Mollica Stromboli Spicy Salami Sourdough Pizza 447g',
+    description: 'Stone baked sourdough stromboli filled with spicy salami, tomato sauce and mozzarella cheese.',
+    storage: 'Keep refrigerated at 4°C or below. Suitable for home freezing. Defrost thoroughly before cooking.',
+    preparation: 'Remove packaging. Preheat oven to 200°C/180°C fan. Cook for 12-15 minutes until cheese is bubbling.',
+    image: '',
+    nutrition: 'Per 100g: Energy 245kcal, Protein 10.5g, Carbohydrates 28g, Fat 10g'
+  },
+
+  'rosedene farms blueberries': {
+    name: 'Rosedene Farms Blueberries 150G',
+    description: 'Premium British blueberries from Rosedene Farms, perfect for breakfast cereals, yoghurts or as a healthy snack.',
+    storage: 'Refrigerate and consume within 5 days. Wash before use.',
+    preparation: 'Ready to eat. Wash thoroughly before consuming.',
+    image: '',
+    nutrition: 'Per 100g: Energy 44kcal, Protein 0.7g, Carbohydrates 9g, Fat 0.3g'
+  },
+
+  'rosedene farms raspberries': {
+    name: 'Rosedene Farms Raspberries 125G',
+    description: 'Sweet and delicate British raspberries from Rosedene Farms, perfect for desserts or as a healthy snack.',
+    storage: 'Refrigerate and consume within 3 days. Wash before use.',
+    preparation: 'Ready to eat. Wash thoroughly before consuming.',
+    image: '',
+    nutrition: 'Per 100g: Energy 36kcal, Protein 1.2g, Carbohydrates 7g, Fat 0.3g'
+  },
+
+  'tesco finest green grapes seedless': {
+    name: 'Tesco Finest Green Grapes Seedless 500G',
+    description: 'Sweet and juicy seedless green grapes, perfect for snacking or lunchboxes.',
+    storage: 'Refrigerate and consume within 7 days.',
+    preparation: 'Ready to eat. Wash before consuming.',
+    image: '',
+    nutrition: 'Per 100g: Energy 67kcal, Protein 0.6g, Carbohydrates 17g, Fat 0.4g'
+  },
+
+  'tesco finest red grapes seedless': {
+    name: 'Tesco Finest Red Grapes Seedless 500G',
+    description: 'Sweet and juicy seedless red grapes, perfect for snacking or lunchboxes.',
+    storage: 'Refrigerate and consume within 7 days.',
+    preparation: 'Ready to eat. Wash before consuming.',
+    image: '',
+    nutrition: 'Per 100g: Energy 67kcal, Protein 0.6g, Carbohydrates 17g, Fat 0.4g'
+  },
+
+  'tesco fire pit 2 salt & pepper beef steaks': {
+    name: 'Tesco Fire Pit 2 Salt & Pepper Beef Steaks 200G',
+    description: 'Premium beef steaks seasoned with salt and pepper, perfect for the BBQ or pan-frying.',
+    storage: 'Keep refrigerated. Consume by the use-by date.',
+    preparation: 'Pan-fry for 3-4 minutes each side or BBQ until cooked through.',
+    image: '',
+    nutrition: 'Per 100g: Energy 180kcal, Protein 22g, Carbohydrates 0.5g, Fat 10g'
+  },
+
+  'aunt bessie maple & thyme glazed carrots': {
+    name: "Aunt Bessie's Maple & Thyme Glazed Carrots 500g",
+    description: 'Honey-glazed carrots with maple syrup and thyme. Ready to cook in minutes.',
+    storage: 'Keep frozen. Defrost thoroughly before cooking.',
+    preparation: 'Oven cook: 200°C/180°C fan for 25-30 minutes. Microwave: 5-6 minutes on high.',
+    image: '',
+    nutrition: 'Per 100g: Energy 75kcal, Protein 1g, Carbohydrates 12g, Fat 2.5g'
   }
 };
 
