@@ -222,15 +222,15 @@ export default function MealsDashboardPage() {
         </div>
 
         {/* Two Column Layout */}
-        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' as const : 'column' as const, gap: '1.5rem', alignItems: 'stretch' as const }}>
+        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' as const : 'column' as const, gap: '1.5rem', alignItems: 'flex-start' as const }}>
           
           {/* Left Column - Week Calendar */}
-          <div style={{ ...cardStyle, flex: isDesktop ? '1 1 65%' : '0 0 auto', display: 'flex', flexDirection: 'column' as const }}>
+          <div style={{ ...cardStyle, flex: isDesktop ? '1 1 65%' : '0 0 auto', display: 'flex', flexDirection: 'column' as const, alignItems: 'stretch' as const }}>
             <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border-color)' }}>
               <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>📅 WEEK MEALS</h2>
             </div>
             
-            <div style={{ padding: '1rem', flex: 1 }}>
+            <div style={{ padding: '1rem' }}>
               {/* Legend at top */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
@@ -260,9 +260,9 @@ export default function MealsDashboardPage() {
                   
                   return (
                     <div key={date} style={{ 
-                      flex: '1 1 0',
+                      width: `${100 / 7}%`,
                       textAlign: 'center' as const,
-                      padding: '0.75rem 0.5rem',
+                      padding: '0.75rem 0.25rem',
                       borderRadius: '10px',
                       backgroundColor: isToday ? `${dayColor}25` : 'var(--bg-tertiary)',
                       border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
@@ -288,30 +288,38 @@ export default function MealsDashboardPage() {
                 
                 return (
                   <div key={mealType}>
-                    {/* Meal Type Header - Clickable to expand/collapse */}
+                    {/* Meal Type Header */}
                     <div 
-                      onClick={() => hasMeals && toggleMealType(mealType)}
                       style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '0.5rem',
                         padding: '1rem 0',
                         borderTop: '1px solid var(--border-color)',
-                        cursor: hasMeals ? 'pointer' : 'default',
                         opacity: hasMeals ? 1 : 0.5
                       }}
                     >
-                      {isCollapsed ? (
-                        <ChevronRight style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
-                      ) : (
-                        <ChevronDown style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
-                      )}
                       <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
                         {mealType}
                       </p>
-                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: 'auto', fontWeight: '500' }}>
-                        {isCollapsed ? 'Show' : 'Hide'}
-                      </span>
+                      {!hasMeals && (
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500' }}>(No meals)</span>
+                      )}
+                      {hasMeals && (
+                        <>
+                          {isCollapsed ? (
+                            <ChevronRight style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
+                          ) : (
+                            <ChevronDown style={{ width: '18px', height: '18px', color: 'var(--text-secondary)' }} />
+                          )}
+                          <span 
+                            onClick={() => toggleMealType(mealType)}
+                            style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: 'auto', fontWeight: '500', cursor: 'pointer' }}
+                          >
+                            {isCollapsed ? 'Show' : 'Hide'}
+                          </span>
+                        </>
+                      )}
                     </div>
                     
                     {/* Meal Rows - Only show if not collapsed */}
@@ -331,8 +339,8 @@ export default function MealsDashboardPage() {
                             
                             return (
                               <div key={date} style={{ 
-                                flex: '1 1 0', 
-                                padding: '0.6rem', 
+                                width: `${100 / 7}%`, 
+                                padding: '0.6rem 0.25rem', 
                                 borderRadius: '8px', 
                                 backgroundColor: 'var(--bg-tertiary)',
                                 display: 'flex',
