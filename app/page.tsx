@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { GroceryMatch } from '@/components/grocery-match';
 import { HistoricalTrends } from '@/components/historical-trends';
@@ -18,6 +18,15 @@ export default function MealsDashboardPage() {
     expandedMealId: null,
     dateRange: { start: '2026-04-13', end: '2026-04-19' },
   });
+
+  const [isDesktop, setIsDesktop] = useState(false);
+  
+  useEffect(() => {
+    const checkWidth = () => setIsDesktop(window.innerWidth >= 1024);
+    checkWidth();
+    window.addEventListener('resize', checkWidth);
+    return () => window.removeEventListener('resize', checkWidth);
+  }, []);
 
   const receipt = transformCachedOrder(realLatestOrder);
   const deliveries = getUpcomingDeliveries();
@@ -60,6 +69,45 @@ export default function MealsDashboardPage() {
     return 'var(--accent-rose)';
   };
 
+  // Layout styles
+  const mainStyle = {
+    maxWidth: '1400px',
+    margin: '0 auto',
+    padding: '1.5rem 1rem',
+  };
+
+  const statsRowStyle = {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '0.75rem',
+    marginBottom: '1.5rem',
+  };
+
+  const statCardStyle = {
+    flex: isDesktop ? '1 1 calc(20% - 0.75rem)' : '1 1 calc(50% - 0.75rem)',
+    minWidth: '140px',
+    maxWidth: isDesktop ? 'none' : 'calc(50% - 0.75rem)',
+  };
+
+  const twoColStyle = {
+    display: 'flex',
+    flexDirection: isDesktop ? 'row' as const : 'column' as const,
+    gap: '1.5rem',
+  };
+
+  const leftColStyle = {
+    flex: isDesktop ? '2 1 0' : '0 0 auto',
+    minWidth: 0,
+  };
+
+  const rightColStyle = {
+    flex: isDesktop ? '1 1 300px' : '0 0 auto',
+    minWidth: 0,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '1.5rem',
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Header */}
@@ -67,90 +115,84 @@ export default function MealsDashboardPage() {
         className="sticky top-0 z-50 px-4 py-3"
         style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}
       >
-        <div className="flex items-center justify-between" style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
-          <h1 className="text-lg font-bold text-[var(--text-primary)]">🍽️ {dashboardConfig.name}</h1>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>🍽️ {dashboardConfig.name}</h1>
           <ThemeToggle />
         </div>
       </header>
 
       {/* Main Content */}
-      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem 1rem' }}>
+      <main style={mainStyle}>
         
-        {/* Stats Row - Horizontal Flex */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <div className="card p-4" style={{ flex: '1 1 180px', minWidth: '150px' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--accent-emerald-bg)' }}>
-                <Check className="w-4 h-4" style={{ color: 'var(--accent-emerald)' }} />
+        {/* Stats Row */}
+        <div style={statsRowStyle}>
+          <div className="card p-4" style={statCardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
+                <Check style={{ width: '16px', height: '16px', color: 'var(--accent-emerald)' }} />
               </div>
-              <span className="text-xs text-[var(--text-muted)]">Order total</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Order total</span>
             </div>
-            <p className="text-xl font-bold text-[var(--text-primary)]">£{receipt?.orderTotal.toFixed(2) || '—'}</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)' }}>£{receipt?.orderTotal.toFixed(2) || '—'}</p>
           </div>
 
-          <div className="card p-4" style={{ flex: '1 1 180px', minWidth: '150px' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--accent-blue-bg)' }}>
-                <Calendar className="w-4 h-4" style={{ color: 'var(--accent-blue)' }} />
+          <div className="card p-4" style={statCardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-blue-bg)' }}>
+                <Calendar style={{ width: '16px', height: '16px', color: 'var(--accent-blue)' }} />
               </div>
-              <span className="text-xs text-[var(--text-muted)]">Delivery</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Delivery</span>
             </div>
-            <p className="text-base font-bold text-[var(--text-primary)]">
+            <p style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
               {deliveries[0] ? new Date(deliveries[0].date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}
             </p>
           </div>
 
-          <div className="card p-4" style={{ flex: '1 1 180px', minWidth: '150px' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--accent-emerald-bg)' }}>
-                <Check className="w-4 h-4" style={{ color: 'var(--accent-emerald)' }} />
+          <div className="card p-4" style={statCardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
+                <Check style={{ width: '16px', height: '16px', color: 'var(--accent-emerald)' }} />
               </div>
-              <span className="text-xs text-[var(--text-muted)]">Meals covered</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Meals covered</span>
             </div>
-            <p className="text-xl font-bold text-[var(--text-primary)]">{covered}/{coverage.length}</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{covered}/{coverage.length}</p>
           </div>
 
-          <div className="card p-4" style={{ flex: '1 1 180px', minWidth: '150px' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--accent-rose-bg)' }}>
-                <X className="w-4 h-4" style={{ color: 'var(--accent-rose)' }} />
+          <div className="card p-4" style={statCardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-rose-bg)' }}>
+                <X style={{ width: '16px', height: '16px', color: 'var(--accent-rose)' }} />
               </div>
-              <span className="text-xs text-[var(--text-muted)]">Unmatched</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Unmatched</span>
             </div>
-            <p className="text-xl font-bold text-[var(--text-primary)]">{unmatchedItems.length}</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{unmatchedItems.length}</p>
           </div>
 
-          <div className="card p-4" style={{ flex: '1 1 180px', minWidth: '150px' }}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ 
-                backgroundColor: summary.coveragePercentage >= 80 ? 'var(--accent-emerald-bg)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)'
-              }}>
-                <TrendingUp className="w-4 h-4" style={{ 
-                  color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)'
-                }} />
+          <div className="card p-4" style={statCardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: summary.coveragePercentage >= 80 ? 'var(--accent-emerald-bg)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' }}>
+                <TrendingUp style={{ width: '16px', height: '16px', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }} />
               </div>
-              <span className="text-xs text-[var(--text-muted)]">Coverage</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Coverage</span>
             </div>
-            <p className="text-xl font-bold" style={{ 
-              color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)'
-            }}>{summary.coveragePercentage}%</p>
+            <p style={{ fontSize: '24px', fontWeight: 'bold', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{summary.coveragePercentage}%</p>
           </div>
         </div>
 
         {/* Two Column Layout */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div style={twoColStyle}>
           
           {/* Left Column - Week Calendar */}
-          <div style={{ flex: '2 1 0', minWidth: 0 }}>
+          <div style={leftColStyle}>
             <div className="card overflow-hidden">
               <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <h2 className="text-sm font-semibold text-[var(--text-primary)]">📅 WEEK MEALS</h2>
+                <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>📅 WEEK MEALS</h2>
               </div>
               
-              <div className="overflow-x-auto">
-                <div style={{ minWidth: '700px' }}>
+              <div style={{ overflowX: 'auto' }}>
+                <div style={{ minWidth: isDesktop ? 'auto' : '700px' }}>
                   {/* Days Header */}
-                  <div className="flex gap-2 p-3" style={{ paddingBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem' }}>
                     <div style={{ width: '80px', flexShrink: 0 }} />
                     {days.map(({ date, isToday }) => {
                       const dayCoverage = coverageByDate[date] || [];
@@ -165,13 +207,13 @@ export default function MealsDashboardPage() {
                           backgroundColor: isToday ? `${dayColor}15` : 'var(--bg-tertiary)',
                           border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
                         }}>
-                          <p className="text-xs text-[var(--text-muted)] uppercase">
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                             {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
                           </p>
-                          <p className="text-lg font-bold" style={{ color: dayColor }}>
+                          <p style={{ fontSize: '20px', fontWeight: 'bold', color: dayColor }}>
                             {new Date(date).getDate()}
                           </p>
-                          <p className="text-[10px] font-medium" style={{ color: dayColor }}>{avgPct}%</p>
+                          <p style={{ fontSize: '10px', fontWeight: '500', color: dayColor }}>{avgPct}%</p>
                         </div>
                       );
                     })}
@@ -181,14 +223,13 @@ export default function MealsDashboardPage() {
                   {['breakfast', 'lunch', 'dinner'].map(mealType => (
                     <div 
                       key={mealType}
-                      className="flex gap-2 p-3 items-start"
-                      style={{ borderTop: '1px solid var(--border-color)' }}
+                      style={{ display: 'flex', gap: '0.5rem', padding: '0.75rem', borderTop: '1px solid var(--border-color)', alignItems: 'flex-start' }}
                     >
                       <div style={{ width: '80px', flexShrink: 0, paddingTop: '0.5rem' }}>
-                        <p className="text-sm font-medium text-[var(--text-muted)] capitalize">{mealType}</p>
+                        <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{mealType}</p>
                       </div>
                       
-                      <div className="flex gap-2" style={{ flex: '1 1 0' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', flex: '1 1 0' }}>
                         {days.map(({ date }) => {
                           const dayMeals = (coverageByDate[date] || []).filter(c => {
                             const m = c.meal.content.toLowerCase();
@@ -200,40 +241,38 @@ export default function MealsDashboardPage() {
                           const meal = dayMeals[0];
                           
                           return (
-                            <div key={date} className="p-2 rounded-lg" style={{ flex: '1 1 0', backgroundColor: 'var(--bg-tertiary)', minHeight: '70px' }}>
+                            <div key={date} style={{ flex: '1 1 0', padding: '0.5rem', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)', minHeight: '70px' }}>
                               {meal ? (
                                 <div>
-                                  <div className="flex items-start justify-between gap-1 mb-1">
-                                    <p className="text-xs font-medium text-[var(--text-primary)] leading-tight truncate" style={{ flex: 1 }} title={meal.meal.content}>
+                                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '4px', marginBottom: '4px' }}>
+                                    <p style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-primary)', lineHeight: '1.3', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={meal.meal.content}>
                                       {meal.meal.content}
                                     </p>
                                     <span 
-                                      className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] shrink-0"
-                                      style={{ backgroundColor: getStatusColor(meal.status, meal.coverageScore), color: 'white' }}
+                                      style={{ width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: 'white', flexShrink: 0, backgroundColor: getStatusColor(meal.status, meal.coverageScore) }}
                                     >
                                       {meal.status === 'covered' ? '✓' : meal.status === 'partial' ? '◧' : '✗'}
                                     </span>
                                   </div>
                                   {meal.meal.labels && meal.meal.labels.length > 0 && (
-                                    <div className="flex flex-wrap gap-1">
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '4px' }}>
                                       {meal.meal.labels.slice(0, 2).map((label: string, idx: number) => (
                                         <span 
                                           key={idx}
-                                          className="text-[9px] px-1 py-0.5 rounded"
-                                          style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+                                          style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
                                         >
                                           {label}
                                         </span>
                                       ))}
                                     </div>
                                   )}
-                                  <p className="text-[10px] mt-1 font-medium" style={{ color: getStatusColor(meal.status, meal.coverageScore) }}>
+                                  <p style={{ fontSize: '10px', fontWeight: '500', marginTop: '4px', color: getStatusColor(meal.status, meal.coverageScore) }}>
                                     {meal.coverageScore}%
                                   </p>
                                 </div>
                               ) : (
-                                <div className="h-full flex items-center justify-center">
-                                  <span className="text-[var(--text-muted)]">—</span>
+                                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                                  —
                                 </div>
                               )}
                             </div>
@@ -246,41 +285,40 @@ export default function MealsDashboardPage() {
               </div>
               
               {/* Legend */}
-              <div className="px-5 py-3 flex items-center gap-4" style={{ borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-tertiary)' }}>
-                <span className="flex items-center gap-1.5 text-xs">
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: 'var(--accent-emerald)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1.25rem', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-tertiary)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                  <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--accent-emerald)' }} />
                   <span style={{ color: 'var(--text-muted)' }}>Covered</span>
                 </span>
-                <span className="flex items-center gap-1.5 text-xs">
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: 'var(--accent-amber)' }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                  <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--accent-amber)' }} />
                   <span style={{ color: 'var(--text-muted)' }}>Partial</span>
                 </span>
-                <span className="flex items-center gap-1.5 text-xs">
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: 'var(--accent-rose)' }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                  <span style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--accent-rose)' }} />
                   <span style={{ color: 'var(--text-muted)' }}>Missing</span>
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Additional Info */}
-          <div style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Right Column */}
+          <div style={rightColStyle}>
             
             {/* Unmatched Groceries */}
             {unmatchedItems.length > 0 && (
               <div className="card overflow-hidden">
-                <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)' }}>
+                  <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>
                     📦 UNMATCHED ({unmatchedItems.length})
                   </h2>
                 </div>
-                <div className="p-3">
-                  <div className="flex flex-wrap gap-2">
+                <div style={{ padding: '0.75rem' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                     {unmatchedItems.map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-2 py-1 px-2 rounded" 
-                        style={{ backgroundColor: 'var(--bg-tertiary)' }}>
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--text-muted)' }} />
-                        <span className="text-sm text-[var(--text-primary)]">{item.name}</span>
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.25rem 0.5rem', borderRadius: '6px', backgroundColor: 'var(--bg-tertiary)' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--text-muted)' }} />
+                        <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>{item.name}</span>
                       </div>
                     ))}
                   </div>
@@ -290,30 +328,30 @@ export default function MealsDashboardPage() {
 
             {/* Grocery Categories */}
             <div className="card overflow-hidden">
-              <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <h2 className="text-sm font-semibold text-[var(--text-primary)]">🛒 CATEGORIES</h2>
+              <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)' }}>
+                <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>🛒 CATEGORIES</h2>
               </div>
-              <div className="p-3">
+              <div style={{ padding: '0.75rem' }}>
                 <GroceryMatch coverage={filteredCoverage} receipt={receipt} />
               </div>
             </div>
 
             {/* Trends */}
             <div className="card overflow-hidden">
-              <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <h2 className="text-sm font-semibold text-[var(--text-primary)]">📊 TRENDS</h2>
+              <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)' }}>
+                <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>📊 TRENDS</h2>
               </div>
-              <div className="p-3">
+              <div style={{ padding: '0.75rem' }}>
                 <HistoricalTrends currentCoverage={summary.coveragePercentage} />
               </div>
             </div>
 
             {/* Chart */}
             <div className="card overflow-hidden">
-              <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <h2 className="text-sm font-semibold text-[var(--text-primary)]">📈 CHART</h2>
+              <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)' }}>
+                <h2 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>📈 CHART</h2>
               </div>
-              <div className="p-3">
+              <div style={{ padding: '0.75rem' }}>
                 <Chart coverage={filteredCoverage} />
               </div>
             </div>
@@ -322,7 +360,7 @@ export default function MealsDashboardPage() {
       </main>
 
       {/* Footer */}
-      <footer className="text-center py-4 text-xs" style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)' }}>
+      <footer style={{ textAlign: 'center', padding: '1rem', fontSize: '12px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)' }}>
         Last updated: {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
       </footer>
     </div>
