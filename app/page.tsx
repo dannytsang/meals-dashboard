@@ -83,7 +83,7 @@ export default function MealsDashboardPage() {
     });
   };
   
-  // Fetch product info from local database
+  // Fetch product info from local database + Open Food Facts for images
   const fetchProductInfo = async (itemName: string) => {
     setLoadingProduct(true);
     setProductInfo(null);
@@ -92,19 +92,40 @@ export default function MealsDashboardPage() {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     const product = findProductInfo(itemName);
+    
+    // Try to get image from Open Food Facts using CORS proxy
+    let imageUrl = product?.image || '';
+    if (!imageUrl) {
+      try {
+        const searchQuery = encodeURIComponent(itemName + ' tesco');
+        const searchUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${searchQuery}&json=1&page_size=1`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(searchUrl)}`;
+        const searchResponse = await fetch(proxyUrl);
+        const searchData = await searchResponse.json();
+        if (searchData.products && searchData.products.length > 0) {
+          const firstProduct = searchData.products[0];
+          if (firstProduct.image_front_url) {
+            imageUrl = firstProduct.image_front_url;
+          }
+        }
+      } catch (e) {
+        console.log('Open Food Facts lookup failed:', e);
+      }
+    }
+    
     if (product) {
       setProductInfo({
         description: product.description,
         storage: product.storage,
         nutrition: product.nutrition,
-        image: product.image
+        image: imageUrl
       });
     } else {
       setProductInfo({
         description: 'Product information not available in database.',
         storage: 'Check packaging for storage instructions.',
         nutrition: 'Nutrition information not available.',
-        image: ''
+        image: imageUrl
       });
     }
     
