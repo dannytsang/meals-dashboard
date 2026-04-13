@@ -3,7 +3,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { HistoricalTrends } from '@/components/historical-trends';
-import { Chart } from '@/components/chart';
 import { dashboardConfig } from '@/lib/config';
 import { calculateCoverageSummary, getUpcomingDeliveries } from '@/lib/meals-data';
 import { realCoverage, realLatestOrder, transformCachedOrder } from '@/lib/real-data';
@@ -41,17 +40,16 @@ export default function MealsDashboardPage() {
   const covered = coverage.filter(c => c.status === 'covered').length;
   const unmatchedItems = receipt?.items || [];
 
-  // Identify unmatched items (items that don't match any meal)
-  const matchedItemNames = new Set<string>();
-  coverage.forEach(c => {
-    matchedItemNames.add(c.meal.content.toLowerCase());
-    c.matchedItems.forEach(name => matchedItemNames.add(name.toLowerCase()));
-  });
-  
+  // Identify unmatched items using word-based matching
+  // An item is "matched" if any of its words appear in a meal's content, or if any meal keywords appear in the item name
   const trulyUnmatchedItems = unmatchedItems.filter(item => {
-    const itemLower = item.name.toLowerCase();
-    return !matchedItemNames.has(itemLower) && 
-           !coverage.some(c => c.meal.content.toLowerCase().includes(itemLower));
+    const itemWords = item.name.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+    const isMatched = coverage.some(c => {
+      const mealWords = c.meal.content.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+      // Check if any item word matches any meal word
+      return itemWords.some(iw => mealWords.some(mw => mw.includes(iw) || iw.includes(mw)));
+    });
+    return !isMatched;
   });
 
   // Group items by category
@@ -67,10 +65,15 @@ export default function MealsDashboardPage() {
   // Get max price from items
   const maxItemPrice = unmatchedItems.length > 0 ? Math.max(...unmatchedItems.map(i => i.price || 0)) : 10;
   
-  // Get matched items for a specific meal
+  // Get items that match a specific meal using word-based matching
   const getMatchedItemsForMeal = (mealContent: string) => {
     const mealCoverage = coverage.find(c => c.meal.content === mealContent);
-    return mealCoverage?.matchedItems || [];
+    if (!mealCoverage) return [];
+    const mealWords = mealContent.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+    return unmatchedItems.filter(item => {
+      const itemWords = item.name.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+      return itemWords.some(iw => mealWords.some(mw => mw.includes(iw) || iw.includes(mw)));
+    });
   };
   
   const displayItems = unmatchedItems.filter(item => {
@@ -84,10 +87,12 @@ export default function MealsDashboardPage() {
       (matchedFilter === 'matched' && isMatched) || 
       (matchedFilter === 'unmatched' && isUnmatched);
     
-    // Meal filter - if a meal is selected, show only items that match that meal
-    const mealMatch = !selectedMeal || getMatchedItemsForMeal(selectedMeal).some(m => 
-      m.toLowerCase() === item.name.toLowerCase() || item.name.toLowerCase().includes(m.toLowerCase())
-    );
+    // Meal filter - if a meal is selected, show only items that match that meal's content
+    const mealMatch = !selectedMeal || (() => {
+      const mealWords = selectedMeal.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+      const itemWords = item.name.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+      return itemWords.some(iw => mealWords.some(mw => mw.includes(iw) || iw.includes(mw)));
+    })();
     
     return catMatch && priceMatch && matchedMatch && mealMatch;
   });
@@ -209,25 +214,25 @@ export default function MealsDashboardPage() {
             </p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', cursor: 'pointer' }} onClick={() => { setMatchedFilter(matchedFilter === 'matched' ? 'all' : 'matched'); setSelectedMeal(null); }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Meals Covered</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)', cursor: 'pointer' }} onClick={() => { setMatchedFilter(matchedFilter === 'matched' ? 'all' : 'matched'); setSelectedMeal(null); }}>{covered}/{coverage.length}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{covered}/{coverage.length}</p>
             {matchedFilter === 'matched' && <p style={{ fontSize: '9px', color: 'var(--accent-emerald)', fontWeight: '600', marginTop: '2px' }}>Filtered</p>}
           </div>
 
-          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', cursor: 'pointer' }} onClick={() => { setMatchedFilter(matchedFilter === 'unmatched' ? 'all' : 'unmatched'); setSelectedMeal(null); }}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-rose-bg)' }}>
                 <X style={{ width: '20px', height: '20px', color: 'var(--accent-rose)' }} />
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unmatched</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)', cursor: 'pointer' }} onClick={() => { setMatchedFilter(matchedFilter === 'unmatched' ? 'all' : 'unmatched'); setSelectedMeal(null); }}>{unmatchedItems.length}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{unmatchedItems.length}</p>
             {matchedFilter === 'unmatched' && <p style={{ fontSize: '9px', color: 'var(--accent-rose)', fontWeight: '600', marginTop: '2px' }}>Filtered</p>}
           </div>
 
@@ -310,14 +315,29 @@ export default function MealsDashboardPage() {
                             }}>
                               {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
                             </span>
-                            <span style={{ 
-                              fontSize: '14px', 
-                              fontWeight: 'bold', 
-                              color: hasMeals ? 'var(--text-primary)' : 'var(--text-secondary)',
-                              display: 'block'
-                            }}>
-                              {new Date(date).getDate()} {new Date(date).toLocaleDateString('en-GB', { month: 'short' }).toUpperCase()}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                              <span style={{ 
+                                fontSize: '14px', 
+                                fontWeight: 'bold', 
+                                color: hasMeals ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                display: 'block'
+                              }}>
+                                {new Date(date).getDate()} {new Date(date).toLocaleDateString('en-GB', { month: 'short' }).toUpperCase()}
+                              </span>
+                              {deliveries.some(d => d.date === date) && (
+                                <span style={{
+                                  fontSize: '8px',
+                                  fontWeight: '700',
+                                  padding: '1px 4px',
+                                  borderRadius: '3px',
+                                  backgroundColor: 'var(--accent-blue)',
+                                  color: 'white',
+                                  textTransform: 'uppercase'
+                                }}>
+                                  Delivery
+                                </span>
+                              )}
+                            </div>
                           </th>
                         );
                       })}
@@ -682,12 +702,6 @@ export default function MealsDashboardPage() {
             <div style={{ ...cardStyle, padding: '1rem' }}>
               <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>📊 TRENDS</h2>
               <HistoricalTrends currentCoverage={summary.coveragePercentage} />
-            </div>
-
-            {/* Chart */}
-            <div style={{ ...cardStyle, padding: '1rem' }}>
-              <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>📈 CHART</h2>
-              <Chart coverage={filteredCoverage} />
             </div>
           </div>
         </div>
