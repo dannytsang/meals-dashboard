@@ -13,6 +13,7 @@ export interface Meal {
   date: string;
   labels: string[];
   section: string;
+  meal_type?: 'lunch' | 'dinner';
   priority?: number;
   description?: string;
 }

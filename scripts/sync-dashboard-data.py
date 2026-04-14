@@ -50,6 +50,8 @@ def run_command(cmd: list, timeout: int = 60, cwd: Path = None) -> Tuple[bool, s
         return False, str(e)
 
 
+ASHLEE_LUNCH_SECTION_ID = "6gJfvHHqHrCMPcp9"
+
 def fetch_meal_plan(days: int = 7) -> Tuple[bool, str]:
     """Fetch meal plan from Todoist."""
     print(f"  Fetching meal plan (next {days} days)...")
@@ -62,8 +64,7 @@ def fetch_meal_plan(days: int = 7) -> Tuple[bool, str]:
         "python3",
         str(MEALS_SKILL_PATH / "scripts" / "grocery" / "fetch-meal-plan.py"),
         "--start-date", str(start),
-        "--end-date", str(end),
-        "--json"
+        "--end-date", str(end)
     ]
     
     success, output = run_command(cmd, timeout=90)
@@ -322,11 +323,22 @@ def main():
         print("[1] Fetching fresh data...")
         
         # Fetch Tesco receipt
-        _, _ = fetch_tesco_receipt(days=14)
+        _, receipt_output = fetch_tesco_receipt(days=14)
         print()
         
-        # Fetch meal plan
-        _, _ = fetch_meal_plan(days=7)
+        # Fetch meal plan and parse JSON
+        success, meal_plan_output = fetch_meal_plan(days=7)
+        if success and meal_plan_output:
+            try:
+                meal_plan_data = json.loads(meal_plan_output)
+                # Add meal_type based on section_id
+                if "meals" in meal_plan_data:
+                    for meal in meal_plan_data["meals"]:
+                        section_id = meal.get("section_id", "")
+                        meal["meal_type"] = "lunch" if section_id == ASHLEE_LUNCH_SECTION_ID else "dinner"
+            except json.JSONDecodeError as e:
+                print(f"  ⚠ Failed to parse meal plan JSON: {e}")
+                meal_plan_data = None
         print()
     else:
         print("[1] Skipping fetch (--skip-fetch)")
@@ -335,7 +347,8 @@ def main():
     # Step 2: Read cached data
     print("[2] Reading cached data...")
     receipt_data = read_cache_json(RECEIPT_CACHE)
-    meal_plan_data = read_cache_json(MEAL_PLAN_CACHE)
+    if args.skip_fetch:
+        meal_plan_data = read_cache_json(MEAL_PLAN_CACHE)
     
     print(f"  Receipt: {'found' if receipt_data else 'not found'}")
     print(f"  Meal plan: {'found' if meal_plan_data else 'not found'}")

@@ -4,7 +4,7 @@ import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { HistoricalTrends } from '@/components/historical-trends';
 import { dashboardConfig } from '@/lib/config';
-import { calculateCoverageSummary, getUpcomingDeliveries } from '@/lib/meals-data';
+import { calculateCoverageSummary, getUpcomingDeliveries, Meal } from '@/lib/meals-data';
 import { realCoverage, realLatestOrder, transformCachedOrder } from '@/lib/real-data';
 import { syncMeta } from '@/lib/sync-meta';
 import { DashboardState, filterCoverage } from '@/lib/dashboard-state';
@@ -42,6 +42,17 @@ export default function MealsDashboardPage() {
   const receipt = transformCachedOrder(realLatestOrder);
   const deliveries = getUpcomingDeliveries();
   const coverage = realCoverage;
+  // Helper to determine meal type from Meal object
+  const getMealType = (meal: Meal): 'breakfast' | 'lunch' | 'dinner' => {
+    if (meal.meal_type === 'lunch') return 'lunch';
+    if (meal.meal_type === 'dinner') return 'dinner';
+    // Fallback to keyword matching for backward compatibility
+    const m = meal.content.toLowerCase();
+    if (m.includes('breakfast') || m.includes('cereal')) return 'breakfast';
+    if (m.includes('lunch') || m.includes('sandwich')) return 'lunch';
+    return 'dinner';
+  };
+
   const filteredCoverage = filterCoverage(coverage, state.statusFilter);
   const summary = calculateCoverageSummary(coverage);
   
@@ -212,10 +223,7 @@ export default function MealsDashboardPage() {
   // Check which meal types have meals
   const mealTypesWithMeals: Set<string> = new Set();
   coverage.forEach(c => {
-    const m = c.meal.content.toLowerCase();
-    if (m.includes('breakfast') || m.includes('cereal')) mealTypesWithMeals.add('breakfast');
-    else if (m.includes('lunch') || m.includes('sandwich')) mealTypesWithMeals.add('lunch');
-    else mealTypesWithMeals.add('dinner');
+    mealTypesWithMeals.add(getMealType(c.meal));
   });
 
   // Auto-expand meal types that have meals, collapse those that don't
@@ -478,12 +486,7 @@ export default function MealsDashboardPage() {
                                   <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>No meals</span>
                                 )}
                                 {hasMeals && isCollapsed && (() => {
-                                  const dayMeals = (coverageByDate[date] || []).filter(c => {
-                                    const m = c.meal.content.toLowerCase();
-                                    if (mealType === 'breakfast') return m.includes('breakfast') || m.includes('cereal');
-                                    if (mealType === 'lunch') return m.includes('lunch') || m.includes('sandwich');
-                                    return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
-                                  });
+                                  const dayMeals = (coverageByDate[date] || []).filter(c => getMealType(c.meal) === mealType);
                                   if (dayMeals.length === 0) return <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>—</span>;
                                   // Show count or first meal coverage
                                   const avgCoverage = Math.round(dayMeals.reduce((sum, m) => sum + m.coverageScore, 0) / dayMeals.length);
@@ -516,12 +519,7 @@ export default function MealsDashboardPage() {
                             <tr>
                               <td style={{ borderBottom: '1px solid var(--border-color)' }} />
                               {days.map(({ date }) => {
-                                const dayMeals = (coverageByDate[date] || []).filter(c => {
-                                  const m = c.meal.content.toLowerCase();
-                                  if (mealType === 'breakfast') return m.includes('breakfast') || m.includes('cereal');
-                                  if (mealType === 'lunch') return m.includes('lunch') || m.includes('sandwich');
-                                  return m.includes('dinner') || m.includes('tea') || (!m.includes('breakfast') && !m.includes('lunch'));
-                                });
+                                const dayMeals = (coverageByDate[date] || []).filter(c => getMealType(c.meal) === mealType);
                                 
                                 return (
                                   <td key={date} style={{ 
