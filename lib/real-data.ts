@@ -173,41 +173,6 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.95
     },
     {
-        "name": "Snack + Tesco Or Branded Sandwich, Wrap, Roll, Salad Or Sushi",
-        "quantity": 1,
-        "price": 3.85
-    },
-    {
-        "name": "Snack + Tesco Or Branded Sandwich, Wrap, Roll, Salad Or Sushi",
-        "quantity": 1,
-        "price": 1.0
-    },
-    {
-        "name": "Snack + Tesco Or Branded Sandwich, Wrap, Roll, Salad Or Sushi",
-        "quantity": 1,
-        "price": 3.85
-    },
-    {
-        "name": "Snack + Tesco Or Branded Sandwich, Wrap, Roll, Salad Or Sushi",
-        "quantity": 1,
-        "price": 3.0
-    },
-    {
-        "name": "Snack + Tesco Or Branded Sandwich, Wrap, Roll, Salad Or Sushi",
-        "quantity": 1,
-        "price": 3.85
-    },
-    {
-        "name": "Snack + Tesco Or Branded Sandwich, Wrap, Roll, Salad Or Sushi",
-        "quantity": 1,
-        "price": 1.0
-    },
-    {
-        "name": "1 Cirio Double Concentrate Puree",
-        "quantity": 1,
-        "price": 4.0
-    },
-    {
         "name": "Fire Pit 2 Minted Lamb Leg Steaks 250g",
         "quantity": 1,
         "price": 0.0
@@ -694,6 +659,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -823,6 +789,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -928,9 +895,9 @@ export const realCoverage: MealCoverage[] = [
       },
       {
         "ingredient": "sandwich loaf",
-        "name": "Snack + Tesco Or Branded Sandwich, Wrap, Roll, Salad Or Sushi",
-        "quantity": 1,
-        "price": 3.85
+        "name": "sandwich loaf",
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "cheese",
@@ -1151,6 +1118,7 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": []
   }
 ];
+
 
 
 
