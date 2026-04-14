@@ -190,34 +190,24 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
     coverage_start = None
     coverage_end = None
     
-    print(f"  DEBUG: File has {len(lines)} lines")
     for i, line in enumerate(lines):
         if 'export const realLatestOrder: CachedOrder' in line:
             receipt_start = i
-            print(f"  DEBUG: receipt_start = {i}")
         elif 'export const realMealPlan: Meal[]' in line:
             meal_plan_start = i
-            print(f"  DEBUG: meal_plan_start = {i}")
         elif 'export const realCoverage: MealCoverage[]' in line:
             coverage_start = i
-            print(f"  DEBUG: coverage_start = {i}")
     
     # Find end markers separately (only look for them after start lines)
     for i, line in enumerate(lines):
         stripped = line.strip()
         if receipt_start is not None and receipt_end is None and i > receipt_start and stripped == '};':
             receipt_end = i
-            print(f"  DEBUG: receipt_end = {i}")
         elif meal_plan_start is not None and meal_plan_end is None and i > meal_plan_start and stripped == '];':
             meal_plan_end = i
-            print(f"  DEBUG: meal_plan_end = {i}")
-        elif coverage_start is not None and coverage_end is None and i > coverage_start and (stripped == '];' or stripped == ';'):
-            # For realCoverage: could be `];` (array literal) or `;` (type declaration with = [])
+        elif coverage_start is not None and coverage_end is None and i > coverage_start and (stripped == '];' or stripped == '};'):
             coverage_end = i
-            print(f"  DEBUG: coverage_end = {i}")
             break
-    
-    print(f"  First scan: receipt_start={receipt_start}, receipt_end={receipt_end}, meal_plan_start={meal_plan_start}, meal_plan_end={meal_plan_end}, coverage_start={coverage_start}, coverage_end={coverage_end}")
     
     # Update receipt data
     if receipt and receipt_start is not None and receipt_end is not None:
@@ -336,20 +326,12 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
                     coverage_end = i
                     break
         
-        print(f"  DEBUG (2nd scan): coverage_start={coverage_start}, coverage_end={coverage_end}, total_lines={len(lines)}")
-        if coverage_start is not None:
-            print(f"  DEBUG: Line {coverage_start}: {repr(lines[coverage_start][:80])}")
-            if coverage_end is not None:
-                print(f"  DEBUG: Line {coverage_end}: {repr(lines[coverage_end][:80])}")
-        
         coverage_json = json.dumps(coverage_block, indent=2)
         coverage_lines = [f'export const realCoverage: MealCoverage[] = {coverage_json};', '']
         
         if coverage_start is not None and coverage_end is not None:
             lines = lines[:coverage_start] + [l + '\n' for l in coverage_lines] + lines[coverage_end+1:]
             print(f"  ✓ Updated coverage data ({len(coverage_block)} entries)")
-        else:
-            print(f"  ✗ Could not find coverage boundaries (start={coverage_start}, end={coverage_end})")
     
     # Write back
     with open(REAL_DATA_PATH, 'w') as f:
