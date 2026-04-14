@@ -211,7 +211,8 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
         elif meal_plan_start is not None and meal_plan_end is None and i > meal_plan_start and stripped == '];':
             meal_plan_end = i
             print(f"  DEBUG: meal_plan_end = {i}")
-        elif coverage_start is not None and coverage_end is None and i > coverage_start and stripped == '];':
+        elif coverage_start is not None and coverage_end is None and i > coverage_start and (stripped == '];' or stripped == ';'):
+            # For realCoverage: could be `];` (array literal) or `;` (type declaration with = [])
             coverage_end = i
             print(f"  DEBUG: coverage_end = {i}")
             break
