@@ -478,11 +478,12 @@ export default function MealsDashboardPage() {
                                 {mealType}
                               </span>
                             </td>
-                            {days.map(({ date }) => (
+                            {days.map(({ date, isToday }) => (
                               <td key={date} style={{ 
                                 padding: '0.4rem 0.25rem',
                                 borderLeft: '1px solid var(--border-color)',
                                 borderBottom: '1px solid var(--border-color)',
+                                backgroundColor: isToday ? 'var(--highlight-today)' : 'transparent',
                                 textAlign: 'center' as const
                               }}>
                                 {!hasMeals && (
@@ -521,7 +522,7 @@ export default function MealsDashboardPage() {
                           {!isCollapsed && (
                             <tr>
                               <td style={{ borderBottom: '1px solid var(--border-color)' }} />
-                              {days.map(({ date }) => {
+                              {days.map(({ date, isToday }) => {
                                 const dayMeals = (coverageByDate[date] || []).filter(c => getMealType(c.meal) === mealType);
                                 
                                 return (
@@ -529,6 +530,7 @@ export default function MealsDashboardPage() {
                                     padding: '0.75rem 0.5rem',
                                     borderLeft: '1px solid var(--border-color)',
                                     borderBottom: '1px solid var(--border-color)',
+                                    backgroundColor: isToday ? 'var(--highlight-today)' : 'transparent',
                                     verticalAlign: 'top' as const
                                   }}>
                                     {dayMeals.length > 0 ? (
