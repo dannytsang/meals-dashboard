@@ -310,8 +310,11 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
         for i, line in enumerate(lines):
             if 'export const realCoverage: MealCoverage[]' in line:
                 coverage_start = i
-            elif coverage_start is not None and coverage_end is None and line.strip() == '];':
-                coverage_end = i
+            elif coverage_start is not None and coverage_end is None:
+                stripped = line.strip()
+                # End marker is either ]; (array literal) or ; (type declaration)
+                if stripped == '];' or stripped == ';':
+                    coverage_end = i
         
         coverage_json = json.dumps(coverage_block, indent=2)
         coverage_lines = [f'export const realCoverage: MealCoverage[] = {coverage_json};', '']
@@ -319,6 +322,8 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
         if coverage_start is not None and coverage_end is not None:
             lines = lines[:coverage_start] + [l + '\n' for l in coverage_lines] + lines[coverage_end+1:]
             print(f"  ✓ Updated coverage data ({len(coverage_block)} entries)")
+        else:
+            print(f"  ✗ Could not find coverage boundaries (start={coverage_start}, end={coverage_end})")
     
     # Write back
     with open(REAL_DATA_PATH, 'w') as f:
