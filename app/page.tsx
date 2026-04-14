@@ -6,6 +6,7 @@ import { HistoricalTrends } from '@/components/historical-trends';
 import { dashboardConfig } from '@/lib/config';
 import { calculateCoverageSummary, getUpcomingDeliveries } from '@/lib/meals-data';
 import { realCoverage, realLatestOrder, transformCachedOrder } from '@/lib/real-data';
+import { syncMeta } from '@/lib/sync-meta';
 import { DashboardState, filterCoverage } from '@/lib/dashboard-state';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { findProductInfo } from '@/lib/product-database';
@@ -855,7 +856,7 @@ export default function MealsDashboardPage() {
 
       {/* Footer */}
       <footer style={{ textAlign: 'center', padding: '1rem', fontSize: '12px', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)' }}>
-        Last updated: {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+        Data updated: {syncMeta.lastSyncDisplay}
       </footer>
       
       {/* Product Modal */}
