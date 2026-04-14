@@ -171,9 +171,110 @@ export const realLatestOrder: CachedOrder = {
         "name": "Jammie Dodgers Biscuits 140G Substitutions: On",
         "quantity": 3,
         "price": 1.95
+    },
+    {
+        "name": "Rosedene Farms Blueberries 150G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Blackberries 250G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco 2 Skinless Smoked Basa Fillets 240G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Finest Green Grapes Seedless 500G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco British Whole Milk 1.13L, 2 Pints",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Jammie Dodgers Biscuits 140G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Cantaloupe Melon Each",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Honeydew Melon",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "\u2020 Radnor Fizz Tropical Drink 4X330ml",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Raw King Prawns 165g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Egg Noodles 300G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Large Vegetable Stir Fry 570g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Soy and Garlic Stir Fry Sauce 165g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Cirio Double Concentrate Puree 4 Pack 70G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "\u2020 Maoam Bloxx 4 Pack 88G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "\u2020 Dr Pepper Regular 500 M",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": 1,
+        "price": 0.0
     }
 ]
 };
+
 
 
 
@@ -333,6 +434,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -347,13 +449,23 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "potato"
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "potato",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "baked potato",
+        "name": "baked potato",
+        "quantity": null,
+        "price": null
+      }
     ],
-    "notes": "Check freezer or add to order"
+    "missingItems": []
   },
   {
     "meal": {
@@ -364,13 +476,23 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "potato"
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "potato",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "baked potato",
+        "name": "baked potato",
+        "quantity": null,
+        "price": null
+      }
     ],
-    "notes": "Check freezer or add to order"
+    "missingItems": []
   },
   {
     "meal": {
@@ -395,14 +517,38 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "lunch"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
+    "status": "partial",
+    "coverageScore": 80,
+    "matchedItems": [
+      {
+        "ingredient": "bread",
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "toastie",
+        "name": "toastie",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "panini",
+        "name": "panini",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "sandwich loaf",
+        "name": "sandwich loaf",
+        "quantity": null,
+        "price": null
+      }
+    ],
     "missingItems": [
-      "bread",
       "cheese"
     ],
-    "notes": "Check freezer or add to order"
+    "notes": "Have: bread or toastie or panini or sandwich loaf | Need: cheese or cheddar"
   },
   {
     "meal": {
@@ -430,13 +576,23 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "potato"
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "potato",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "mash",
+        "name": "mash",
+        "quantity": null,
+        "price": null
+      }
     ],
-    "notes": "Check freezer or add to order"
+    "missingItems": []
   },
   {
     "meal": {
@@ -468,13 +624,23 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "lunch"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "potato"
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "potato",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "baked potato",
+        "name": "baked potato",
+        "quantity": null,
+        "price": null
+      }
     ],
-    "notes": "Check freezer or add to order"
+    "missingItems": []
   },
   {
     "meal": {
@@ -580,6 +746,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "Check freezer or add to order"
   }
 ];
+
 
 
 
