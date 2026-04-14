@@ -219,67 +219,396 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 
 // Real data from the meals skill cache (April 10, 2026 delivery)
 export const realLatestOrder: CachedOrder = {
-  "email_id": "19d777b317c3b7fe",
-  "email_date": "2026-04-10T14:00:00",
-  "delivery_date": "Friday 10 April 2026",
-  "delivery_sort": "2026-04-10T00:00:00",
-  "order_number": "4611-8983-20",
+  "email_id": "",
+  "email_date": "",
+  "delivery_date": "2026-04-14",
+  "delivery_sort": "",
+  "order_number": "2911-8019-581",
   "items": [
-    { "name": "Crosta & Mollica Salami Napoli Sourdough Pizza 413g", "quantity": 1, "price": 6.25 },
-    { "name": "Crosta & Mollica Stromboli Spicy Salami Sourdough Pizza 447g", "quantity": 1, "price": 6.25 },
-    { "name": "Rosedene Farms Blueberries 150G", "quantity": 1, "price": 1.31 },
-    { "name": "Tesco Blueberries 150G", "quantity": 1, "price": 2.0 },
-    { "name": "Tesco Celery", "quantity": 1, "price": 0.75 },
-    { "name": "Tesco Organic Celery", "quantity": 1, "price": 1.3 },
-    { "name": "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g", "quantity": 1, "price": 2.5 },
-    { "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g", "quantity": 1, "price": 2.75 },
-    { "name": "Innocent Wonder Green Juice 750Ml", "quantity": 1, "price": 2.5 },
-    { "name": "Rosedene Farms Raspberries 125G", "quantity": 1, "price": 1.49 },
-    { "name": "Tesco Blackberries 250G", "quantity": 3, "price": 8.25 },
-    { "name": "Tesco Finest Green Grapes Seedless 500G", "quantity": 3, "price": 6.0 },
-    { "name": "Tesco Finest Red Grapes Seedless 500G", "quantity": 1, "price": 2.0 },
-    { "name": "Tesco Fire Pit 2 Salt & Pepper Beef Steaks 200G", "quantity": 1, "price": 4.04 },
-    { "name": "Tesco Gammon Steak With Cheese & Pineapple 345G", "quantity": 1, "price": 3.96 },
-    { "name": "Tesco Iceberg Lettuce 200G", "quantity": 2, "price": 1.28 },
-    { "name": "Tesco Pork Loin Joint 1.900KG", "quantity": 1, "price": 7.6 },
-    { "name": "Tesco Pork Stir Fry 500G", "quantity": 1, "price": 4.3 },
-    { "name": "Tesco Strawberries 400G", "quantity": 1, "price": 2.6 },
-    { "name": "Yoplait Frubes Yoghurt Tubes - Strawberry, Red Berry & Peach 9x37g", "quantity": 1, "price": 1.5 },
-    { "name": "Aunt Bessie's Maple & Thyme Glazed Carrots 500g", "quantity": 1, "price": 2.5 },
-    { "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g", "quantity": 2, "price": 4.5 },
-    { "name": "Tesco Frozen Broccoli Florets 900G", "quantity": 1, "price": 1.07 },
-    { "name": "Butterkist Microwave Popcorn Sweet & Salted 3X60g", "quantity": 1, "price": 1.75 },
-    { "name": "De Cecco Conchiglie Rigate 500g", "quantity": 1, "price": 2.0 },
-    { "name": "Jammie Dodgers Biscuits 140G", "quantity": 1, "price": 0.65 },
-    { "name": "Tesco All Rounder Potatoes 2Kg", "quantity": 1, "price": 1.32 },
-    { "name": "Tesco Baby Plum Tomatoes 300G", "quantity": 2, "price": 1.8 },
-    { "name": "Tesco Baking Potatoes 2kg", "quantity": 1, "price": 1.4 },
-    { "name": "Tesco Medium Free Range Eggs 12 Pack", "quantity": 1, "price": 2.85 },
-    { "name": "Tesco Red Peppers Each", "quantity": 2, "price": 1.4 },
-    { "name": "Tesco Whole Cucumber Each", "quantity": 1, "price": 0.8 },
-  ]
+    {
+        "name": "Wild Juicy Mango 0% Aluminium Deodorant Refill 40g",
+        "quantity": 1,
+        "price": 4.8
+    },
+    {
+        "name": "\u2020 Wild Natural Deodorant Refill - Coconut & Vanilla 40g",
+        "quantity": 1,
+        "price": 6.0
+    },
+    {
+        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
+        "quantity": 1,
+        "price": 2.75
+    },
+    {
+        "name": "Tesco British Whole Milk 568Ml, 1 Pint",
+        "quantity": 1,
+        "price": 0.85
+    },
+    {
+        "name": "Tesco Cheese and Garlic Flatbread 230g",
+        "quantity": 1,
+        "price": 1.2
+    },
+    {
+        "name": "Tesco Large Chicken Fillet Pack 1.6Kg",
+        "quantity": 1,
+        "price": 9.8
+    },
+    {
+        "name": "Birds Eye Steamfresh Asian Style Rice 380g",
+        "quantity": 1,
+        "price": 2.08
+    },
+    {
+        "name": "Birds Eye Steamfresh Korean Style Noodles 350g",
+        "quantity": 1,
+        "price": 2.42
+    },
+    {
+        "name": "McCain Home Chips Crinkle Cut 1.6kg",
+        "quantity": 1,
+        "price": 4.3
+    },
+    {
+        "name": "\u2020 Cadbury Dairy Milk Chocolate Bar 180g",
+        "quantity": 1,
+        "price": 2.0
+    },
+    {
+        "name": "Crosta & Mollica Parmesan & Poppyseed Torinesi 120G",
+        "quantity": 1,
+        "price": 1.3
+    },
+    {
+        "name": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
+        "quantity": 1,
+        "price": 2.2
+    },
+    {
+        "name": "\u2020 Growers Harvest Apple Juice From Concentrate 6 X 200Ml",
+        "quantity": 1,
+        "price": 1.89
+    },
+    {
+        "name": "\u2020 Growers Harvest Orange Juice From Concentrate 6 X 200Ml",
+        "quantity": 1,
+        "price": 1.89
+    },
+    {
+        "name": "Hayden's 4 Delicious Yum Yums",
+        "quantity": 1,
+        "price": 1.75
+    },
+    {
+        "name": "Jammie Dodgers Biscuits 140G",
+        "quantity": 3,
+        "price": 1.95
+    },
+    {
+        "name": "\u2020 McCoy's Classic Variety Multipack Crisps 6x25g",
+        "quantity": 1,
+        "price": 1.75
+    },
+    {
+        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
+        "quantity": 1,
+        "price": 1.75
+    },
+    {
+        "name": "Polli Capers in Vinegar Capotes 190g",
+        "quantity": 1,
+        "price": 2.0
+    },
+    {
+        "name": "Ryvita Multiseed Thins 125G",
+        "quantity": 1,
+        "price": 2.3
+    },
+    {
+        "name": "\u2020 Soft & Gentle Antiperspirant Deodorant Fresh Blossom Roll On 50Ml",
+        "quantity": 1,
+        "price": 1.0
+    },
+    {
+        "name": "\u2020 Tesco Apple & Elderflower Sparkling Water 1 Litre",
+        "quantity": 3,
+        "price": 2.0
+    },
+    {
+        "name": "Tesco Pink & White Mini Marshmallows 100G",
+        "quantity": 1,
+        "price": 1.1
+    },
+    {
+        "name": "Tesco White Iced Ring Doughnuts 4 Pack",
+        "quantity": 1,
+        "price": 0.95
+    },
+    {
+        "name": "Crosta & Mollica Salami Napoli Sourdough Pizza 413g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Crosta & Mollica Stromboli Spicy Salami Sourdough Pizza 447g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Rosedene Farms Blueberries 150G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Blueberries 150G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Celery",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Organic Celery",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "\u2020 Innocent Wonder Green Juice 750Ml",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Rosedene Farms Raspberries 125G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Blackberries 250G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Finest Green Grapes Seedless 500G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Finest Red Grapes Seedless 500G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Fire Pit 2 Salt & Pepper Beef Steaks 200G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Gammon Steak With Cheese & Pineapple 345G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Iceberg Lettuce 200G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Pork Loin Joint 1.900KG",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Pork Stir Fry 500G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Strawberries 400G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Yoplait Frubes Yoghurt Tubes - Strawberry, Red Berry & Peach 9x37g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Aunt Bessie\u2019s Maple & Thyme Glazed Carrots 500g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Frozen Broccoli Florets 900G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Butterkist Microwave Popcorn Sweet & Salted 3X60g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "De Cecco Conchiglie Rigate 500g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Baby Plum Tomatoes 300G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Medium Free Range Eggs 12 Pack",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Red Peppers Each",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Whole Cucumber Each",
+        "quantity": 1,
+        "price": 0.0
+    }
+]
 };
+
 
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  { id: '6gJfvMfJ43rpMf4h', content: 'Mash potato, cheese, beans', date: '2026-04-13', labels: [], section: 'Planned', meal_type: 'dinner' },
-  { id: '6gJg7wWGPVH3J289', content: 'Pizza', date: '2026-04-13', labels: ['adult'], section: 'Planned', meal_type: 'dinner' },
-  { id: '6gJg7xQ73r4GFg6h', content: 'Toastie', date: '2026-04-13', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
-  { id: '6gJfvXWQ62xmcvFh', content: 'Sticky rice', date: '2026-04-14', labels: [], section: 'Ashlee Lunch', meal_type: 'lunch' },
-  { id: '6gJfXmmr9Hjp2MH9', content: 'Gammon, baked potatoes and salad', date: '2026-04-14', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
-  { id: '6gJfXqChQ7wx9JFh', content: 'Beef steaks, baked potatoes and salad', date: '2026-04-14', labels: ['adult'], section: 'Planned', meal_type: 'dinner' },
-  { id: '6gJfvVvqpMpG8mv9', content: 'Ham and cheese toastie', date: '2026-04-15', labels: [], section: 'Ashlee Lunch', meal_type: 'lunch' },
-  { id: '6gJhvC5QhXC2hHR9', content: 'Pizza (Leo)', date: '2026-04-15', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
-  { id: '6gMPhXmqffW8MMGh', content: 'Mash potato cheese (Ashlee)', date: '2026-04-15', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
-  { id: '6gJhvG6JXWPw4GGh', content: 'Chicken and rice veg (Terina)', date: '2026-04-15', labels: ['adult'], section: 'Planned', meal_type: 'dinner' },
-  { id: '6gJfvcwHgh5hx2gh', content: 'Jacket potatoes (school)', date: '2026-04-16', labels: [], section: 'Ashlee Lunch', meal_type: 'lunch' },
-  { id: '6gJhvfx2j3fxQFv9', content: 'KFC', date: '2026-04-16', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
-  { id: '6gJfvgmG5cHr2Wrh', content: 'KFC', date: '2026-04-17', labels: [], section: 'Ashlee Lunch', meal_type: 'lunch' },
-  { id: '6gM4f6gQjgVXPq49', content: 'Chicken and noodles (Terina)', date: '2026-04-17', labels: ['adult'], section: 'Planned', meal_type: 'dinner' },
-  { id: '6Rv6P5rj7RjvV6j9', content: 'chicken / garlic bread and chips', date: '2026-04-17', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
+  {
+    "id": "",
+    "content": "Sticky rice",
+    "date": "2026-04-14",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "lunch"
+  },
+  {
+    "id": "",
+    "content": "Gammon, baked potatoes and salad",
+    "date": "2026-04-14",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Beef steaks, baked potatoes and salad",
+    "date": "2026-04-14",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Ham and cheese toastie",
+    "date": "2026-04-15",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "lunch"
+  },
+  {
+    "id": "",
+    "content": "Pizza (Leo)",
+    "date": "2026-04-15",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Mash potato cheese (Ashlee)",
+    "date": "2026-04-15",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Chicken and rice veg (Terina)",
+    "date": "2026-04-15",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Jacket potatoes (school)",
+    "date": "2026-04-16",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "lunch"
+  },
+  {
+    "id": "",
+    "content": "KFC",
+    "date": "2026-04-16",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "KFC",
+    "date": "2026-04-17",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "lunch"
+  },
+  {
+    "id": "",
+    "content": "Chicken and noodles (Terina)",
+    "date": "2026-04-17",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "chicken / garlic bread and chips",
+    "date": "2026-04-17",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Salmon kebabs, salad and new potatoes",
+    "date": "2026-04-20",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  }
 ];
+
 
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);

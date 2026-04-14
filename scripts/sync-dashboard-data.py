@@ -30,6 +30,7 @@ REAL_DATA_PATH = DASHBOARD_PATH / 'lib' / 'real-data.ts'
 SYNC_META_PATH = DASHBOARD_PATH / 'lib' / 'sync-meta.ts'
 RECEIPT_CACHE = MEALS_SKILL_PATH / 'data' / 'receipt_coverage_cache.json'
 MEAL_PLAN_CACHE = MEALS_SKILL_PATH / 'data' / 'meal-plan-cache.json'
+DASHBOARD_CACHE = MEALS_SKILL_PATH / 'data' / 'dashboard_cache.json'
 
 
 def run_command(cmd: list, timeout: int = 60, cwd: Path = None) -> Tuple[bool, str]:
@@ -130,8 +131,159 @@ def get_latest_order(receipt_data: Dict) -> Optional[Dict]:
     return None
 
 
+def read_dashboard_cache() -> Optional[Dict]:
+    """Read pre-generated dashboard data from meals check cache.
+    
+    This is the preferred source when available, as it contains
+    the full analysis from the meals check (with manual overrides,
+    restaurant detection, etc.) in one place.
+    """
+    return read_cache_json(DASHBOARD_CACHE)
+
+
+def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
+    """Update lib/real-data.ts from dashboard cache data.
+    
+    This uses the pre-generated dashboard data which includes
+    full coverage analysis with manual overrides and restaurant detection.
+    """
+    print("  Updating lib/real-data.ts from dashboard cache...")
+    
+    # Read current file as lines
+    with open(REAL_DATA_PATH) as f:
+        lines = f.readlines()
+    
+    # Extract meals and receipt from cache
+    meals = cache_data.get("meals", [])
+    receipt = cache_data.get("receipt", {})
+    
+    # Find export line numbers
+    receipt_start = None
+    receipt_end = None
+    meal_plan_start = None
+    meal_plan_end = None
+    coverage_start = None
+    coverage_end = None
+    
+    for i, line in enumerate(lines):
+        if 'export const realLatestOrder: CachedOrder' in line:
+            receipt_start = i
+        elif receipt_start is not None and receipt_end is None and line.strip() == '};':
+            receipt_end = i
+        elif 'export const realMealPlan: Meal[]' in line:
+            meal_plan_start = i
+        elif meal_plan_start is not None and meal_plan_end is None and line.strip() == '];':
+            meal_plan_end = i
+        elif 'export const realCoverage: MealCoverage[]' in line:
+            coverage_start = i
+        elif coverage_start is not None and coverage_end is None and line.strip() == '];':
+            coverage_end = i
+    
+    # Update receipt data
+    if receipt and receipt_start is not None and receipt_end is not None:
+        # Filter items to only include fields that CachedOrder expects
+        raw_items = receipt.get("items", [])
+        items = [
+            {"name": i.get("name", ""), "quantity": i.get("quantity", 1), "price": i.get("price", 0)}
+            for i in raw_items
+        ]
+        items_json = json.dumps(items, indent=4)
+        order_block = [
+            f'export const realLatestOrder: CachedOrder = {{',
+            f'  "email_id": "",',
+            f'  "email_date": "",',
+            f'  "delivery_date": "{receipt.get("delivery_date", "")}",',
+            f'  "delivery_sort": "",',
+            f'  "order_number": "{receipt.get("order_number", "")}",',
+            f'  "items": {items_json}',
+            '};',
+            '',
+        ]
+        lines = lines[:receipt_start] + [l + '\n' for l in order_block] + lines[receipt_end+1:]
+        print(f"  ✓ Updated receipt data ({len(items)} items)")
+    
+    # Update meal plan and coverage
+    if meals:
+        # Format meals for real-data.ts - convert cache format to Meal array
+        meals_block = []
+        coverage_block = []
+        
+        for m in meals:
+            meal_entry = {
+                "id": m.get("id", ""),
+                "content": m.get("content", ""),
+                "date": m.get("date", ""),
+                "labels": m.get("labels", []),
+                "section": m.get("section", "Planned"),
+            }
+            if m.get("meal_type"):
+                meal_entry["meal_type"] = m["meal_type"]
+            meals_block.append(meal_entry)
+            
+            # Build coverage entry
+            coverage_entry = {
+                "meal": meal_entry,
+                "status": m.get("status", "unknown"),
+                "coverageScore": m.get("coverage_score", 0),
+                "matchedItems": m.get("matched_items", []),
+                "missingItems": m.get("missing_items", []),
+            }
+            if m.get("notes"):
+                coverage_entry["notes"] = m["notes"]
+            coverage_block.append(coverage_entry)
+        
+        # Recalculate line indices after receipt update
+        meal_plan_start = None
+        meal_plan_end = None
+        coverage_start = None
+        coverage_end = None
+        for i, line in enumerate(lines):
+            if 'export const realMealPlan: Meal[]' in line:
+                meal_plan_start = i
+            elif meal_plan_start is not None and meal_plan_end is None and line.strip() == '];':
+                meal_plan_end = i
+            elif 'export const realCoverage: MealCoverage[]' in line:
+                coverage_start = i
+            elif coverage_start is not None and coverage_end is None and line.strip() == '];':
+                coverage_end = i
+        
+        meals_json = json.dumps(meals_block, indent=2)
+        meals_lines = [f'export const realMealPlan: Meal[] = {meals_json};', '']
+        
+        if meal_plan_start is not None and meal_plan_end is not None:
+            lines = lines[:meal_plan_start] + [l + '\n' for l in meals_lines] + lines[meal_plan_end+1:]
+            print(f"  ✓ Updated meal plan data ({len(meals)} meals)")
+        
+        # Recalculate indices again
+        coverage_start = None
+        coverage_end = None
+        for i, line in enumerate(lines):
+            if 'export const realCoverage: MealCoverage[]' in line:
+                coverage_start = i
+            elif coverage_start is not None and coverage_end is None and line.strip() == '];':
+                coverage_end = i
+        
+        coverage_json = json.dumps(coverage_block, indent=2)
+        coverage_lines = [f'export const realCoverage: MealCoverage[] = {coverage_json};', '']
+        
+        if coverage_start is not None and coverage_end is not None:
+            lines = lines[:coverage_start] + [l + '\n' for l in coverage_lines] + lines[coverage_end+1:]
+            print(f"  ✓ Updated coverage data ({len(coverage_block)} entries)")
+    
+    # Write back
+    with open(REAL_DATA_PATH, 'w') as f:
+        f.writelines(lines)
+    
+    print("  ✓ Saved changes to real-data.ts")
+    return True
+
+
 def update_real_data_ts(receipt_data: Dict, meal_plan_data: Dict) -> bool:
-    """Update lib/real-data.ts with fresh data."""
+    """Update lib/real-data.ts with fresh data.
+    
+    DEPRECATED: This is the legacy path. Prefer update_real_data_ts_from_cache()
+    which uses pre-generated dashboard data from meals check.
+    """
     print("  Updating lib/real-data.ts...")
     
     # Read current file
@@ -315,49 +467,61 @@ def main():
     
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     
-    # Step 1: Fetch fresh data (unless skipped)
-    receipt_data = None
-    meal_plan_data = None
+    # Check for dashboard cache from meals check (preferred source)
+    dashboard_cache = read_dashboard_cache()
     
-    if not args.skip_fetch:
-        print("[1] Fetching fresh data...")
-        
-        # Fetch Tesco receipt
-        _, receipt_output = fetch_tesco_receipt(days=14)
+    if dashboard_cache:
+        print("[1] Found dashboard cache from meals check (using unified data)")
+        print(f"  Cache generated: {dashboard_cache.get('generated_at', 'unknown')}")
+        print(f"  Meals: {len(dashboard_cache.get('meals', []))}")
+        print(f"  Receipt items: {len(dashboard_cache.get('receipt', {}).get('items', []))}")
         print()
         
-        # Fetch meal plan and parse JSON
-        success, meal_plan_output = fetch_meal_plan(days=7)
-        if success and meal_plan_output:
-            try:
-                meal_plan_data = json.loads(meal_plan_output)
-                # Add meal_type based on section_id
-                if "meals" in meal_plan_data:
-                    for meal in meal_plan_data["meals"]:
-                        section_id = meal.get("section_id", "")
-                        meal["meal_type"] = "lunch" if section_id == ASHLEE_LUNCH_SECTION_ID else "dinner"
-            except json.JSONDecodeError as e:
-                print(f"  ⚠ Failed to parse meal plan JSON: {e}")
-                meal_plan_data = None
-        print()
+        # Use cache data directly (no re-analysis needed)
+        use_cache = True
     else:
-        print("[1] Skipping fetch (--skip-fetch)")
+        print("[1] No dashboard cache found, falling back to legacy sync")
         print()
-    
-    # Step 2: Read cached data
-    print("[2] Reading cached data...")
-    receipt_data = read_cache_json(RECEIPT_CACHE)
-    if args.skip_fetch:
-        meal_plan_data = read_cache_json(MEAL_PLAN_CACHE)
-    
-    print(f"  Receipt: {'found' if receipt_data else 'not found'}")
-    print(f"  Meal plan: {'found' if meal_plan_data else 'not found'}")
-    
-    if not receipt_data and not meal_plan_data:
-        print("\n  ✗ No data found. Exiting.")
-        return
-    
-    print()
+        use_cache = False
+        
+        # Legacy path: fetch and analyse
+        if not args.skip_fetch:
+            print("[1a] Fetching fresh data...")
+            
+            # Fetch Tesco receipt
+            _, receipt_output = fetch_tesco_receipt(days=14)
+            print()
+            
+            # Fetch meal plan and parse JSON
+            success, meal_plan_output = fetch_meal_plan(days=7)
+            if success and meal_plan_output:
+                try:
+                    meal_plan_data = json.loads(meal_plan_output)
+                    if "meals" in meal_plan_data:
+                        for meal in meal_plan_data["meals"]:
+                            section_id = meal.get("section_id", "")
+                            meal["meal_type"] = "lunch" if section_id == ASHLEE_LUNCH_SECTION_ID else "dinner"
+                except json.JSONDecodeError as e:
+                    print(f"  ⚠ Failed to parse meal plan JSON: {e}")
+                    meal_plan_data = None
+            print()
+        else:
+            print("[1a] Skipping fetch (--skip-fetch)")
+            print()
+        
+        # Step 2: Read cached data
+        print("[2] Reading cached data...")
+        receipt_data = read_cache_json(RECEIPT_CACHE)
+        if args.skip_fetch:
+            meal_plan_data = read_cache_json(MEAL_PLAN_CACHE)
+        
+        print(f"  Receipt: {'found' if receipt_data else 'not found'}")
+        print(f"  Meal plan: {'found' if meal_plan_data else 'not found'}")
+        
+        if not receipt_data and not meal_plan_data:
+            print("\n  ✗ No data found. Exiting.")
+            return
+        print()
     
     # Step 3: Update sync metadata
     print("[3] Updating sync metadata...")
@@ -366,7 +530,10 @@ def main():
     
     # Step 4: Update real-data.ts
     print("[4] Updating dashboard data...")
-    update_real_data_ts(receipt_data, meal_plan_data)
+    if use_cache:
+        update_real_data_ts_from_cache(dashboard_cache)
+    else:
+        update_real_data_ts(receipt_data, meal_plan_data)
     print()
     
     # Step 5: Build (unless skipped)
