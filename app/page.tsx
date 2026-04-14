@@ -4,7 +4,7 @@ import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { HistoricalTrends } from '@/components/historical-trends';
 import { dashboardConfig } from '@/lib/config';
-import { calculateCoverageSummary, getUpcomingDeliveries, Meal } from '@/lib/meals-data';
+import { calculateCoverageSummary, getUpcomingDeliveries, Meal, MatchedItem } from '@/lib/meals-data';
 import { realCoverage, realLatestOrder, transformCachedOrder } from '@/lib/real-data';
 import { syncMeta } from '@/lib/sync-meta';
 import { DashboardState, filterCoverage } from '@/lib/dashboard-state';
@@ -23,7 +23,7 @@ export default function MealsDashboardPage() {
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
-  const [selectedMealData, setSelectedMealData] = useState<{meal: Meal, status: string, coverageScore: number, matchedItems: string[], missingItems: string[], notes?: string} | null>(null);
+  const [selectedMealData, setSelectedMealData] = useState<{meal: Meal, status: string, coverageScore: number, matchedItems: MatchedItem[], missingItems: string[], notes?: string} | null>(null);
   const [selectedItem, setSelectedItem] = useState<{name: string, price: number, quantity: number} | null>(null);
   const [productInfo, setProductInfo] = useState<{description: string, storage: string, nutrition: string, image: string} | null>(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
@@ -1093,14 +1093,9 @@ export default function MealsDashboardPage() {
               <div style={{ marginBottom: '1rem' }}>
                 <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Matched Items</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {selectedMealData.matchedItems.map((itemName, idx) => {
-                    // Find the actual receipt item
-                    const receiptItem = receipt.items.find(i => 
-                      i.name.toLowerCase().includes(itemName.toLowerCase()) ||
-                      itemName.toLowerCase().includes(i.name.toLowerCase().split(' ')[0])
-                    );
-                    const qty = receiptItem?.quantity ?? 1;
-                    const unitPrice = receiptItem?.price ?? 0;
+                  {selectedMealData.matchedItems.map((item, idx) => {
+                    const qty = item.quantity ?? 1;
+                    const unitPrice = item.price ?? 0;
                     return (
                       <div key={idx} style={{
                         display: 'flex',
@@ -1111,26 +1106,20 @@ export default function MealsDashboardPage() {
                         borderRadius: '6px',
                         border: '1px solid var(--accent-emerald)'
                       }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ color: 'var(--accent-emerald)', fontSize: '14px' }}>✓</span>
-                          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
-                            {itemName}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+                          <span style={{ color: 'var(--accent-emerald)', fontSize: '14px', flexShrink: 0 }}>✓</span>
+                          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {item.name}
                           </span>
                         </div>
-                        {receiptItem ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                              {qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}
-                            </span>
-                            <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>
-                              £{(unitPrice * qty).toFixed(2)}
-                            </span>
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                            (no receipt data)
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                            {qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}
                           </span>
-                        )}
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>
+                            £{(unitPrice * qty).toFixed(2)}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}

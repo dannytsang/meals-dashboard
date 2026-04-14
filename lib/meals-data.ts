@@ -53,11 +53,18 @@ export interface ShortLifeItem {
   daysRemaining: number;
 }
 
+export interface MatchedItem {
+  ingredient: string;
+  name: string;
+  quantity: number;
+  price: number;
+}
+
 export interface MealCoverage {
   meal: Meal;
   status: 'covered' | 'partial' | 'missing' | 'unknown';
   coverageScore: number;
-  matchedItems: string[];
+  matchedItems: MatchedItem[];
   missingItems: string[];
   notes?: string;
 }
@@ -116,12 +123,12 @@ export const mockReceipt: TescoReceipt = {
 };
 
 export const mockCoverage: MealCoverage[] = [
-  { meal: mockMeals[0], status: 'covered', coverageScore: 100, matchedItems: ['Beef mince', 'Pasta', 'Onions', 'Carrots'], missingItems: [] },
-  { meal: mockMeals[1], status: 'covered', coverageScore: 100, matchedItems: ['Salmon fillets', 'New potatoes'], missingItems: [] },
-  { meal: mockMeals[2], status: 'covered', coverageScore: 100, matchedItems: ['Fish fingers'], missingItems: [] },
-  { meal: mockMeals[3], status: 'covered', coverageScore: 100, matchedItems: ['Lamb mince', 'Curry sauce'], missingItems: [] },
-  { meal: mockMeals[4], status: 'partial', coverageScore: 70, matchedItems: ['Lamb mince', 'Frozen peas', 'Carrots'], missingItems: ['Potatoes for mash'], notes: 'Need potatoes' },
-  { meal: mockMeals[5], status: 'covered', coverageScore: 100, matchedItems: ['Stir fry veg', 'Egg noodles'], missingItems: [] },
+  { meal: mockMeals[0], status: 'covered', coverageScore: 100, matchedItems: [{ingredient: 'Beef mince', name: 'Beef mince', quantity: 1, price: 0}, {ingredient: 'Pasta', name: 'Pasta', quantity: 1, price: 0}, {ingredient: 'Onions', name: 'Onions', quantity: 1, price: 0}, {ingredient: 'Carrots', name: 'Carrots', quantity: 1, price: 0}], missingItems: [] },
+  { meal: mockMeals[1], status: 'covered', coverageScore: 100, matchedItems: [{ingredient: 'Salmon fillets', name: 'Salmon fillets', quantity: 1, price: 0}, {ingredient: 'New potatoes', name: 'New potatoes', quantity: 1, price: 0}], missingItems: [] },
+  { meal: mockMeals[2], status: 'covered', coverageScore: 100, matchedItems: [{ingredient: 'Fish fingers', name: 'Fish fingers', quantity: 1, price: 0}], missingItems: [] },
+  { meal: mockMeals[3], status: 'covered', coverageScore: 100, matchedItems: [{ingredient: 'Lamb mince', name: 'Lamb mince', quantity: 1, price: 0}, {ingredient: 'Curry sauce', name: 'Curry sauce', quantity: 1, price: 0}], missingItems: [] },
+  { meal: mockMeals[4], status: 'partial', coverageScore: 70, matchedItems: [{ingredient: 'Lamb mince', name: 'Lamb mince', quantity: 1, price: 0}, {ingredient: 'Frozen peas', name: 'Frozen peas', quantity: 1, price: 0}, {ingredient: 'Carrots', name: 'Carrots', quantity: 1, price: 0}], missingItems: ['Potatoes for mash'], notes: 'Need potatoes' },
+  { meal: mockMeals[5], status: 'covered', coverageScore: 100, matchedItems: [{ingredient: 'Stir fry veg', name: 'Stir fry veg', quantity: 1, price: 0}, {ingredient: 'Egg noodles', name: 'Egg noodles', quantity: 1, price: 0}], missingItems: [] },
 ];
 
 // Data fetching functions (will integrate with meals skill scripts)

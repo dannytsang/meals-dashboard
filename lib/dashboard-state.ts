@@ -138,74 +138,12 @@ export function analyzeCoverageForShop(
   meals: Meal[],
   receipt: TescoReceipt
 ): MealCoverage[] {
-  const items = receipt.items.map(i => i.name.toLowerCase());
-  
-  return meals.map(meal => {
-    const mealLower = meal.content.toLowerCase();
-    const matchedItems: string[] = [];
-    const missingItems: string[] = [];
-    
-    // Keyword mappings
-    const keywords: Record<string, string[]> = {
-      'pizza': ['pizza'],
-      'potato': ['potato', 'potatoes'],
-      'cheese': ['cheese'],
-      'beans': ['beans', 'kidney beans', 'baked beans'],
-      'gammon': ['gammon', 'ham'],
-      'steak': ['steak', 'beef'],
-      'salad': ['lettuce', 'tomato', 'cucumber', 'salad'],
-      'toastie': ['bread', 'cheese'],
-      'chicken': ['chicken', 'chicken breast', 'chicken thighs'],
-      'rice': ['rice', 'basmati', 'jasmine'],
-      'noodles': ['noodles', 'egg noodles'],
-      'kfc': ['kfc', 'zinger'],
-      'sticky rice': ['rice'],
-    };
-    
-    let matchCount = 0;
-    let totalKeywords = 0;
-    
-    for (const [category, words] of Object.entries(keywords)) {
-      if (mealLower.includes(category)) {
-        totalKeywords++;
-        const hasMatch = words.some(word => 
-          items.some(item => item.includes(word))
-        );
-        if (hasMatch) {
-          matchCount++;
-          matchedItems.push(category);
-        } else {
-          missingItems.push(category);
-        }
-      }
-    }
-    
-    // Special cases
-    if (mealLower.includes('jacket potatoes') || mealLower.includes('baked potatoes')) {
-      if (!matchedItems.includes('potato')) {
-        totalKeywords++;
-        if (items.some(i => i.includes('potato'))) {
-          matchCount++;
-          matchedItems.push('potatoes');
-        } else {
-          missingItems.push('potatoes');
-        }
-      }
-    }
-    
-    const coverageScore = totalKeywords > 0 ? Math.round((matchCount / totalKeywords) * 100) : 50;
-    
-    let status: MealCoverage['status'] = 'unknown';
-    if (coverageScore >= 80) status = 'covered';
-    else if (coverageScore >= 50) status = 'partial';
-    else if (coverageScore > 0) status = 'missing';
-    
-    return {
-      meal,
-      status,
-      coverageScore,
-      matchedItems,
-      missingItems,
-    };
-  });
+  // Legacy function - returns empty data since real coverage comes from sync script
+  return meals.map(meal => ({
+    meal,
+    status: 'unknown' as const,
+    coverageScore: 0,
+    matchedItems: [],
+    missingItems: [],
+  }));
 }

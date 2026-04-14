@@ -120,7 +120,7 @@ export function MealList({ coverage }: MealListProps) {
                             key={idx}
                             className="text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-300"
                           >
-                            {matched}
+                            {matched.name}
                           </span>
                         ))}
                       </div>

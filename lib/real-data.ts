@@ -122,99 +122,20 @@ export function transformCachedOrder(order: CachedOrder): TescoReceipt {
 
 /**
  * Simple coverage analysis based on keyword matching
- * This is a simplified version - the real meals skill has more sophisticated logic
+ * This is a simplified version - the real meals skill has more sophisticated logic.
+ * NOTE: Coverage data is now pre-computed by the sync script. This function
+ * is kept for type compatibility but returns empty data.
  */
 export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCoverage[] {
-  const items = receipt.items.map(i => i.name.toLowerCase());
-  
-  // Restaurant / takeaway chains that mean "eating out" - no ingredients needed
-  const restaurantPatterns = [
-    'kfc', 'mcdonald', 'mcdonalds', 'burger king', 'whopper',
-    'domino', "domino's", 'pizza express', 'pizza hut',
-    'nando', "nando's", 'subway', 'greggs', 'pret',
-    'taco bell', 'kebab', 'fish chips', 'fish & chips',
-    'chin chin', 'wok', 'thai', 'indian', 'chinese take',
-    'takeaway', 'take out', 'eating out', 'meal deal'
-  ];
-  
-  return meals.map(meal => {
-    const mealLower = meal.content.toLowerCase();
-    const matchedItems: string[] = [];
-    const missingItems: string[] = [];
-    
-    // Check if this is a restaurant / eating out meal
-    const isRestaurant = restaurantPatterns.some(p => mealLower.includes(p));
-    if (isRestaurant) {
-      return {
-        meal,
-        status: 'covered' as const,
-        coverageScore: 100,
-        matchedItems: ['Eating out'],
-        missingItems: [],
-        notes: 'Takeaway / eating out - no ingredients needed'
-      };
-    }
-    
-    // Simple keyword matching (real implementation uses meal_ingredient_lookup.py)
-    const keywords: Record<string, string[]> = {
-      'pizza': ['pizza'],
-      'potato': ['potato', 'potatoes'],
-      'cheese': ['cheese'],
-      'beans': ['beans'],
-      'gammon': ['gammon', 'ham'],
-      'steak': ['steak', 'beef'],
-      'salad': ['lettuce', 'tomato', 'cucumber', 'salad'],
-      'toastie': ['bread', 'cheese'],
-      'chicken': ['chicken'],
-      'rice': ['rice'],
-      'noodles': ['noodles', 'pasta'],
-      'kfc': ['chicken'],
-    };
-    
-    let matchCount = 0;
-    let totalKeywords = 0;
-    
-    for (const [category, words] of Object.entries(keywords)) {
-      if (mealLower.includes(category)) {
-        totalKeywords++;
-        const hasMatch = words.some(word => 
-          items.some(item => item.includes(word))
-        );
-        if (hasMatch) {
-          matchCount++;
-          matchedItems.push(category);
-        } else {
-          missingItems.push(category);
-        }
-      }
-    }
-    
-    // Special cases
-    if (mealLower.includes('jacket potatoes') || mealLower.includes('baked potatoes')) {
-      totalKeywords++;
-      if (items.some(i => i.includes('potato'))) {
-        matchCount++;
-        matchedItems.push('potatoes');
-      } else {
-        missingItems.push('potatoes');
-      }
-    }
-    
-    const coverageScore = totalKeywords > 0 ? Math.round((matchCount / totalKeywords) * 100) : 50;
-    
-    let status: MealCoverage['status'] = 'unknown';
-    if (coverageScore >= 80) status = 'covered';
-    else if (coverageScore >= 50) status = 'partial';
-    else if (coverageScore > 0) status = 'missing';
-    
-    return {
-      meal,
-      status,
-      coverageScore,
-      matchedItems,
-      missingItems,
-    };
-  });
+  // Coverage is now pre-computed by the sync script.
+  // This legacy function returns empty data - actual data is in realCoverage.
+  return meals.map(meal => ({
+    meal,
+    status: 'unknown' as const,
+    coverageScore: 0,
+    matchedItems: [],
+    missingItems: [],
+  }));
 }
 
 // Real data from the meals skill cache (April 10, 2026 delivery)

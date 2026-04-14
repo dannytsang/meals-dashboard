@@ -131,6 +131,31 @@ def get_latest_order(receipt_data: Dict) -> Optional[Dict]:
     return None
 
 
+def find_receipt_item_match(ingredient_name: str, receipt_items: list) -> Optional[Dict]:
+    """Find the best matching receipt item for an ingredient name.
+    
+    Uses substring matching to find the receipt item that contains or is
+    contained by the ingredient name.
+    """
+    ingredient_lower = ingredient_name.lower()
+    
+    # First, try exact substring match
+    for item in receipt_items:
+        item_lower = item.get("name", "").lower()
+        if ingredient_lower in item_lower or item_lower in ingredient_lower:
+            return item
+    
+    # Try first word match
+    first_word = ingredient_lower.split(" ")[0] if " " in ingredient_lower else ingredient_lower
+    if len(first_word) > 2:
+        for item in receipt_items:
+            item_lower = item.get("name", "").lower()
+            if first_word in item_lower:
+                return item
+    
+    return None
+
+
 def read_dashboard_cache() -> Optional[Dict]:
     """Read pre-generated dashboard data from meals check cache.
     
@@ -204,6 +229,9 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
     
     # Update meal plan and coverage
     if meals:
+        # Get receipt items for matching
+        raw_items = receipt.get("items", []) if receipt else []
+        
         # Format meals for real-data.ts - convert cache format to Meal array
         meals_block = []
         coverage_block = []
@@ -220,12 +248,34 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
                 meal_entry["meal_type"] = m["meal_type"]
             meals_block.append(meal_entry)
             
-            # Build coverage entry
+            # Resolve ingredient names to actual receipt item names
+            matched_ingredient_names = m.get("matched_items", [])
+            resolved_matched_items = []
+            for ing_name in matched_ingredient_names:
+                matched_receipt_item = find_receipt_item_match(ing_name, raw_items)
+                if matched_receipt_item:
+                    # Use the actual receipt item name
+                    resolved_matched_items.append({
+                        "ingredient": ing_name,
+                        "name": matched_receipt_item.get("name", ing_name),
+                        "quantity": matched_receipt_item.get("quantity", 1),
+                        "price": matched_receipt_item.get("price", 0),
+                    })
+                else:
+                    # Keep the ingredient name if no receipt match
+                    resolved_matched_items.append({
+                        "ingredient": ing_name,
+                        "name": ing_name,
+                        "quantity": 1,
+                        "price": 0,
+                    })
+            
+            # Build coverage entry with resolved items
             coverage_entry = {
                 "meal": meal_entry,
                 "status": m.get("status", "unknown"),
                 "coverageScore": m.get("coverage_score", 0),
-                "matchedItems": m.get("matched_items", []),
+                "matchedItems": resolved_matched_items,
                 "missingItems": m.get("missing_items", []),
             }
             if m.get("notes"):
