@@ -23,6 +23,7 @@ export default function MealsDashboardPage() {
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
   const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
+  const [selectedMealData, setSelectedMealData] = useState<{meal: Meal, status: string, coverageScore: number, matchedItems: string[], missingItems: string[], notes?: string} | null>(null);
   const [selectedItem, setSelectedItem] = useState<{name: string, price: number, quantity: number} | null>(null);
   const [productInfo, setProductInfo] = useState<{description: string, storage: string, nutrition: string, image: string} | null>(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
@@ -540,7 +541,7 @@ export default function MealsDashboardPage() {
                                           return (
                                             <div 
                                               key={idx}
-                                              onClick={() => setSelectedMeal(selectedMeal === meal.meal.content ? null : meal.meal.content)}
+                                              onClick={() => setSelectedMealData(meal)}
                                               style={{ 
                                                 padding: '0.5rem 0.5rem',
                                                 borderRadius: '6px',
@@ -553,7 +554,7 @@ export default function MealsDashboardPage() {
                                                 minHeight: '50px',
                                                 boxSizing: 'border-box',
                                                 cursor: 'pointer',
-                                                outline: selectedMeal === meal.meal.content ? '3px solid white' : 'none',
+                                                outline: 'none',
                                                 outlineOffset: '2px'
                                               }}>
                                               <span style={{ 
@@ -951,6 +952,216 @@ export default function MealsDashboardPage() {
             ) : (
               <div style={{ textAlign: 'center', padding: '2rem' }}>
                 <p style={{ color: 'var(--text-secondary)' }}>Unable to load product information.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Meal Info Modal */}
+      {selectedMealData && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem'
+          }}
+          onClick={() => setSelectedMealData(null)}
+        >
+          <div 
+            style={{
+              backgroundColor: 'var(--bg-secondary)',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '80vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0, flex: 1 }}>{selectedMealData.meal.content}</h3>
+              <button 
+                onClick={() => setSelectedMealData(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  padding: '0 0 0 1rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Meal Meta */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: '600',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-secondary)'
+              }}>
+                {new Date(selectedMealData.meal.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+              </span>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: '600',
+                padding: '4px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'var(--accent-blue-bg)',
+                color: 'var(--accent-blue)'
+              }}>
+                {selectedMealData.meal.section}
+              </span>
+              {selectedMealData.meal.meal_type && (
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  backgroundColor: 'var(--accent-purple-bg)',
+                  color: 'var(--accent-purple)'
+                }}>
+                  {selectedMealData.meal.meal_type}
+                </span>
+              )}
+            </div>
+
+            {/* Labels */}
+            {selectedMealData.meal.labels && selectedMealData.meal.labels.length > 0 && (
+              <div style={{ marginBottom: '1rem' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Labels</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {selectedMealData.meal.labels.map((label, idx) => (
+                    <span key={idx} style={{
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                      color: 'white'
+                    }}>
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Coverage Status */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              padding: '0.75rem',
+              backgroundColor: 'var(--bg-tertiary)',
+              borderRadius: '8px',
+              marginBottom: '1rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: getStatusColor(selectedMealData.status, selectedMealData.coverageScore)
+                }} />
+                <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                  {selectedMealData.status}
+                </span>
+              </div>
+              <span style={{ fontSize: '16px', fontWeight: '700', color: getStatusColor(selectedMealData.status, selectedMealData.coverageScore) }}>
+                {selectedMealData.coverageScore}%
+              </span>
+            </div>
+
+            {/* Matched Items */}
+            {selectedMealData.matchedItems && selectedMealData.matchedItems.length > 0 && (
+              <div style={{ marginBottom: '1rem' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Matched Items</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {selectedMealData.matchedItems.map((item, idx) => (
+                    <span key={idx} style={{
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: 'var(--accent-emerald-bg)',
+                      color: 'var(--accent-emerald)'
+                    }}>
+                      ✓ {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Missing Items */}
+            {selectedMealData.missingItems && selectedMealData.missingItems.length > 0 && (
+              <div style={{ marginBottom: '1rem' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Missing Items</h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {selectedMealData.missingItems.map((item, idx) => (
+                    <span key={idx} style={{
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: 'var(--accent-rose-bg)',
+                      color: 'var(--accent-rose)'
+                    }}>
+                      ✗ {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {selectedMealData.notes && (
+              <div style={{ marginBottom: '1rem' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Notes</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                  {selectedMealData.notes}
+                </p>
+              </div>
+            )}
+
+            {/* Todoist Link */}
+            {selectedMealData.meal.id && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.75rem',
+                backgroundColor: 'var(--bg-tertiary)',
+                borderRadius: '8px',
+                textAlign: 'center'
+              }}>
+                <a 
+                  href={`https://todoist.com/app/task/${selectedMealData.meal.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: 'var(--accent-blue)',
+                    textDecoration: 'none'
+                  }}
+                >
+                  View in Todoist →
+                </a>
               </div>
             )}
           </div>
