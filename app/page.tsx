@@ -213,7 +213,9 @@ export default function MealsDashboardPage() {
   
   const days: { date: string; isToday: boolean }[] = [];
   const current = new Date(startDate);
-  const today = new Date().toISOString().split('T')[0];
+  // Use local date for today comparison (browser timezone)
+  const todayLocal = new Date();
+  const today = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
   while (current <= new Date(endDate)) {
     const dateStr = current.toISOString().split('T')[0];
     days.push({ date: dateStr, isToday: dateStr === today });
@@ -402,7 +404,8 @@ export default function MealsDashboardPage() {
                             textAlign: 'center' as const,
                             padding: '0.5rem 0.25rem',
                             borderLeft: '1px solid var(--border-color)',
-                            borderBottom: '1px solid var(--border-color)',
+                            borderBottom: isToday ? '3px solid var(--accent-green)' : '1px solid var(--border-color)',
+                            backgroundColor: isToday ? 'var(--highlight-today)' : 'transparent',
                             position: 'relative' as const
                           }}>
                             <span style={{ 
