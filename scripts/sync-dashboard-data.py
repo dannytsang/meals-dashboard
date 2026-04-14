@@ -107,6 +107,27 @@ def read_cache_json(path: Path) -> Optional[Dict]:
         return None
 
 
+def get_latest_order(receipt_data: Dict) -> Optional[Dict]:
+    """Get the most recent order from receipt data.
+    
+    The cache has two keys:
+    - orders: all orders, but many have empty items
+    - selected: orders with items, sorted by date (most recent last)
+    """
+    if not receipt_data:
+        return None
+    
+    # Use 'selected' if available (has items), otherwise fall back to 'orders'
+    for key in ['selected', 'orders']:
+        if key in receipt_data and receipt_data[key]:
+            # Find the last order with items
+            for order in reversed(receipt_data[key]):
+                if order.get('items'):
+                    return order
+    
+    return None
+
+
 def update_real_data_ts(receipt_data: Dict, meal_plan_data: Dict) -> bool:
     """Update lib/real-data.ts with fresh data."""
     print("  Updating lib/real-data.ts...")
@@ -115,10 +136,10 @@ def update_real_data_ts(receipt_data: Dict, meal_plan_data: Dict) -> bool:
     with open(REAL_DATA_PATH) as f:
         content = f.read()
     
-    # Update the receipt data
-    if receipt_data and "orders" in receipt_data and receipt_data["orders"]:
-        order = receipt_data["orders"][0]
-        
+    # Get the latest order with items
+    order = get_latest_order(receipt_data)
+    
+    if order:
         items_json = json.dumps(order.get("items", []), indent=4)
         
         new_block = f'''export const realLatestOrder: CachedOrder = {{
@@ -145,9 +166,11 @@ def update_real_data_ts(receipt_data: Dict, meal_plan_data: Dict) -> bool:
         
         if new_content != content:
             content = new_content
-            print("  ✓ Updated receipt data")
+            print(f"  ✓ Updated receipt data ({len(order.get('items', []))} items)")
         else:
             print("  ⚠ Could not find realLatestOrder pattern")
+    else:
+        print("  ⚠ No order with items found in cache")
     
     # Update meal plan if available
     if meal_plan_data and "meals" in meal_plan_data:
