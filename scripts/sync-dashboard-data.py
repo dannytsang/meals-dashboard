@@ -312,9 +312,10 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
                 coverage_start = i
             elif coverage_start is not None and coverage_end is None:
                 stripped = line.strip()
-                # End marker is either ]; (array literal) or ; (type declaration)
+                print(f"  DEBUG line {i}: '{stripped}' (looking for ]; or ;)")
                 if stripped == '];' or stripped == ';':
                     coverage_end = i
+                    print(f"  DEBUG: Found end at line {i}")
         
         coverage_json = json.dumps(coverage_block, indent=2)
         coverage_lines = [f'export const realCoverage: MealCoverage[] = {coverage_json};', '']
