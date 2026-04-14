@@ -190,19 +190,33 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
     coverage_start = None
     coverage_end = None
     
+    print(f"  DEBUG: File has {len(lines)} lines")
     for i, line in enumerate(lines):
         if 'export const realLatestOrder: CachedOrder' in line:
             receipt_start = i
-        elif receipt_start is not None and receipt_end is None and line.strip() == '};':
-            receipt_end = i
+            print(f"  DEBUG: receipt_start = {i}")
         elif 'export const realMealPlan: Meal[]' in line:
             meal_plan_start = i
-        elif meal_plan_start is not None and meal_plan_end is None and line.strip() == '];':
-            meal_plan_end = i
+            print(f"  DEBUG: meal_plan_start = {i}")
         elif 'export const realCoverage: MealCoverage[]' in line:
             coverage_start = i
-        elif coverage_start is not None and coverage_end is None and line.strip() == '];':
+            print(f"  DEBUG: coverage_start = {i}")
+    
+    # Find end markers separately (only look for them after start lines)
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if receipt_start is not None and receipt_end is None and i > receipt_start and stripped == '};':
+            receipt_end = i
+            print(f"  DEBUG: receipt_end = {i}")
+        elif meal_plan_start is not None and meal_plan_end is None and i > meal_plan_start and stripped == '];':
+            meal_plan_end = i
+            print(f"  DEBUG: meal_plan_end = {i}")
+        elif coverage_start is not None and coverage_end is None and i > coverage_start and stripped == '];':
             coverage_end = i
+            print(f"  DEBUG: coverage_end = {i}")
+            break
+    
+    print(f"  First scan: receipt_start={receipt_start}, receipt_end={receipt_end}, meal_plan_start={meal_plan_start}, meal_plan_end={meal_plan_end}, coverage_start={coverage_start}, coverage_end={coverage_end}")
     
     # Update receipt data
     if receipt and receipt_start is not None and receipt_end is not None:
@@ -310,12 +324,9 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
         for i, line in enumerate(lines):
             if 'export const realCoverage: MealCoverage[]' in line:
                 coverage_start = i
-            elif coverage_start is not None and coverage_end is None:
-                stripped = line.strip()
-                print(f"  DEBUG line {i}: '{stripped}' (looking for ]; or ;)")
-                if stripped == '];' or stripped == ';':
-                    coverage_end = i
-                    print(f"  DEBUG: Found end at line {i}")
+            elif coverage_start is not None and coverage_end is None and line.strip() == '];':
+                coverage_end = i
+                break
         
         coverage_json = json.dumps(coverage_block, indent=2)
         coverage_lines = [f'export const realCoverage: MealCoverage[] = {coverage_json};', '']
