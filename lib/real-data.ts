@@ -127,10 +127,33 @@ export function transformCachedOrder(order: CachedOrder): TescoReceipt {
 export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCoverage[] {
   const items = receipt.items.map(i => i.name.toLowerCase());
   
+  // Restaurant / takeaway chains that mean "eating out" - no ingredients needed
+  const restaurantPatterns = [
+    'kfc', 'mcdonald', 'mcdonalds', 'burger king', 'whopper',
+    'domino', "domino's", 'pizza express', 'pizza hut',
+    'nando', "nando's", 'subway', 'greggs', 'pret',
+    'taco bell', 'kebab', 'fish chips', 'fish & chips',
+    'chin chin', 'wok', 'thai', 'indian', 'chinese take',
+    'takeaway', 'take out', 'eating out', 'meal deal'
+  ];
+  
   return meals.map(meal => {
     const mealLower = meal.content.toLowerCase();
     const matchedItems: string[] = [];
     const missingItems: string[] = [];
+    
+    // Check if this is a restaurant / eating out meal
+    const isRestaurant = restaurantPatterns.some(p => mealLower.includes(p));
+    if (isRestaurant) {
+      return {
+        meal,
+        status: 'covered' as const,
+        coverageScore: 100,
+        matchedItems: ['Eating out'],
+        missingItems: [],
+        notes: 'Takeaway / eating out - no ingredients needed'
+      };
+    }
     
     // Simple keyword matching (real implementation uses meal_ingredient_lookup.py)
     const keywords: Record<string, string[]> = {
