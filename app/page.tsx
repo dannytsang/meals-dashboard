@@ -1092,19 +1092,48 @@ export default function MealsDashboardPage() {
             {selectedMealData.matchedItems && selectedMealData.matchedItems.length > 0 && (
               <div style={{ marginBottom: '1rem' }}>
                 <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Matched Items</h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {selectedMealData.matchedItems.map((item, idx) => (
-                    <span key={idx} style={{
-                      fontSize: '11px',
-                      fontWeight: '600',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      backgroundColor: 'var(--accent-emerald-bg)',
-                      color: 'var(--accent-emerald)'
-                    }}>
-                      ✓ {item}
-                    </span>
-                  ))}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {selectedMealData.matchedItems.map((itemName, idx) => {
+                    // Find the actual receipt item
+                    const receiptItem = receipt.items.find(i => 
+                      i.name.toLowerCase().includes(itemName.toLowerCase()) ||
+                      itemName.toLowerCase().includes(i.name.toLowerCase().split(' ')[0])
+                    );
+                    const qty = receiptItem?.quantity ?? 1;
+                    const unitPrice = receiptItem?.price ?? 0;
+                    return (
+                      <div key={idx} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.5rem 0.75rem',
+                        backgroundColor: 'var(--accent-emerald-bg)',
+                        borderRadius: '6px',
+                        border: '1px solid var(--accent-emerald)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ color: 'var(--accent-emerald)', fontSize: '14px' }}>✓</span>
+                          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                            {itemName}
+                          </span>
+                        </div>
+                        {receiptItem ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                              {qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>
+                              £{(unitPrice * qty).toFixed(2)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                            (no receipt data)
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
