@@ -237,23 +237,25 @@ export const realLatestOrder: CachedOrder = {
   ]
 };
 
-// Real meal plan from Todoist (April 13-17, 2026)
+// Real meal plan from Todoist (April 13-19, 2026)
+// section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
+// section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  { id: '6gJfvMfJ43rpMf4h', content: 'Mash potato, cheese, beans', date: '2026-04-13', labels: [], section: 'Planned' },
-  { id: '6gJg7wWGPVH3J289', content: 'Pizza', date: '2026-04-13', labels: ['adult'], section: 'Planned' },
-  { id: '6gJg7xQ73r4GFg6h', content: 'Toastie', date: '2026-04-13', labels: ['children'], section: 'Planned' },
-  { id: '6gJfvXWQ62xmcvFh', content: 'Sticky rice', date: '2026-04-14', labels: [], section: 'Planned' },
-  { id: '6gJfXmmr9Hjp2MH9', content: 'Gammon, baked potatoes and salad', date: '2026-04-14', labels: ['children'], section: 'Planned' },
-  { id: '6gJfXqChQ7wx9JFh', content: 'Beef steaks, baked potatoes and salad', date: '2026-04-14', labels: ['adult'], section: 'Planned' },
-  { id: '6gJfvVvqpMpG8mv9', content: 'Ham and cheese toastie', date: '2026-04-15', labels: [], section: 'Planned' },
-  { id: '6gJhvC5QhXC2hHR9', content: 'Pizza (Leo)', date: '2026-04-15', labels: ['children'], section: 'Planned' },
-  { id: '6gMPhXmqffW8MMGh', content: 'Mash potato cheese (Ashlee)', date: '2026-04-15', labels: ['children'], section: 'Planned' },
-  { id: '6gJhvG6JXWPw4GGh', content: 'Chicken and rice veg (Terina)', date: '2026-04-15', labels: ['adult'], section: 'Planned' },
-  { id: '6gJfvcwHgh5hx2gh', content: 'Jacket potatoes (school)', date: '2026-04-16', labels: [], section: 'Planned' },
-  { id: '6gJhvfx2j3fxQFv9', content: 'KFC', date: '2026-04-16', labels: ['children'], section: 'Planned' },
-  { id: '6gJfvgmG5cHr2Wrh', content: 'KFC', date: '2026-04-17', labels: [], section: 'Planned' },
-  { id: '6gM4f6gQjgVXPq49', content: 'Chicken and noodles (Terina)', date: '2026-04-17', labels: ['adult'], section: 'Planned' },
-  { id: '6Rv6P5rj7RjvV6j9', content: 'chicken / garlic bread and chips', date: '2026-04-17', labels: ['children'], section: 'Planned' },
+  { id: '6gJfvMfJ43rpMf4h', content: 'Mash potato, cheese, beans', date: '2026-04-13', labels: [], section: 'Planned', meal_type: 'dinner' },
+  { id: '6gJg7wWGPVH3J289', content: 'Pizza', date: '2026-04-13', labels: ['adult'], section: 'Planned', meal_type: 'dinner' },
+  { id: '6gJg7xQ73r4GFg6h', content: 'Toastie', date: '2026-04-13', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
+  { id: '6gJfvXWQ62xmcvFh', content: 'Sticky rice', date: '2026-04-14', labels: [], section: 'Ashlee Lunch', meal_type: 'lunch' },
+  { id: '6gJfXmmr9Hjp2MH9', content: 'Gammon, baked potatoes and salad', date: '2026-04-14', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
+  { id: '6gJfXqChQ7wx9JFh', content: 'Beef steaks, baked potatoes and salad', date: '2026-04-14', labels: ['adult'], section: 'Planned', meal_type: 'dinner' },
+  { id: '6gJfvVvqpMpG8mv9', content: 'Ham and cheese toastie', date: '2026-04-15', labels: [], section: 'Ashlee Lunch', meal_type: 'lunch' },
+  { id: '6gJhvC5QhXC2hHR9', content: 'Pizza (Leo)', date: '2026-04-15', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
+  { id: '6gMPhXmqffW8MMGh', content: 'Mash potato cheese (Ashlee)', date: '2026-04-15', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
+  { id: '6gJhvG6JXWPw4GGh', content: 'Chicken and rice veg (Terina)', date: '2026-04-15', labels: ['adult'], section: 'Planned', meal_type: 'dinner' },
+  { id: '6gJfvcwHgh5hx2gh', content: 'Jacket potatoes (school)', date: '2026-04-16', labels: [], section: 'Ashlee Lunch', meal_type: 'lunch' },
+  { id: '6gJhvfx2j3fxQFv9', content: 'KFC', date: '2026-04-16', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
+  { id: '6gJfvgmG5cHr2Wrh', content: 'KFC', date: '2026-04-17', labels: [], section: 'Ashlee Lunch', meal_type: 'lunch' },
+  { id: '6gM4f6gQjgVXPq49', content: 'Chicken and noodles (Terina)', date: '2026-04-17', labels: ['adult'], section: 'Planned', meal_type: 'dinner' },
+  { id: '6Rv6P5rj7RjvV6j9', content: 'chicken / garlic bread and chips', date: '2026-04-17', labels: ['children'], section: 'Planned', meal_type: 'dinner' },
 ];
 
 // Transform and export
