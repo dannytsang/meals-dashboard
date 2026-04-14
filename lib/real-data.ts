@@ -435,6 +435,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -560,8 +561,329 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 // Coverage data - pre-computed by sync script (do not edit manually)
-export const realCoverage: MealCoverage[] = [];
+export const realCoverage: MealCoverage[] = [
+  {
+    "meal": {
+      "id": "",
+      "content": "Sticky rice",
+      "date": "2026-04-14",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "lunch"
+    },
+    "status": "covered",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Gammon, baked potatoes and salad",
+      "date": "2026-04-14",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "potato",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "baked potato",
+        "name": "baked potato",
+        "quantity": 1,
+        "price": 0
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Beef steaks, baked potatoes and salad",
+      "date": "2026-04-14",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "potato",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "baked potato",
+        "name": "baked potato",
+        "quantity": 1,
+        "price": 0
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Ham and cheese toastie",
+      "date": "2026-04-15",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "lunch"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "bread",
+        "name": "Tesco Cheese and Garlic Flatbread 230g",
+        "quantity": 1,
+        "price": 1.2
+      },
+      {
+        "ingredient": "toastie",
+        "name": "toastie",
+        "quantity": 1,
+        "price": 0
+      },
+      {
+        "ingredient": "panini",
+        "name": "panini",
+        "quantity": 1,
+        "price": 0
+      },
+      {
+        "ingredient": "sandwich loaf",
+        "name": "sandwich loaf",
+        "quantity": 1,
+        "price": 0
+      },
+      {
+        "ingredient": "cheese",
+        "name": "Tesco Cheese and Garlic Flatbread 230g",
+        "quantity": 1,
+        "price": 1.2
+      },
+      {
+        "ingredient": "cheddar",
+        "name": "cheddar",
+        "quantity": 1,
+        "price": 0
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Pizza (Leo)",
+      "date": "2026-04-15",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "pizza",
+        "name": "Crosta & Mollica Salami Napoli Sourdough Pizza 413g",
+        "quantity": 1,
+        "price": 0.0
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Mash potato cheese (Ashlee)",
+      "date": "2026-04-15",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "potato",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "mash",
+        "name": "mash",
+        "quantity": 1,
+        "price": 0
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Chicken and rice veg (Terina)",
+      "date": "2026-04-15",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "chicken",
+        "name": "Tesco Large Chicken Fillet Pack 1.6Kg",
+        "quantity": 1,
+        "price": 9.8
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Jacket potatoes (school)",
+      "date": "2026-04-16",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "lunch"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "potato",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "baked potato",
+        "name": "baked potato",
+        "quantity": 1,
+        "price": 0
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "KFC",
+      "date": "2026-04-16",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 0,
+    "matchedItems": [
+      {
+        "ingredient": "takeaway - no ingredients needed",
+        "name": "takeaway - no ingredients needed",
+        "quantity": 1,
+        "price": 0
+      }
+    ],
+    "missingItems": [],
+    "notes": "takeaway - no ingredients needed"
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "KFC",
+      "date": "2026-04-17",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "lunch"
+    },
+    "status": "covered",
+    "coverageScore": 0,
+    "matchedItems": [
+      {
+        "ingredient": "takeaway - no ingredients needed",
+        "name": "takeaway - no ingredients needed",
+        "quantity": 1,
+        "price": 0
+      }
+    ],
+    "missingItems": [],
+    "notes": "takeaway - no ingredients needed"
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Chicken and noodles (Terina)",
+      "date": "2026-04-17",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "chicken",
+        "name": "Tesco Large Chicken Fillet Pack 1.6Kg",
+        "quantity": 1,
+        "price": 9.8
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "chicken / garlic bread and chips",
+      "date": "2026-04-17",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "chicken",
+        "name": "Tesco Large Chicken Fillet Pack 1.6Kg",
+        "quantity": 1,
+        "price": 9.8
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Salmon kebabs, salad and new potatoes",
+      "date": "2026-04-20",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [
+      "salmon"
+    ],
+    "notes": "Check freezer or add to order"
+  }
+];
+
