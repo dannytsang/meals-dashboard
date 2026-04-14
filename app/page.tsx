@@ -1096,6 +1096,7 @@ export default function MealsDashboardPage() {
                   {selectedMealData.matchedItems.map((item, idx) => {
                     const qty = item.quantity ?? 1;
                     const unitPrice = item.price ?? 0;
+                    const totalPrice = unitPrice * qty;
                     return (
                       <div key={idx} style={{
                         display: 'flex',
@@ -1113,12 +1114,20 @@ export default function MealsDashboardPage() {
                           </span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                            {qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}
-                          </span>
-                          <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>
-                            £{(unitPrice * qty).toFixed(2)}
-                          </span>
+                          {unitPrice > 0 ? (
+                            <>
+                              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                                {qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}
+                              </span>
+                              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>
+                                £{totalPrice.toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                              (price N/A)
+                            </span>
+                          )}
                         </div>
                       </div>
                     );

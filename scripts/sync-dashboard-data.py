@@ -271,8 +271,8 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
                     resolved_matched_items.append({
                         "ingredient": ing_name,
                         "name": ing_name,
-                        "quantity": 1,
-                        "price": 0,
+                        "quantity": None,
+                        "price": None,
                     })
             
             # Build coverage entry with resolved items

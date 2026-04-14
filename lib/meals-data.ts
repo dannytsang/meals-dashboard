@@ -56,8 +56,8 @@ export interface ShortLifeItem {
 export interface MatchedItem {
   ingredient: string;
   name: string;
-  quantity: number;
-  price: number;
+  quantity: number | null;
+  price: number | null;
 }
 
 export interface MealCoverage {
