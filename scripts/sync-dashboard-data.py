@@ -325,9 +325,16 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
         for i, line in enumerate(lines):
             if 'export const realCoverage: MealCoverage[]' in line:
                 coverage_start = i
-            elif coverage_start is not None and coverage_end is None and line.strip() == '];':
-                coverage_end = i
-                break
+            elif coverage_start is not None and coverage_end is None:
+                stripped = line.strip()
+                if stripped == '];' or stripped == '};':
+                    # End of array literal (either old [] or new computed)
+                    coverage_end = i
+                    break
+                elif '= [];' in line:
+                    # Old format: single line `export const realCoverage: MealCoverage[] = [];`
+                    coverage_end = i
+                    break
         
         print(f"  DEBUG (2nd scan): coverage_start={coverage_start}, coverage_end={coverage_end}, total_lines={len(lines)}")
         if coverage_start is not None:
