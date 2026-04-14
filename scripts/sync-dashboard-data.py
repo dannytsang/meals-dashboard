@@ -328,6 +328,12 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
                 coverage_end = i
                 break
         
+        print(f"  DEBUG (2nd scan): coverage_start={coverage_start}, coverage_end={coverage_end}, total_lines={len(lines)}")
+        if coverage_start is not None:
+            print(f"  DEBUG: Line {coverage_start}: {repr(lines[coverage_start][:80])}")
+            if coverage_end is not None:
+                print(f"  DEBUG: Line {coverage_end}: {repr(lines[coverage_end][:80])}")
+        
         coverage_json = json.dumps(coverage_block, indent=2)
         coverage_lines = [f'export const realCoverage: MealCoverage[] = {coverage_json};', '']
         
