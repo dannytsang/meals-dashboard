@@ -353,6 +353,8 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
             
             # Use matched item names directly from cache (already resolved by meal_coverage)
             # No need to re-run find_receipt_item_match() - meal_coverage already did the resolution
+            matched_ingredient_names = m.get("matched_items", [])
+            resolved_matched_items = []
             for item_name in matched_ingredient_names:
                 # Try to find the item in raw_items to get quantity and price
                 matched_receipt_item = None
