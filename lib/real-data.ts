@@ -249,6 +249,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -395,6 +396,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -419,8 +421,26 @@ export const realCoverage: MealCoverage[] = [
         "price": 2.02
       },
       {
+        "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
+        "name": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
+      },
+      {
         "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
         "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Hovis Best of Both Medium Bread 800g",
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack",
+        "name": "Warburtons White Sandwich Bread Thins 6 Pack",
         "quantity": null,
         "price": null
       }
@@ -689,11 +709,56 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [],
-    "notes": "No matching items"
+    "status": "partial",
+    "coverageScore": 87,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Aioli Dip 200G Substitutions: On",
+        "name": "Tesco Aioli Dip 200G Substitutions: On",
+        "quantity": 1,
+        "price": 1.1
+      },
+      {
+        "ingredient": "Tesco Guacamole 163g Substitutions: On",
+        "name": "Tesco Guacamole 163g Substitutions: On",
+        "quantity": 2,
+        "price": 2.2
+      },
+      {
+        "ingredient": "Tesco Tzatziki Dip 200G Substitutions: On",
+        "name": "Tesco Tzatziki Dip 200G Substitutions: On",
+        "quantity": 1,
+        "price": 1.1
+      },
+      {
+        "ingredient": "Tesco Aioli Dip 200G",
+        "name": "Tesco Aioli Dip 200G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Guacamole 163g",
+        "name": "Tesco Guacamole 163g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Tzatziki Dip 200G",
+        "name": "Tesco Tzatziki Dip 200G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Doritos Mild Salsa Dip 300g",
+        "name": "Doritos Mild Salsa Dip 300g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [
+      "Tesco Guacamole 163g Substitutions: On"
+    ],
+    "notes": "Need: Tesco Guacamole 163g Substitutions: On"
   },
   {
     "meal": {
@@ -756,6 +821,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "No matching items"
   }
 ];
+
 
 
 
