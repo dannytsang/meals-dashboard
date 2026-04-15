@@ -351,24 +351,28 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
                 meal_entry["meal_type"] = m["meal_type"]
             meals_block.append(meal_entry)
             
-            # Resolve ingredient names to actual receipt item names
-            matched_ingredient_names = m.get("matched_items", [])
-            resolved_matched_items = []
-            for ing_name in matched_ingredient_names:
-                matched_receipt_item = find_receipt_item_match(ing_name, raw_items)
+            # Use matched item names directly from cache (already resolved by meal_coverage)
+            # No need to re-run find_receipt_item_match() - meal_coverage already did the resolution
+            for item_name in matched_ingredient_names:
+                # Try to find the item in raw_items to get quantity and price
+                matched_receipt_item = None
+                for ri in raw_items:
+                    if ri.get('name') == item_name:
+                        matched_receipt_item = ri
+                        break
+                
                 if matched_receipt_item:
-                    # Use the actual receipt item name
                     resolved_matched_items.append({
-                        "ingredient": ing_name,
-                        "name": matched_receipt_item.get("name", ing_name),
+                        "ingredient": item_name,
+                        "name": matched_receipt_item.get("name", item_name),
                         "quantity": matched_receipt_item.get("quantity", 1),
                         "price": matched_receipt_item.get("price", 0),
                     })
                 else:
-                    # Keep the ingredient name if no receipt match
+                    # Use the item name directly from cache (already a product name, not just ingredient)
                     resolved_matched_items.append({
-                        "ingredient": ing_name,
-                        "name": ing_name,
+                        "ingredient": item_name,
+                        "name": item_name,
                         "quantity": None,
                         "price": None,
                     })
