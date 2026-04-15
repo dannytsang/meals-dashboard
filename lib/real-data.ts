@@ -203,34 +203,11 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "",
-    "content": "Gammon, baked potatoes and salad",
-    "date": "2026-04-14",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Beef steaks, baked potatoes and salad",
-    "date": "2026-04-14",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Sticky rice",
-    "date": "2026-04-14",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "",
     "content": "Ham and cheese toastie",
@@ -341,79 +318,12 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "",
-      "content": "Gammon, baked potatoes and salad",
-      "date": "2026-04-14",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "potato",
-        "name": "potato",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "baked potato",
-        "name": "baked potato",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Beef steaks, baked potatoes and salad",
-      "date": "2026-04-14",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "potato",
-        "name": "potato",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "baked potato",
-        "name": "baked potato",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Sticky rice",
-      "date": "2026-04-14",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": []
-  },
   {
     "meal": {
       "id": "",
@@ -652,6 +562,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "Check freezer or add to order"
   }
 ];
+
 
 
 
