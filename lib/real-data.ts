@@ -143,7 +143,7 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 export const realLatestOrder: CachedOrder = {
   "email_id": "",
   "email_date": "",
-  "delivery_date": "2026-04-17",
+  "delivery_date": "",
   "delivery_sort": "",
   "order_number": "7711-8507-752",
   "items": [
@@ -237,6 +237,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -247,7 +248,7 @@ export const realMealPlan: Meal[] = [
     "date": "2026-04-15",
     "labels": [],
     "section": "Planned",
-    "meal_type": "lunch"
+    "meal_type": "dinner"
   },
   {
     "id": "",
@@ -279,7 +280,7 @@ export const realMealPlan: Meal[] = [
     "date": "2026-04-16",
     "labels": [],
     "section": "Planned",
-    "meal_type": "lunch"
+    "meal_type": "dinner"
   },
   {
     "id": "",
@@ -295,7 +296,7 @@ export const realMealPlan: Meal[] = [
     "date": "2026-04-17",
     "labels": [],
     "section": "Planned",
-    "meal_type": "lunch"
+    "meal_type": "dinner"
   },
   {
     "id": "",
@@ -376,6 +377,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -388,40 +390,25 @@ export const realCoverage: MealCoverage[] = [
       "date": "2026-04-15",
       "labels": [],
       "section": "Planned",
-      "meal_type": "lunch"
+      "meal_type": "dinner"
     },
-    "status": "partial",
-    "coverageScore": 80,
+    "status": "covered",
+    "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "bread",
-        "name": "bread",
-        "quantity": null,
-        "price": null
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
+        "quantity": 1,
+        "price": 2.02
       },
       {
-        "ingredient": "toastie",
-        "name": "toastie",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "panini",
-        "name": "panini",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "sandwich loaf",
-        "name": "sandwich loaf",
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
         "quantity": null,
         "price": null
       }
     ],
-    "missingItems": [
-      "cheese"
-    ],
-    "notes": "Have: bread or toastie or panini or sandwich loaf | Need: cheese or cheddar"
+    "missingItems": []
   },
   {
     "meal": {
@@ -435,10 +422,8 @@ export const realCoverage: MealCoverage[] = [
     "status": "missing",
     "coverageScore": 0,
     "matchedItems": [],
-    "missingItems": [
-      "pizza"
-    ],
-    "notes": "Check freezer or add to order"
+    "missingItems": [],
+    "notes": "No matching items"
   },
   {
     "meal": {
@@ -469,12 +454,6 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco All Rounder Potatoes 2Kg",
         "quantity": null,
         "price": null
-      },
-      {
-        "ingredient": "mash",
-        "name": "mash",
-        "quantity": null,
-        "price": null
       }
     ],
     "missingItems": []
@@ -496,6 +475,36 @@ export const realCoverage: MealCoverage[] = [
         "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
         "quantity": 1,
         "price": 1.75
+      },
+      {
+        "ingredient": "Tesco Soy and Garlic Stir Fry Sauce 165g Substitutions: On",
+        "name": "Tesco Soy and Garlic Stir Fry Sauce 165g Substitutions: On",
+        "quantity": 1,
+        "price": 0.72
+      },
+      {
+        "ingredient": "Tesco Large Vegetable Stir Fry 570g Substitutions: On",
+        "name": "Tesco Large Vegetable Stir Fry 570g Substitutions: On",
+        "quantity": 1,
+        "price": 1.29
+      },
+      {
+        "ingredient": "Tesco Soy and Garlic Stir Fry Sauce 165g",
+        "name": "Tesco Soy and Garlic Stir Fry Sauce 165g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Large Vegetable Stir Fry 570g",
+        "name": "Tesco Large Vegetable Stir Fry 570g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "\u2020 Dr Pepper Regular 500 M",
+        "name": "\u2020 Dr Pepper Regular 500 M",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
@@ -507,29 +516,11 @@ export const realCoverage: MealCoverage[] = [
       "date": "2026-04-16",
       "labels": [],
       "section": "Planned",
-      "meal_type": "lunch"
+      "meal_type": "dinner"
     },
     "status": "covered",
     "coverageScore": 100,
     "matchedItems": [
-      {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "quantity": 1,
-        "price": 3.33
-      },
-      {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco All Rounder Potatoes 2Kg",
-        "name": "Tesco All Rounder Potatoes 2Kg",
-        "quantity": null,
-        "price": null
-      },
       {
         "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
         "name": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
@@ -561,7 +552,7 @@ export const realCoverage: MealCoverage[] = [
       "meal_type": "dinner"
     },
     "status": "covered",
-    "coverageScore": 0,
+    "coverageScore": 100,
     "matchedItems": [
       {
         "ingredient": "takeaway - no ingredients needed",
@@ -580,10 +571,10 @@ export const realCoverage: MealCoverage[] = [
       "date": "2026-04-17",
       "labels": [],
       "section": "Planned",
-      "meal_type": "lunch"
+      "meal_type": "dinner"
     },
     "status": "covered",
-    "coverageScore": 0,
+    "coverageScore": 100,
     "matchedItems": [
       {
         "ingredient": "takeaway - no ingredients needed",
@@ -604,17 +595,44 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
+    "status": "partial",
+    "coverageScore": 83,
     "matchedItems": [
       {
         "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
         "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
         "quantity": 1,
         "price": 1.75
+      },
+      {
+        "ingredient": "Tesco Egg Noodles 300G Substitutions: On",
+        "name": "Tesco Egg Noodles 300G Substitutions: On",
+        "quantity": 1,
+        "price": 0.72
+      },
+      {
+        "ingredient": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On",
+        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On",
+        "quantity": 2,
+        "price": 4.5
+      },
+      {
+        "ingredient": "Tesco Egg Noodles 300G",
+        "name": "Tesco Egg Noodles 300G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
+        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
+        "quantity": null,
+        "price": null
       }
     ],
-    "missingItems": []
+    "missingItems": [
+      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On"
+    ],
+    "notes": "Need: Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On"
   },
   {
     "meal": {
@@ -633,6 +651,24 @@ export const realCoverage: MealCoverage[] = [
         "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
         "quantity": 1,
         "price": 1.75
+      },
+      {
+        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
+        "name": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
+        "quantity": 1,
+        "price": 3.33
+      },
+      {
+        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
+        "name": "Fire Pit Tesco Beef Smash Burgers 340g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco All Rounder Potatoes 2Kg",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
@@ -646,13 +682,47 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "salmon"
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
+        "name": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
+        "quantity": 1,
+        "price": 3.33
+      },
+      {
+        "ingredient": "Tesco Firepit 6 Mango Coconut Lime Fish Skewers 300G Substitutions: On",
+        "name": "Tesco Firepit 6 Mango Coconut Lime Fish Skewers 300G Substitutions: On",
+        "quantity": 1,
+        "price": 3.33
+      },
+      {
+        "ingredient": "Tesco Raw King Prawns 165g",
+        "name": "Tesco Raw King Prawns 165g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
+        "name": "Fire Pit Tesco Beef Smash Burgers 340g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Firepit 6 Mango Coconut Lime Fish Skewers 300G",
+        "name": "Tesco Firepit 6 Mango Coconut Lime Fish Skewers 300G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco All Rounder Potatoes 2Kg",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
+      }
     ],
-    "notes": "Check freezer or add to order"
+    "missingItems": []
   },
   {
     "meal": {
@@ -663,10 +733,11 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
+    "status": "missing",
     "coverageScore": 0,
     "matchedItems": [],
-    "missingItems": []
+    "missingItems": [],
+    "notes": "No matching items"
   },
   {
     "meal": {
@@ -690,6 +761,7 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": []
   }
 ];
+
 
 
 
