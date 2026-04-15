@@ -131,29 +131,127 @@ def get_latest_order(receipt_data: Dict) -> Optional[Dict]:
     return None
 
 
+# Keywords that indicate a primary ingredient match at start of item name
+_PRIMARY_INGREDIENT_KEYWORDS = {
+    'chicken', 'beef', 'pork', 'lamb', 'turkey', 'duck', 'fish', 'salmon',
+    'cod', 'tuna', 'prawn', 'shrimp', 'rice', 'pasta', 'potato', 'chips',
+    'onion', 'garlic', 'carrot', 'broccoli', 'pepper', 'mushroom', 'tomato',
+    'cheese', 'milk', 'cream', 'butter', 'egg', 'bread', 'flour',
+    'sugar', 'salt', 'oil', 'vinegar', 'noodles', 'flatbread',
+    # Common secondary ingredients
+    'tomato', 'lemon', 'lime', 'ginger', 'chilli', 'curry', 'soy',
+    'honey', 'mustard', 'mayo', 'mayonnaise', 'ketchup', 'bbq',
+    'bacon', 'ham', 'sausage', 'steak', 'mince', 'chorizo',
+    'sweetcorn', 'peas', 'beans', 'lentil', 'chickpea',
+    'coconut', 'almond', 'walnut', 'cashew', 'pine nut',
+    'basil', 'oregano', 'thyme', 'rosemary', 'mint', 'coriander', 'parsley',
+    'cumin', 'paprika', 'cinnamon', 'nutmeg', 'turmeric', 'curry powder',
+}
+
+# Keywords that indicate the item is a prepared/compound dish (weak match for ingredients)
+_COMPOUND_DISH_KEYWORDS = {
+    'soup', 'sauce', 'curry', 'stew', 'casserole', 'ready meal', 'readymeal',
+    'sandwich', 'sarnie', 'wrap', 'pitta', 'pizza', 'pasta', 'noodles',
+    'salad', 'smoothie', 'juice', 'drink', 'shake', 'ice cream', 'icecream',
+    'cake', 'biscuit', 'cookie', 'chocolate', 'sweet', 'snack',
+    'meal deal', 'lunch special', 'dinner special',
+}
+
+# Brand prefixes to skip when checking word positions
+_BRAND_PREFIXES = {'tesco', 'sainsbury', 'asda', 'morrisons', 'waitrose', 'co-op', 'aldi', 'lidl', 'iceland'}
+
+
+
+def _is_weak_match(ingredient_name: str, item_name: str) -> bool:
+    """Check if a match is weak (ingredient is a minor word in a compound dish).
+    
+    Returns True if the match should be rejected because the ingredient
+    appears to be a minor component of a prepared dish rather than the
+    main ingredient.
+    """
+    ing_lower = ingredient_name.lower()
+    item_lower = item_name.lower()
+    
+    # Check if item is a compound dish - if so, ingredient appearing in it is weak
+    for keyword in _COMPOUND_DISH_KEYWORDS:
+        if keyword in item_lower:
+            return True
+    
+    return False
+
+
 def find_receipt_item_match(ingredient_name: str, receipt_items: list) -> Optional[Dict]:
     """Find the best matching receipt item for an ingredient name.
     
-    Uses substring matching to find the receipt item that contains or is
-    contained by the ingredient name.
+    Uses strict substring matching with these rules:
+    1. For primary ingredient keywords, prefer matches where ingredient appears early in item name
+    2. Reject compound dishes (soup, sauce, ready meals) as ingredient matches
+    3. Prefer exact matches and matches where ingredient is a main descriptor
     """
     ingredient_lower = ingredient_name.lower()
     
-    # First, try exact substring match
+    # Split into words for analysis
+    ing_words = ingredient_lower.split(" ")
+    primary_word = ing_words[0] if ing_words else ingredient_lower
+    
+    def _get_meaningful_words(item_name: str) -> list:
+        """Get words after brand prefix."""
+        words = item_name.lower().split()
+        # Skip brand prefix if present
+        if words and words[0] in _BRAND_PREFIXES:
+            words = words[1:]
+        return words
+    
+    def _word_position(item_name: str, word: str) -> int:
+        """Get position of word in item name (0-indexed, after brand prefix)."""
+        words = _get_meaningful_words(item_name)
+        for i, w in enumerate(words):
+            if w.startswith(word):
+                return i
+        return 999  # Not found
+    
+    best_match = None
+    best_match_score = 0
+    
     for item in receipt_items:
         item_lower = item.get("name", "").lower()
-        if ingredient_lower in item_lower or item_lower in ingredient_lower:
-            return item
+        item_words = _get_meaningful_words(item.get("name", ""))
+        
+        # Reject weak matches (ingredient inside compound dish)
+        if _is_weak_match(ingredient_lower, item_lower):
+            continue
+        
+        score = 0
+        
+        # Rule 1: For primary ingredients, check position in item name
+        if primary_word in _PRIMARY_INGREDIENT_KEYWORDS:
+            pos = _word_position(item.get("name", ""), primary_word)
+            if pos <= 2:  # Among first 3 meaningful words = strong match
+                score = 100 - pos * 10  # Earlier = better
+            elif pos <= 4:
+                score = 70
+        
+        # Rule 2: Exact full match
+        if ingredient_lower == item_lower:
+            score = 95
+        
+        # Rule 3: Item contained by ingredient (item is more specific)
+        elif item_lower in ingredient_lower and len(item_lower) > 3:
+            score = 60
+        
+        # Rule 4: Ingredient word at start of meaningful words (not brand)
+        elif any(w.startswith(primary_word) for w in item_words if len(primary_word) > 2):
+            score = 50
+        
+        # Rule 5: Any word from ingredient starts with ingredient (fallback)
+        elif any(w.startswith(ing_word) for ing_word in ing_words for w in item_words if len(ing_word) > 2):
+            score = 40
+        
+        if score > best_match_score:
+            best_match_score = score
+            best_match = item
     
-    # Try first word match
-    first_word = ingredient_lower.split(" ")[0] if " " in ingredient_lower else ingredient_lower
-    if len(first_word) > 2:
-        for item in receipt_items:
-            item_lower = item.get("name", "").lower()
-            if first_word in item_lower:
-                return item
-    
-    return None
+    return best_match
 
 
 def read_dashboard_cache() -> Optional[Dict]:
