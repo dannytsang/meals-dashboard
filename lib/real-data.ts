@@ -148,9 +148,19 @@ export const realLatestOrder: CachedOrder = {
   "order_number": "7711-8507-752",
   "items": [
     {
+        "name": "Tesco Aioli Dip 200G Substitutions: On",
+        "quantity": 1,
+        "price": 1.1
+    },
+    {
         "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
         "quantity": 1,
         "price": 1.75
+    },
+    {
+        "name": "Tesco Guacamole 163g Substitutions: On",
+        "quantity": 2,
+        "price": 2.2
     },
     {
         "name": "Tesco Soy and Garlic Stir Fry Sauce 165g Substitutions: On",
@@ -163,6 +173,11 @@ export const realLatestOrder: CachedOrder = {
         "price": 2.02
     },
     {
+        "name": "Tesco Tzatziki Dip 200G Substitutions: On",
+        "quantity": 1,
+        "price": 1.1
+    },
+    {
         "name": "Tesco Egg Noodles 300G Substitutions: On",
         "quantity": 1,
         "price": 0.72
@@ -173,21 +188,6 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.29
     },
     {
-        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-    },
-    {
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "quantity": 1,
-        "price": 3.33
-    },
-    {
-        "name": "Tesco Firepit 6 Mango Coconut Lime Fish Skewers 300G Substitutions: On",
-        "quantity": 1,
-        "price": 3.33
-    },
-    {
         "name": "\u2020 Maoam Bloxx 4 Pack 88G Substitutions: On",
         "quantity": 1,
         "price": 0.48
@@ -196,9 +196,15 @@ export const realLatestOrder: CachedOrder = {
         "name": "Jammie Dodgers Biscuits 140G Substitutions: On",
         "quantity": 3,
         "price": 1.95
+    },
+    {
+        "name": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
     }
 ]
 };
+
 
 
 
@@ -254,14 +260,6 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Pizza (Leo)",
-    "date": "2026-04-15",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
     "content": "Mash potato cheese (Ashlee)",
     "date": "2026-04-15",
     "labels": [],
@@ -271,6 +269,14 @@ export const realMealPlan: Meal[] = [
   {
     "id": "",
     "content": "Chicken and rice veg (Terina)",
+    "date": "2026-04-15",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Pizza (Leo)",
     "date": "2026-04-15",
     "labels": [],
     "section": "Planned",
@@ -318,6 +324,14 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
+    "content": "Nachos (Ashlee and Danny)",
+    "date": "2026-04-18",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
     "content": "Salmon kebabs, salad and new potatoes",
     "date": "2026-04-20",
     "labels": [],
@@ -331,16 +345,9 @@ export const realMealPlan: Meal[] = [
     "labels": [],
     "section": "Planned",
     "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Lamb kofta and salad",
-    "date": "2026-04-20",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
   }
 ];
+
 
 
 
@@ -417,21 +424,6 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Pizza (Leo)",
-      "date": "2026-04-15",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [],
-    "notes": "No matching items"
-  },
-  {
-    "meal": {
-      "id": "",
       "content": "Mash potato cheese (Ashlee)",
       "date": "2026-04-15",
       "labels": [],
@@ -442,12 +434,6 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "quantity": 1,
-        "price": 3.33
-      },
-      {
         "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
         "name": "Fire Pit Tesco Beef Smash Burgers 340g",
         "quantity": null,
@@ -456,6 +442,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco All Rounder Potatoes 2Kg",
         "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
+        "name": "Tesco Lightly Salted Tortilla Chips 200g",
         "quantity": null,
         "price": null
       }
@@ -516,6 +508,20 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
+      "content": "Pizza (Leo)",
+      "date": "2026-04-15",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
       "content": "Jacket potatoes (school)",
       "date": "2026-04-16",
       "labels": [],
@@ -526,12 +532,6 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "quantity": 1,
-        "price": 3.33
-      },
-      {
         "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
         "name": "Fire Pit Tesco Beef Smash Burgers 340g",
         "quantity": null,
@@ -540,6 +540,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco All Rounder Potatoes 2Kg",
         "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
+        "name": "Tesco Lightly Salted Tortilla Chips 200g",
         "quantity": null,
         "price": null
       }
@@ -599,8 +605,8 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "partial",
-    "coverageScore": 83,
+    "status": "covered",
+    "coverageScore": 100,
     "matchedItems": [
       {
         "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
@@ -615,12 +621,6 @@ export const realCoverage: MealCoverage[] = [
         "price": 0.72
       },
       {
-        "ingredient": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On",
-        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-      },
-      {
         "ingredient": "Tesco Egg Noodles 300G",
         "name": "Tesco Egg Noodles 300G",
         "quantity": null,
@@ -633,10 +633,7 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       }
     ],
-    "missingItems": [
-      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On"
-    ],
-    "notes": "Need: Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On"
+    "missingItems": []
   },
   {
     "meal": {
@@ -657,12 +654,6 @@ export const realCoverage: MealCoverage[] = [
         "price": 1.75
       },
       {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "quantity": 1,
-        "price": 3.33
-      },
-      {
         "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
         "name": "Fire Pit Tesco Beef Smash Burgers 340g",
         "quantity": null,
@@ -673,9 +664,30 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco All Rounder Potatoes 2Kg",
         "quantity": null,
         "price": null
+      },
+      {
+        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
+        "name": "Tesco Lightly Salted Tortilla Chips 200g",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Nachos (Ashlee and Danny)",
+      "date": "2026-04-18",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
   },
   {
     "meal": {
@@ -689,18 +701,6 @@ export const realCoverage: MealCoverage[] = [
     "status": "covered",
     "coverageScore": 100,
     "matchedItems": [
-      {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g Substitutions: On",
-        "quantity": 1,
-        "price": 3.33
-      },
-      {
-        "ingredient": "Tesco Firepit 6 Mango Coconut Lime Fish Skewers 300G Substitutions: On",
-        "name": "Tesco Firepit 6 Mango Coconut Lime Fish Skewers 300G Substitutions: On",
-        "quantity": 1,
-        "price": 3.33
-      },
       {
         "ingredient": "Tesco Raw King Prawns 165g",
         "name": "Tesco Raw King Prawns 165g",
@@ -724,6 +724,12 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco All Rounder Potatoes 2Kg",
         "quantity": null,
         "price": null
+      },
+      {
+        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
+        "name": "Tesco Lightly Salted Tortilla Chips 200g",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
@@ -742,29 +748,9 @@ export const realCoverage: MealCoverage[] = [
     "matchedItems": [],
     "missingItems": [],
     "notes": "No matching items"
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Lamb kofta and salad",
-      "date": "2026-04-20",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "TESCO FIRE PIT 8 MINT LAMB KOFTAS 320G",
-        "name": "TESCO FIRE PIT 8 MINT LAMB KOFTAS 320G",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
   }
 ];
+
 
 
 
