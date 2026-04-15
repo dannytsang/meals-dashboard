@@ -205,6 +205,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -321,6 +322,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -398,8 +400,8 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "potato",
-        "name": "potato",
+        "ingredient": "Tesco All Rounder Potatoes 2Kg",
+        "name": "Tesco All Rounder Potatoes 2Kg",
         "quantity": null,
         "price": null
       },
@@ -425,10 +427,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "chicken",
-        "name": "chicken",
-        "quantity": null,
-        "price": null
+        "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
+        "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
+        "quantity": 1,
+        "price": 1.75
       }
     ],
     "missingItems": []
@@ -446,14 +448,14 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "potato",
-        "name": "potato",
+        "ingredient": "Tesco All Rounder Potatoes 2Kg",
+        "name": "Tesco All Rounder Potatoes 2Kg",
         "quantity": null,
         "price": null
       },
       {
-        "ingredient": "baked potato",
-        "name": "baked potato",
+        "ingredient": "Tesco All Rounder Potatoes 2Kg",
+        "name": "Tesco All Rounder Potatoes 2Kg",
         "quantity": null,
         "price": null
       }
@@ -517,10 +519,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "chicken",
-        "name": "chicken",
-        "quantity": null,
-        "price": null
+        "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
+        "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
+        "quantity": 1,
+        "price": 1.75
       }
     ],
     "missingItems": []
@@ -538,10 +540,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "chicken",
-        "name": "chicken",
-        "quantity": null,
-        "price": null
+        "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
+        "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
+        "quantity": 1,
+        "price": 1.75
       }
     ],
     "missingItems": []
@@ -564,6 +566,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "Check freezer or add to order"
   }
 ];
+
 
 
 
