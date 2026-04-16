@@ -4,6 +4,7 @@ import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { calculateCoverageSummary, getUpcomingDeliveries, Meal } from '@/lib/meals-data';
 import { cleanItemName, deduplicateMatchedItems, MatchedItem } from '@/lib/item-utils';
+import { getMealType } from '@/lib/meal-type';
 import { realCoverage, realLatestOrder, transformCachedOrder } from '@/lib/real-data';
 import { syncMeta } from '@/lib/sync-meta';
 import { DashboardState, filterCoverage } from '@/lib/dashboard-state';
@@ -46,15 +47,6 @@ export function DashboardClient({ today }: DashboardClientProps) {
   const receipt = transformCachedOrder(realLatestOrder);
   const deliveries = getUpcomingDeliveries();
   const coverage = realCoverage;
-  
-  const getMealType = (meal: Meal): 'breakfast' | 'lunch' | 'dinner' => {
-    if (meal.meal_type === 'lunch') return 'lunch';
-    if (meal.meal_type === 'dinner') return 'dinner';
-    const m = meal.content.toLowerCase();
-    if (m.includes('breakfast') || m.includes('cereal')) return 'breakfast';
-    if (m.includes('lunch') || m.includes('sandwich')) return 'lunch';
-    return 'dinner';
-  };
 
   const filteredCoverage = filterCoverage(coverage, state.statusFilter);
   const summary = calculateCoverageSummary(coverage);

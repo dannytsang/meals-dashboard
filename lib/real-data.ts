@@ -269,7 +269,7 @@ export const realMealPlan: Meal[] = [
     "date": "2026-04-15",
     "labels": [],
     "section": "Planned",
-    "meal_type": "dinner"
+    "meal_type": "lunch"
   },
   {
     "id": "",
@@ -456,7 +456,7 @@ export const realCoverage: MealCoverage[] = [
       "date": "2026-04-15",
       "labels": [],
       "section": "Planned",
-      "meal_type": "dinner"
+      "meal_type": "lunch"
     },
     "status": "covered",
     "coverageScore": 100,
