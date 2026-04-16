@@ -148,6 +148,11 @@ export const realLatestOrder: CachedOrder = {
   "order_number": "7711-8507-752",
   "items": [
     {
+        "name": "Tesco Boneless Salmon Fillets 4 Pack 520g Substitutions: On",
+        "quantity": 1,
+        "price": 7.5
+    },
+    {
         "name": "Tesco Aioli Dip 200G Substitutions: On",
         "quantity": 1,
         "price": 1.1
@@ -163,14 +168,19 @@ export const realLatestOrder: CachedOrder = {
         "price": 2.2
     },
     {
-        "name": "Tesco Soy and Garlic Stir Fry Sauce 165g Substitutions: On",
+        "name": "\u2020 Innocent Super Smoothie Blue Spark, Guava & Pineapple 750ml Substitutions: On",
         "quantity": 1,
-        "price": 0.72
+        "price": 2.5
+    },
+    {
+        "name": "Tesco Blackberries 250G Substitutions: On",
+        "quantity": 3,
+        "price": 8.25
     },
     {
         "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
         "quantity": 1,
-        "price": 2.02
+        "price": 2.0
     },
     {
         "name": "Tesco Tzatziki Dip 200G Substitutions: On",
@@ -178,24 +188,44 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.1
     },
     {
-        "name": "Tesco Egg Noodles 300G Substitutions: On",
+        "name": "Tesco Strawberries 400G Substitutions: On",
         "quantity": 1,
-        "price": 0.72
+        "price": 2.6
     },
     {
-        "name": "Tesco Large Vegetable Stir Fry 570g Substitutions: On",
+        "name": "Tesco Finest Red Grapes Seedless 500G Substitutions: On",
         "quantity": 1,
-        "price": 1.29
+        "price": 2.03
+    },
+    {
+        "name": "Tesco Finest Green Grapes Seedless 500G Substitutions: On",
+        "quantity": 2,
+        "price": 4.0
+    },
+    {
+        "name": "Graze Smoky Barbecue Crunch 100g Substitutions: On",
+        "quantity": 1,
+        "price": 1.5
+    },
+    {
+        "name": "\u2020 Dr Pepper Regular 500 M Substitutions: On",
+        "quantity": 1,
+        "price": 1.34
     },
     {
         "name": "\u2020 Maoam Bloxx 4 Pack 88G Substitutions: On",
         "quantity": 1,
-        "price": 0.48
+        "price": 0.52
     },
     {
-        "name": "Jammie Dodgers Biscuits 140G Substitutions: On",
-        "quantity": 3,
-        "price": 1.95
+        "name": "Tesco Finest Sweet Easy Peelers 600g Substitutions: On",
+        "quantity": 1,
+        "price": 1.97
+    },
+    {
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
+        "quantity": 1,
+        "price": 0.51
     },
     {
         "name": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
@@ -251,42 +281,11 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "",
-    "content": "Ham and cheese toastie",
-    "date": "2026-04-15",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Mash potato cheese (Ashlee)",
-    "date": "2026-04-15",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "lunch"
-  },
-  {
-    "id": "",
-    "content": "Chicken and rice veg (Terina)",
-    "date": "2026-04-15",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Pizza (Leo)",
-    "date": "2026-04-15",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "",
     "content": "Jacket potatoes (school)",
@@ -297,7 +296,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "KFC",
+    "content": "Takeaway",
     "date": "2026-04-16",
     "labels": [],
     "section": "Planned",
@@ -305,7 +304,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "KFC",
+    "content": "Ham and cheese toastie",
     "date": "2026-04-17",
     "labels": [],
     "section": "Planned",
@@ -313,7 +312,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Chicken and noodles (Terina)",
+    "content": "Sausages and something",
     "date": "2026-04-17",
     "labels": [],
     "section": "Planned",
@@ -337,7 +336,15 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Salmon kebabs, salad and new potatoes",
+    "content": "Roast pork, potatoes, carrots and broccoli",
+    "date": "2026-04-19",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Chicken curry",
     "date": "2026-04-20",
     "labels": [],
     "section": "Planned",
@@ -345,13 +352,78 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Hotdogs",
+    "content": "Toastie",
     "date": "2026-04-20",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Salmon, jacket potatoes, salad",
+    "date": "2026-04-20",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Sticky rice",
+    "date": "2026-04-21",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Tony and Barbara cooking",
+    "date": "2026-04-21",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Ham and cheese toastie",
+    "date": "2026-04-22",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Ham and cheese toastie",
+    "date": "2026-04-23",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Mash and cheese",
+    "date": "2026-04-24",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Salmon kebabs, salad and new potatoes",
+    "date": "2026-04-28",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Smoked fish/fish, new potatoes and salad",
+    "date": "2026-04-29",
     "labels": [],
     "section": "Planned",
     "meal_type": "dinner"
   }
 ];
+
 
 
 
@@ -407,8 +479,36 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
+      "content": "Jacket potatoes (school)",
+      "date": "2026-04-16",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Takeaway",
+      "date": "2026-04-16",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
       "content": "Ham and cheese toastie",
-      "date": "2026-04-15",
+      "date": "2026-04-17",
       "labels": [],
       "section": "Planned",
       "meal_type": "dinner"
@@ -420,7 +520,7 @@ export const realCoverage: MealCoverage[] = [
         "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
         "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
         "quantity": 1,
-        "price": 2.02
+        "price": 2.0
       },
       {
         "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
@@ -435,47 +535,14 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
-        "ingredient": "Hovis Best of Both Medium Bread 800g",
-        "name": "Hovis Best of Both Medium Bread 800g",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack",
         "name": "Warburtons White Sandwich Bread Thins 6 Pack",
         "quantity": null,
         "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Mash potato cheese (Ashlee)",
-      "date": "2026-04-15",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "lunch"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g",
-        "quantity": null,
-        "price": null
       },
       {
-        "ingredient": "Tesco All Rounder Potatoes 2Kg",
-        "name": "Tesco All Rounder Potatoes 2Kg",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
-        "name": "Tesco Lightly Salted Tortilla Chips 200g",
+        "ingredient": "Hovis Best of Both Medium Bread 800g",
+        "name": "Hovis Best of Both Medium Bread 800g",
         "quantity": null,
         "price": null
       }
@@ -485,127 +552,7 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Chicken and rice veg (Terina)",
-      "date": "2026-04-15",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
-        "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
-        "quantity": 1,
-        "price": 1.75
-      },
-      {
-        "ingredient": "Tesco Soy and Garlic Stir Fry Sauce 165g Substitutions: On",
-        "name": "Tesco Soy and Garlic Stir Fry Sauce 165g Substitutions: On",
-        "quantity": 1,
-        "price": 0.72
-      },
-      {
-        "ingredient": "Tesco Large Vegetable Stir Fry 570g Substitutions: On",
-        "name": "Tesco Large Vegetable Stir Fry 570g Substitutions: On",
-        "quantity": 1,
-        "price": 1.29
-      },
-      {
-        "ingredient": "Tesco Soy and Garlic Stir Fry Sauce 165g",
-        "name": "Tesco Soy and Garlic Stir Fry Sauce 165g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Large Vegetable Stir Fry 570g",
-        "name": "Tesco Large Vegetable Stir Fry 570g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "\u2020 Dr Pepper Regular 500 M",
-        "name": "\u2020 Dr Pepper Regular 500 M",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Pizza (Leo)",
-      "date": "2026-04-15",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Jacket potatoes (school)",
-      "date": "2026-04-16",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco All Rounder Potatoes 2Kg",
-        "name": "Tesco All Rounder Potatoes 2Kg",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
-        "name": "Tesco Lightly Salted Tortilla Chips 200g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "KFC",
-      "date": "2026-04-16",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "takeaway - no ingredients needed",
-        "name": "takeaway - no ingredients needed",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [],
-    "notes": "takeaway - no ingredients needed"
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "KFC",
+      "content": "Sausages and something",
       "date": "2026-04-17",
       "labels": [],
       "section": "Planned",
@@ -615,48 +562,14 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "takeaway - no ingredients needed",
-        "name": "takeaway - no ingredients needed",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [],
-    "notes": "takeaway - no ingredients needed"
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Chicken and noodles (Terina)",
-      "date": "2026-04-17",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
-        "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
         "quantity": 1,
-        "price": 1.75
+        "price": 2.0
       },
       {
-        "ingredient": "Tesco Egg Noodles 300G Substitutions: On",
-        "name": "Tesco Egg Noodles 300G Substitutions: On",
-        "quantity": 1,
-        "price": 0.72
-      },
-      {
-        "ingredient": "Tesco Egg Noodles 300G",
-        "name": "Tesco Egg Noodles 300G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
-        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
         "quantity": null,
         "price": null
       }
@@ -682,14 +595,26 @@ export const realCoverage: MealCoverage[] = [
         "price": 1.75
       },
       {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g",
-        "quantity": null,
-        "price": null
+        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
+        "quantity": 1,
+        "price": 0.51
       },
       {
         "ingredient": "Tesco All Rounder Potatoes 2Kg",
         "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
         "quantity": null,
         "price": null
       },
@@ -765,8 +690,8 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Salmon kebabs, salad and new potatoes",
-      "date": "2026-04-20",
+      "content": "Roast pork, potatoes, carrots and broccoli",
+      "date": "2026-04-19",
       "labels": [],
       "section": "Planned",
       "meal_type": "dinner"
@@ -775,26 +700,50 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Raw King Prawns 165g",
-        "name": "Tesco Raw King Prawns 165g",
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
+        "quantity": 1,
+        "price": 2.0
+      },
+      {
+        "ingredient": "\u2020 Dr Pepper Regular 500 M Substitutions: On",
+        "name": "\u2020 Dr Pepper Regular 500 M Substitutions: On",
+        "quantity": 1,
+        "price": 1.34
+      },
+      {
+        "ingredient": "Tesco Soy and Garlic Stir Fry Sauce 165g",
+        "name": "Tesco Soy and Garlic Stir Fry Sauce 165g",
         "quantity": null,
         "price": null
       },
       {
-        "ingredient": "Fire Pit Tesco Beef Smash Burgers 340g",
-        "name": "Fire Pit Tesco Beef Smash Burgers 340g",
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
         "quantity": null,
         "price": null
       },
       {
-        "ingredient": "Tesco Firepit 6 Mango Coconut Lime Fish Skewers 300G",
-        "name": "Tesco Firepit 6 Mango Coconut Lime Fish Skewers 300G",
+        "ingredient": "Tesco Large Vegetable Stir Fry 570g",
+        "name": "Tesco Large Vegetable Stir Fry 570g",
         "quantity": null,
         "price": null
       },
       {
         "ingredient": "Tesco All Rounder Potatoes 2Kg",
         "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "\u2020 Dr Pepper Regular 500 M",
+        "name": "\u2020 Dr Pepper Regular 500 M",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
         "quantity": null,
         "price": null
       },
@@ -810,8 +759,125 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Hotdogs",
+      "content": "Chicken curry",
       "date": "2026-04-20",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
+        "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g Substitutions: On",
+        "quantity": 1,
+        "price": 1.75
+      },
+      {
+        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
+        "quantity": 1,
+        "price": 0.51
+      },
+      {
+        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Toastie",
+      "date": "2026-04-20",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
+        "name": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
+      },
+      {
+        "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack",
+        "name": "Warburtons White Sandwich Bread Thins 6 Pack",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Hovis Best of Both Medium Bread 800g",
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Salmon, jacket potatoes, salad",
+      "date": "2026-04-20",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Boneless Salmon Fillets 4 Pack 520g Substitutions: On",
+        "name": "Tesco Boneless Salmon Fillets 4 Pack 520g Substitutions: On",
+        "quantity": 1,
+        "price": 7.5
+      },
+      {
+        "ingredient": "Tesco Raw King Prawns 165g",
+        "name": "Tesco Raw King Prawns 165g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco All Rounder Potatoes 2Kg",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
+        "name": "Tesco Lightly Salted Tortilla Chips 200g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Boneless Salmon Fillets 4 Pack 520g",
+        "name": "Tesco Boneless Salmon Fillets 4 Pack 520g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Sticky rice",
+      "date": "2026-04-21",
       "labels": [],
       "section": "Planned",
       "meal_type": "dinner"
@@ -821,8 +887,248 @@ export const realCoverage: MealCoverage[] = [
     "matchedItems": [],
     "missingItems": [],
     "notes": "No matching items"
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Tony and Barbara cooking",
+      "date": "2026-04-21",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Ham and cheese toastie",
+      "date": "2026-04-22",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
+        "quantity": 1,
+        "price": 2.0
+      },
+      {
+        "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
+        "name": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
+      },
+      {
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack",
+        "name": "Warburtons White Sandwich Bread Thins 6 Pack",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Hovis Best of Both Medium Bread 800g",
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Ham and cheese toastie",
+      "date": "2026-04-23",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
+        "quantity": 1,
+        "price": 2.0
+      },
+      {
+        "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
+        "name": "Warburtons White Sandwich Bread Thins 6 Pack Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
+      },
+      {
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack",
+        "name": "Warburtons White Sandwich Bread Thins 6 Pack",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Hovis Best of Both Medium Bread 800g",
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Mash and cheese",
+      "date": "2026-04-24",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco All Rounder Potatoes 2Kg",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
+        "name": "Tesco Lightly Salted Tortilla Chips 200g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Salmon kebabs, salad and new potatoes",
+      "date": "2026-04-28",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Boneless Salmon Fillets 4 Pack 520g Substitutions: On",
+        "name": "Tesco Boneless Salmon Fillets 4 Pack 520g Substitutions: On",
+        "quantity": 1,
+        "price": 7.5
+      },
+      {
+        "ingredient": "Tesco Raw King Prawns 165g",
+        "name": "Tesco Raw King Prawns 165g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco All Rounder Potatoes 2Kg",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
+        "name": "Tesco Lightly Salted Tortilla Chips 200g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Boneless Salmon Fillets 4 Pack 520g",
+        "name": "Tesco Boneless Salmon Fillets 4 Pack 520g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Smoked fish/fish, new potatoes and salad",
+      "date": "2026-04-29",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Boneless Salmon Fillets 4 Pack 520g Substitutions: On",
+        "name": "Tesco Boneless Salmon Fillets 4 Pack 520g Substitutions: On",
+        "quantity": 1,
+        "price": 7.5
+      },
+      {
+        "ingredient": "Tesco Raw King Prawns 165g",
+        "name": "Tesco Raw King Prawns 165g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco All Rounder Potatoes 2Kg",
+        "name": "Tesco All Rounder Potatoes 2Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
+        "name": "Tesco Lightly Salted Tortilla Chips 200g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Boneless Salmon Fillets 4 Pack 520g",
+        "name": "Tesco Boneless Salmon Fillets 4 Pack 520g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
   }
 ];
+
 
 
 
