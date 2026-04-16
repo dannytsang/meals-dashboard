@@ -62,7 +62,11 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
               const dayColor = coveragePct >= 80 ? 'var(--accent-emerald)' : coveragePct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)';
               
               return (
-                <div key={date} className="text-center">
+                <div 
+                  key={date} 
+                  className="text-center"
+                  style={isToday ? { backgroundColor: 'rgba(245, 158, 11, 0.15)', borderRadius: '8px', margin: '0 -2px' } : undefined}
+                >
                   <p className="text-xs text-[var(--text-muted)] uppercase mb-1">
                     {new Date(date).toLocaleDateString('en-GB', { weekday: 'short' })}
                   </p>
@@ -70,7 +74,8 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
                     className="w-12 h-12 rounded-full flex items-center justify-center mx-auto"
                     style={{ 
                       backgroundColor: isToday ? `${dayColor}20` : 'var(--bg-tertiary)',
-                      border: isToday ? `2px solid ${dayColor}` : '2px solid transparent'
+                      border: isToday ? `2px solid ${dayColor}` : '2px solid transparent',
+                      boxShadow: isToday ? '0 0 12px rgba(245, 158, 11, 0.6)' : 'none'
                     }}
                   >
                     <span className="text-lg font-bold" style={{ color: dayColor }}>
@@ -101,6 +106,7 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
               </div>
               
               {days.map(date => {
+                const isToday = date === new Date().toISOString().split('T')[0];
                 const dayMeals = coverageByDate[date]?.filter(c => {
                   const m = c.meal.content.toLowerCase();
                   if (mealType === 'breakfast') return m.includes('breakfast') || m.includes('cereal');
@@ -111,7 +117,14 @@ export function MealCalendar({ coverage }: MealCalendarProps) {
                 const meal = dayMeals[0];
                 
                 return (
-                  <div key={date} className="min-h-[70px] p-2 rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                  <div 
+                    key={date} 
+                    className="min-h-[70px] p-2 rounded-lg" 
+                    style={{ 
+                      backgroundColor: isToday ? 'rgba(245, 158, 11, 0.18)' : 'var(--bg-tertiary)',
+                      borderLeft: isToday ? '4px solid var(--accent-amber)' : '3px solid transparent'
+                    }}
+                  >
                     {meal ? (
                       <div className="flex items-start gap-1.5">
                         <span className="text-sm">{getMealTypeEmoji(meal.meal.content)}</span>
