@@ -148,19 +148,24 @@ export const realLatestOrder: CachedOrder = {
   "order_number": "2911-8005-761",
   "items": [
     {
-        "name": "Tesco Blackberries 250G Substitutions: On",
-        "quantity": 1,
-        "price": 2.75
-    },
-    {
         "name": "Flora Buttery Spread with Natural Ingredients 1KG Substitutions: On",
         "quantity": 1,
         "price": 3.5
     },
     {
+        "name": "Yazoo Chocolate Milkshake 1 Litre Bottle Substitutions: On",
+        "quantity": 2,
+        "price": 3.2
+    },
+    {
         "name": "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g Substitutions: On",
         "quantity": 1,
         "price": 2.5
+    },
+    {
+        "name": "Tesco Finest Smoked Vintage Red Fox 200g Substitutions: On",
+        "quantity": 1,
+        "price": 2.55
     },
     {
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
@@ -171,9 +176,25 @@ export const realLatestOrder: CachedOrder = {
         "name": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
         "quantity": 1,
         "price": 1.2
+    },
+    {
+        "name": "\u2020 Corsodyl Intensive Gum Repair White & Polish Toothpaste 75ml Substitutions: On",
+        "quantity": 1,
+        "price": 4.75
+    },
+    {
+        "name": "\u2020 McCoy's Classic Variety Multipack Crisps 6x25g Substitutions: On",
+        "quantity": 2,
+        "price": 3.5
+    },
+    {
+        "name": "Snack Organisation Sweet Chilli Cracker 100G Substitutions: On",
+        "quantity": 1,
+        "price": 0.9
     }
 ]
 };
+
 
 
 
@@ -234,22 +255,6 @@ export const realLatestOrder: CachedOrder = {
 export const realMealPlan: Meal[] = [
   {
     "id": "",
-    "content": "Nachos (Ashlee and Danny)",
-    "date": "2026-04-18",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Roast pork, potatoes, carrots and broccoli",
-    "date": "2026-04-19",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
     "content": "Chicken curry",
     "date": "2026-04-20",
     "labels": [],
@@ -258,7 +263,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Toastie",
+    "content": "Salmon, salad",
     "date": "2026-04-20",
     "labels": [],
     "section": "Planned",
@@ -266,7 +271,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Salmon, salad",
+    "content": "Toastie",
     "date": "2026-04-20",
     "labels": [],
     "section": "Planned",
@@ -431,6 +436,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -439,73 +445,22 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Nachos (Ashlee and Danny)",
-      "date": "2026-04-18",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
-        "name": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
-        "quantity": 1,
-        "price": 1.2
-      },
-      {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Roast pork, potatoes, carrots and broccoli",
-      "date": "2026-04-19",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-      },
-      {
-        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
-        "name": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
       "content": "Chicken curry",
+      "date": "2026-04-20",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Salmon, salad",
       "date": "2026-04-20",
       "labels": [],
       "section": "Planned",
@@ -528,36 +483,8 @@ export const realCoverage: MealCoverage[] = [
     },
     "status": "covered",
     "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
-        "name": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
-        "quantity": 1,
-        "price": 1.2
-      },
-      {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Salmon, salad",
-      "date": "2026-04-20",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
     "matchedItems": [],
-    "missingItems": [],
-    "notes": "No matching items"
+    "missingItems": []
   },
   {
     "meal": {
@@ -607,8 +534,20 @@ export const realCoverage: MealCoverage[] = [
         "price": 1.2
       },
       {
+        "ingredient": "Vintage Red Fox Cheese 200G",
+        "name": "Vintage Red Fox Cheese 200G",
+        "quantity": null,
+        "price": null
+      },
+      {
         "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
         "name": "Tesco Cheese and Garlic Flatbread 230g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Old Amsterdam Mature Gouda Cheese 150g",
+        "name": "Old Amsterdam Mature Gouda Cheese 150g",
         "quantity": null,
         "price": null
       }
@@ -676,20 +615,8 @@ export const realCoverage: MealCoverage[] = [
         "price": 4.5
       },
       {
-        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
-        "name": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
         "quantity": null,
         "price": null
       }
@@ -715,8 +642,20 @@ export const realCoverage: MealCoverage[] = [
         "price": 1.2
       },
       {
+        "ingredient": "Vintage Red Fox Cheese 200G",
+        "name": "Vintage Red Fox Cheese 200G",
+        "quantity": null,
+        "price": null
+      },
+      {
         "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
         "name": "Tesco Cheese and Garlic Flatbread 230g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Old Amsterdam Mature Gouda Cheese 150g",
+        "name": "Old Amsterdam Mature Gouda Cheese 150g",
         "quantity": null,
         "price": null
       }
@@ -756,20 +695,8 @@ export const realCoverage: MealCoverage[] = [
         "price": 4.5
       },
       {
-        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
-        "name": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
         "quantity": null,
         "price": null
       }
@@ -795,20 +722,8 @@ export const realCoverage: MealCoverage[] = [
         "price": 4.5
       },
       {
-        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
-        "name": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
         "quantity": null,
         "price": null
       }
@@ -855,20 +770,8 @@ export const realCoverage: MealCoverage[] = [
         "price": 4.5
       },
       {
-        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
-        "name": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
         "quantity": null,
         "price": null
       }
@@ -894,20 +797,8 @@ export const realCoverage: MealCoverage[] = [
         "price": 4.5
       },
       {
-        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
-        "name": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
         "quantity": null,
         "price": null
       }
@@ -915,6 +806,7 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": []
   }
 ];
+
 
 
 
