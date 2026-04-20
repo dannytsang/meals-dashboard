@@ -266,13 +266,14 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
   {
     "id": "",
-    "content": "Chicken curry",
+    "content": "Salmon, salad",
     "date": "2026-04-20",
     "labels": [],
     "section": "Planned",
@@ -280,7 +281,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Salmon, salad",
+    "content": "Chicken curry",
     "date": "2026-04-20",
     "labels": [],
     "section": "Planned",
@@ -296,7 +297,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Sticky rice",
+    "content": "Ham and cheese toastie",
     "date": "2026-04-21",
     "labels": [],
     "section": "Planned",
@@ -312,7 +313,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Ham and cheese toastie",
+    "content": "Sticky rice",
     "date": "2026-04-22",
     "labels": [],
     "section": "Planned",
@@ -368,7 +369,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "chicken / garlic bread and chips",
+    "content": "Tuscan Ragu pappardelle",
     "date": "2026-04-24",
     "labels": [],
     "section": "Planned",
@@ -376,7 +377,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Tuscan Ragu pappardelle",
+    "content": "chicken / garlic bread and chips",
     "date": "2026-04-24",
     "labels": [],
     "section": "Planned",
@@ -456,26 +457,12 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "",
-      "content": "Chicken curry",
-      "date": "2026-04-20",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [],
-    "notes": "No matching items"
-  },
   {
     "meal": {
       "id": "",
@@ -485,11 +472,24 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
+    "status": "covered",
+    "coverageScore": 100,
     "matchedItems": [],
-    "missingItems": [],
-    "notes": "No matching items"
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Chicken curry",
+      "date": "2026-04-20",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [],
+    "missingItems": []
   },
   {
     "meal": {
@@ -508,37 +508,8 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Sticky rice",
-      "date": "2026-04-21",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [],
-    "notes": "No matching items"
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Tony and Barbara cooking",
-      "date": "2026-04-21",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
       "content": "Ham and cheese toastie",
-      "date": "2026-04-22",
+      "date": "2026-04-21",
       "labels": [],
       "section": "Planned",
       "meal_type": "dinner"
@@ -572,6 +543,35 @@ export const realCoverage: MealCoverage[] = [
       }
     ],
     "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Tony and Barbara cooking",
+      "date": "2026-04-21",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Sticky rice",
+      "date": "2026-04-22",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
   },
   {
     "meal": {
@@ -725,6 +725,27 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
+      "content": "Tuscan Ragu pappardelle",
+      "date": "2026-04-24",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
+        "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
       "content": "chicken / garlic bread and chips",
       "date": "2026-04-24",
       "labels": [],
@@ -743,27 +764,6 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Tuscan Ragu pappardelle",
-      "date": "2026-04-24",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-        "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
         "quantity": null,
         "price": null
       }
@@ -825,6 +825,7 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": []
   }
 ];
+
 
 
 
