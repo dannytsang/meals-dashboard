@@ -153,14 +153,14 @@ export const realLatestOrder: CachedOrder = {
         "price": 3.5
     },
     {
-        "name": "Yazoo Chocolate Milkshake 1 Litre Bottle Substitutions: On",
-        "quantity": 2,
-        "price": 3.2
-    },
-    {
         "name": "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g Substitutions: On",
         "quantity": 1,
         "price": 2.5
+    },
+    {
+        "name": "Tesco Perfectly Ripe Plums 325G Substitutions: On",
+        "quantity": 1,
+        "price": 2.15
     },
     {
         "name": "Tesco Finest Smoked Vintage Red Fox 200g Substitutions: On",
@@ -178,9 +178,24 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.2
     },
     {
-        "name": "\u2020 Corsodyl Intensive Gum Repair White & Polish Toothpaste 75ml Substitutions: On",
+        "name": "Yazoo Chocolate Milkshake 1 Litre Bottle Substitutions: On",
+        "quantity": 2,
+        "price": 3.2
+    },
+    {
+        "name": "Go Ahead Yogurt Breaks - Forest Fruit 4 x 35.5g Substitutions: On",
+        "quantity": 2,
+        "price": 3.0
+    },
+    {
+        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g Substitutions: On",
+        "quantity": 2,
+        "price": 3.5
+    },
+    {
+        "name": "\u2020 Lucozade Sport Drink Blue Force 4x500ml Substitutions: On",
         "quantity": 1,
-        "price": 4.75
+        "price": 3.0
     },
     {
         "name": "\u2020 McCoy's Classic Variety Multipack Crisps 6x25g Substitutions: On",
@@ -194,6 +209,7 @@ export const realLatestOrder: CachedOrder = {
     }
 ]
 };
+
 
 
 
@@ -383,6 +399,7 @@ export const realMealPlan: Meal[] = [
     "meal_type": "dinner"
   }
 ];
+
 
 
 
@@ -808,6 +825,7 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": []
   }
 ];
+
 
 
 
