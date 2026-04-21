@@ -341,6 +341,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -512,6 +513,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -588,11 +590,17 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [],
-    "notes": "No matching items"
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Garlic Scottish Mussels 500G",
+        "name": "Tesco Garlic Scottish Mussels 500G",
+        "quantity": 2,
+        "price": 5.3
+      }
+    ],
+    "missingItems": []
   },
   {
     "meal": {
@@ -762,6 +770,12 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
+        "ingredient": "Tesco Garlic Scottish Mussels 500G",
+        "name": "Tesco Garlic Scottish Mussels 500G",
+        "quantity": 2,
+        "price": 5.3
+      },
+      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "quantity": 2,
@@ -783,6 +797,12 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
+        "ingredient": "Tesco Garlic Scottish Mussels 500G",
+        "name": "Tesco Garlic Scottish Mussels 500G",
+        "quantity": 2,
+        "price": 5.3
+      },
+      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "quantity": 2,
@@ -792,6 +812,7 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": []
   }
 ];
+
 
 
 
