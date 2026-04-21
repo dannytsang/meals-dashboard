@@ -148,67 +148,138 @@ export const realLatestOrder: CachedOrder = {
   "order_number": "2911-8005-761",
   "items": [
     {
-        "name": "Flora Buttery Spread with Natural Ingredients 1KG Substitutions: On",
-        "quantity": 1,
-        "price": 3.5
-    },
-    {
-        "name": "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g Substitutions: On",
+        "name": "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g",
         "quantity": 1,
         "price": 2.5
     },
     {
-        "name": "Tesco Perfectly Ripe Plums 325G Substitutions: On",
+        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
         "quantity": 1,
-        "price": 2.15
+        "price": 2.75
     },
     {
-        "name": "Tesco Finest Smoked Vintage Red Fox 200g Substitutions: On",
+        "name": "Flora Buttery Spread with Natural Ingredients 1KG",
         "quantity": 1,
-        "price": 2.55
+        "price": 3.5
     },
     {
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
+        "name": "\u2020 Innocent Wonder Green Juice 750Ml",
+        "quantity": 1,
+        "price": 2.5
+    },
+    {
+        "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
         "quantity": 2,
-        "price": 4.5
+        "price": 18.0
     },
     {
-        "name": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
+        "name": "Old Amsterdam Mature Gouda Cheese 150g",
+        "quantity": 1,
+        "price": 2.39
+    },
+    {
+        "name": "Tesco British Whole Milk 1.13L, 2 Pints",
         "quantity": 1,
         "price": 1.2
     },
     {
-        "name": "Yazoo Chocolate Milkshake 1 Litre Bottle Substitutions: On",
+        "name": "Tesco Cheese and Garlic Flatbread 230g",
+        "quantity": 1,
+        "price": 1.2
+    },
+    {
+        "name": "Tesco Finest Smoked Vintage Red Fox 200g",
+        "quantity": 1,
+        "price": 2.55
+    },
+    {
+        "name": "Tesco Garlic Scottish Mussels 500G",
+        "quantity": 2,
+        "price": 5.3
+    },
+    {
+        "name": "Tesco Perfectly Ripe Plums 325G",
+        "quantity": 1,
+        "price": 2.15
+    },
+    {
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "quantity": 2,
+        "price": 4.5
+    },
+    {
+        "name": "Vintage Red Fox Cheese 200G",
+        "quantity": 1,
+        "price": 2.56
+    },
+    {
+        "name": "Yazoo Chocolate Milkshake 1 Litre Bottle",
         "quantity": 2,
         "price": 3.2
     },
     {
-        "name": "Go Ahead Yogurt Breaks - Forest Fruit 4 x 35.5g Substitutions: On",
+        "name": "\u2020 Haagen-Dazs Ice Cream - Strawberries & Cream 460ml",
+        "quantity": 6,
+        "price": 23.7
+    },
+    {
+        "name": "\u2020 Corsodyl Intensive Gum Repair White & Polish Toothpaste 75ml",
+        "quantity": 1,
+        "price": 4.75
+    },
+    {
+        "name": "De Cecco Spaghetti 500G",
+        "quantity": 2,
+        "price": 2.7
+    },
+    {
+        "name": "Go Ahead Yogurt Breaks - Forest Fruit 4 x 35.5g",
         "quantity": 2,
         "price": 3.0
     },
     {
-        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g Substitutions: On",
-        "quantity": 2,
-        "price": 3.5
+        "name": "Hayden's 4 Delicious Yum Yums",
+        "quantity": 1,
+        "price": 1.75
     },
     {
-        "name": "\u2020 Lucozade Sport Drink Blue Force 4x500ml Substitutions: On",
+        "name": "\u2020 Lucozade Sport Drink Blue Force 4x500ml",
         "quantity": 1,
         "price": 3.0
     },
     {
-        "name": "\u2020 McCoy's Classic Variety Multipack Crisps 6x25g Substitutions: On",
+        "name": "\u2020 McCoy's Classic Variety Multipack Crisps 6x25g",
         "quantity": 2,
         "price": 3.5
     },
     {
-        "name": "Snack Organisation Sweet Chilli Cracker 100G Substitutions: On",
+        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
+        "quantity": 2,
+        "price": 3.5
+    },
+    {
+        "name": "Snack Organisation Sweet Chilli Cracker 100G",
         "quantity": 1,
         "price": 0.9
+    },
+    {
+        "name": "\u2020 Tesco Apple & Elderflower Sparkling Water 1 Litre",
+        "quantity": 3,
+        "price": 2.0
+    },
+    {
+        "name": "Tesco Tiger Baton",
+        "quantity": 1,
+        "price": 0.8
+    },
+    {
+        "name": "Tesco White Iced Ring Doughnuts 4 Pack",
+        "quantity": 1,
+        "price": 0.95
     }
 ]
 };
+
 
 
 
@@ -272,30 +343,6 @@ export const realLatestOrder: CachedOrder = {
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "",
-    "content": "Salmon, salad",
-    "date": "2026-04-20",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Chicken curry",
-    "date": "2026-04-20",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Toastie",
-    "date": "2026-04-20",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "",
     "content": "Ham and cheese toastie",
@@ -460,53 +507,12 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "",
-      "content": "Salmon, salad",
-      "date": "2026-04-20",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Chicken curry",
-      "date": "2026-04-20",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Toastie",
-      "date": "2026-04-20",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
   {
     "meal": {
       "id": "",
@@ -520,28 +526,22 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
-        "name": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
+        "ingredient": "Old Amsterdam Mature Gouda Cheese 150g",
+        "name": "Old Amsterdam Mature Gouda Cheese 150g",
+        "quantity": 1,
+        "price": 2.39
+      },
+      {
+        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
+        "name": "Tesco Cheese and Garlic Flatbread 230g",
         "quantity": 1,
         "price": 1.2
       },
       {
         "ingredient": "Vintage Red Fox Cheese 200G",
         "name": "Vintage Red Fox Cheese 200G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Old Amsterdam Mature Gouda Cheese 150g",
-        "name": "Old Amsterdam Mature Gouda Cheese 150g",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 2.56
       }
     ],
     "missingItems": []
@@ -603,16 +603,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
+        "quantity": 2,
+        "price": 4.5
       }
     ],
     "missingItems": []
@@ -630,16 +624,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
+        "quantity": 2,
+        "price": 4.5
       }
     ],
     "missingItems": []
@@ -657,28 +645,22 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
-        "name": "Tesco Cheese and Garlic Flatbread 230g Substitutions: On",
+        "ingredient": "Old Amsterdam Mature Gouda Cheese 150g",
+        "name": "Old Amsterdam Mature Gouda Cheese 150g",
+        "quantity": 1,
+        "price": 2.39
+      },
+      {
+        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
+        "name": "Tesco Cheese and Garlic Flatbread 230g",
         "quantity": 1,
         "price": 1.2
       },
       {
         "ingredient": "Vintage Red Fox Cheese 200G",
         "name": "Vintage Red Fox Cheese 200G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Old Amsterdam Mature Gouda Cheese 150g",
-        "name": "Old Amsterdam Mature Gouda Cheese 150g",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 2.56
       }
     ],
     "missingItems": []
@@ -710,16 +692,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
+        "quantity": 2,
+        "price": 4.5
       }
     ],
     "missingItems": []
@@ -733,17 +709,20 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
+    "status": "partial",
+    "coverageScore": 50,
     "matchedItems": [
       {
         "ingredient": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
         "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-        "quantity": null,
-        "price": null
+        "quantity": 2,
+        "price": 18.0
       }
     ],
-    "missingItems": []
+    "missingItems": [
+      "La Famiglia Rana Tuscan Ragu Pappardelle 814g"
+    ],
+    "notes": "Need: La Famiglia Rana Tuscan Ragu Pappardelle 814g"
   },
   {
     "meal": {
@@ -758,16 +737,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
+        "quantity": 2,
+        "price": 4.5
       }
     ],
     "missingItems": []
@@ -785,16 +758,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
+        "quantity": 2,
+        "price": 4.5
       }
     ],
     "missingItems": []
@@ -812,21 +779,16 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-      },
-      {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
+        "quantity": 2,
+        "price": 4.5
       }
     ],
     "missingItems": []
   }
 ];
+
 
 
 
