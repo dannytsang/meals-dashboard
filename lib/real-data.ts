@@ -143,142 +143,33 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 export const realLatestOrder: CachedOrder = {
   "email_id": "",
   "email_date": "",
-  "delivery_date": "2026-04-21",
+  "delivery_date": "2026-04-24",
   "delivery_sort": "",
-  "order_number": "2911-8005-761",
+  "order_number": "2911-8348-761",
   "items": [
     {
-        "name": "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g",
+        "name": "Tesco Red Seedless Grapes 500G Substitutions: On",
         "quantity": 1,
-        "price": 2.5
+        "price": 1.5
     },
     {
-        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
-        "quantity": 1,
-        "price": 2.75
-    },
-    {
-        "name": "Flora Buttery Spread with Natural Ingredients 1KG",
+        "name": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
         "quantity": 1,
         "price": 3.5
     },
     {
-        "name": "\u2020 Innocent Wonder Green Juice 750Ml",
-        "quantity": 1,
-        "price": 2.5
-    },
-    {
-        "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-        "quantity": 2,
-        "price": 18.0
-    },
-    {
-        "name": "Old Amsterdam Mature Gouda Cheese 150g",
-        "quantity": 1,
-        "price": 2.39
-    },
-    {
-        "name": "Tesco British Whole Milk 1.13L, 2 Pints",
-        "quantity": 1,
-        "price": 1.2
-    },
-    {
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": 1,
-        "price": 1.2
-    },
-    {
-        "name": "Tesco Finest Smoked Vintage Red Fox 200g",
-        "quantity": 1,
-        "price": 2.55
-    },
-    {
-        "name": "Tesco Garlic Scottish Mussels 500G",
-        "quantity": 2,
-        "price": 5.3
-    },
-    {
-        "name": "Tesco Perfectly Ripe Plums 325G",
-        "quantity": 1,
-        "price": 2.15
-    },
-    {
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Birds Eye Steamfresh Family Favourite Mix 540g Substitutions: On",
         "quantity": 2,
         "price": 4.5
     },
     {
-        "name": "Vintage Red Fox Cheese 200G",
+        "name": "De Cecco Conchiglie Rigate 500g Substitutions: On",
         "quantity": 1,
-        "price": 2.56
-    },
-    {
-        "name": "Yazoo Chocolate Milkshake 1 Litre Bottle",
-        "quantity": 2,
-        "price": 3.2
-    },
-    {
-        "name": "\u2020 Haagen-Dazs Ice Cream - Strawberries & Cream 460ml",
-        "quantity": 6,
-        "price": 23.7
-    },
-    {
-        "name": "\u2020 Corsodyl Intensive Gum Repair White & Polish Toothpaste 75ml",
-        "quantity": 1,
-        "price": 4.75
-    },
-    {
-        "name": "De Cecco Spaghetti 500G",
-        "quantity": 2,
-        "price": 2.7
-    },
-    {
-        "name": "Go Ahead Yogurt Breaks - Forest Fruit 4 x 35.5g",
-        "quantity": 2,
-        "price": 3.0
-    },
-    {
-        "name": "Hayden's 4 Delicious Yum Yums",
-        "quantity": 1,
-        "price": 1.75
-    },
-    {
-        "name": "\u2020 Lucozade Sport Drink Blue Force 4x500ml",
-        "quantity": 1,
-        "price": 3.0
-    },
-    {
-        "name": "\u2020 McCoy's Classic Variety Multipack Crisps 6x25g",
-        "quantity": 2,
-        "price": 3.5
-    },
-    {
-        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-        "quantity": 2,
-        "price": 3.5
-    },
-    {
-        "name": "Snack Organisation Sweet Chilli Cracker 100G",
-        "quantity": 1,
-        "price": 0.9
-    },
-    {
-        "name": "\u2020 Tesco Apple & Elderflower Sparkling Water 1 Litre",
-        "quantity": 3,
-        "price": 2.0
-    },
-    {
-        "name": "Tesco Tiger Baton",
-        "quantity": 1,
-        "price": 0.8
-    },
-    {
-        "name": "Tesco White Iced Ring Doughnuts 4 Pack",
-        "quantity": 1,
-        "price": 0.95
+        "price": 1.35
     }
 ]
 };
+
 
 
 
@@ -347,22 +238,6 @@ export const realLatestOrder: CachedOrder = {
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "",
-    "content": "Ham and cheese toastie",
-    "date": "2026-04-21",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Tony and Barbara cooking",
-    "date": "2026-04-21",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "",
     "content": "Sticky rice",
@@ -437,21 +312,46 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Salmon kebabs, salad and new potatoes",
-    "date": "2026-04-28",
+    "content": "Tony and Barbara cooking",
+    "date": "2026-04-25",
     "labels": [],
     "section": "Planned",
     "meal_type": "dinner"
   },
   {
     "id": "",
-    "content": "Smoked fish/fish, new potatoes and salad",
-    "date": "2026-04-29",
+    "content": "Steak with peppercorn, salad, curly fries",
+    "date": "2026-04-26",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Chicken omelette (Terina)",
+    "date": "2026-04-27",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Toastie",
+    "date": "2026-04-27",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "KFC",
+    "date": "2026-04-28",
     "labels": [],
     "section": "Planned",
     "meal_type": "dinner"
   }
 ];
+
 
 
 
@@ -524,53 +424,6 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Ham and cheese toastie",
-      "date": "2026-04-21",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Old Amsterdam Mature Gouda Cheese 150g",
-        "name": "Old Amsterdam Mature Gouda Cheese 150g",
-        "quantity": 1,
-        "price": 2.39
-      },
-      {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": 1,
-        "price": 1.2
-      },
-      {
-        "ingredient": "Vintage Red Fox Cheese 200G",
-        "name": "Vintage Red Fox Cheese 200G",
-        "quantity": 1,
-        "price": 2.56
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Tony and Barbara cooking",
-      "date": "2026-04-21",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
       "content": "Sticky rice",
       "date": "2026-04-22",
       "labels": [],
@@ -592,17 +445,11 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Garlic Scottish Mussels 500G",
-        "name": "Tesco Garlic Scottish Mussels 500G",
-        "quantity": 2,
-        "price": 5.3
-      }
-    ],
-    "missingItems": []
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
   },
   {
     "meal": {
@@ -613,17 +460,11 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 2,
-        "price": 4.5
-      }
-    ],
-    "missingItems": []
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
   },
   {
     "meal": {
@@ -638,10 +479,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 2,
-        "price": 4.5
+        "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
@@ -659,22 +500,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Old Amsterdam Mature Gouda Cheese 150g",
-        "name": "Old Amsterdam Mature Gouda Cheese 150g",
+        "ingredient": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
+        "name": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
         "quantity": 1,
-        "price": 2.39
-      },
-      {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": 1,
-        "price": 1.2
-      },
-      {
-        "ingredient": "Vintage Red Fox Cheese 200G",
-        "name": "Vintage Red Fox Cheese 200G",
-        "quantity": 1,
-        "price": 2.56
+        "price": 3.5
       }
     ],
     "missingItems": []
@@ -706,10 +535,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 2,
-        "price": 4.5
+        "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
@@ -723,20 +552,11 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "partial",
-    "coverageScore": 50,
-    "matchedItems": [
-      {
-        "ingredient": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-        "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-        "quantity": 2,
-        "price": 18.0
-      }
-    ],
-    "missingItems": [
-      "La Famiglia Rana Tuscan Ragu Pappardelle 814g"
-    ],
-    "notes": "Need: La Famiglia Rana Tuscan Ragu Pappardelle 814g"
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
   },
   {
     "meal": {
@@ -751,10 +571,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 2,
-        "price": 4.5
+        "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
@@ -762,7 +582,72 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Salmon kebabs, salad and new potatoes",
+      "content": "Tony and Barbara cooking",
+      "date": "2026-04-25",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Steak with peppercorn, salad, curly fries",
+      "date": "2026-04-26",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Beef Steaks with Peppercorn Sauce 320g",
+        "name": "Tesco Beef Steaks with Peppercorn Sauce 320g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Chicken omelette (Terina)",
+      "date": "2026-04-27",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Toastie",
+      "date": "2026-04-27",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "KFC",
       "date": "2026-04-28",
       "labels": [],
       "section": "Planned",
@@ -772,48 +657,17 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Garlic Scottish Mussels 500G",
-        "name": "Tesco Garlic Scottish Mussels 500G",
-        "quantity": 2,
-        "price": 5.3
-      },
-      {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 2,
-        "price": 4.5
+        "ingredient": "takeaway - no ingredients needed",
+        "name": "takeaway - no ingredients needed",
+        "quantity": null,
+        "price": null
       }
     ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Smoked fish/fish, new potatoes and salad",
-      "date": "2026-04-29",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Garlic Scottish Mussels 500G",
-        "name": "Tesco Garlic Scottish Mussels 500G",
-        "quantity": 2,
-        "price": 5.3
-      },
-      {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 2,
-        "price": 4.5
-      }
-    ],
-    "missingItems": []
+    "missingItems": [],
+    "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
