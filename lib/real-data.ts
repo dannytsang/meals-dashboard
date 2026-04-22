@@ -278,49 +278,18 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
   {
     "id": "",
-    "content": "Mussels and bread",
-    "date": "2026-04-22",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Sticky rice",
-    "date": "2026-04-22",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Mash and cheese (Ashlee)",
-    "date": "2026-04-22",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Pizza (Leo)",
-    "date": "2026-04-22",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
     "content": "Ham and cheese toastie",
     "date": "2026-04-23",
     "labels": [],
     "section": "Planned",
-    "meal_type": "dinner"
+    "meal_type": "lunch"
   },
   {
     "id": "",
@@ -336,7 +305,7 @@ export const realMealPlan: Meal[] = [
     "date": "2026-04-24",
     "labels": [],
     "section": "Planned",
-    "meal_type": "dinner"
+    "meal_type": "lunch"
   },
   {
     "id": "",
@@ -504,6 +473,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -512,74 +482,11 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Mussels and bread",
-      "date": "2026-04-22",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Hovis Best of Both Medium Bread 800g",
-        "name": "Hovis Best of Both Medium Bread 800g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Sticky rice",
-      "date": "2026-04-22",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Mash and cheese (Ashlee)",
-      "date": "2026-04-22",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Pizza (Leo)",
-      "date": "2026-04-22",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
       "content": "Ham and cheese toastie",
       "date": "2026-04-23",
       "labels": [],
       "section": "Planned",
-      "meal_type": "dinner"
+      "meal_type": "lunch"
     },
     "status": "covered",
     "coverageScore": 100,
@@ -614,7 +521,7 @@ export const realCoverage: MealCoverage[] = [
       "date": "2026-04-24",
       "labels": [],
       "section": "Planned",
-      "meal_type": "dinner"
+      "meal_type": "lunch"
     },
     "status": "covered",
     "coverageScore": 100,
@@ -764,6 +671,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
