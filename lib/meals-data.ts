@@ -133,17 +133,14 @@ export const mockCoverage: MealCoverage[] = [
 
 // Data fetching functions (will integrate with meals skill scripts)
 export async function fetchMealPlan(startDate: string, endDate: string): Promise<Meal[]> {
-  // TODO: Integrate with fetch-meal-plan.py
   return mockMeals;
 }
 
 export async function fetchLatestReceipt(): Promise<TescoReceipt | null> {
-  // TODO: Integrate with parse-tesco-receipt.py
   return mockReceipt;
 }
 
 export async function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): Promise<MealCoverage[]> {
-  // TODO: Integrate with match-grocery-meals.py
   return mockCoverage;
 }
 
@@ -153,7 +150,7 @@ export function calculateCoverageSummary(coverage: MealCoverage[]): CoverageSumm
   const partial = coverage.filter(c => c.status === 'partial').length;
   const missing = coverage.filter(c => c.status === 'missing').length;
   const unknown = coverage.filter(c => c.status === 'unknown').length;
-  
+
   return {
     totalMeals: total,
     covered,
@@ -164,30 +161,20 @@ export function calculateCoverageSummary(coverage: MealCoverage[]): CoverageSumm
   };
 }
 
-export function getUpcomingDeliveries(): DeliveryWindow[] {
-  // Use real delivery date from the synced order
-  const deliveryDateStr = realLatestOrder.delivery_date;
-  if (!deliveryDateStr) return [];
-
-  // Parse delivery date
-  let deliveryDate: Date;
-  try {
-    deliveryDate = new Date(deliveryDateStr + 'T00:00:00');
-  } catch {
-    return [];
-  }
+/**
+ * Generate upcoming delivery windows based on a known delivery date.
+ * Tesco delivers on Tuesday (2) and Friday (5).
+ * Pass the most recent delivery date (ISO string or null) to anchor the pattern.
+ */
+export function getUpcomingDeliveries(deliveryDate: string | null): DeliveryWindow[] {
+  if (!deliveryDate) return [];
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const deliveries: DeliveryWindow[] = [];
-  const dayOfWeek = deliveryDate.getDay(); // 0=Sun, ..., 6=Sat
-
-  // Tesco delivers on Tuesday and Friday (2 and 5). Figure out the weekly pattern.
-  // Start from the most recent delivery and generate upcoming windows.
   const deliveryDays = [2, 5]; // Tuesday, Friday
 
-  // Find the next delivery on or after today
   for (let offset = 0; offset <= 14; offset++) {
     const checkDate = new Date(today);
     checkDate.setDate(today.getDate() + offset);
@@ -195,14 +182,14 @@ export function getUpcomingDeliveries(): DeliveryWindow[] {
 
     if (deliveryDays.includes(dow)) {
       const dateStr = checkDate.toISOString().split('T')[0];
-      const status: 'pending' | 'scheduled' | 'delivered' =
-        dateStr === deliveryDateStr ? 'delivered' :
+      const status: 'pending' | 'delivered' | 'scheduled' =
+        dateStr === deliveryDate ? 'delivered' :
         checkDate > today ? 'pending' : 'delivered';
 
       deliveries.push({
         date: dateStr,
         slot: 'Evening',
-        orderTotal: realLatestOrder.orderTotal || 0,
+        orderTotal: 0,
         status,
       });
 

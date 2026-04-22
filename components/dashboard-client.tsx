@@ -45,7 +45,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
   }, []);
 
   const receipt = transformCachedOrder(realLatestOrder);
-  const deliveries = getUpcomingDeliveries();
+  const deliveries = getUpcomingDeliveries(realLatestOrder.delivery_date);
   const coverage = realCoverage;
 
   const filteredCoverage = filterCoverage(coverage, state.statusFilter);
