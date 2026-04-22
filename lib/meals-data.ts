@@ -165,15 +165,50 @@ export function calculateCoverageSummary(coverage: MealCoverage[]): CoverageSumm
 }
 
 export function getUpcomingDeliveries(): DeliveryWindow[] {
-  // Return the next delivery based on real order data
-  // The realLatestOrder was delivered on April 10, 2026 (Friday)
-  // Weekly delivery schedule - next deliveries would be:
-  // - Tuesday April 14 (based on subscription pattern)
-  // - Friday April 17 (week after last delivery)
-  const todayStr = '2026-04-13';
-  
-  return [
-    { date: '2026-04-14', slot: 'Evening', orderTotal: 128.15, status: 'pending' },
-    { date: '2026-04-17', slot: 'Evening', orderTotal: 128.15, status: 'scheduled' },
-  ];
+  // Use real delivery date from the synced order
+  const deliveryDateStr = realLatestOrder.delivery_date;
+  if (!deliveryDateStr) return [];
+
+  // Parse delivery date
+  let deliveryDate: Date;
+  try {
+    deliveryDate = new Date(deliveryDateStr + 'T00:00:00');
+  } catch {
+    return [];
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const deliveries: DeliveryWindow[] = [];
+  const dayOfWeek = deliveryDate.getDay(); // 0=Sun, ..., 6=Sat
+
+  // Tesco delivers on Tuesday and Friday (2 and 5). Figure out the weekly pattern.
+  // Start from the most recent delivery and generate upcoming windows.
+  const deliveryDays = [2, 5]; // Tuesday, Friday
+
+  // Find the next delivery on or after today
+  for (let offset = 0; offset <= 14; offset++) {
+    const checkDate = new Date(today);
+    checkDate.setDate(today.getDate() + offset);
+    const dow = checkDate.getDay();
+
+    if (deliveryDays.includes(dow)) {
+      const dateStr = checkDate.toISOString().split('T')[0];
+      const status: 'pending' | 'scheduled' | 'delivered' =
+        dateStr === deliveryDateStr ? 'delivered' :
+        checkDate > today ? 'pending' : 'delivered';
+
+      deliveries.push({
+        date: dateStr,
+        slot: 'Evening',
+        orderTotal: realLatestOrder.orderTotal || 0,
+        status,
+      });
+
+      if (deliveries.length >= 4) break;
+    }
+  }
+
+  return deliveries;
 }
