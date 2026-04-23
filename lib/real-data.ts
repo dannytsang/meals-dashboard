@@ -319,26 +319,11 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "",
-    "content": "Ham and cheese toastie",
-    "date": "2026-04-23",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "lunch"
-  },
-  {
-    "id": "",
-    "content": "Tony and Barbara cooking",
-    "date": "2026-04-23",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "",
     "content": "Mash and cheese",
@@ -534,52 +519,12 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "",
-      "content": "Ham and cheese toastie",
-      "date": "2026-04-23",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "lunch"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
-        "name": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
-        "quantity": 1,
-        "price": 3.5
-      },
-      {
-        "ingredient": "Hovis Best of Both Medium Bread 800g",
-        "name": "Hovis Best of Both Medium Bread 800g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Tony and Barbara cooking",
-      "date": "2026-04-23",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
   {
     "meal": {
       "id": "",
@@ -754,6 +699,12 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
+        "ingredient": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
+        "name": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
+        "quantity": 1,
+        "price": 3.5
+      },
+      {
         "ingredient": "Hovis Best of Both Medium Bread 800g",
         "name": "Hovis Best of Both Medium Bread 800g",
         "quantity": null,
@@ -785,6 +736,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
