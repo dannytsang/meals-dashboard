@@ -143,32 +143,108 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 export const realLatestOrder: CachedOrder = {
   "email_id": "",
   "email_date": "",
-  "delivery_date": "2026-04-24",
+  "delivery_date": "2026-04-28",
   "delivery_sort": "",
-  "order_number": "2911-8348-761",
+  "order_number": "2911-8431-861",
   "items": [
     {
-        "name": "Tesco Red Seedless Grapes 500G Substitutions: On",
+        "name": "Tesco Oranges Each",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Bananas Loose",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Large Gala Apples Loose Class 1",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Blueberries 250G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Chocolate Iced Ring Doughnuts 4 Pack",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Hayden&#39;s 4 Delicious Yum Yums",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Apple &amp; Elderflower Sparkling Water 1 Litre",
+        "quantity": 3,
+        "price": 0.0
+    },
+    {
+        "name": "Innocent Plus Blue Bolt Guava &amp; Lime Juice with Vitamins 750ml",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Innocent Plus Blue Bolt Guava &amp; Lime Juice with Vitamins 750ml",
         "quantity": 1,
         "price": 1.5
     },
     {
-        "name": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
+        "name": "Tesco British Whole Milk 1.13L, 2 Pints",
         "quantity": 1,
-        "price": 3.5
+        "price": 1.2
     },
     {
-        "name": "Birds Eye Steamfresh Family Favourite Mix 540g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
+        "name": "Tesco Blueberries 250G",
+        "quantity": 1,
+        "price": 0.45
     },
     {
-        "name": "De Cecco Conchiglie Rigate 500g Substitutions: On",
+        "name": "Tesco Chocolate Iced Ring Doughnuts 4 Pack",
         "quantity": 1,
-        "price": 1.35
+        "price": 0.95
+    },
+    {
+        "name": "Tesco Oranges Each",
+        "quantity": 1,
+        "price": 0.35
+    },
+    {
+        "name": "Large Gala Apples Loose Class 1",
+        "quantity": 1,
+        "price": 0.45
+    },
+    {
+        "name": "Tesco Bananas Loose",
+        "quantity": 1,
+        "price": 0.16
+    },
+    {
+        "name": "Hayden&#39;s 4 Delicious Yum Yums",
+        "quantity": 1,
+        "price": 1.75
+    },
+    {
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": 1,
+        "price": 1.15
+    },
+    {
+        "name": "Tesco Apple &amp; Elderflower Sparkling Water 1 Litre",
+        "quantity": 3,
+        "price": 0.4
     }
 ]
 };
+
 
 
 
@@ -480,6 +556,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -498,10 +575,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
-        "name": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
+        "ingredient": "Hovis Best of Both Medium Bread 800g",
+        "name": "Hovis Best of Both Medium Bread 800g",
         "quantity": 1,
-        "price": 3.5
+        "price": 0.0
       }
     ],
     "missingItems": []
@@ -532,6 +609,18 @@ export const realCoverage: MealCoverage[] = [
     "status": "covered",
     "coverageScore": 100,
     "matchedItems": [
+      {
+        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
+        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Cheddar Mash 450G",
+        "name": "Tesco Cheddar Mash 450G",
+        "quantity": null,
+        "price": null
+      },
       {
         "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
@@ -574,6 +663,18 @@ export const realCoverage: MealCoverage[] = [
     "status": "covered",
     "coverageScore": 100,
     "matchedItems": [
+      {
+        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
+        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Cheddar Mash 450G",
+        "name": "Tesco Cheddar Mash 450G",
+        "quantity": null,
+        "price": null
+      },
       {
         "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
@@ -648,11 +749,17 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [],
-    "notes": "No matching items"
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Hovis Best of Both Medium Bread 800g",
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": 1,
+        "price": 0.0
+      }
+    ],
+    "missingItems": []
   },
   {
     "meal": {
@@ -677,6 +784,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
