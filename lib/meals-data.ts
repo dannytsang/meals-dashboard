@@ -182,9 +182,10 @@ export function getUpcomingDeliveries(deliveryDate: string | null): DeliveryWind
 
     if (deliveryDays.includes(dow)) {
       const dateStr = checkDate.toISOString().split('T')[0];
+      const todayStr = new Date().toISOString().split('T')[0];
       const status: 'pending' | 'delivered' | 'scheduled' =
         dateStr === deliveryDate ? 'delivered' :
-        checkDate > today ? 'pending' : 'delivered';
+        dateStr < todayStr ? 'delivered' : 'pending';
 
       deliveries.push({
         date: dateStr,
