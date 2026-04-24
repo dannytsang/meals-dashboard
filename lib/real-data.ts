@@ -328,6 +328,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -534,16 +535,17 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
   "order_total": 74.44,
   "delivery_date": "2026-04-24",
-  "meals_covered": 4,
-  "meals_total": 15,
+  "meals_covered": 2,
+  "meals_total": 7,
   "unmatched_groceries": 14,
-  "coverage_percentage": 26,
+  "coverage_percentage": 28,
   "day_coverage": [
     {
       "date": "2026-04-24",
@@ -562,13 +564,13 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-04-27",
-      "status": "covered",
+      "status": "missing",
       "is_delivery_day": false
     },
     {
       "date": "2026-04-28",
-      "status": "covered",
-      "is_delivery_day": false
+      "status": "delivery",
+      "is_delivery_day": true
     },
     {
       "date": "2026-04-29",
@@ -579,49 +581,10 @@ export const realMealsCheckSummary = {
       "date": "2026-04-30",
       "status": "gap",
       "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-01",
-      "status": "gap",
-      "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-02",
-      "status": "gap",
-      "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-03",
-      "status": "gap",
-      "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-04",
-      "status": "gap",
-      "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-05",
-      "status": "gap",
-      "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-06",
-      "status": "gap",
-      "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-07",
-      "status": "gap",
-      "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-08",
-      "status": "gap",
-      "is_delivery_day": false
     }
   ]
 };
+
 
 
 // Coverage data - pre-computed by sync script (do not edit manually)
@@ -837,6 +800,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
