@@ -305,6 +305,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -529,10 +530,10 @@ export const realReceipt = transformCachedOrder(realLatestOrder);
 export const realMealsCheckSummary = {
   "order_total": 1.2,
   "delivery_date": "2026-05-19",
-  "meals_covered": 1,
+  "meals_covered": 0,
   "meals_total": 7,
   "unmatched_groceries": 0,
-  "coverage_percentage": 14,
+  "coverage_percentage": 0,
   "day_coverage": [
     {
       "date": "2026-04-24",
@@ -541,17 +542,17 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-04-25",
-      "status": "covered",
+      "status": "gap",
       "is_delivery_day": false
     },
     {
       "date": "2026-04-26",
-      "status": "missing",
+      "status": "gap",
       "is_delivery_day": false
     },
     {
       "date": "2026-04-27",
-      "status": "missing",
+      "status": "gap",
       "is_delivery_day": false
     },
     {
@@ -571,6 +572,7 @@ export const realMealsCheckSummary = {
     }
   ]
 };
+
 
 
 
