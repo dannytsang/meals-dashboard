@@ -170,33 +170,37 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
     coverageByDate[date].push(c);
   });
   
-  // Build a rolling 7-day window (Mon first, Sun last).
-  // For days in the past, we show the same weekday from next week instead,
-  // but still look up coverage using the equivalent past date in the data.
+  // Build a rolling 7-day window (Mon first, Sun last), starting from the
+  // upcoming Monday. Today (Friday) shows Mon 27 as the first day, not Mon 20.
   const todayDate = parseISODateLocal(today);
   const todayDow = todayDate.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
 
-  // Find last Monday relative to today (could be today itself if today is Monday)
+  // Find the most recent Monday
   const daysSinceMonday = todayDow === 0 ? 6 : todayDow - 1;
-  const thisMonday = new Date(todayDate);
+  let thisMonday = new Date(todayDate);
   thisMonday.setDate(todayDate.getDate() - daysSinceMonday);
+
+  // If that Monday is already past (i.e. today is Tue–Sun), advance to next Monday
+  if (thisMonday < todayDate) {
+    thisMonday.setDate(thisMonday.getDate() + 7);
+  }
 
   const days: { date: string; displayDate: string; isToday: boolean; dataKey: string }[] = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(thisMonday);
     d.setDate(thisMonday.getDate() + i);
     const dateStr = toISODateLocal(d);
-    const isPast = d < parseISODateLocal(today);
+    const isPast = d < todayDate;
 
-    // For past days: show next week's date but look up data for the actual past date
+    // For past days: show the same weekday 7 days ahead, but look up data
+    // using the actual past date
     let displayDate: string;
     let dataKey: string;
     if (isPast) {
-      // Same weekday, 7 days ahead
       const nextWeek = new Date(d);
       nextWeek.setDate(d.getDate() + 7);
       displayDate = toISODateLocal(nextWeek);
-      dataKey = dateStr; // but data is under the actual past date
+      dataKey = dateStr;
     } else {
       displayDate = dateStr;
       dataKey = dateStr;
