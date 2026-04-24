@@ -144,53 +144,19 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 export const realLatestOrder: CachedOrder = {
   "email_id": "",
   "email_date": "",
-  "delivery_date": "2026-04-24",
+  "delivery_date": "2026-05-05",
   "delivery_sort": "",
-  "order_number": "2911-8348-761",
-  "order_total": 74.44,
+  "order_number": "9021-8747-68",
+  "order_total": 1.2,
   "items": [
     {
-        "name": "Tesco Blackberries 250G Substitutions: On",
+        "name": "Tesco British Whole Milk 1.13L, 2 Pints",
         "quantity": 1,
-        "price": 2.75
-    },
-    {
-        "name": "Tesco Celery Substitutions: On",
-        "quantity": 1,
-        "price": 0.6
-    },
-    {
-        "name": "Tesco Cheddar Mash 450G Substitutions: On",
-        "quantity": 3,
-        "price": 3.5
-    },
-    {
-        "name": "Tesco Red Seedless Grapes 500G Substitutions: On",
-        "quantity": 1,
-        "price": 1.5
-    },
-    {
-        "name": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
-        "quantity": 1,
-        "price": 3.5
-    },
-    {
-        "name": "Birds Eye Steamfresh Family Favourite Mix 540g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-    },
-    {
-        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On",
-        "quantity": 2,
-        "price": 4.5
-    },
-    {
-        "name": "De Cecco Conchiglie Rigate 500g Substitutions: On",
-        "quantity": 1,
-        "price": 1.35
+        "price": 1.2
     }
 ]
 };
+
 
 
 
@@ -540,16 +506,17 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "order_total": 74.44,
-  "delivery_date": "2026-04-24",
-  "meals_covered": 2,
+  "order_total": 1.2,
+  "delivery_date": "2026-05-05",
+  "meals_covered": 1,
   "meals_total": 7,
-  "unmatched_groceries": 14,
-  "coverage_percentage": 28,
+  "unmatched_groceries": 0,
+  "coverage_percentage": 14,
   "day_coverage": [
     {
       "date": "2026-04-24",
@@ -563,7 +530,7 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-04-26",
-      "status": "covered",
+      "status": "missing",
       "is_delivery_day": false
     },
     {
@@ -593,6 +560,7 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
   {
@@ -604,38 +572,17 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "lunch"
     },
-    "status": "partial",
-    "coverageScore": 80,
+    "status": "covered",
+    "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Cheddar Mash 450G Substitutions: On",
-        "name": "Tesco Cheddar Mash 450G Substitutions: On",
-        "quantity": 3,
-        "price": 3.5
-      },
-      {
-        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Cheddar Mash 450G",
-        "name": "Tesco Cheddar Mash 450G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
-        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
+        "name": "Tesco Cheese and Garlic Flatbread 230g",
         "quantity": null,
         "price": null
       }
     ],
-    "missingItems": [
-      "Tesco Cheddar Mash 450G Substitutions: On"
-    ],
-    "notes": "Need: Tesco Cheddar Mash 450G Substitutions: On"
+    "missingItems": []
   },
   {
     "meal": {
@@ -667,38 +614,17 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "partial",
-    "coverageScore": 80,
+    "status": "covered",
+    "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Cheddar Mash 450G Substitutions: On",
-        "name": "Tesco Cheddar Mash 450G Substitutions: On",
-        "quantity": 3,
-        "price": 3.5
-      },
-      {
-        "ingredient": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "name": "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Cheddar Mash 450G",
-        "name": "Tesco Cheddar Mash 450G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
-        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
+        "name": "Tesco Cheese and Garlic Flatbread 230g",
         "quantity": null,
         "price": null
       }
     ],
-    "missingItems": [
-      "Tesco Cheddar Mash 450G Substitutions: On"
-    ],
-    "notes": "Need: Tesco Cheddar Mash 450G Substitutions: On"
+    "missingItems": []
   },
   {
     "meal": {
@@ -727,8 +653,8 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Beef Steaks with Peppercorn Sauce 320g",
-        "name": "Tesco Beef Steaks with Peppercorn Sauce 320g",
+        "ingredient": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
+        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
         "quantity": null,
         "price": null
       }
@@ -765,23 +691,11 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
-        "name": "Tesco Cheese & Bacon En Croute 410G Substitutions: On",
-        "quantity": 1,
-        "price": 3.5
-      },
-      {
-        "ingredient": "Hovis Best of Both Medium Bread 800g",
-        "name": "Hovis Best of Both Medium Bread 800g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
   },
   {
     "meal": {
@@ -806,6 +720,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
