@@ -170,20 +170,17 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
     coverageByDate[date].push(c);
   });
   
-  // Build a rolling 7-day window (Mon first, Sun last), starting from the
-  // upcoming Monday. Today (Friday) shows Mon 27 as the first day, not Mon 20.
+  // Build a rolling 7-day window (Mon first, Sun last).
+  // For past days (before today), show the same weekday 7 days ahead in the
+  // display, but look up coverage using the shifted future date (not the old
+  // past date) so meals are found correctly.
   const todayDate = parseISODateLocal(today);
   const todayDow = todayDate.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
 
-  // Find the most recent Monday
+  // Find last Monday relative to today
   const daysSinceMonday = todayDow === 0 ? 6 : todayDow - 1;
-  let thisMonday = new Date(todayDate);
+  const thisMonday = new Date(todayDate);
   thisMonday.setDate(todayDate.getDate() - daysSinceMonday);
-
-  // If that Monday is already past (i.e. today is Tue–Sun), advance to next Monday
-  if (thisMonday < todayDate) {
-    thisMonday.setDate(thisMonday.getDate() + 7);
-  }
 
   const days: { date: string; displayDate: string; isToday: boolean; dataKey: string }[] = [];
   for (let i = 0; i < 7; i++) {
@@ -192,15 +189,14 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
     const dateStr = toISODateLocal(d);
     const isPast = d < todayDate;
 
-    // For past days: show the same weekday 7 days ahead, but look up data
-    // using the actual past date
     let displayDate: string;
     let dataKey: string;
     if (isPast) {
+      // Show as same weekday 7 days ahead, and look up using that shifted date
       const nextWeek = new Date(d);
       nextWeek.setDate(d.getDate() + 7);
       displayDate = toISODateLocal(nextWeek);
-      dataKey = dateStr;
+      dataKey = displayDate; // use shifted date so meals are found
     } else {
       displayDate = dateStr;
       dataKey = dateStr;
