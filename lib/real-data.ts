@@ -147,7 +147,7 @@ export const realLatestOrder: CachedOrder = {
   "delivery_date": "2026-04-24",
   "delivery_sort": "",
   "order_number": "9021-8754-78",
-  "order_total": 1.2,
+  "order_total": 6.2,
   "items": [
     {
         "name": "Tesco British Whole Milk 1.13L, 2 Pints",
@@ -822,6 +822,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -1046,11 +1047,12 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "order_total": 1.2,
+  "order_total": 6.2,
   "delivery_date": "2026-04-24",
   "meals_covered": 4,
   "meals_total": 7,
@@ -1094,6 +1096,7 @@ export const realMealsCheckSummary = {
     }
   ]
 };
+
 
 
 
@@ -1436,6 +1439,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
