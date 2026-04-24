@@ -14,14 +14,15 @@ import { findProductInfo } from '@/lib/product-database';
 
 interface DashboardClientProps {
   today: string;
+  defaultDateRange?: { start: string; end: string };
 }
 
-export function DashboardClient({ today }: DashboardClientProps) {
+export function DashboardClient({ today, defaultDateRange }: DashboardClientProps) {
   const [state] = useState<DashboardState>({
     selectedShop: 'current',
     statusFilter: 'all',
     expandedMealId: null,
-    dateRange: { start: '2026-04-13', end: '2026-04-19' },
+    dateRange: defaultDateRange ?? { start: '2026-04-13', end: '2026-04-19' },
   });
 
   const [isDesktop, setIsDesktop] = useState(false);

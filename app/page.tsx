@@ -7,5 +7,10 @@ export default function MealsDashboardPage() {
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-  return <DashboardClient today={today} />;
+  // Default date range: today + 14 days
+  const twoWeeksLater = new Date(now);
+  twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
+  const endDate = `${twoWeeksLater.getFullYear()}-${String(twoWeeksLater.getMonth() + 1).padStart(2, '0')}-${String(twoWeeksLater.getDate()).padStart(2, '0')}`;
+
+  return <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} />;
 }
