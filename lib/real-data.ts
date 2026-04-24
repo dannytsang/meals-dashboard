@@ -144,9 +144,9 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 export const realLatestOrder: CachedOrder = {
   "email_id": "",
   "email_date": "",
-  "delivery_date": "2026-05-05",
+  "delivery_date": "2026-05-19",
   "delivery_sort": "",
-  "order_number": "9021-8747-68",
+  "order_number": "9021-8754-78",
   "order_total": 1.2,
   "items": [
     {
@@ -156,6 +156,7 @@ export const realLatestOrder: CachedOrder = {
     }
 ]
 };
+
 
 
 
@@ -507,12 +508,13 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
   "order_total": 1.2,
-  "delivery_date": "2026-05-05",
+  "delivery_date": "2026-05-19",
   "meals_covered": 1,
   "meals_total": 7,
   "unmatched_groceries": 0,
@@ -555,6 +557,7 @@ export const realMealsCheckSummary = {
     }
   ]
 };
+
 
 
 
@@ -720,6 +723,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
