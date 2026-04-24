@@ -279,6 +279,7 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
     # Extract meals and receipt from cache
     meals = cache_data.get("meals", [])
     receipt = cache_data.get("receipt", {})
+    meals_check_summary = cache_data.get("meals_check_summary", {})
     
     # Find export line numbers
     receipt_start = None
@@ -316,6 +317,7 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
             for i in raw_items
         ]
         items_json = json.dumps(items, indent=4)
+        order_total = receipt.get("total", 0)
         order_block = [
             f'export const realLatestOrder: CachedOrder = {{',
             f'  "email_id": "",',
@@ -323,12 +325,42 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
             f'  "delivery_date": "{receipt.get("delivery_date", "")}",',
             f'  "delivery_sort": "",',
             f'  "order_number": "{receipt.get("order_number", "")}",',
+            f'  "order_total": {json.dumps(order_total)},',
             f'  "items": {items_json}',
             '};',
             '',
         ]
         lines = lines[:receipt_start] + [l + '\n' for l in order_block] + lines[receipt_end+1:]
-        print(f"  ✓ Updated receipt data ({len(items)} items)")
+        print(f"  ✓ Updated receipt data ({len(items)} items, total £{order_total:.2f})")
+
+    # Update meals-check-aligned headline metrics
+    if meals_check_summary:
+        summary_json = json.dumps(meals_check_summary, indent=2)
+        summary_block = [
+            f'export const realMealsCheckSummary = {summary_json};',
+            '',
+        ]
+
+        summary_start = None
+        summary_end = None
+        receipt_transform_idx = None
+        for i, line in enumerate(lines):
+            if 'export const realReceipt = transformCachedOrder(realLatestOrder);' in line:
+                receipt_transform_idx = i
+            elif 'export const realMealsCheckSummary =' in line:
+                summary_start = i
+            elif summary_start is not None and summary_end is None and line.strip() == '};':
+                summary_end = i
+                break
+
+        if summary_start is not None and summary_end is not None:
+            lines = lines[:summary_start] + [l + '\n' for l in summary_block] + lines[summary_end+1:]
+        elif receipt_transform_idx is not None:
+            insert_at = receipt_transform_idx + 1
+            while insert_at < len(lines) and lines[insert_at].strip() == '':
+                insert_at += 1
+            lines = lines[:insert_at] + [l + '\n' for l in summary_block] + lines[insert_at:]
+        print("  ✓ Updated meals check summary data")
     
     # Update meal plan and coverage
     if meals:

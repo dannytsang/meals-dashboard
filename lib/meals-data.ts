@@ -169,8 +169,16 @@ export function calculateCoverageSummary(coverage: MealCoverage[]): CoverageSumm
 export function getUpcomingDeliveries(deliveryDate: string | null): DeliveryWindow[] {
   if (!deliveryDate) return [];
 
+  const toISODateLocal = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const todayStr = toISODateLocal(today);
 
   const deliveries: DeliveryWindow[] = [];
   const deliveryDays = [2, 5]; // Tuesday, Friday
@@ -181,8 +189,7 @@ export function getUpcomingDeliveries(deliveryDate: string | null): DeliveryWind
     const dow = checkDate.getDay();
 
     if (deliveryDays.includes(dow)) {
-      const dateStr = checkDate.toISOString().split('T')[0];
-      const todayStr = new Date().toISOString().split('T')[0];
+      const dateStr = toISODateLocal(checkDate);
       const status: 'pending' | 'delivered' | 'scheduled' =
         dateStr === deliveryDate ? 'delivered' :
         dateStr < todayStr ? 'delivered' : 'pending';

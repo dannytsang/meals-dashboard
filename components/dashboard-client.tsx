@@ -5,7 +5,8 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { calculateCoverageSummary, getUpcomingDeliveries, Meal } from '@/lib/meals-data';
 import { cleanItemName, deduplicateMatchedItems, MatchedItem } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
-import { realCoverage, realLatestOrder, transformCachedOrder } from '@/lib/real-data';
+import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
+import { realCoverage, realLatestOrder, realMealsCheckSummary, transformCachedOrder } from '@/lib/real-data';
 import { syncMeta } from '@/lib/sync-meta';
 import { DashboardState, filterCoverage } from '@/lib/dashboard-state';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
@@ -50,8 +51,8 @@ export function DashboardClient({ today }: DashboardClientProps) {
 
   const filteredCoverage = filterCoverage(coverage, state.statusFilter);
   const summary = calculateCoverageSummary(coverage);
+  const headlineSummary = realMealsCheckSummary;
   
-  const covered = coverage.filter(c => c.status === 'covered').length;
   const unmatchedItems = receipt?.items || [];
 
   const trulyUnmatchedItems = unmatchedItems.filter(item => {
@@ -171,7 +172,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
   // Build a rolling 7-day window.
   // For days in the past, we show the same weekday from next week instead,
   // but still look up coverage using the equivalent past date in the data.
-  const todayDate = new Date(today);
+  const todayDate = parseISODateLocal(today);
   const todayDow = todayDate.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
 
   // Find last Monday relative to today (could be today itself if today is Monday)
@@ -183,8 +184,8 @@ export function DashboardClient({ today }: DashboardClientProps) {
   for (let i = 0; i < 7; i++) {
     const d = new Date(thisMonday);
     d.setDate(thisMonday.getDate() + i);
-    const dateStr = d.toISOString().split('T')[0];
-    const isPast = d < new Date(today + 'T00:00:00');
+    const dateStr = toISODateLocal(d);
+    const isPast = d < parseISODateLocal(today);
 
     // For past days: show next week's date but look up data for the actual past date
     let displayDate: string;
@@ -193,7 +194,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
       // Same weekday, 7 days ahead
       const nextWeek = new Date(d);
       nextWeek.setDate(d.getDate() + 7);
-      displayDate = nextWeek.toISOString().split('T')[0];
+      displayDate = toISODateLocal(nextWeek);
       dataKey = dateStr; // but data is under the actual past date
     } else {
       displayDate = dateStr;
@@ -250,7 +251,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Order Total</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>£{receipt?.orderTotal.toFixed(2) || '—'}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>£{headlineSummary.order_total?.toFixed(2) || receipt?.orderTotal.toFixed(2) || '—'}</p>
           </div>
 
           <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
@@ -261,7 +262,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Delivery</p>
             <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-              {deliveries[0] ? new Date(deliveries[0].date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}
+              {headlineSummary.delivery_date ? formatShortDayMonth(headlineSummary.delivery_date) : deliveries[0] ? formatShortDayMonth(deliveries[0].date) : '—'}
             </p>
           </div>
 
@@ -272,7 +273,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Meals Covered</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{covered}/{coverage.length}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{headlineSummary.meals_covered ?? summary.covered}/{headlineSummary.meals_total ?? coverage.length}</p>
             {matchedFilter === 'matched' && <p style={{ fontSize: '9px', color: 'var(--accent-emerald)', fontWeight: '600', marginTop: '2px' }}>Filtered</p>}
           </div>
 
@@ -283,18 +284,18 @@ export function DashboardClient({ today }: DashboardClientProps) {
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unmatched</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{unmatchedItems.length}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{headlineSummary.unmatched_groceries ?? unmatchedItems.length}</p>
             {matchedFilter === 'unmatched' && <p style={{ fontSize: '9px', color: 'var(--accent-rose)', fontWeight: '600', marginTop: '2px' }}>Filtered</p>}
           </div>
 
           <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: summary.coveragePercentage >= 80 ? 'var(--accent-emerald-bg)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' }}>
-                <TrendingUp style={{ width: '20px', height: '20px', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }} />
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 80 ? 'var(--accent-emerald-bg)' : (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' }}>
+                <TrendingUp style={{ width: '20px', height: '20px', color: (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 80 ? 'var(--accent-emerald)' : (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }} />
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Coverage</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: summary.coveragePercentage >= 80 ? 'var(--accent-emerald)' : summary.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{summary.coveragePercentage}%</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 80 ? 'var(--accent-emerald)' : (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{headlineSummary.coverage_percentage ?? summary.coveragePercentage}%</p>
           </div>
         </div>
 
@@ -343,11 +344,11 @@ export function DashboardClient({ today }: DashboardClientProps) {
                             position: 'relative' as const
                           }}>
                             <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block' }}>
-                              {new Date(displayDate).toLocaleDateString('en-GB', { weekday: 'short' })}
+                              {formatWeekdayShort(displayDate)}
                             </span>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                               <span style={{ fontSize: '14px', fontWeight: 'bold', color: hasMeals ? 'var(--text-primary)' : 'var(--text-secondary)', display: 'block' }}>
-                                {new Date(displayDate).getDate()} {new Date(displayDate).toLocaleDateString('en-GB', { month: 'short' }).toUpperCase()}
+                                {formatDayMonthUpper(displayDate)}
                               </span>
                               {deliveries.some(d => d.date === dataKey) && (
                                 <span style={{ fontSize: '8px', fontWeight: '700', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'var(--accent-blue)', color: 'white', textTransform: 'uppercase' }}>Delivery</span>

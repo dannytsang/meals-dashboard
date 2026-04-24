@@ -23,6 +23,7 @@ interface CachedOrder {
   delivery_date: string | null;
   delivery_sort: string;
   order_number: string | null;
+  order_total?: number;
   items: {
     name: string;
     quantity: number;
@@ -70,7 +71,7 @@ export async function fetchLatestReceipt(): Promise<TescoReceipt | null> {
  * Transform cached order data to TescoReceipt format
  */
 export function transformCachedOrder(order: CachedOrder): TescoReceipt {
-  const totalPrice = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const totalPrice = order.order_total ?? order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
   // Identify short-life items (fresh produce with short shelf life)
   const shortLifeKeywords = ['strawberries', 'raspberries', 'blueberries', 'blackberries', 
@@ -146,6 +147,7 @@ export const realLatestOrder: CachedOrder = {
   "delivery_date": "2026-04-24",
   "delivery_sort": "",
   "order_number": "2911-8348-761",
+  "order_total": 74.44,
   "items": [
     {
         "name": "Tesco Blackberries 250G Substitutions: On",
@@ -189,6 +191,7 @@ export const realLatestOrder: CachedOrder = {
     }
 ]
 };
+
 
 
 
@@ -528,8 +531,19 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
+
+export const realMealsCheckSummary = {
+  "order_total": 0,
+  "delivery_date": "",
+  "meals_covered": 0,
+  "meals_total": 0,
+  "unmatched_groceries": 0,
+  "coverage_percentage": 0,
+  "day_coverage": []
+};
 
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
@@ -744,6 +758,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
