@@ -170,31 +170,35 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
     coverageByDate[date].push(c);
   });
   
-  // Build a rolling 7-day window.
-  // For days in the past, we show the same weekday from next week instead,
-  // but still look up coverage using the equivalent past date in the data.
+  // Build the day columns from the date range (from page.tsx props, or fallback).
+  // For past days that are shown as their next-weekday equivalent, look up data
+  // using the actual past date as the dataKey.
   const todayDate = parseISODateLocal(today);
   const todayDow = todayDate.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
 
   // Find last Monday relative to today (could be today itself if today is Monday)
   const daysSinceMonday = todayDow === 0 ? 6 : todayDow - 1;
-  const thisMonday = new Date(todayDate);
-  thisMonday.setDate(todayDate.getDate() - daysSinceMonday);
+  const rangeStart = parseISODateLocal(defaultDateRange?.start ?? today);
+  const rangeEnd = parseISODateLocal(defaultDateRange?.end ?? (() => {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() + 14);
+    return toISODateLocal(d);
+  })());
 
   const days: { date: string; displayDate: string; isToday: boolean; dataKey: string }[] = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(thisMonday);
-    d.setDate(thisMonday.getDate() + i);
-    const dateStr = toISODateLocal(d);
-    const isPast = d < parseISODateLocal(today);
+  const current = new Date(rangeStart);
+  while (current <= rangeEnd) {
+    const dateStr = toISODateLocal(current);
+    const isPast = current < todayDate;
+    const isToday = dateStr === today;
 
     // For past days: show next week's date but look up data for the actual past date
     let displayDate: string;
     let dataKey: string;
     if (isPast) {
       // Same weekday, 7 days ahead
-      const nextWeek = new Date(d);
-      nextWeek.setDate(d.getDate() + 7);
+      const nextWeek = new Date(current);
+      nextWeek.setDate(current.getDate() + 7);
       displayDate = toISODateLocal(nextWeek);
       dataKey = dateStr; // but data is under the actual past date
     } else {
@@ -202,7 +206,8 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
       dataKey = dateStr;
     }
 
-    days.push({ date: dateStr, displayDate, isToday: dateStr === today, dataKey });
+    days.push({ date: dateStr, displayDate, isToday, dataKey });
+    current.setDate(current.getDate() + 1);
   }
 
   const mealTypesWithMeals: Set<string> = new Set();
