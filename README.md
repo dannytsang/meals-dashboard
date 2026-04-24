@@ -40,6 +40,37 @@ Deployed at: https://meals-dashboard.vercel.app
 4. **`sync-dashboard-data.py`** copies cache to `lib/real-data.ts`
 5. **Vercel** deploys the updated dashboard
 
+## Operational Invariants
+
+These are easy to break and expensive to rediscover.
+
+### 1. Dashboard headline and meal rows must agree
+
+If the meal rows show a day as fully matched, the headline count must not silently undercount it.
+
+**Important nuance:** a day can still render as `delivery` in the UI while also counting as a covered day in the headline if that day has covered meals.
+
+### 2. `meals_check_summary` overrides must stay aligned with canonical state
+
+The sync pipeline may override headline fields so the dashboard mirrors `/meals check`, but those overrides must still use canonical-state-compatible semantics.
+
+Do **not** derive the headline from raw display symbols alone if canonical day state already knows whether the day is covered.
+
+### 3. Delivery-day display semantics are not counting semantics
+
+`delivery` is a display label.
+It is **not** permission to exclude the day from `meals_covered` when meals on that day are covered.
+
+### 4. Tesco email selection mistakes will surface here first
+
+If the dashboard suddenly shows implausible totals or coverage, check the meals skill first for:
+
+- inbox vs trash/bin search differences
+- receipt vs confirmation email precedence
+- subtotal vs final-total parsing mistakes
+
+See also: `skills/meals/docs/MEALS_CHECK_DASHBOARD_LESSONS_2026-04-24.md`
+
 ## Shared Module: `meal_coverage`
 
 The `meal_coverage` module (`skills/meals/scripts/meal_coverage/`) is the **single source of truth** for coverage analysis.
