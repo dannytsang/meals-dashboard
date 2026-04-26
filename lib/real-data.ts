@@ -258,394 +258,10 @@ export const realLatestOrder: CachedOrder = {
         "name": "Tesco Whole Cucumber Each",
         "quantity": 1,
         "price": 0.99
-    },
-    {
-        "name": "Wild Juicy Mango 0% Aluminium Deodorant Refill 40g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Wild Natural Deodorant Refill - Coconut & Vanilla 40g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco British Whole Milk 568Ml, 1 Pint",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Large Chicken Fillet Pack 1.6Kg",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Birds Eye Steamfresh Asian Style Rice 380g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Birds Eye Steamfresh Korean Style Noodles 350g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "McCain Home Chips Crinkle Cut 1.6kg",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Cadbury Dairy Milk Chocolate Bar 180g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Crosta & Mollica Parmesan & Poppyseed Torinesi 120G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Growers Harvest Apple Juice From Concentrate 6 X 200Ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Growers Harvest Orange Juice From Concentrate 6 X 200Ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Hayden's 4 Delicious Yum Yums",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Jammie Dodgers Biscuits 140G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 McCoy's Classic Variety Multipack Crisps 6x25g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Polli Capers in Vinegar Capotes 190g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Ryvita Multiseed Thins 125G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Soft & Gentle Antiperspirant Deodorant Fresh Blossom Roll On 50Ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Tesco Apple & Elderflower Sparkling Water 1 Litre",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Pink & White Mini Marshmallows 100G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco White Iced Ring Doughnuts 4 Pack",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Innocent Super Smoothie Blue Spark, Guava & Pineapple 750ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Aioli Dip 200G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Bacon Lettuce & Tom Sandwich",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Blueberries 500G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Boneless Salmon Fillets 4 Pack 520g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Finest Green Grapes Seedless 500G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Finest Red Grapes Seedless 500G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Guacamole 163g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Party Salad 455G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Strawberries 400G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Tzatziki Dip 200G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Cirio Double Concentrate Puree 4 Pack 70G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Dr Pepper Regular 500 M",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Graze Smoky Barbecue Crunch 100g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Hovis Best of Both Medium Bread 800g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Maoam Bloxx 4 Pack 88G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Pepsi Max Cherry No Sugar Cola Bottle 500ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco All Rounder Potatoes 2Kg",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Finest Sweet Easy Peelers 600g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Frosted Flakes Cereal 500G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Lightly Salted Tortilla Chips 200g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Thornbridge Jaipur Ipa 4X330ml Can",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Warburtons White Sandwich Bread Thins 6 Pack",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Flora Buttery Spread with Natural Ingredients 1KG",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Innocent Wonder Green Juice 750Ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Old Amsterdam Mature Gouda Cheese 150g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco British Whole Milk 1.13L, 2 Pints",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Finest Smoked Vintage Red Fox 200g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Garlic Scottish Mussels 500G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Perfectly Ripe Plums 325G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Vintage Red Fox Cheese 200G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Yazoo Chocolate Milkshake 1 Litre Bottle",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Corsodyl Intensive Gum Repair White & Polish Toothpaste 75ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "De Cecco Spaghetti 500G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Go Ahead Yogurt Breaks - Forest Fruit 4 x 35.5g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Hayden's 4 Delicious Yum Yums",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Lucozade Sport Drink Blue Force 4x500ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 McCoy's Classic Variety Multipack Crisps 6x25g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Snack Organisation Sweet Chilli Cracker 100G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Tesco Apple & Elderflower Sparkling Water 1 Litre",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Tiger Baton",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco White Iced Ring Doughnuts 4 Pack",
-        "quantity": 1,
-        "price": 0.0
     }
 ]
 };
+
 
 
 
@@ -815,38 +431,6 @@ export const realLatestOrder: CachedOrder = {
 export const realMealPlan: Meal[] = [
   {
     "id": "",
-    "content": "Tuscan Ragu pappardelle",
-    "date": "2026-04-24",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "chicken / garlic bread and chips",
-    "date": "2026-04-24",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Mash and cheese",
-    "date": "2026-04-24",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "lunch"
-  },
-  {
-    "id": "",
-    "content": "Tony and Barbara cooking",
-    "date": "2026-04-25",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
     "content": "Steak with peppercorn, salad, curly fries",
     "date": "2026-04-26",
     "labels": [],
@@ -871,13 +455,62 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "KFC",
+    "content": "KFC / pizza",
     "date": "2026-04-28",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Prawn stir fry",
+    "date": "2026-04-29",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Pizza (Leo)",
+    "date": "2026-04-29",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Mash and cheese (Ashlee)",
+    "date": "2026-04-29",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Fish jacket potato and salad",
+    "date": "2026-04-30",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "chicken / garlic bread and chips",
+    "date": "2026-05-01",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Spicy pork and nduja fettuccine",
+    "date": "2026-05-01",
     "labels": [],
     "section": "Planned",
     "meal_type": "dinner"
   }
 ];
+
 
 
 
@@ -1048,19 +681,9 @@ export const realMealsCheckSummary = {
   "delivery_date": "2026-04-24",
   "meals_covered": 5,
   "meals_total": 7,
-  "unmatched_groceries": 0,
+  "unmatched_groceries": 10,
   "coverage_percentage": 71,
   "day_coverage": [
-    {
-      "date": "2026-04-24",
-      "status": "delivery",
-      "is_delivery_day": true
-    },
-    {
-      "date": "2026-04-25",
-      "status": "covered",
-      "is_delivery_day": false
-    },
     {
       "date": "2026-04-26",
       "status": "covered",
@@ -1068,7 +691,7 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-04-27",
-      "status": "covered",
+      "status": "missing",
       "is_delivery_day": false
     },
     {
@@ -1078,11 +701,21 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-04-29",
-      "status": "gap",
+      "status": "covered",
       "is_delivery_day": false
     },
     {
       "date": "2026-04-30",
+      "status": "covered",
+      "is_delivery_day": false
+    },
+    {
+      "date": "2026-05-01",
+      "status": "delivery",
+      "is_delivery_day": true
+    },
+    {
+      "date": "2026-05-02",
       "status": "gap",
       "is_delivery_day": false
     }
@@ -1116,13 +749,14 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Tuscan Ragu pappardelle",
-      "date": "2026-04-24",
+      "content": "Steak with peppercorn, salad, curly fries",
+      "date": "2026-04-26",
       "labels": [],
       "section": "Planned",
       "meal_type": "dinner"
@@ -1131,10 +765,16 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-        "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-        "quantity": 1,
-        "price": 0.0
+        "ingredient": "Tesco Sweet Chilli Stir Fry Sauce 165g",
+        "name": "Tesco Sweet Chilli Stir Fry Sauce 165g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Large Vegetable Stir Fry 570g",
+        "name": "Tesco Large Vegetable Stir Fry 570g",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
@@ -1142,8 +782,120 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "chicken / garlic bread and chips",
-      "date": "2026-04-24",
+      "content": "Chicken omelette (Terina)",
+      "date": "2026-04-27",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [],
+    "notes": "No matching items"
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Toastie",
+      "date": "2026-04-27",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Hovis Best of Both Medium Bread 800g",
+        "name": "Hovis Best of Both Medium Bread 800g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "KFC / pizza",
+      "date": "2026-04-28",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "takeaway - no ingredients needed",
+        "name": "takeaway - no ingredients needed",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [],
+    "notes": "takeaway - no ingredients needed"
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Prawn stir fry",
+      "date": "2026-04-29",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Raw King Prawns 165g",
+        "name": "Tesco Raw King Prawns 165g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Sweet Chilli Stir Fry Sauce 165g",
+        "name": "Tesco Sweet Chilli Stir Fry Sauce 165g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Large Vegetable Stir Fry 570g",
+        "name": "Tesco Large Vegetable Stir Fry 570g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Pizza (Leo)",
+      "date": "2026-04-29",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Mash and cheese (Ashlee)",
+      "date": "2026-04-29",
       "labels": [],
       "section": "Planned",
       "meal_type": "dinner"
@@ -1164,58 +916,61 @@ export const realCoverage: MealCoverage[] = [
         "price": 1.15
       },
       {
-        "ingredient": "Tesco Large Chicken Fillet Pack 1.6Kg",
-        "name": "Tesco Large Chicken Fillet Pack 1.6Kg",
-        "quantity": 1,
-        "price": 0.0
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "quantity": null,
+        "price": null
       },
       {
-        "ingredient": "McCain Home Chips Crinkle Cut 1.6kg",
-        "name": "McCain Home Chips Crinkle Cut 1.6kg",
-        "quantity": 1,
-        "price": 0.0
+        "ingredient": "Tesco Baking Potatoes 2kg",
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Fish jacket potato and salad",
+      "date": "2026-04-30",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Cheddar Mash 450G",
+        "name": "Tesco Cheddar Mash 450G",
+        "quantity": 3,
+        "price": 3.5
       },
       {
-        "ingredient": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
-        "name": "Doritos Chilli Heatwave Tortilla Chips Multipack Crisps 5x30g",
+        "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "quantity": 1,
-        "price": 0.0
+        "price": 1.15
       },
       {
-        "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g",
-        "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "Tesco All Rounder Potatoes 2Kg",
-        "name": "Tesco All Rounder Potatoes 2Kg",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
-        "name": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "Tesco Lightly Salted Tortilla Chips 200g",
-        "name": "Tesco Lightly Salted Tortilla Chips 200g",
-        "quantity": 1,
-        "price": 0.0
+        "ingredient": "Tesco Raw King Prawns 165g",
+        "name": "Tesco Raw King Prawns 165g",
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 1,
-        "price": 0.0
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baking Potatoes 2kg",
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
@@ -1223,36 +978,8 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Mash and cheese",
-      "date": "2026-04-24",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "lunch"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Tony and Barbara cooking",
-      "date": "2026-04-25",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Steak with peppercorn, salad, curly fries",
-      "date": "2026-04-26",
+      "content": "chicken / garlic bread and chips",
+      "date": "2026-05-01",
       "labels": [],
       "section": "Planned",
       "meal_type": "dinner"
@@ -1261,22 +988,28 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-        "quantity": 1,
-        "price": 0.0
+        "ingredient": "Tesco Cheddar Mash 450G",
+        "name": "Tesco Cheddar Mash 450G",
+        "quantity": 3,
+        "price": 3.5
       },
       {
-        "ingredient": "\u2020 Dr Pepper Regular 500 M",
-        "name": "\u2020 Dr Pepper Regular 500 M",
+        "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "quantity": 1,
-        "price": 0.0
+        "price": 1.15
       },
       {
-        "ingredient": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
-        "name": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
-        "quantity": 1,
-        "price": 0.0
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baking Potatoes 2kg",
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
@@ -1284,41 +1017,8 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "Chicken omelette (Terina)",
-      "date": "2026-04-27",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Large Chicken Fillet Pack 1.6Kg",
-        "name": "Tesco Large Chicken Fillet Pack 1.6Kg",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "New Covent Garden Soup Co Chicken & Sweetcorn 560g",
-        "name": "New Covent Garden Soup Co Chicken & Sweetcorn 560g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "quantity": 1,
-        "price": 0.0
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Toastie",
-      "date": "2026-04-27",
+      "content": "Spicy pork and nduja fettuccine",
+      "date": "2026-05-01",
       "labels": [],
       "section": "Planned",
       "meal_type": "dinner"
@@ -1331,63 +1031,12 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Cheese & Bacon En Croute 410G",
         "quantity": 1,
         "price": 3.5
-      },
-      {
-        "ingredient": "Tesco Cheese and Garlic Flatbread 230g",
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "Hovis Best of Both Medium Bread 800g",
-        "name": "Hovis Best of Both Medium Bread 800g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "Warburtons White Sandwich Bread Thins 6 Pack",
-        "name": "Warburtons White Sandwich Bread Thins 6 Pack",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "Old Amsterdam Mature Gouda Cheese 150g",
-        "name": "Old Amsterdam Mature Gouda Cheese 150g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "Vintage Red Fox Cheese 200G",
-        "name": "Vintage Red Fox Cheese 200G",
-        "quantity": 1,
-        "price": 0.0
       }
     ],
     "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "KFC",
-      "date": "2026-04-28",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "takeaway - no ingredients needed",
-        "name": "takeaway - no ingredients needed",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [],
-    "notes": "takeaway - no ingredients needed"
   }
 ];
+
 
 
 
