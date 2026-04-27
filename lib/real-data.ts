@@ -425,18 +425,11 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "",
-    "content": "Steak with peppercorn, salad, curly fries",
-    "date": "2026-04-26",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "",
     "content": "Chicken omelette (Terina)",
@@ -673,22 +666,18 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
   "order_total": 61.91,
   "delivery_date": "2026-04-24",
-  "meals_covered": 5,
+  "meals_covered": 4,
   "meals_total": 7,
   "unmatched_groceries": 10,
-  "coverage_percentage": 71,
+  "coverage_percentage": 57,
   "day_coverage": [
-    {
-      "date": "2026-04-26",
-      "status": "covered",
-      "is_delivery_day": false
-    },
     {
       "date": "2026-04-27",
       "status": "missing",
@@ -716,6 +705,11 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-05-02",
+      "status": "gap",
+      "is_delivery_day": false
+    },
+    {
+      "date": "2026-05-03",
       "status": "gap",
       "is_delivery_day": false
     }
@@ -750,35 +744,9 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "",
-      "content": "Steak with peppercorn, salad, curly fries",
-      "date": "2026-04-26",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Sweet Chilli Stir Fry Sauce 165g",
-        "name": "Tesco Sweet Chilli Stir Fry Sauce 165g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Large Vegetable Stir Fry 570g",
-        "name": "Tesco Large Vegetable Stir Fry 570g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
   {
     "meal": {
       "id": "",
@@ -1036,6 +1004,7 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": []
   }
 ];
+
 
 
 
