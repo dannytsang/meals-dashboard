@@ -144,123 +144,99 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 export const realLatestOrder: CachedOrder = {
   "email_id": "",
   "email_date": "",
-  "delivery_date": "2026-04-24",
+  "delivery_date": "2026-05-01",
   "delivery_sort": "",
-  "order_number": "2911-8348-761",
-  "order_total": 61.91,
+  "order_number": "2911-8014-861",
+  "order_total": 83.27,
   "items": [
     {
-        "name": "Activia Rhubarb & Mixed Fruit Low Fat Gut Health Yoghurt Multipack 8x115g",
+        "name": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
         "quantity": 1,
-        "price": 4.25
+        "price": 3.65
     },
     {
-        "name": "Tesco Blackberries 250G",
+        "name": "Tesco Perfectly Ripe Plums 325G Substitutions: On",
         "quantity": 1,
-        "price": 2.75
+        "price": 2.15
     },
     {
-        "name": "Tesco Celery",
+        "name": "Tesco Fresh Mashed Potato 800G Substitutions: On",
         "quantity": 1,
-        "price": 0.6
+        "price": 1.25
     },
     {
-        "name": "Tesco Cheddar Mash 450G",
-        "quantity": 3,
-        "price": 3.5
-    },
-    {
-        "name": "Tesco Cheese & Bacon En Croute 410G",
+        "name": "Noel Sliced Tapas Selection 120G Substitutions: On",
         "quantity": 1,
-        "price": 3.5
+        "price": 2.17
     },
     {
-        "name": "Tesco Iceberg Lettuce 200G",
+        "name": "Tesco Potato Slices 350G Substitutions: On",
         "quantity": 1,
-        "price": 0.64
+        "price": 1.08
     },
     {
-        "name": "Tesco Red Seedless Grapes 500G",
+        "name": "Tesco Garlic & Cheese Mushrooms 200g Substitutions: On",
         "quantity": 1,
-        "price": 1.5
+        "price": 1.42
     },
     {
-        "name": "Birds Eye Steamfresh Family Favourite Mix 540g",
+        "name": "Tesco Firepit 6 Minted Lamb Kebabs 360g Substitutions: On",
+        "quantity": 1,
+        "price": 4.0
+    },
+    {
+        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g Substitutions: On",
+        "quantity": 1,
+        "price": 1.75
+    },
+    {
+        "name": "Fire Pit 2 Minted Lamb Leg Steaks 250g Substitutions: On",
+        "quantity": 1,
+        "price": 4.0
+    },
+    {
+        "name": "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G Substitutions: On",
+        "quantity": 2,
+        "price": 2.69
+    },
+    {
+        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g Substitutions: On",
         "quantity": 2,
         "price": 4.5
     },
     {
-        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
+        "name": "Tesco 8 Prawn Bao Buns 256g Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
+    },
+    {
+        "name": "Tesco 10 Prawn Kushiyaki Skewers 180g Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
+    },
+    {
+        "name": "Itsu Pork Gyozas 240G Substitutions: On",
         "quantity": 2,
-        "price": 4.5
+        "price": 7.36
     },
     {
-        "name": "\u2020 Haagen-Dazs Ice Cream - Strawberries & Cream 460ml",
-        "quantity": 4,
-        "price": 15.8
-    },
-    {
-        "name": "Tesco Curly Fries 700G",
-        "quantity": 1,
-        "price": 2.2
-    },
-    {
-        "name": "De Cecco Conchiglie Rigate 500g",
-        "quantity": 1,
-        "price": 1.35
-    },
-    {
-        "name": "Doritos Mild Salsa Dip 300g",
+        "name": "Tesco Finest Pink Lady Apple 4 Pack Substitutions: On",
         "quantity": 1,
         "price": 2.5
     },
     {
-        "name": "Large Braeburn Apples Loose Class 1 0.189KG",
+        "name": "\u2020 Belazu Truffle & Pecorino Nut Mix 135g Substitutions: On",
         "quantity": 1,
-        "price": 0.53
+        "price": 2.88
     },
     {
-        "name": "\u2020 Propercorn Sweet & Salty Popcorn 6X14g",
+        "name": "Belazu Rosemary Snack Mix 120g Substitutions: On",
         "quantity": 1,
-        "price": 1.5
-    },
-    {
-        "name": "\u2020 Radnor Splash Apple & Raspberry 3 X 250Ml",
-        "quantity": 1,
-        "price": 0.95
-    },
-    {
-        "name": "\u2020 Radnor Splash Orange & Passion Fruit 3X250ml",
-        "quantity": 1,
-        "price": 0.95
-    },
-    {
-        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
-        "quantity": 1,
-        "price": 1.15
-    },
-    {
-        "name": "Tesco Baby Plum Tomatoes 300G",
-        "quantity": 1,
-        "price": 0.9
-    },
-    {
-        "name": "Tesco Golden Syrup 680G",
-        "quantity": 1,
-        "price": 1.7
-    },
-    {
-        "name": "Tesco Pancake Shaker Traditional Mix 155G",
-        "quantity": 1,
-        "price": 1.15
-    },
-    {
-        "name": "Tesco Whole Cucumber Each",
-        "quantity": 1,
-        "price": 0.99
+        "price": 2.7
     }
 ]
 };
+
 
 
 
@@ -466,8 +442,49 @@ export const realMealPlan: Meal[] = [
     "labels": [],
     "section": "Planned",
     "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Smash burgers, potato chips, mushrooms (adults)",
+    "date": "2026-05-02",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Minted lamb, new potatoes, salad",
+    "date": "2026-05-03",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Lamb kebab, new potatoes, salad",
+    "date": "2026-05-03",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Gammon, mash and beans",
+    "date": "2026-05-04",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Salmon, jacket potatoes, salad",
+    "date": "2026-05-05",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
   }
 ];
+
 
 
 
@@ -641,12 +658,12 @@ export const realMealPlan: Meal[] = [
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "order_total": 61.91,
-  "delivery_date": "2026-04-24",
-  "meals_covered": 2,
+  "order_total": 83.27,
+  "delivery_date": "2026-05-01",
+  "meals_covered": 5,
   "meals_total": 7,
-  "unmatched_groceries": 2,
-  "coverage_percentage": 28,
+  "unmatched_groceries": 17,
+  "coverage_percentage": 71,
   "day_coverage": [
     {
       "date": "2026-04-30",
@@ -660,12 +677,12 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-05-02",
-      "status": "gap",
+      "status": "covered",
       "is_delivery_day": false
     },
     {
       "date": "2026-05-03",
-      "status": "gap",
+      "status": "covered",
       "is_delivery_day": false
     },
     {
@@ -720,6 +737,7 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
   {
@@ -733,38 +751,7 @@ export const realCoverage: MealCoverage[] = [
     },
     "status": "covered",
     "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Cheddar Mash 450G",
-        "name": "Tesco Cheddar Mash 450G",
-        "quantity": 3,
-        "price": 3.5
-      },
-      {
-        "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
-        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
-        "quantity": 1,
-        "price": 1.15
-      },
-      {
-        "ingredient": "Tesco Raw King Prawns 165g",
-        "name": "Tesco Raw King Prawns 165g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Baking Potatoes 2kg",
-        "name": "Tesco Baking Potatoes 2kg",
-        "quantity": null,
-        "price": null
-      }
-    ],
+    "matchedItems": [],
     "missingItems": []
   },
   {
@@ -794,26 +781,56 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Cheddar Mash 450G",
-        "name": "Tesco Cheddar Mash 450G",
-        "quantity": 3,
-        "price": 3.5
-      },
-      {
-        "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
-        "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "ingredient": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "name": "Tesco Fresh Mashed Potato 800G Substitutions: On",
         "quantity": 1,
-        "price": 1.15
+        "price": 1.25
       },
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "ingredient": "Tesco Potato Slices 350G Substitutions: On",
+        "name": "Tesco Potato Slices 350G Substitutions: On",
+        "quantity": 1,
+        "price": 1.08
+      },
+      {
+        "ingredient": "Tesco Honey Roast Ham Slices 400g",
+        "name": "Tesco Honey Roast Ham Slices 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "name": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G",
+        "name": "Tesco Fresh Mashed Potato 800G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G",
+        "name": "Tesco Potato Slices 350G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Sticky Chicken Kebabs 10 Pack 180g",
+        "name": "Tesco Sticky Chicken Kebabs 10 Pack 180g",
         "quantity": null,
         "price": null
       },
       {
         "ingredient": "Tesco Baking Potatoes 2kg",
         "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
         "quantity": null,
         "price": null
       }
@@ -833,15 +850,472 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Cheese & Bacon En Croute 410G",
-        "name": "Tesco Cheese & Bacon En Croute 410G",
+        "ingredient": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
+        "name": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
         "quantity": 1,
-        "price": 3.5
+        "price": 3.65
+      },
+      {
+        "ingredient": "Itsu Pork Gyozas 240G Substitutions: On",
+        "name": "Itsu Pork Gyozas 240G Substitutions: On",
+        "quantity": 2,
+        "price": 7.36
+      },
+      {
+        "ingredient": "Tesco Unsmoked Gammon Joint 750G",
+        "name": "Tesco Unsmoked Gammon Joint 750G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Honey Roast Ham Slices 400g",
+        "name": "Tesco Honey Roast Ham Slices 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Itsu Pork Gyozas 240G",
+        "name": "Itsu Pork Gyozas 240G",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Smash burgers, potato chips, mushrooms (adults)",
+      "date": "2026-05-02",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "name": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "quantity": 1,
+        "price": 1.25
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G Substitutions: On",
+        "name": "Tesco Potato Slices 350G Substitutions: On",
+        "quantity": 1,
+        "price": 1.08
+      },
+      {
+        "ingredient": "Tesco Honey Roast Ham Slices 400g",
+        "name": "Tesco Honey Roast Ham Slices 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "name": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G",
+        "name": "Tesco Fresh Mashed Potato 800G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G",
+        "name": "Tesco Potato Slices 350G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baking Potatoes 2kg",
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Minted lamb, new potatoes, salad",
+      "date": "2026-05-03",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "name": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "quantity": 1,
+        "price": 1.25
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G Substitutions: On",
+        "name": "Tesco Potato Slices 350G Substitutions: On",
+        "quantity": 1,
+        "price": 1.08
+      },
+      {
+        "ingredient": "Tesco Firepit 6 Minted Lamb Kebabs 360g Substitutions: On",
+        "name": "Tesco Firepit 6 Minted Lamb Kebabs 360g Substitutions: On",
+        "quantity": 1,
+        "price": 4.0
+      },
+      {
+        "ingredient": "Fire Pit 2 Minted Lamb Leg Steaks 250g Substitutions: On",
+        "name": "Fire Pit 2 Minted Lamb Leg Steaks 250g Substitutions: On",
+        "quantity": 1,
+        "price": 4.0
+      },
+      {
+        "ingredient": "Tesco Firepit 6 Minted Lamb Kebabs 360g",
+        "name": "Tesco Firepit 6 Minted Lamb Kebabs 360g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Fire Pit 2 Minted Lamb Leg Steaks 250g",
+        "name": "Fire Pit 2 Minted Lamb Leg Steaks 250g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Honey Roast Ham Slices 400g",
+        "name": "Tesco Honey Roast Ham Slices 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "name": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G",
+        "name": "Tesco Fresh Mashed Potato 800G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G",
+        "name": "Tesco Potato Slices 350G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baking Potatoes 2kg",
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Lamb kebab, new potatoes, salad",
+      "date": "2026-05-03",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "name": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "quantity": 1,
+        "price": 1.25
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G Substitutions: On",
+        "name": "Tesco Potato Slices 350G Substitutions: On",
+        "quantity": 1,
+        "price": 1.08
+      },
+      {
+        "ingredient": "Tesco Firepit 6 Minted Lamb Kebabs 360g Substitutions: On",
+        "name": "Tesco Firepit 6 Minted Lamb Kebabs 360g Substitutions: On",
+        "quantity": 1,
+        "price": 4.0
+      },
+      {
+        "ingredient": "Fire Pit 2 Minted Lamb Leg Steaks 250g Substitutions: On",
+        "name": "Fire Pit 2 Minted Lamb Leg Steaks 250g Substitutions: On",
+        "quantity": 1,
+        "price": 4.0
+      },
+      {
+        "ingredient": "Tesco Firepit 6 Minted Lamb Kebabs 360g",
+        "name": "Tesco Firepit 6 Minted Lamb Kebabs 360g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Fire Pit 2 Minted Lamb Leg Steaks 250g",
+        "name": "Fire Pit 2 Minted Lamb Leg Steaks 250g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Honey Roast Ham Slices 400g",
+        "name": "Tesco Honey Roast Ham Slices 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "name": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G",
+        "name": "Tesco Fresh Mashed Potato 800G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G",
+        "name": "Tesco Potato Slices 350G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baking Potatoes 2kg",
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Gammon, mash and beans",
+      "date": "2026-05-04",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "partial",
+    "coverageScore": 93,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
+        "name": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
+        "quantity": 1,
+        "price": 3.65
+      },
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "name": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "quantity": 1,
+        "price": 1.25
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G Substitutions: On",
+        "name": "Tesco Potato Slices 350G Substitutions: On",
+        "quantity": 1,
+        "price": 1.08
+      },
+      {
+        "ingredient": "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G Substitutions: On",
+        "name": "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G Substitutions: On",
+        "quantity": 2,
+        "price": 2.69
+      },
+      {
+        "ingredient": "Itsu Pork Gyozas 240G Substitutions: On",
+        "name": "Itsu Pork Gyozas 240G Substitutions: On",
+        "quantity": 2,
+        "price": 7.36
+      },
+      {
+        "ingredient": "Tesco Unsmoked Gammon Joint 750G",
+        "name": "Tesco Unsmoked Gammon Joint 750G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Honey Roast Ham Slices 400g",
+        "name": "Tesco Honey Roast Ham Slices 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "name": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G",
+        "name": "Tesco Fresh Mashed Potato 800G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G",
+        "name": "Tesco Potato Slices 350G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G",
+        "name": "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Itsu Pork Gyozas 240G",
+        "name": "Itsu Pork Gyozas 240G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baking Potatoes 2kg",
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [
+      "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G Substitutions: On"
+    ],
+    "notes": "Need: Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G Substitutions: On"
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Salmon, jacket potatoes, salad",
+      "date": "2026-05-05",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "name": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "quantity": 1,
+        "price": 1.25
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G Substitutions: On",
+        "name": "Tesco Potato Slices 350G Substitutions: On",
+        "quantity": 1,
+        "price": 1.08
+      },
+      {
+        "ingredient": "Tesco 8 Prawn Bao Buns 256g Substitutions: On",
+        "name": "Tesco 8 Prawn Bao Buns 256g Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
+      },
+      {
+        "ingredient": "Tesco 10 Prawn Kushiyaki Skewers 180g Substitutions: On",
+        "name": "Tesco 10 Prawn Kushiyaki Skewers 180g Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
+      },
+      {
+        "ingredient": "Tesco Honey Roast Ham Slices 400g",
+        "name": "Tesco Honey Roast Ham Slices 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Bay Fishmongers Salmon 0.5KG",
+        "name": "Bay Fishmongers Salmon 0.5KG",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "name": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G",
+        "name": "Tesco Fresh Mashed Potato 800G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G",
+        "name": "Tesco Potato Slices 350G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco 8 Prawn Bao Buns 256g",
+        "name": "Tesco 8 Prawn Bao Buns 256g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco 10 Prawn Kushiyaki Skewers 180g",
+        "name": "Tesco 10 Prawn Kushiyaki Skewers 180g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baking Potatoes 2kg",
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": []
   }
 ];
+
 
 
 
