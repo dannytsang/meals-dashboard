@@ -407,6 +407,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -429,7 +430,7 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "chicken / garlic bread and chips",
+    "content": "Spicy pork and nduja fettuccine",
     "date": "2026-05-01",
     "labels": [],
     "section": "Planned",
@@ -437,7 +438,15 @@ export const realMealPlan: Meal[] = [
   },
   {
     "id": "",
-    "content": "Spicy pork and nduja fettuccine",
+    "content": "Pizza (Leo)",
+    "date": "2026-05-01",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Chicken drumstick x1, chips (Ashlee)",
     "date": "2026-05-01",
     "labels": [],
     "section": "Planned",
@@ -482,8 +491,17 @@ export const realMealPlan: Meal[] = [
     "labels": [],
     "section": "Planned",
     "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "chicken / garlic bread and chips",
+    "date": "2026-05-08",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
   }
 ];
+
 
 
 
@@ -660,10 +678,10 @@ export const realReceipt = transformCachedOrder(realLatestOrder);
 export const realMealsCheckSummary = {
   "order_total": 83.27,
   "delivery_date": "2026-05-01",
-  "meals_covered": 5,
+  "meals_covered": 6,
   "meals_total": 7,
-  "unmatched_groceries": 17,
-  "coverage_percentage": 71,
+  "unmatched_groceries": 16,
+  "coverage_percentage": 85,
   "day_coverage": [
     {
       "date": "2026-04-30",
@@ -687,7 +705,7 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-05-04",
-      "status": "gap",
+      "status": "covered",
       "is_delivery_day": false
     },
     {
@@ -702,6 +720,7 @@ export const realMealsCheckSummary = {
     }
   ]
 };
+
 
 
 
@@ -771,7 +790,79 @@ export const realCoverage: MealCoverage[] = [
   {
     "meal": {
       "id": "",
-      "content": "chicken / garlic bread and chips",
+      "content": "Spicy pork and nduja fettuccine",
+      "date": "2026-05-01",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
+        "name": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
+        "quantity": 1,
+        "price": 3.65
+      },
+      {
+        "ingredient": "Itsu Pork Gyozas 240G Substitutions: On",
+        "name": "Itsu Pork Gyozas 240G Substitutions: On",
+        "quantity": 2,
+        "price": 7.36
+      },
+      {
+        "ingredient": "Tesco Unsmoked Gammon Joint 750G",
+        "name": "Tesco Unsmoked Gammon Joint 750G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Honey Roast Ham Slices 400g",
+        "name": "Tesco Honey Roast Ham Slices 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Itsu Pork Gyozas 240G",
+        "name": "Itsu Pork Gyozas 240G",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Pizza (Leo)",
+      "date": "2026-05-01",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G Substitutions: On",
+        "name": "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G Substitutions: On",
+        "quantity": 2,
+        "price": 2.69
+      },
+      {
+        "ingredient": "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G",
+        "name": "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Chicken drumstick x1, chips (Ashlee)",
       "date": "2026-05-01",
       "labels": [],
       "section": "Planned",
@@ -831,51 +922,6 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Baby Potatoes 1Kg",
         "name": "Tesco Baby Potatoes 1Kg",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Spicy pork and nduja fettuccine",
-      "date": "2026-05-01",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
-        "name": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
-        "quantity": 1,
-        "price": 3.65
-      },
-      {
-        "ingredient": "Itsu Pork Gyozas 240G Substitutions: On",
-        "name": "Itsu Pork Gyozas 240G Substitutions: On",
-        "quantity": 2,
-        "price": 7.36
-      },
-      {
-        "ingredient": "Tesco Unsmoked Gammon Joint 750G",
-        "name": "Tesco Unsmoked Gammon Joint 750G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Honey Roast Ham Slices 400g",
-        "name": "Tesco Honey Roast Ham Slices 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Itsu Pork Gyozas 240G",
-        "name": "Itsu Pork Gyozas 240G",
         "quantity": null,
         "price": null
       }
@@ -1128,8 +1174,8 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "partial",
-    "coverageScore": 93,
+    "status": "covered",
+    "coverageScore": 100,
     "matchedItems": [
       {
         "ingredient": "Tesco Unsmoked Gammon Joint 750G Substitutions: On",
@@ -1216,10 +1262,7 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       }
     ],
-    "missingItems": [
-      "Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G Substitutions: On"
-    ],
-    "notes": "Need: Chicago Town Deep Dish Pepperoni Pizzas 2 X 155G Substitutions: On"
+    "missingItems": []
   },
   {
     "meal": {
@@ -1313,8 +1356,78 @@ export const realCoverage: MealCoverage[] = [
       }
     ],
     "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "chicken / garlic bread and chips",
+      "date": "2026-05-08",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "name": "Tesco Fresh Mashed Potato 800G Substitutions: On",
+        "quantity": 1,
+        "price": 1.25
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G Substitutions: On",
+        "name": "Tesco Potato Slices 350G Substitutions: On",
+        "quantity": 1,
+        "price": 1.08
+      },
+      {
+        "ingredient": "Tesco Honey Roast Ham Slices 400g",
+        "name": "Tesco Honey Roast Ham Slices 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "name": "Tesco Fire Pit 10 Smash Beef Burger 850g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Fresh Mashed Potato 800G",
+        "name": "Tesco Fresh Mashed Potato 800G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Potato Slices 350G",
+        "name": "Tesco Potato Slices 350G",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Sticky Chicken Kebabs 10 Pack 180g",
+        "name": "Tesco Sticky Chicken Kebabs 10 Pack 180g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baking Potatoes 2kg",
+        "name": "Tesco Baking Potatoes 2kg",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Baby Potatoes 1Kg",
+        "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
   }
 ];
+
 
 
 
