@@ -335,6 +335,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -420,6 +421,7 @@ export const realMealPlan: Meal[] = [
     "meal_type": "dinner"
   }
 ];
+
 
 
 
@@ -680,6 +682,7 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
   {
@@ -715,12 +718,6 @@ export const realCoverage: MealCoverage[] = [
         "price": 3.76
       },
       {
-        "ingredient": "\u2020 Dr Pepper Regular 500 M",
-        "name": "\u2020 Dr Pepper Regular 500 M",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "Tesco Finest Sweet Potato Fries 300g",
         "name": "Tesco Finest Sweet Potato Fries 300g",
         "quantity": null,
@@ -735,6 +732,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
         "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "\u2020 Dr Pepper Regular 500 M",
+        "name": "\u2020 Dr Pepper Regular 500 M",
         "quantity": null,
         "price": null
       },
@@ -766,12 +769,6 @@ export const realCoverage: MealCoverage[] = [
         "price": 3.76
       },
       {
-        "ingredient": "\u2020 Dr Pepper Regular 500 M",
-        "name": "\u2020 Dr Pepper Regular 500 M",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "Tesco Finest Sweet Potato Fries 300g",
         "name": "Tesco Finest Sweet Potato Fries 300g",
         "quantity": null,
@@ -786,6 +783,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
         "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "\u2020 Dr Pepper Regular 500 M",
+        "name": "\u2020 Dr Pepper Regular 500 M",
         "quantity": null,
         "price": null
       },
@@ -877,12 +880,6 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Beef Lasagne 1.5Kg",
-        "name": "Tesco Beef Lasagne 1.5Kg",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
         "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
         "quantity": null,
@@ -955,12 +952,6 @@ export const realCoverage: MealCoverage[] = [
         "price": 3.76
       },
       {
-        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
         "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
         "quantity": null,
@@ -981,6 +972,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
         "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
         "quantity": null,
         "price": null
       },
@@ -1012,12 +1009,6 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Beef Lasagne 1.5Kg",
-        "name": "Tesco Beef Lasagne 1.5Kg",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
         "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
         "quantity": null,
@@ -1045,12 +1036,6 @@ export const realCoverage: MealCoverage[] = [
         "price": 3.76
       },
       {
-        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "quantity": null,
-        "price": null
-      },
-      {
         "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
         "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
         "quantity": null,
@@ -1075,6 +1060,12 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
+        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "quantity": null,
+        "price": null
+      },
+      {
         "ingredient": "Tesco Hunters Chicken Breast Fillets 430g",
         "name": "Tesco Hunters Chicken Breast Fillets 430g",
         "quantity": null,
@@ -1090,6 +1081,7 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": []
   }
 ];
+
 
 
 
