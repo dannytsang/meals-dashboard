@@ -150,14 +150,109 @@ export const realLatestOrder: CachedOrder = {
   "order_total": 56.23,
   "items": [
     {
-        "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
+        "name": "\u2020 Innocent Citrus Shield Juice 750Ml",
+        "quantity": 2,
+        "price": 5.0
+    },
+    {
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 2,
+        "price": 14.0
+    },
+    {
+        "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
         "quantity": 1,
         "price": 3.76
     },
     {
-        "name": "\u2020 Pringles Original Sharing Crisps 185g Substitutions: On",
+        "name": "Tesco Garlic Flatbread 225g",
+        "quantity": 1,
+        "price": 1.0
+    },
+    {
+        "name": "Tesco Green Seedless Grapes Pack 500G",
+        "quantity": 2,
+        "price": 4.0
+    },
+    {
+        "name": "Tesco Hunters Chicken Breast Fillets 430g",
+        "quantity": 1,
+        "price": 4.24
+    },
+    {
+        "name": "Tesco Iceberg Lettuce 200G",
+        "quantity": 1,
+        "price": 0.64
+    },
+    {
+        "name": "Tesco Italian Unsmoked Pancetta 2 X65g",
+        "quantity": 1,
+        "price": 1.95
+    },
+    {
+        "name": "Hayden's 4 Delicious Yum Yums",
+        "quantity": 1,
+        "price": 1.75
+    },
+    {
+        "name": "Jammie Dodgers Raspberry Biscuits Twin Pack280g",
+        "quantity": 1,
+        "price": 1.5
+    },
+    {
+        "name": "\u2020 Pringles Original Sharing Crisps 185g",
         "quantity": 1,
         "price": 1.85
+    },
+    {
+        "name": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
+        "quantity": 1,
+        "price": 1.85
+    },
+    {
+        "name": "\u2020 Radnor Splash Apple & Raspberry 3 X 250Ml",
+        "quantity": 1,
+        "price": 0.95
+    },
+    {
+        "name": "\u2020 Radnor Splash Orange & Passion Fruit 3X250ml",
+        "quantity": 1,
+        "price": 0.95
+    },
+    {
+        "name": "\u2020 TePe Interdental Brush Size 3 0.6mm 6 Pack",
+        "quantity": 1,
+        "price": 3.3
+    },
+    {
+        "name": "\u2020 Tepe Interdental Brush Yellow 6 Pack 0.7Mm",
+        "quantity": 1,
+        "price": 3.3
+    },
+    {
+        "name": "Tesco Baby Plum Tomatoes 300G",
+        "quantity": 1,
+        "price": 0.9
+    },
+    {
+        "name": "Tesco Finest Extra Fruity Hot Cross Buns 4 pack",
+        "quantity": 1,
+        "price": 2.0
+    },
+    {
+        "name": "Tesco Sweet Easy Peelers 600g",
+        "quantity": 1,
+        "price": 1.35
+    },
+    {
+        "name": "Tesco White Iced Ring Doughnuts 4 Pack",
+        "quantity": 1,
+        "price": 0.95
+    },
+    {
+        "name": "Tesco Whole Cucumber Each",
+        "quantity": 1,
+        "price": 0.99
     },
     {
         "name": "Activia Rhubarb & Mixed Fruit Low Fat Gut Health Yoghurt Multipack 8x115g",
@@ -230,16 +325,6 @@ export const realLatestOrder: CachedOrder = {
         "price": 0.0
     },
     {
-        "name": "\u2020 Radnor Splash Apple & Raspberry 3 X 250Ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Radnor Splash Orange & Passion Fruit 3X250ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
         "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "quantity": 1,
         "price": 0.0
@@ -280,6 +365,11 @@ export const realLatestOrder: CachedOrder = {
         "price": 0.0
     },
     {
+        "name": "Tesco Blueberries 250G",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
         "name": "Tesco Egg Noodles 300G",
         "quantity": 1,
         "price": 0.0
@@ -310,22 +400,12 @@ export const realLatestOrder: CachedOrder = {
         "price": 0.0
     },
     {
-        "name": "Hayden's 4 Delicious Yum Yums",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
         "name": "Hovis Best of Both Medium Bread 800g",
         "quantity": 1,
         "price": 0.0
     },
     {
         "name": "Large Gala Apples Loose Class 1 0.193KG",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
         "quantity": 1,
         "price": 0.0
     },
@@ -351,6 +431,11 @@ export const realLatestOrder: CachedOrder = {
     },
     {
         "name": "Tesco Oranges Each",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Tesco Blueberries 250G",
         "quantity": 1,
         "price": 0.0
     },
@@ -508,34 +593,10 @@ export const realLatestOrder: CachedOrder = {
         "name": "Tesco Seeded Large Burger Buns 4 Pack",
         "quantity": 1,
         "price": 0.0
-    },
-    {
-        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Hayden's 4 Delicious Yum Yums",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Radnor Splash Apple & Raspberry 3 X 250Ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Radnor Splash Orange & Passion Fruit 3X250ml",
-        "quantity": 1,
-        "price": 0.0
     }
 ]
 };
+
 
 
 
@@ -974,6 +1035,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -982,7 +1044,7 @@ export const realMealsCheckSummary = {
   "delivery_date": "2026-05-05",
   "meals_covered": 4,
   "meals_total": 7,
-  "unmatched_groceries": 4,
+  "unmatched_groceries": 0,
   "coverage_percentage": 57,
   "day_coverage": [
     {
@@ -1068,6 +1130,7 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
   {
@@ -1083,40 +1146,22 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "quantity": 1,
-        "price": 3.76
-      },
-      {
-        "ingredient": "\u2020 Dr Pepper Regular 500 M",
-        "name": "\u2020 Dr Pepper Regular 500 M",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
-        "name": "Tesco Finest Sweet Potato Fries 300g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g",
-        "name": "Tesco Finest Triple Cook Chips 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "quantity": null,
-        "price": null
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 2,
+        "price": 14.0
       },
       {
         "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
         "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 3.76
+      },
+      {
+        "ingredient": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
+        "name": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
+        "quantity": 1,
+        "price": 1.85
       },
       {
         "ingredient": "Tesco Cheddar Mash 450G",
@@ -1145,12 +1190,6 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
         "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
-        "name": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
         "quantity": 1,
         "price": 0.0
       },
@@ -1211,12 +1250,6 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Baby Potatoes 1Kg",
         "name": "Tesco Baby Potatoes 1Kg",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
         "quantity": 1,
         "price": 0.0
       }
@@ -1236,40 +1269,22 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "quantity": 1,
-        "price": 3.76
-      },
-      {
-        "ingredient": "\u2020 Dr Pepper Regular 500 M",
-        "name": "\u2020 Dr Pepper Regular 500 M",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
-        "name": "Tesco Finest Sweet Potato Fries 300g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g",
-        "name": "Tesco Finest Triple Cook Chips 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "quantity": null,
-        "price": null
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 2,
+        "price": 14.0
       },
       {
         "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
         "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 3.76
+      },
+      {
+        "ingredient": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
+        "name": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
+        "quantity": 1,
+        "price": 1.85
       },
       {
         "ingredient": "Tesco Cheddar Mash 450G",
@@ -1298,12 +1313,6 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
         "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
-        "name": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
         "quantity": 1,
         "price": 0.0
       },
@@ -1364,12 +1373,6 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Baby Potatoes 1Kg",
         "name": "Tesco Baby Potatoes 1Kg",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
         "quantity": 1,
         "price": 0.0
       }
@@ -1416,34 +1419,16 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "quantity": 1,
-        "price": 3.76
-      },
-      {
-        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
-        "name": "Tesco Finest Sweet Potato Fries 300g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g",
-        "name": "Tesco Finest Triple Cook Chips 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "quantity": null,
-        "price": null
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 2,
+        "price": 14.0
       },
       {
         "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
         "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 3.76
       },
       {
         "ingredient": "Tesco Cheddar Mash 450G",
@@ -1504,12 +1489,6 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Baby Potatoes 1Kg",
         "quantity": 1,
         "price": 0.0
-      },
-      {
-        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "quantity": 1,
-        "price": 0.0
       }
     ],
     "missingItems": []
@@ -1527,16 +1506,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Beef Lasagne 1.5Kg",
-        "name": "Tesco Beef Lasagne 1.5Kg",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "quantity": null,
-        "price": null
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 2,
+        "price": 14.0
       },
       {
         "ingredient": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
@@ -1547,12 +1520,6 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Egg Noodles 300G",
         "name": "Tesco Egg Noodles 300G",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
-        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
         "quantity": 1,
         "price": 0.0
       }
@@ -1572,34 +1539,16 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "quantity": 1,
-        "price": 3.76
-      },
-      {
-        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
-        "name": "Tesco Finest Sweet Potato Fries 300g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g",
-        "name": "Tesco Finest Triple Cook Chips 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "quantity": null,
-        "price": null
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 2,
+        "price": 14.0
       },
       {
         "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
         "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 3.76
       },
       {
         "ingredient": "Tesco Cheddar Mash 450G",
@@ -1684,12 +1633,6 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Baby Potatoes 1Kg",
         "quantity": 1,
         "price": 0.0
-      },
-      {
-        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "quantity": 1,
-        "price": 0.0
       }
     ],
     "missingItems": []
@@ -1707,52 +1650,22 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "quantity": 1,
-        "price": 3.76
-      },
-      {
-        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
-        "name": "Tesco Finest Sweet Potato Fries 300g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g",
-        "name": "Tesco Finest Triple Cook Chips 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Hunters Chicken Breast Fillets 430g",
-        "name": "Tesco Hunters Chicken Breast Fillets 430g",
-        "quantity": null,
-        "price": null
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 2,
+        "price": 14.0
       },
       {
         "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
         "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 3.76
+      },
+      {
+        "ingredient": "Tesco Hunters Chicken Breast Fillets 430g",
+        "name": "Tesco Hunters Chicken Breast Fillets 430g",
+        "quantity": 1,
+        "price": 4.24
       },
       {
         "ingredient": "Tesco Cheddar Mash 450G",
@@ -1813,12 +1726,6 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Baby Potatoes 1Kg",
         "quantity": 1,
         "price": 0.0
-      },
-      {
-        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "quantity": 1,
-        "price": 0.0
       }
     ],
     "missingItems": []
@@ -1836,16 +1743,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Beef Lasagne 1.5Kg",
-        "name": "Tesco Beef Lasagne 1.5Kg",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "quantity": null,
-        "price": null
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 2,
+        "price": 14.0
       },
       {
         "ingredient": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
@@ -1876,12 +1777,6 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Lamb Diced Leg 300G",
         "quantity": 1,
         "price": 0.0
-      },
-      {
-        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "quantity": 1,
-        "price": 0.0
       }
     ],
     "missingItems": []
@@ -1899,52 +1794,22 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G Substitutions: On",
-        "quantity": 1,
-        "price": 3.76
-      },
-      {
-        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
-        "name": "Tesco Finest Sweet Potato Fries 300g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g",
-        "name": "Tesco Finest Triple Cook Chips 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Hunters Chicken Breast Fillets 430g",
-        "name": "Tesco Hunters Chicken Breast Fillets 430g",
-        "quantity": null,
-        "price": null
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 2,
+        "price": 14.0
       },
       {
         "ingredient": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
         "name": "Tesco Fire Pit Hot Honey Pork Belly Slices 400G",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 3.76
+      },
+      {
+        "ingredient": "Tesco Hunters Chicken Breast Fillets 430g",
+        "name": "Tesco Hunters Chicken Breast Fillets 430g",
+        "quantity": 1,
+        "price": 4.24
       },
       {
         "ingredient": "Tesco Cheddar Mash 450G",
@@ -2005,17 +1870,12 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Baby Potatoes 1Kg",
         "quantity": 1,
         "price": 0.0
-      },
-      {
-        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
-        "quantity": 1,
-        "price": 0.0
       }
     ],
     "missingItems": []
   }
 ];
+
 
 
 
