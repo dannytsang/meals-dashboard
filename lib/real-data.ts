@@ -160,126 +160,6 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.85
     },
     {
-        "name": "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Flora Buttery Spread with Natural Ingredients 1KG",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Innocent Wonder Green Juice 750Ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Old Amsterdam Mature Gouda Cheese 150g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Cheese and Garlic Flatbread 230g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Finest Smoked Vintage Red Fox 200g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Garlic Scottish Mussels 500G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Perfectly Ripe Plums 325G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Vintage Red Fox Cheese 200G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Yazoo Chocolate Milkshake 1 Litre Bottle",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Haagen-Dazs Ice Cream - Strawberries & Cream 460ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Corsodyl Intensive Gum Repair White & Polish Toothpaste 75ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "De Cecco Spaghetti 500G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Go Ahead Yogurt Breaks - Forest Fruit 4 x 35.5g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Hayden's 4 Delicious Yum Yums",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Lucozade Sport Drink Blue Force 4x500ml",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 McCoy's Classic Variety Multipack Crisps 6x25g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Snack Organisation Sweet Chilli Cracker 100G",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "\u2020 Tesco Apple & Elderflower Sparkling Water 1 Litre",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
-        "name": "Tesco Tiger Baton",
-        "quantity": 1,
-        "price": 0.0
-    },
-    {
         "name": "Activia Rhubarb & Mixed Fruit Low Fat Gut Health Yoghurt Multipack 8x115g",
         "quantity": 1,
         "price": 0.0
@@ -628,9 +508,35 @@ export const realLatestOrder: CachedOrder = {
         "name": "Tesco Seeded Large Burger Buns 4 Pack",
         "quantity": 1,
         "price": 0.0
+    },
+    {
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "Hayden's 4 Delicious Yum Yums",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 185g",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "\u2020 Radnor Splash Apple & Raspberry 3 X 250Ml",
+        "quantity": 1,
+        "price": 0.0
+    },
+    {
+        "name": "\u2020 Radnor Splash Orange & Passion Fruit 3X250ml",
+        "quantity": 1,
+        "price": 0.0
     }
 ]
 };
+
 
 
 
@@ -1067,6 +973,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -1075,7 +982,7 @@ export const realMealsCheckSummary = {
   "delivery_date": "2026-05-05",
   "meals_covered": 4,
   "meals_total": 7,
-  "unmatched_groceries": 10,
+  "unmatched_groceries": 4,
   "coverage_percentage": 57,
   "day_coverage": [
     {
@@ -1115,6 +1022,7 @@ export const realMealsCheckSummary = {
     }
   ]
 };
+
 
 
 
@@ -1211,12 +1119,6 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
         "ingredient": "Tesco Cheddar Mash 450G",
         "name": "Tesco Cheddar Mash 450G",
         "quantity": 1,
@@ -1225,6 +1127,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "quantity": 1,
         "price": 0.0
       },
@@ -1303,6 +1211,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Baby Potatoes 1Kg",
         "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
         "quantity": 1,
         "price": 0.0
       }
@@ -1358,12 +1272,6 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
         "ingredient": "Tesco Cheddar Mash 450G",
         "name": "Tesco Cheddar Mash 450G",
         "quantity": 1,
@@ -1372,6 +1280,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "quantity": 1,
         "price": 0.0
       },
@@ -1450,6 +1364,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Baby Potatoes 1Kg",
         "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
         "quantity": 1,
         "price": 0.0
       }
@@ -1526,12 +1446,6 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
         "ingredient": "Tesco Cheddar Mash 450G",
         "name": "Tesco Cheddar Mash 450G",
         "quantity": 1,
@@ -1540,6 +1454,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "quantity": 1,
         "price": 0.0
       },
@@ -1584,6 +1504,12 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Baby Potatoes 1Kg",
         "quantity": 1,
         "price": 0.0
+      },
+      {
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 1,
+        "price": 0.0
       }
     ],
     "missingItems": []
@@ -1613,12 +1539,6 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
-        "ingredient": "De Cecco Spaghetti 500G",
-        "name": "De Cecco Spaghetti 500G",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
         "ingredient": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
         "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
         "quantity": 1,
@@ -1627,6 +1547,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Egg Noodles 300G",
         "name": "Tesco Egg Noodles 300G",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
         "quantity": 1,
         "price": 0.0
       }
@@ -1676,12 +1602,6 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
         "ingredient": "Tesco Cheddar Mash 450G",
         "name": "Tesco Cheddar Mash 450G",
         "quantity": 1,
@@ -1702,6 +1622,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
         "name": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "quantity": 1,
         "price": 0.0
       },
@@ -1756,6 +1682,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Baby Potatoes 1Kg",
         "name": "Tesco Baby Potatoes 1Kg",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
         "quantity": 1,
         "price": 0.0
       }
@@ -1823,12 +1755,6 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
         "ingredient": "Tesco Cheddar Mash 450G",
         "name": "Tesco Cheddar Mash 450G",
         "quantity": 1,
@@ -1837,6 +1763,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "quantity": 1,
         "price": 0.0
       },
@@ -1881,6 +1813,12 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Baby Potatoes 1Kg",
         "quantity": 1,
         "price": 0.0
+      },
+      {
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 1,
+        "price": 0.0
       }
     ],
     "missingItems": []
@@ -1910,12 +1848,6 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
-        "ingredient": "De Cecco Spaghetti 500G",
-        "name": "De Cecco Spaghetti 500G",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
         "ingredient": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
         "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
         "quantity": 1,
@@ -1942,6 +1874,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Lamb Diced Leg 300G",
         "name": "Tesco Lamb Diced Leg 300G",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
         "quantity": 1,
         "price": 0.0
       }
@@ -2009,12 +1947,6 @@ export const realCoverage: MealCoverage[] = [
         "price": null
       },
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": 1,
-        "price": 0.0
-      },
-      {
         "ingredient": "Tesco Cheddar Mash 450G",
         "name": "Tesco Cheddar Mash 450G",
         "quantity": 1,
@@ -2023,6 +1955,12 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
         "name": "Tesco American Pancake Shaker Mix With Chocolate Chips 155G",
+        "quantity": 1,
+        "price": 0.0
+      },
+      {
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "quantity": 1,
         "price": 0.0
       },
@@ -2067,11 +2005,18 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Baby Potatoes 1Kg",
         "quantity": 1,
         "price": 0.0
+      },
+      {
+        "ingredient": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "name": "La Famiglia Rana Roasted Lamb & Mint Lasagne 700g",
+        "quantity": 1,
+        "price": 0.0
       }
     ],
     "missingItems": []
   }
 ];
+
 
 
 
