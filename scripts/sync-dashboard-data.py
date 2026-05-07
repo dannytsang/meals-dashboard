@@ -23,9 +23,9 @@ from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
 
 # Base paths - use absolute paths for clarity
-BASE_PATH = Path('/home/openclaw/workspace/openclaw')
-MEALS_SKILL_PATH = BASE_PATH / 'skills' / 'meals'
-DASHBOARD_PATH = BASE_PATH / 'agents' / 'openclaw' / 'meals-dashboard'
+OPENCLAW_PATH = Path('/home/openclaw/workspace/openclaw')
+MEALS_SKILL_PATH = Path('/home/openclaw/workspace/skills/meals')
+DASHBOARD_PATH = OPENCLAW_PATH / 'agents' / 'openclaw' / 'meals-dashboard'
 REAL_DATA_PATH = DASHBOARD_PATH / 'lib' / 'real-data.ts'
 SYNC_META_PATH = DASHBOARD_PATH / 'lib' / 'sync-meta.ts'
 RECEIPT_CACHE = MEALS_SKILL_PATH / 'data' / 'receipt_coverage_cache.json'
