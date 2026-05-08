@@ -94,9 +94,10 @@ The `meal_coverage` module (`skills/meals/scripts/meal_coverage/`) is the **sing
 
 The sync script is located at `scripts/sync-dashboard-data.py`.
 
+
 **Usage:**
 ```bash
-# Full sync (fetch + analyze + build)
+# Full sync (fetch + analyze + build + deploy)
 python3 scripts/sync-dashboard-data.py
 
 # Use cached data only (skip fetch)
@@ -105,11 +106,19 @@ python3 scripts/sync-dashboard-data.py --skip-fetch
 # Skip build step
 python3 scripts/sync-dashboard-data.py --no-build
 
-# Dry run
+# Dry run (no changes made)
 python3 scripts/sync-dashboard-data.py --dry-run
 ```
 
-**GitHub Actions:** On merge to `main`, GitHub Actions automatically syncs and deploys.
+**Pipeline steps:**
+1. Read `data/dashboard_cache.json` from meals skill (preferred) or fall back to legacy fetch path
+2. Update `lib/real-data.ts` with fresh data
+3. Update `lib/sync-meta.ts` with timestamp
+4. Commit to git (for version history)
+5. **Trigger force rebuild** via `npx vercel --prod --yes` (bypasses Vercel build cache)
+6. GitHub Actions also runs on `main` push as a fallback/secondary trigger
+
+**Note:** Step 5 (force rebuild) is the critical step that ensures the dashboard always reflects the latest data, even when Vercel's build cache would otherwise suppress a rebuild.
 
 ## TypeScript Data Types
 
@@ -186,6 +195,30 @@ npm run lint
 - **Branch:** `main`
 - **Auto-deploy:** On push to `main`, GitHub Actions runs sync + build + deploy
 - **URL:** https://meals-dashboard.vercel.app
+
+### Deployment Triggers (Build Cache Strategy)
+
+Vercel caches build output aggressively. A git-push trigger only rebuilds when Vercel detects that something in the **build graph** has changed. Data-only changes to `lib/real-data.ts` can be invisible to Vercel's cache invalidation — resulting in stale deployments despite fresh source files.
+
+The sync pipeline handles this by **explicitly triggering a new deployment** after updating `real-data.ts`, bypassing the build cache entirely.
+
+**Implementation options (in order of reliability):**
+
+| Approach | How | Pros | Cons |
+|---|---|---|---|
+| **Vercel API `POST /v6/deployments`** | Call from sync script after push | Full control, no git spam, reliable | Requires `VERCEL_TOKEN` env var |
+| **CLI `vercel --prod --yes`** | `subprocess.run(['npx', 'vercel', '--prod', '--yes'])` in sync script | No API token needed | Slower, parses CLI output |
+| **GitHub Actions `workflow_dispatch`** | Trigger via API from sync script | Uses existing CI infra | More complex |
+
+**Current approach:** CLI-based force rebuild in the sync script (see `scripts/sync-dashboard-data.py`). This was chosen because it requires no additional secrets — `npx vercel` is already authenticated in the environment.
+
+**Why not git commits as the trigger?**
+
+The original design relied on sync script commits to `main` → GitHub Actions → Vercel rebuild. This breaks when:
+- Vercel marks the build as "unchanged" despite `real-data.ts` changing (build cache miss on data-only diffs)
+- Subsequent sync runs make no new commits (no change to push) → no rebuild triggered at all
+
+A force-rebuild approach is more reliable because it is explicit: every sync run produces a fresh deployment regardless of what changed.
 
 ## File Structure
 

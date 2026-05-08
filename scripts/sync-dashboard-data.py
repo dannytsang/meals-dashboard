@@ -650,6 +650,37 @@ def build_dashboard() -> Tuple[bool, str]:
     return True, ""
 
 
+def trigger_vercel_deploy() -> Tuple[bool, str]:
+    """Trigger a production deployment via Vercel CLI.
+    
+    This forces a fresh build, bypassing Vercel's build cache.
+    Required because Vercel may skip rebuilding when only data files change.
+    """
+    print("  Running: npx vercel --prod --yes")
+    try:
+        result = subprocess.run(
+            ["npx", "vercel", "--prod", "--yes"],
+            cwd=DASHBOARD_PATH,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            shell=False
+        )
+        if result.returncode == 0:
+            # Parse deployment URL from output
+            output = result.stdout + result.stderr
+            for line in output.split("\n"):
+                if "Production:" in line or "meals-dashboard" in line:
+                    print(f"  {line.strip()}")
+            return True, ""
+        else:
+            return False, result.stderr[-300:] or result.stdout[-300:]
+    except subprocess.TimeoutExpired:
+        return False, "Deploy timed out after 180s"
+    except Exception as e:
+        return False, str(e)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Sync dashboard data from Todoist and Tesco")
     parser.add_argument("--dry-run", action="store_true", help="Show what would change without making changes")
@@ -756,6 +787,21 @@ def main():
             return
     else:
         print("  ✓ No changes to commit")
+    print()
+    
+    # Step 7: Force rebuild via Vercel CLI
+    # This is the critical step that ensures the dashboard always updates,
+    # even when Vercel's build cache would otherwise suppress a rebuild
+    # because only data files (not build artefacts) have changed.
+    print("[7] Triggering Vercel production deployment (force rebuild)...")
+    if not args.dry_run:
+        deploy_success, deploy_error = trigger_vercel_deploy()
+        if not deploy_success:
+            print(f"  ⚠ Deploy warning: {deploy_error}")
+        else:
+            print("  ✓ Deployment triggered")
+    else:
+        print("  ⚠ Dry run - skipping deploy trigger")
     print()
     
     print("=" * 50)
