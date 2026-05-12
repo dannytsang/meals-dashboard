@@ -147,85 +147,292 @@ export const realLatestOrder: CachedOrder = {
   "delivery_date": "2026-05-08",
   "delivery_sort": "",
   "order_number": "9021-8819-68",
-  "order_total": 67.65,
+  "order_total": 67.61,
   "items": [
     {
-        "name": "Tesco Finest Triple Cook Chips 400g Substitutions: On",
+        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
         "quantity": 1,
-        "price": 2.2
+        "price": 1.75
     },
     {
-        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
-        "quantity": 1,
-        "price": 1.97
-    },
-    {
-        "name": "Gressingham Aromatic Half Duck 570G Substitutions: On",
+        "name": "Gressingham Aromatic Half Duck 570G",
         "quantity": 2,
         "price": 12.6
     },
     {
-        "name": "\u2020 Dr Pepper Regular 500 M Substitutions: On",
+        "name": "Tesco 6 Duck Spring Rolls 216G",
+        "quantity": 1,
+        "price": 3.15
+    },
+    {
+        "name": "Tesco Bacon Lettuce & Tom Sandwich",
+        "quantity": 1,
+        "price": 2.02
+    },
+    {
+        "name": "Tesco Broccoli Loose 0.356KG",
+        "quantity": 1,
+        "price": 0.78
+    },
+    {
+        "name": "Tesco Chestnut Vitamin D Mushrooms 250G",
+        "quantity": 1,
+        "price": 0.8
+    },
+    {
+        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
+        "quantity": 1,
+        "price": 2.2
+    },
+    {
+        "name": "Tesco Finest Portobello Vitamin D Mushrooms",
+        "quantity": 2,
+        "price": 2.8
+    },
+    {
+        "name": "Tesco Finest Sweet Potato Fries 300g",
+        "quantity": 1,
+        "price": 2.2
+    },
+    {
+        "name": "Tesco Prawn Toasts 4 Pack 120g",
+        "quantity": 2,
+        "price": 6.8
+    },
+    {
+        "name": "Tesco Ready Rolled Shortcrust Savoury Pastry 320G",
+        "quantity": 1,
+        "price": 1.35
+    },
+    {
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "quantity": 1,
+        "price": 1.97
+    },
+    {
+        "name": "\u2020 Dr Pepper Regular 500 M",
         "quantity": 1,
         "price": 1.38
     },
     {
-        "name": "\u2020 Robinsons Double Strength Orange No Added Sugar Squash 1L Substitutions: On",
+        "name": "\u2020 Lenor In Wash Scent Booster Gold Orchid 155G",
         "quantity": 1,
-        "price": 1.5
+        "price": 3.3
     },
     {
-        "name": "\u2020 Tesco Pure Orange Juice With Bits 1 Litre Substitutions: On",
-        "quantity": 2,
-        "price": 2.33
+        "name": "\u2020 Lenor In-Wash Scent Booster Jasmine & White Cedar 280g",
+        "quantity": 1,
+        "price": 4.8
     },
     {
-        "name": "\u2020 Maoam Bloxx 4 Pack 88G Substitutions: On",
+        "name": "\u2020 Maoam Bloxx 4 Pack 88G",
         "quantity": 1,
         "price": 0.52
     },
     {
-        "name": "\u2020 Tesco Apple And Mango From Concentrate 1 Litre Substitutions: On",
+        "name": "\u2020 Pepsi Max Cherry No Sugar Cola Bottle 500ml",
+        "quantity": 1,
+        "price": 1.31
+    },
+    {
+        "name": "\u2020 Robinsons Double Strength Orange No Added Sugar Squash 1L",
+        "quantity": 1,
+        "price": 1.5
+    },
+    {
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "quantity": 1,
+        "price": 0.5
+    },
+    {
+        "name": "\u2020 Tesco Apple And Mango From Concentrate 1 Litre",
         "quantity": 1,
         "price": 1.17
     },
     {
-        "name": "Sugar Squash",
+        "name": "Tesco Brown Onions 1Kg",
+        "quantity": 1,
+        "price": 0.99
+    },
+    {
+        "name": "Tesco Carrots 1Kg",
+        "quantity": 1,
+        "price": 0.69
+    },
+    {
+        "name": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
+        "quantity": 2,
+        "price": 3.0
+    },
+    {
+        "name": "\u2020 Tesco Pure Orange Juice With Bits 1 Litre",
+        "quantity": 2,
+        "price": 2.33
+    },
+    {
+        "name": "Tesco Sweet Easy Peelers 600g",
+        "quantity": 1,
+        "price": 1.5
+    },
+    {
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products",
         "quantity": 1,
         "price": 1.0
     },
     {
-        "name": "Sugar Squash",
+        "name": "Products",
+        "quantity": 1,
+        "price": 1.5
+    },
+    {
+        "name": "Products",
         "quantity": 1,
         "price": 1.0
     },
     {
-        "name": "Sugar Squash",
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products",
         "quantity": 1,
         "price": 1.0
     },
     {
-        "name": "Sugar Squash",
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products",
         "quantity": 1,
         "price": 1.0
     },
     {
-        "name": "Sugar Squash",
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products Items marked with an \u2018\u2020\u2019 include VAT at",
+        "quantity": 1,
+        "price": 20.0
+    },
+    {
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products",
         "quantity": 1,
         "price": 1.0
     },
     {
-        "name": "Sugar Squash",
+        "name": "Products",
+        "quantity": 1,
+        "price": 1.5
+    },
+    {
+        "name": "Products",
         "quantity": 1,
         "price": 1.0
     },
     {
-        "name": "Sugar Squash",
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products",
         "quantity": 1,
         "price": 1.0
+    },
+    {
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products",
+        "quantity": 1,
+        "price": 1.0
+    },
+    {
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products Items marked with an \u2018\u2020\u2019 include VAT at",
+        "quantity": 1,
+        "price": 20.0
+    },
+    {
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products",
+        "quantity": 1,
+        "price": 1.0
+    },
+    {
+        "name": "Products",
+        "quantity": 1,
+        "price": 1.5
+    },
+    {
+        "name": "Products",
+        "quantity": 1,
+        "price": 1.0
+    },
+    {
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products",
+        "quantity": 1,
+        "price": 1.0
+    },
+    {
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products",
+        "quantity": 1,
+        "price": 1.0
+    },
+    {
+        "name": "Products Buy",
+        "quantity": 1,
+        "price": 5.0
+    },
+    {
+        "name": "Products Items marked with an \u2018\u2020\u2019 include VAT at",
+        "quantity": 1,
+        "price": 20.0
     }
 ]
 };
+
+
+
+
+
+
+
 
 
 
@@ -427,54 +634,6 @@ export const realLatestOrder: CachedOrder = {
 export const realMealPlan: Meal[] = [
   {
     "id": "",
-    "content": "Chicken potato and salad",
-    "date": "2026-05-07",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Belly pork, potatoes, salad",
-    "date": "2026-05-07",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Minted lamb lasagna",
-    "date": "2026-05-08",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "chicken / garlic bread and chips",
-    "date": "2026-05-08",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Chinese crispy duck, duck rolls, prawn toast, sweet potato fries, triple cooked chips",
-    "date": "2026-05-09",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Tony and Barbara cooking",
-    "date": "2026-05-10",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
     "content": "Tony and Barbara cooking",
     "date": "2026-05-11",
     "labels": [],
@@ -488,8 +647,63 @@ export const realMealPlan: Meal[] = [
     "labels": [],
     "section": "Planned",
     "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Pizza (Leo)",
+    "date": "2026-05-13",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Chicken and chips (Ashlee)",
+    "date": "2026-05-13",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Pasta, sauce, garlic bread",
+    "date": "2026-05-13",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "London/Tony and Barbara???",
+    "date": "2026-05-14",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "chicken / garlic bread and chips",
+    "date": "2026-05-15",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "",
+    "content": "Sweet and sour pork and rice",
+    "date": "2026-05-15",
+    "labels": [],
+    "section": "Planned",
+    "meal_type": "dinner"
   }
 ];
+
+
+
+
+
+
+
 
 
 
@@ -688,33 +902,13 @@ export const realMealPlan: Meal[] = [
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "order_total": 67.65,
+  "order_total": 67.61,
   "delivery_date": "2026-05-08",
   "meals_covered": 5,
   "meals_total": 7,
-  "unmatched_groceries": 26,
+  "unmatched_groceries": 37,
   "coverage_percentage": 71,
   "day_coverage": [
-    {
-      "date": "2026-05-07",
-      "status": "covered",
-      "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-08",
-      "status": "delivery",
-      "is_delivery_day": true
-    },
-    {
-      "date": "2026-05-09",
-      "status": "gap",
-      "is_delivery_day": false
-    },
-    {
-      "date": "2026-05-10",
-      "status": "covered",
-      "is_delivery_day": false
-    },
     {
       "date": "2026-05-11",
       "status": "covered",
@@ -727,6 +921,26 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-05-13",
+      "status": "covered",
+      "is_delivery_day": false
+    },
+    {
+      "date": "2026-05-14",
+      "status": "covered",
+      "is_delivery_day": false
+    },
+    {
+      "date": "2026-05-15",
+      "status": "delivery",
+      "is_delivery_day": true
+    },
+    {
+      "date": "2026-05-16",
+      "status": "gap",
+      "is_delivery_day": false
+    },
+    {
+      "date": "2026-05-17",
       "status": "gap",
       "is_delivery_day": false
     }
@@ -792,188 +1006,15 @@ export const realMealsCheckSummary = {
 
 
 
+
+
+
+
+
+
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "",
-      "content": "Chicken potato and salad",
-      "date": "2026-05-07",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Belly pork, potatoes, salad",
-      "date": "2026-05-07",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Minted lamb lasagna",
-      "date": "2026-05-08",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "chicken / garlic bread and chips",
-      "date": "2026-05-08",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g Substitutions: On",
-        "name": "Tesco Finest Triple Cook Chips 400g Substitutions: On",
-        "quantity": 1,
-        "price": 2.2
-      },
-      {
-        "ingredient": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "name": "THE GYM KITCHEN FOOD TO FUEL CHICKEN CARBONARA PASTA 400G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
-        "name": "Tesco Finest Sweet Potato Fries 300g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g",
-        "name": "Tesco Finest Triple Cook Chips 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Chinese crispy duck, duck rolls, prawn toast, sweet potato fries, triple cooked chips",
-      "date": "2026-05-09",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "partial",
-    "coverageScore": 88,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g Substitutions: On",
-        "name": "Tesco Finest Triple Cook Chips 400g Substitutions: On",
-        "quantity": 1,
-        "price": 2.2
-      },
-      {
-        "ingredient": "Gressingham Aromatic Half Duck 570G Substitutions: On",
-        "name": "Gressingham Aromatic Half Duck 570G Substitutions: On",
-        "quantity": 2,
-        "price": 12.6
-      },
-      {
-        "ingredient": "Tesco 6 Duck Spring Rolls 216G",
-        "name": "Tesco 6 Duck Spring Rolls 216G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
-        "name": "Tesco Finest Sweet Potato Fries 300g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Gressingham Aromatic Half Duck 570G",
-        "name": "Gressingham Aromatic Half Duck 570G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Triple Cook Chips 400g",
-        "name": "Tesco Finest Triple Cook Chips 400g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Prawn Toasts 4 Pack 120g",
-        "name": "Tesco Prawn Toasts 4 Pack 120g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [
-      "Gressingham Aromatic Half Duck 570G Substitutions: On"
-    ],
-    "notes": "Need: Gressingham Aromatic Half Duck 570G Substitutions: On"
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Tony and Barbara cooking",
-      "date": "2026-05-10",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
   {
     "meal": {
       "id": "",
@@ -1001,8 +1042,175 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [],
     "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Pizza (Leo)",
+      "date": "2026-05-13",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Chicken and chips (Ashlee)",
+      "date": "2026-05-13",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
+        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
+        "quantity": 1,
+        "price": 2.2
+      },
+      {
+        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
+        "name": "Tesco Finest Sweet Potato Fries 300g",
+        "quantity": 1,
+        "price": 2.2
+      },
+      {
+        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "quantity": 1,
+        "price": 0.5
+      },
+      {
+        "ingredient": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
+        "name": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
+        "quantity": 2,
+        "price": 3.0
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Pasta, sauce, garlic bread",
+      "date": "2026-05-13",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Garlic Flatbread 225g",
+        "name": "Tesco Garlic Flatbread 225g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "London/Tony and Barbara???",
+      "date": "2026-05-14",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "chicken / garlic bread and chips",
+      "date": "2026-05-15",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
+        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400g",
+        "quantity": 1,
+        "price": 2.2
+      },
+      {
+        "ingredient": "Tesco Finest Sweet Potato Fries 300g",
+        "name": "Tesco Finest Sweet Potato Fries 300g",
+        "quantity": 1,
+        "price": 2.2
+      },
+      {
+        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G",
+        "quantity": 1,
+        "price": 0.5
+      },
+      {
+        "ingredient": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
+        "name": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
+        "quantity": 2,
+        "price": 3.0
+      }
+    ],
+    "missingItems": []
+  },
+  {
+    "meal": {
+      "id": "",
+      "content": "Sweet and sour pork and rice",
+      "date": "2026-05-15",
+      "labels": [],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Bacon Lettuce & Tom Sandwich",
+        "name": "Tesco Bacon Lettuce & Tom Sandwich",
+        "quantity": 1,
+        "price": 2.02
+      },
+      {
+        "ingredient": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
+        "quantity": 1,
+        "price": 1.97
+      },
+      {
+        "ingredient": "\u2020 Lenor In-Wash Scent Booster Jasmine & White Cedar 280g",
+        "name": "\u2020 Lenor In-Wash Scent Booster Jasmine & White Cedar 280g",
+        "quantity": 1,
+        "price": 4.8
+      }
+    ],
+    "missingItems": []
   }
 ];
+
+
+
+
+
+
+
 
 
 
