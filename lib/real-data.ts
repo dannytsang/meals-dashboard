@@ -630,18 +630,14 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
+
+
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "",
-    "content": "Tony and Barbara cooking",
-    "date": "2026-05-11",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "",
     "content": "Tony and Barbara cooking",
@@ -902,22 +898,21 @@ export const realMealPlan: Meal[] = [
 
 
 
+
+
+
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
   "order_total": 67.61,
   "delivery_date": "2026-05-08",
-  "meals_covered": 5,
+  "meals_covered": 4,
   "meals_total": 7,
   "unmatched_groceries": 37,
-  "coverage_percentage": 71,
+  "coverage_percentage": 57,
   "day_coverage": [
-    {
-      "date": "2026-05-11",
-      "status": "covered",
-      "is_delivery_day": false
-    },
     {
       "date": "2026-05-12",
       "status": "delivery",
@@ -945,6 +940,11 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-05-17",
+      "status": "gap",
+      "is_delivery_day": false
+    },
+    {
+      "date": "2026-05-18",
       "status": "gap",
       "is_delivery_day": false
     }
@@ -1019,22 +1019,12 @@ export const realMealsCheckSummary = {
 
 
 
+
+
+
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "",
-      "content": "Tony and Barbara cooking",
-      "date": "2026-05-11",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": []
-  },
   {
     "meal": {
       "id": "",
@@ -1210,6 +1200,10 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": []
   }
 ];
+
+
+
+
 
 
 
