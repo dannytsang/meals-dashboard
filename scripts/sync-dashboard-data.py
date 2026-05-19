@@ -24,7 +24,15 @@ from typing import Dict, Any, Optional, Tuple
 
 # Base paths - use absolute paths for clarity
 OPENCLAW_PATH = Path('/home/openclaw/workspace/openclaw')
-MEALS_SKILL_PATH = Path('/home/openclaw/workspace/skills/meals')
+MEALS_SKILL_CANDIDATES = [
+    Path('/home/openclaw/workspace/skills/meals-check'),
+    Path('/home/openclaw/workspace/OpenClaw-Skills/meals-check'),
+    Path('/home/openclaw/workspace/skills/meals'),
+]
+MEALS_SKILL_PATH = next(
+    (path for path in MEALS_SKILL_CANDIDATES if path.exists()),
+    MEALS_SKILL_CANDIDATES[0],
+)
 DASHBOARD_PATH = OPENCLAW_PATH / 'agents' / 'openclaw' / 'meals-dashboard'
 REAL_DATA_PATH = DASHBOARD_PATH / 'lib' / 'real-data.ts'
 SYNC_META_PATH = DASHBOARD_PATH / 'lib' / 'sync-meta.ts'
@@ -750,8 +758,14 @@ def main():
         
         if not receipt_data and not meal_plan_data:
             print("\n  ✗ No data found. Exiting.")
-            return
+            return 1
         print()
+
+    if args.dry_run:
+        print("[dry-run] Data source resolved successfully.")
+        print(f"  Meals skill path: {MEALS_SKILL_PATH}")
+        print("  No files, commits, pushes, or deployments were changed.")
+        return 0
     
     # Step 3: Update sync metadata
     print("[3] Updating sync metadata...")
@@ -772,7 +786,7 @@ def main():
         success, error = build_dashboard()
         if not success:
             print(f"  ✗ Build failed: {error}")
-            return
+            return 1
         print()
     
     # Step 6: Commit and push
@@ -784,7 +798,7 @@ def main():
         success = commit_and_push(message, dry_run=args.dry_run)
         if not success:
             print("  ✗ Failed to push")
-            return
+            return 1
     else:
         print("  ✓ No changes to commit")
     print()
@@ -812,6 +826,8 @@ def main():
         print("\n⚠ This was a dry run. No changes were made.")
         print("Run without --dry-run to actually sync and deploy.")
 
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
