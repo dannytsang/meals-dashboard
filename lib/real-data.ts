@@ -147,8 +147,13 @@ export const realLatestOrder: CachedOrder = {
   "delivery_date": "2026-05-22",
   "delivery_sort": "",
   "order_number": "5121-8713-222",
-  "order_total": 50.0,
+  "order_total": 50.2,
   "items": [
+    {
+        "name": "Tesco The Chicken Club Sandwich Substitutions: On",
+        "quantity": 1,
+        "price": 1.45
+    },
     {
         "name": "Emmi High Protein Caffe Latte 370ml Substitutions: On",
         "quantity": 1,
@@ -163,21 +168,6 @@ export const realLatestOrder: CachedOrder = {
         "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
         "quantity": 1,
         "price": 1.95
-    },
-    {
-        "name": "Tesco Guacamole 163g Substitutions: On",
-        "quantity": 1,
-        "price": 1.1
-    },
-    {
-        "name": "Tesco Tzatziki Dip 200G Substitutions: On",
-        "quantity": 1,
-        "price": 1.1
-    },
-    {
-        "name": "Tesco The Chicken Club Sandwich Substitutions: On",
-        "quantity": 1,
-        "price": 1.45
     },
     {
         "name": "Walls 4 Hearty Sausage Rolls 220G Substitutions: On",
@@ -200,6 +190,11 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.75
     },
     {
+        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g Substitutions: On",
+        "quantity": 3,
+        "price": 5.25
+    },
+    {
         "name": "\u2020 Maoam Bloxx 4 Pack 88G Substitutions: On",
         "quantity": 1,
         "price": 0.49
@@ -215,14 +210,14 @@ export const realLatestOrder: CachedOrder = {
         "price": 0.53
     },
     {
-        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g Substitutions: On",
-        "quantity": 2,
-        "price": 3.5
+        "name": "\u2020 Cantabile Double Mango Flavored Ade 230ml Substitutions: On",
+        "quantity": 1,
+        "price": 1.0
     },
     {
-        "name": "\u2020 Keep It Handy Assorted Plasters Pack 42pk Substitutions: On",
-        "quantity": 2,
-        "price": 2.0
+        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
+        "quantity": 1,
+        "price": 1.5
     },
     {
         "name": "Nescafe Dolce Gusto Kit Kat Cocoa Beverage Pods x16 256g Substitutions: On",
@@ -231,6 +226,7 @@ export const realLatestOrder: CachedOrder = {
     }
 ]
 };
+
 
 
 
@@ -761,15 +757,16 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "order_total": 50.0,
+  "order_total": 50.2,
   "delivery_date": "2026-05-22",
   "meals_covered": 1,
   "meals_total": 7,
-  "unmatched_groceries": 20,
+  "unmatched_groceries": 21,
   "coverage_percentage": 14,
   "day_coverage": [
     {
@@ -921,6 +918,7 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
   {
@@ -951,10 +949,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco White Wine Scottish Mussels 500G",
-        "name": "Tesco White Wine Scottish Mussels 500G",
-        "quantity": null,
-        "price": null
+        "ingredient": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
+        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
+        "quantity": 1,
+        "price": 1.5
       }
     ],
     "missingItems": []
@@ -982,6 +980,12 @@ export const realCoverage: MealCoverage[] = [
         "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
         "quantity": 1,
         "price": 0.53
+      },
+      {
+        "ingredient": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
+        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
+        "quantity": 1,
+        "price": 1.5
       },
       {
         "ingredient": "Tesco The Chicken Club Sandwich",
@@ -1014,6 +1018,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "No matching items"
   }
 ];
+
 
 
 
