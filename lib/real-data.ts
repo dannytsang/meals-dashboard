@@ -147,12 +147,17 @@ export const realLatestOrder: CachedOrder = {
   "delivery_date": "2026-05-22",
   "delivery_sort": "",
   "order_number": "5121-8713-222",
-  "order_total": 27.45,
+  "order_total": 50.0,
   "items": [
     {
         "name": "Emmi High Protein Caffe Latte 370ml Substitutions: On",
         "quantity": 1,
         "price": 1.32
+    },
+    {
+        "name": "Tesco Three Cheese Pasta Bake 750g Substitutions: On",
+        "quantity": 1,
+        "price": 3.25
     },
     {
         "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
@@ -180,12 +185,53 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.0
     },
     {
-        "name": "\u2020 Kind Protein Caramel Nut 50g Substitutions: On",
+        "name": "Tesco Bolognese Pasta Bake 750g Substitutions: On",
         "quantity": 1,
-        "price": 1.08
+        "price": 3.25
+    },
+    {
+        "name": "Tesco Quiche-Lorraine 400g Substitutions: On",
+        "quantity": 1,
+        "price": 1.75
+    },
+    {
+        "name": "\u2020 Pringles Salt & Vinegar Sharing Crisps 165g Substitutions: On",
+        "quantity": 1,
+        "price": 1.75
+    },
+    {
+        "name": "\u2020 Maoam Bloxx 4 Pack 88G Substitutions: On",
+        "quantity": 1,
+        "price": 0.49
+    },
+    {
+        "name": "McVitie's Jaffa Cakes - Hot Honey Flavour 10 Pack Substitutions: On",
+        "quantity": 1,
+        "price": 0.75
+    },
+    {
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
+        "quantity": 1,
+        "price": 0.53
+    },
+    {
+        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g Substitutions: On",
+        "quantity": 2,
+        "price": 3.5
+    },
+    {
+        "name": "\u2020 Keep It Handy Assorted Plasters Pack 42pk Substitutions: On",
+        "quantity": 2,
+        "price": 2.0
+    },
+    {
+        "name": "Nescafe Dolce Gusto Kit Kat Cocoa Beverage Pods x16 256g Substitutions: On",
+        "quantity": 2,
+        "price": 7.5
     }
 ]
 };
+
 
 
 
@@ -436,22 +482,6 @@ export const realLatestOrder: CachedOrder = {
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "",
-    "content": "Pizza (Leo)",
-    "date": "2026-05-20",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "",
-    "content": "Beef strips (frozen) egg fried rice (adults & Ashlee)",
-    "date": "2026-05-20",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "",
     "content": "Costco",
@@ -730,22 +760,18 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "order_total": 27.45,
+  "order_total": 50.0,
   "delivery_date": "2026-05-22",
-  "meals_covered": 2,
+  "meals_covered": 1,
   "meals_total": 7,
-  "unmatched_groceries": 12,
-  "coverage_percentage": 28,
+  "unmatched_groceries": 20,
+  "coverage_percentage": 14,
   "day_coverage": [
-    {
-      "date": "2026-05-20",
-      "status": "covered",
-      "is_delivery_day": false
-    },
     {
       "date": "2026-05-21",
       "status": "missing",
@@ -773,6 +799,11 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-05-26",
+      "status": "gap",
+      "is_delivery_day": false
+    },
+    {
+      "date": "2026-05-27",
       "status": "gap",
       "is_delivery_day": false
     }
@@ -889,50 +920,9 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "",
-      "content": "Pizza (Leo)",
-      "date": "2026-05-20",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
-  {
-    "meal": {
-      "id": "",
-      "content": "Beef strips (frozen) egg fried rice (adults & Ashlee)",
-      "date": "2026-05-20",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Bacon Lettuce & Tom Sandwich",
-        "name": "Tesco Bacon Lettuce & Tom Sandwich",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": []
-  },
   {
     "meal": {
       "id": "",
@@ -965,18 +955,6 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco White Wine Scottish Mussels 500G",
         "quantity": null,
         "price": null
-      },
-      {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Potato Slices 350G",
-        "name": "Tesco Potato Slices 350G",
-        "quantity": null,
-        "price": null
       }
     ],
     "missingItems": []
@@ -1000,16 +978,10 @@ export const realCoverage: MealCoverage[] = [
         "price": 1.45
       },
       {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Potato Slices 350G",
-        "name": "Tesco Potato Slices 350G",
-        "quantity": null,
-        "price": null
+        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
+        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
+        "quantity": 1,
+        "price": 0.53
       },
       {
         "ingredient": "Tesco The Chicken Club Sandwich",
@@ -1042,6 +1014,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "No matching items"
   }
 ];
+
 
 
 
