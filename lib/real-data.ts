@@ -144,88 +144,104 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 export const realLatestOrder: CachedOrder = {
   "email_id": "",
   "email_date": "",
-  "delivery_date": "2026-05-22",
+  "delivery_date": "2026-05-19",
   "delivery_sort": "",
-  "order_number": "5121-8713-222",
-  "order_total": 50.2,
+  "order_number": "9021-8754-78",
+  "order_total": 50.25,
   "items": [
     {
-        "name": "Tesco The Chicken Club Sandwich Substitutions: On",
-        "quantity": 1,
-        "price": 1.45
-    },
-    {
-        "name": "Emmi High Protein Caffe Latte 370ml Substitutions: On",
-        "quantity": 1,
-        "price": 1.32
-    },
-    {
-        "name": "Tesco Three Cheese Pasta Bake 750g Substitutions: On",
-        "quantity": 1,
-        "price": 3.25
-    },
-    {
-        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup Substitutions: On",
-        "quantity": 1,
-        "price": 1.95
-    },
-    {
-        "name": "Walls 4 Hearty Sausage Rolls 220G Substitutions: On",
-        "quantity": 1,
-        "price": 1.0
-    },
-    {
-        "name": "Tesco Bolognese Pasta Bake 750g Substitutions: On",
-        "quantity": 1,
-        "price": 3.25
-    },
-    {
-        "name": "Tesco Quiche-Lorraine 400g Substitutions: On",
-        "quantity": 1,
-        "price": 1.75
-    },
-    {
-        "name": "\u2020 Pringles Salt & Vinegar Sharing Crisps 165g Substitutions: On",
-        "quantity": 1,
-        "price": 1.75
-    },
-    {
-        "name": "\u2020 McCoy's Flame Grilled Steak Multipack Crisps 6x25g Substitutions: On",
+        "name": "Pringles Sour Cream & Onion Sharing Crisps 185g",
         "quantity": 3,
-        "price": 5.25
+        "price": 5.55
     },
     {
-        "name": "\u2020 Maoam Bloxx 4 Pack 88G Substitutions: On",
+        "name": "\u2020 Pringles Sour Cream & Onion Sharing Crisps 165g",
+        "quantity": 3,
+        "price": 2.5
+    },
+    {
+        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
         "quantity": 1,
-        "price": 0.49
+        "price": 2.75
     },
     {
-        "name": "McVitie's Jaffa Cakes - Hot Honey Flavour 10 Pack Substitutions: On",
-        "quantity": 1,
-        "price": 0.75
-    },
-    {
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
-        "quantity": 1,
-        "price": 0.53
-    },
-    {
-        "name": "\u2020 Cantabile Double Mango Flavored Ade 230ml Substitutions: On",
-        "quantity": 1,
-        "price": 1.0
-    },
-    {
-        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
-        "quantity": 1,
-        "price": 1.5
-    },
-    {
-        "name": "Nescafe Dolce Gusto Kit Kat Cocoa Beverage Pods x16 256g Substitutions: On",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
         "quantity": 2,
-        "price": 7.5
+        "price": 4.5
+    },
+    {
+        "name": "Tesco White Wine Scottish Mussels 500G",
+        "quantity": 2,
+        "price": 4.7
+    },
+    {
+        "name": "Birds Eye Steamfresh Family Favourite Mix 540g",
+        "quantity": 2,
+        "price": 4.5
+    },
+    {
+        "name": "Go Ahead Strawberry Fruit Yogurt Breaks Snack Bars Multipack 4 x 35.5g",
+        "quantity": 1,
+        "price": 2.0
+    },
+    {
+        "name": "Go Ahead Yogurt Breaks - Forest Fruit 4 x 35.5g",
+        "quantity": 2,
+        "price": 4.0
+    },
+    {
+        "name": "Gogo Squeez Fruit Snack Apple Mango 4X90g",
+        "quantity": 2,
+        "price": 3.0
+    },
+    {
+        "name": "H.W. Nevill's Part Baked White Baguette 2 Pack",
+        "quantity": 1,
+        "price": 0.85
+    },
+    {
+        "name": "\u2020 HARIBO Sour Goldbears 175g",
+        "quantity": 2,
+        "price": 2.0
+    },
+    {
+        "name": "Hayden's 4 Delicious Yum Yums",
+        "quantity": 1,
+        "price": 1.75
+    },
+    {
+        "name": "\u2020 Keep It Handy Click Seal Snack Bags 50pk",
+        "quantity": 2,
+        "price": 2.0
+    },
+    {
+        "name": "\u2020 Pringles Original Sharing Crisps 185g",
+        "quantity": 3,
+        "price": 5.55
+    },
+    {
+        "name": "\u2020 Swizzels Squashies Love Hearts 140g",
+        "quantity": 1,
+        "price": 1.15
+    },
+    {
+        "name": "\u2020 Tesco Apple & Elderflower Sparkling Water 1 Litre",
+        "quantity": 3,
+        "price": 2.0
+    },
+    {
+        "name": "Tesco White Iced Ring Doughnuts 4 Pack",
+        "quantity": 1,
+        "price": 0.95
+    },
+    {
+        "name": "\u2020 Walkers Wotsits Cheese Multipack Crisps 12x16.5g",
+        "quantity": 1,
+        "price": 3.0
     }
 ]
 };
+
 
 
 
@@ -480,14 +496,6 @@ export const realLatestOrder: CachedOrder = {
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "",
-    "content": "Costco",
-    "date": "2026-05-21",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "",
     "content": "Mussels and part baked bread",
@@ -762,22 +770,18 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "order_total": 50.2,
-  "delivery_date": "2026-05-22",
+  "order_total": 50.25,
+  "delivery_date": "2026-05-19",
   "meals_covered": 1,
   "meals_total": 7,
-  "unmatched_groceries": 21,
+  "unmatched_groceries": 12,
   "coverage_percentage": 14,
   "day_coverage": [
-    {
-      "date": "2026-05-21",
-      "status": "missing",
-      "is_delivery_day": false
-    },
     {
       "date": "2026-05-22",
       "status": "delivery",
@@ -805,6 +809,11 @@ export const realMealsCheckSummary = {
     },
     {
       "date": "2026-05-27",
+      "status": "gap",
+      "is_delivery_day": false
+    },
+    {
+      "date": "2026-05-28",
       "status": "gap",
       "is_delivery_day": false
     }
@@ -925,23 +934,9 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "",
-      "content": "Costco",
-      "date": "2026-05-21",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [],
-    "notes": "No matching items"
-  },
   {
     "meal": {
       "id": "",
@@ -955,10 +950,22 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
-        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "quantity": 2,
+        "price": 4.5
+      },
+      {
+        "ingredient": "Tesco White Wine Scottish Mussels 500G",
+        "name": "Tesco White Wine Scottish Mussels 500G",
+        "quantity": 2,
+        "price": 4.7
+      },
+      {
+        "ingredient": "H.W. Nevill's Part Baked White Baguette 2 Pack",
+        "name": "H.W. Nevill's Part Baked White Baguette 2 Pack",
         "quantity": 1,
-        "price": 1.5
+        "price": 0.85
       }
     ],
     "missingItems": []
@@ -976,22 +983,16 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco The Chicken Club Sandwich Substitutions: On",
-        "name": "Tesco The Chicken Club Sandwich Substitutions: On",
-        "quantity": 1,
-        "price": 1.45
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "quantity": 2,
+        "price": 4.5
       },
       {
-        "ingredient": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
-        "name": "\u2020 Swizzels Drumsticks Squashies Original Bag 60G Substitutions: On",
+        "ingredient": "H.W. Nevill's Part Baked White Baguette 2 Pack",
+        "name": "H.W. Nevill's Part Baked White Baguette 2 Pack",
         "quantity": 1,
-        "price": 0.53
-      },
-      {
-        "ingredient": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
-        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130g Substitutions: On",
-        "quantity": 1,
-        "price": 1.5
+        "price": 0.85
       },
       {
         "ingredient": "Tesco The Chicken Club Sandwich",
@@ -1024,6 +1025,7 @@ export const realCoverage: MealCoverage[] = [
     "notes": "No matching items"
   }
 ];
+
 
 
 
