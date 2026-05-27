@@ -7,6 +7,7 @@
  */
 
 import type { Meal } from './meals-data';
+export type { Meal } from './meals-data';
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner';
 

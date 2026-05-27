@@ -18,27 +18,20 @@ import json
 import argparse
 import subprocess
 import re
+import os
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, Optional, Tuple
 
-# Base paths - use absolute paths for clarity
-OPENCLAW_PATH = Path('/home/openclaw/workspace/openclaw')
-MEALS_SKILL_CANDIDATES = [
-    Path('/home/openclaw/workspace/skills/meals-check'),
-    Path('/home/openclaw/workspace/OpenClaw-Skills/meals-check'),
-    Path('/home/openclaw/workspace/skills/meals'),
-]
-MEALS_SKILL_PATH = next(
-    (path for path in MEALS_SKILL_CANDIDATES if path.exists()),
-    MEALS_SKILL_CANDIDATES[0],
-)
-DASHBOARD_PATH = OPENCLAW_PATH / 'agents' / 'openclaw' / 'meals-dashboard'
+# Base paths - use absolute paths for clarity. Defaults match Danny's Hermes chef profile
+# environment, but can be overridden for local/dev runs.
+DASHBOARD_PATH = Path(os.environ.get('MEALS_DASHBOARD_REPO', '/home/hermes/workspace/meals-dashboard')).expanduser().resolve()
+MEALS_SCRIPTS_PATH = Path(os.environ.get('MEALS_CHECK_SCRIPTS', '/home/hermes/.hermes/scripts')).expanduser().resolve()
 REAL_DATA_PATH = DASHBOARD_PATH / 'lib' / 'real-data.ts'
 SYNC_META_PATH = DASHBOARD_PATH / 'lib' / 'sync-meta.ts'
-RECEIPT_CACHE = MEALS_SKILL_PATH / 'data' / 'receipt_coverage_cache.json'
-MEAL_PLAN_CACHE = MEALS_SKILL_PATH / 'data' / 'meal-plan-cache.json'
-DASHBOARD_CACHE = MEALS_SKILL_PATH / 'data' / 'dashboard_cache.json'
+RECEIPT_CACHE = MEALS_SCRIPTS_PATH / 'data' / 'receipt_coverage_cache.json'
+MEAL_PLAN_CACHE = MEALS_SCRIPTS_PATH / 'data' / 'meal-plan-cache.json'
+DASHBOARD_CACHE = Path(os.environ.get('MEALS_DASHBOARD_CACHE', str(MEALS_SCRIPTS_PATH / 'data' / 'dashboard_cache.json'))).expanduser().resolve()
 
 
 def run_command(cmd: list, timeout: int = 60, cwd: Path = None) -> Tuple[bool, str]:
@@ -696,6 +689,7 @@ def main():
     parser.add_argument("--skip-fetch", action="store_true", help="Skip fetching, just use cached data")
     parser.add_argument("--message", "-m", help="Custom commit message")
     parser.add_argument("--no-build", action="store_true", help="Skip build step")
+    parser.add_argument("--force-deploy", action="store_true", help="Trigger Vercel even when there are no dashboard data changes")
     args = parser.parse_args()
     
     print("=" * 50)
@@ -763,7 +757,8 @@ def main():
 
     if args.dry_run:
         print("[dry-run] Data source resolved successfully.")
-        print(f"  Meals skill path: {MEALS_SKILL_PATH}")
+        print(f"  Meals scripts path: {MEALS_SCRIPTS_PATH}")
+        print(f"  Dashboard cache: {DASHBOARD_CACHE}")
         print("  No files, commits, pushes, or deployments were changed.")
         return 0
     
@@ -792,30 +787,34 @@ def main():
     # Step 6: Commit and push
     print("[6] Committing and pushing...")
     has_changes, _ = get_git_status()
-    
+    committed_changes = False
+
     if has_changes:
         message = args.message or f"sync: update dashboard data {timestamp}"
         success = commit_and_push(message, dry_run=args.dry_run)
         if not success:
             print("  ✗ Failed to push")
             return 1
+        committed_changes = not args.dry_run
     else:
         print("  ✓ No changes to commit")
     print()
-    
-    # Step 7: Force rebuild via Vercel CLI
-    # This is the critical step that ensures the dashboard always updates,
-    # even when Vercel's build cache would otherwise suppress a rebuild
-    # because only data files (not build artefacts) have changed.
+
+    # Step 7: Force rebuild via Vercel CLI. Only do this when something was
+    # actually pushed, unless explicitly forced; otherwise hourly checks would
+    # redeploy identical data forever.
     print("[7] Triggering Vercel production deployment (force rebuild)...")
-    if not args.dry_run:
+    should_deploy = (committed_changes or args.force_deploy) and not args.dry_run
+    if should_deploy:
         deploy_success, deploy_error = trigger_vercel_deploy()
         if not deploy_success:
             print(f"  ⚠ Deploy warning: {deploy_error}")
         else:
             print("  ✓ Deployment triggered")
-    else:
+    elif args.dry_run:
         print("  ⚠ Dry run - skipping deploy trigger")
+    else:
+        print("  ✓ No pushed dashboard changes; skipping deploy")
     print()
     
     print("=" * 50)
