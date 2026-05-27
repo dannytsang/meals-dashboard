@@ -99,7 +99,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "/home/openclaw",
+    "outputFileTracingRoot": "/home/hermes/workspace/meals-dashboard",
     "experimental": {
       "useSkewCookie": false,
       "cacheLife": {
@@ -289,11 +289,11 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.ts",
     "turbopack": {
-      "root": "/home/openclaw"
+      "root": "/home/hermes/workspace/meals-dashboard"
     }
   },
-  "appDir": "/home/openclaw/workspace/openclaw/agents/openclaw/meals-dashboard",
-  "relativeAppDir": "workspace/openclaw/agents/openclaw/meals-dashboard",
+  "appDir": "/home/hermes/workspace/meals-dashboard",
+  "relativeAppDir": "",
   "files": [
     ".next/routes-manifest.json",
     ".next/server/pages-manifest.json",
