@@ -631,6 +631,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -931,6 +932,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -943,8 +945,9 @@ export const realMealsCheckSummary = {
   "missing": 2,
   "order_total": 46.2,
   "partial": 1,
-  "unmatched_groceries": 43
+  "unmatched_groceries": 42
 };
+
 
 
 
@@ -1175,7 +1178,6 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Bolognese Pasta Bake 750g",
       "Tesco Quiche-Lorraine 400g",
       "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
-      "Tesco The Chicken Club Sandwich",
       "Tesco Three Cheese Pasta Bake 750g",
       "Walls 4 Hearty Sausage Rolls 220G",
       "Butterkist Microwave Popcorn Sweet & Salted 3X60g",
@@ -1212,7 +1214,6 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Bolognese Pasta Bake 750g",
       "Tesco Quiche-Lorraine 400g",
       "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
-      "Tesco The Chicken Club Sandwich",
       "Tesco Three Cheese Pasta Bake 750g",
       "Walls 4 Hearty Sausage Rolls 220G",
       "Butterkist Microwave Popcorn Sweet & Salted 3X60g",
@@ -1232,6 +1233,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
