@@ -163,7 +163,7 @@ export function calculateCoverageSummary(coverage: MealCoverage[]): CoverageSumm
 
 /**
  * Generate upcoming delivery windows based on a known delivery date.
- * Tesco delivers on Tuesday (2) and Friday (5).
+ * Tesco delivers on Tuesday (2) and Saturday (6).
  * Pass the most recent delivery date (ISO string or null) to anchor the pattern.
  */
 export function getUpcomingDeliveries(deliveryDate: string | null): DeliveryWindow[] {
@@ -181,7 +181,7 @@ export function getUpcomingDeliveries(deliveryDate: string | null): DeliveryWind
   const todayStr = toISODateLocal(today);
 
   const deliveries: DeliveryWindow[] = [];
-  const deliveryDays = [2, 5]; // Tuesday, Friday
+  const deliveryDays = [2, 6]; // Tuesday, Saturday
 
   for (let offset = 0; offset <= 14; offset++) {
     const checkDate = new Date(today);
