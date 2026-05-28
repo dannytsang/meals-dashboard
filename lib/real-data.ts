@@ -144,121 +144,11 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 export const realLatestOrder: CachedOrder = {
   "email_id": "",
   "email_date": "",
-  "delivery_date": "2026-05-22",
+  "delivery_date": "2026-05-30",
   "delivery_sort": "",
-  "order_number": "5121-8713-222",
-  "order_total": 46.2,
+  "order_number": "0321-8070-381",
+  "order_total": 57.45,
   "items": [
-    {
-        "name": "Emmi High Protein Caffe Latte 370ml",
-        "quantity": 1,
-        "price": 1.32
-    },
-    {
-        "name": "Tesco Bacon Lettuce & Tom Sandwich",
-        "quantity": 1,
-        "price": 1.9
-    },
-    {
-        "name": "Tesco Bolognese Pasta Bake 750g",
-        "quantity": 1,
-        "price": 3.25
-    },
-    {
-        "name": "Tesco Quiche-Lorraine 400g",
-        "quantity": 1,
-        "price": 1.75
-    },
-    {
-        "name": "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
-        "quantity": 1,
-        "price": 1.95
-    },
-    {
-        "name": "Tesco The Chicken Club Sandwich",
-        "quantity": 1,
-        "price": 1.45
-    },
-    {
-        "name": "Tesco Three Cheese Pasta Bake 750g",
-        "quantity": 1,
-        "price": 3.25
-    },
-    {
-        "name": "Walls 4 Hearty Sausage Rolls 220G",
-        "quantity": 1,
-        "price": 1.0
-    },
-    {
-        "name": "Butterkist Microwave Popcorn Sweet & Salted 3X60g",
-        "quantity": 1,
-        "price": 2.5
-    },
-    {
-        "name": "Caxton Pink & White Wafers 6 Pack 85G",
-        "quantity": 1,
-        "price": 0.7
-    },
-    {
-        "name": "\u2020\u00a0Dr Pepper Regular 500 M",
-        "quantity": 1,
-        "price": 2.83
-    },
-    {
-        "name": "\u2020\u00a0Keep It Handy Assorted Plasters Pack 42pk",
-        "quantity": 1,
-        "price": 2.0
-    },
-    {
-        "name": "\u2020\u00a0Kind Protein Caramel Nut 50g",
-        "quantity": 1,
-        "price": 1.08
-    },
-    {
-        "name": "\u2020\u00a0Maoam Bloxx 4 Pack 88G",
-        "quantity": 1,
-        "price": 0.49
-    },
-    {
-        "name": "\u2020\u00a0McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-        "quantity": 1,
-        "price": 5.25
-    },
-    {
-        "name": "McVitie's Jaffa Cakes - Hot Honey Flavour 10 Pack",
-        "quantity": 1,
-        "price": 0.75
-    },
-    {
-        "name": "Nescafe Dolce Gusto Kit Kat Cocoa Beverage Pods x16 256g",
-        "quantity": 1,
-        "price": 7.5
-    },
-    {
-        "name": "\u2020\u00a0Pringles Salt & Vinegar Sharing Crisps 165g",
-        "quantity": 1,
-        "price": 1.75
-    },
-    {
-        "name": "\u2020\u00a0Skinny Whip Double Chocolate Nougat Bars 5 x 20g",
-        "quantity": 1,
-        "price": 0.95
-    },
-    {
-        "name": "\u2020\u00a0Swizzels Drumsticks Squashies Original Bag 60G",
-        "quantity": 1,
-        "price": 0.53
-    },
-    {
-        "name": "Tesco Finest Apple & Cinnamon Hot Cross Buns 4 Pack",
-        "quantity": 1,
-        "price": 2.0
-    },
-    {
-        "name": "Tesco Finest Extra Fruity Hot Cross Buns 4 pack",
-        "quantity": 1,
-        "price": 2.0
-    },
     {
         "name": "Emmi High Protein Caffe Latte 370ml",
         "quantity": 1,
@@ -371,6 +261,7 @@ export const realLatestOrder: CachedOrder = {
     }
 ]
 };
+
 
 
 
@@ -989,6 +880,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -999,10 +891,11 @@ export const realMealsCheckSummary = {
   "meals_covered": 2,
   "meals_total": 4,
   "missing": 2,
-  "order_total": 46.2,
+  "order_total": 57.45,
   "partial": 1,
-  "unmatched_groceries": 42
+  "unmatched_groceries": 21
 };
+
 
 
 
@@ -1256,29 +1149,7 @@ export const realCoverage: MealCoverage[] = [
     "status": "missing",
     "coverageScore": 0,
     "matchedItems": [],
-    "missingItems": [
-      "Emmi High Protein Caffe Latte 370ml",
-      "Tesco Bacon Lettuce & Tom Sandwich",
-      "Tesco Bolognese Pasta Bake 750g",
-      "Tesco Quiche-Lorraine 400g",
-      "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
-      "Tesco Three Cheese Pasta Bake 750g",
-      "Walls 4 Hearty Sausage Rolls 220G",
-      "Butterkist Microwave Popcorn Sweet & Salted 3X60g",
-      "Caxton Pink & White Wafers 6 Pack 85G",
-      "\u2020\u00a0Dr Pepper Regular 500 M",
-      "\u2020\u00a0Keep It Handy Assorted Plasters Pack 42pk",
-      "\u2020\u00a0Kind Protein Caramel Nut 50g",
-      "\u2020\u00a0Maoam Bloxx 4 Pack 88G",
-      "\u2020\u00a0McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-      "McVitie's Jaffa Cakes - Hot Honey Flavour 10 Pack",
-      "Nescafe Dolce Gusto Kit Kat Cocoa Beverage Pods x16 256g",
-      "\u2020\u00a0Pringles Salt & Vinegar Sharing Crisps 165g",
-      "\u2020\u00a0Skinny Whip Double Chocolate Nougat Bars 5 x 20g",
-      "\u2020\u00a0Swizzels Drumsticks Squashies Original Bag 60G",
-      "Tesco Finest Apple & Cinnamon Hot Cross Buns 4 Pack",
-      "Tesco Finest Extra Fruity Hot Cross Buns 4 pack"
-    ]
+    "missingItems": []
   },
   {
     "meal": {
@@ -1292,31 +1163,10 @@ export const realCoverage: MealCoverage[] = [
     "status": "missing",
     "coverageScore": 0,
     "matchedItems": [],
-    "missingItems": [
-      "Emmi High Protein Caffe Latte 370ml",
-      "Tesco Bacon Lettuce & Tom Sandwich",
-      "Tesco Bolognese Pasta Bake 750g",
-      "Tesco Quiche-Lorraine 400g",
-      "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
-      "Tesco Three Cheese Pasta Bake 750g",
-      "Walls 4 Hearty Sausage Rolls 220G",
-      "Butterkist Microwave Popcorn Sweet & Salted 3X60g",
-      "Caxton Pink & White Wafers 6 Pack 85G",
-      "\u2020\u00a0Dr Pepper Regular 500 M",
-      "\u2020\u00a0Keep It Handy Assorted Plasters Pack 42pk",
-      "\u2020\u00a0Kind Protein Caramel Nut 50g",
-      "\u2020\u00a0Maoam Bloxx 4 Pack 88G",
-      "\u2020\u00a0McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-      "McVitie's Jaffa Cakes - Hot Honey Flavour 10 Pack",
-      "Nescafe Dolce Gusto Kit Kat Cocoa Beverage Pods x16 256g",
-      "\u2020\u00a0Pringles Salt & Vinegar Sharing Crisps 165g",
-      "\u2020\u00a0Skinny Whip Double Chocolate Nougat Bars 5 x 20g",
-      "\u2020\u00a0Swizzels Drumsticks Squashies Original Bag 60G",
-      "Tesco Finest Apple & Cinnamon Hot Cross Buns 4 Pack",
-      "Tesco Finest Extra Fruity Hot Cross Buns 4 pack"
-    ]
+    "missingItems": []
   }
 ];
+
 
 
 
