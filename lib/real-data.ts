@@ -147,7 +147,7 @@ export const realLatestOrder: CachedOrder = {
   "delivery_date": "2026-05-30",
   "delivery_sort": "",
   "order_number": "0321-8070-381",
-  "order_total": 57.45,
+  "order_total": 80.7,
   "items": [
     {
         "name": "Emmi High Protein Caffe Latte 370ml",
@@ -280,19 +280,19 @@ export const realLatestOrder: CachedOrder = {
         "price": 2.5
     },
     {
-        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
-        "quantity": 1,
-        "price": 2.75
-    },
-    {
         "name": "Tesco Guacamole 163gSubstitutions: On",
         "quantity": 1,
         "price": 1.1
     },
     {
-        "name": "Tesco Tzatziki Dip 200GSubstitutions: On",
+        "name": "Tesco finest Scottish Salmon Joint 500gSubstitutions: On",
         "quantity": 1,
-        "price": 1.1
+        "price": 10.0
+    },
+    {
+        "name": "Tesco Perfectly Ripe Nectarines Minimum 3Substitutions: On",
+        "quantity": 1,
+        "price": 2.5
     },
     {
         "name": "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
@@ -300,44 +300,49 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.2
     },
     {
+        "name": "Tesco Finest Green Vegetable Gratin 300gSubstitutions: On",
+        "quantity": 1,
+        "price": 2.31
+    },
+    {
+        "name": "Tesco Beef Stir Fry Strips 357GSubstitutions: On",
+        "quantity": 1,
+        "price": 6.4
+    },
+    {
+        "name": "Tesco Potato Gratin 400gSubstitutions: On",
+        "quantity": 1,
+        "price": 1.97
+    },
+    {
+        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
+        "quantity": 1,
+        "price": 2.75
+    },
+    {
+        "name": "Tesco Tzatziki Dip 200GSubstitutions: On",
+        "quantity": 1,
+        "price": 1.1
+    },
+    {
+        "name": "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
+        "quantity": 1,
+        "price": 1.95
+    },
+    {
+        "name": "Tesco Finest Golden-Baked Potato Dauphinoise 400gSubstitutions: On",
+        "quantity": 1,
+        "price": 2.32
+    },
+    {
+        "name": "Tesco Pork Stir Fry Strips 250gSubstitutions: On",
+        "quantity": 1,
+        "price": 3.1
+    },
+    {
         "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400gSubstitutions: On",
         "quantity": 1,
         "price": 4.5
-    },
-    {
-        "name": "\u2020 Fuller's London Pride Amber Ale Bottle 500mlSubstitutions: On",
-        "quantity": 1,
-        "price": 2.0
-    },
-    {
-        "name": "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
-        "quantity": 1,
-        "price": 2.34
-    },
-    {
-        "name": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-    },
-    {
-        "name": "\u2020 Badger Golden Champion 500MlSubstitutions: On",
-        "quantity": 1,
-        "price": 1.82
-    },
-    {
-        "name": "Deli Kitchen Carb Lite Wheat Tortilla Wraps 6 Pack 300gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.9
-    },
-    {
-        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-    },
-    {
-        "name": "\u2020 Jiddler's Tipple Well Dressed Hazy IPA 440ml canSubstitutions: On",
-        "quantity": 1,
-        "price": 3.65
     },
     {
         "name": "Tesco Sweet Easy Peelers 600gSubstitutions: On",
@@ -345,9 +350,34 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.5
     },
     {
-        "name": "\u2020 Hogs Back Brewery Tea 500Ml (L)Substitutions: On",
+        "name": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
         "quantity": 1,
-        "price": 1.86
+        "price": 1.5
+    },
+    {
+        "name": "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
+        "quantity": 1,
+        "price": 2.34
+    },
+    {
+        "name": "Deli Kitchen Carb Lite Wheat Tortilla Wraps 6 Pack 300gSubstitutions: On",
+        "quantity": 1,
+        "price": 1.9
+    },
+    {
+        "name": "\u2020 Calbee Asian Style Chips Umami Salt Flavour Potato Chips 130gSubstitutions: On",
+        "quantity": 1,
+        "price": 1.5
+    },
+    {
+        "name": "Happy Egg Free Range Eggs Medium 6 PackSubstitutions: On",
+        "quantity": 1,
+        "price": 2.35
+    },
+    {
+        "name": "Tesco Finest Extra Fruity Hot Cross Buns 4 packSubstitutions: On",
+        "quantity": 1,
+        "price": 1.5
     },
     {
         "name": "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
@@ -355,17 +385,13 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.16
     },
     {
-        "name": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
+        "name": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150gSubstitutions: On",
         "quantity": 1,
         "price": 1.5
-    },
-    {
-        "name": "\u2020 Shipyard American IPA Ale Beer Bottle 500mlSubstitutions: On",
-        "quantity": 1,
-        "price": 1.82
     }
 ]
 };
+
 
 
 
@@ -669,14 +695,6 @@ export const realMealPlan: Meal[] = [
     "labels": [
       "children"
     ],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "6gjW34qmRx7gGxV9",
-    "content": "Eating out",
-    "date": "2026-05-28",
-    "labels": [],
     "section": "Planned",
     "meal_type": "dinner"
   },
@@ -990,20 +1008,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 50,
+  "coverage_percentage": 67,
   "covered": 1,
   "delivery_date": "2026-05-30",
   "meals_covered": 2,
-  "meals_total": 4,
-  "missing": 2,
-  "order_total": 57.45,
+  "meals_total": 3,
+  "missing": 1,
+  "order_total": 80.7,
   "partial": 1,
-  "unmatched_groceries": 42
+  "unmatched_groceries": 45
 };
+
 
 
 
@@ -1210,44 +1230,6 @@ export const realCoverage: MealCoverage[] = [
   },
   {
     "meal": {
-      "id": "6gjW34qmRx7gGxV9",
-      "content": "Eating out",
-      "date": "2026-05-28",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [],
-    "missingItems": [
-      "Emmi High Protein Caffe Latte 370ml",
-      "Tesco Bacon Lettuce & Tom Sandwich",
-      "Tesco Bolognese Pasta Bake 750g",
-      "Tesco Quiche-Lorraine 400g",
-      "Tesco Smoky Bacon Sarnie - Tangy Ketchup",
-      "Tesco The Chicken Club Sandwich",
-      "Tesco Three Cheese Pasta Bake 750g",
-      "Walls 4 Hearty Sausage Rolls 220G",
-      "Butterkist Microwave Popcorn Sweet & Salted 3X60g",
-      "Caxton Pink & White Wafers 6 Pack 85G",
-      "\u2020\u00a0Dr Pepper Regular 500 M",
-      "\u2020\u00a0Keep It Handy Assorted Plasters Pack 42pk",
-      "\u2020\u00a0Kind Protein Caramel Nut 50g",
-      "\u2020\u00a0Maoam Bloxx 4 Pack 88G",
-      "\u2020\u00a0McCoy's Flame Grilled Steak Multipack Crisps 6x25g",
-      "McVitie's Jaffa Cakes - Hot Honey Flavour 10 Pack",
-      "Nescafe Dolce Gusto Kit Kat Cocoa Beverage Pods x16 256g",
-      "\u2020\u00a0Pringles Salt & Vinegar Sharing Crisps 165g",
-      "\u2020\u00a0Skinny Whip Double Chocolate Nougat Bars 5 x 20g",
-      "\u2020\u00a0Swizzels Drumsticks Squashies Original Bag 60G",
-      "Tesco Finest Apple & Cinnamon Hot Cross Buns 4 Pack",
-      "Tesco Finest Extra Fruity Hot Cross Buns 4 pack"
-    ],
-    "notes": "external"
-  },
-  {
-    "meal": {
       "id": "6gjW648qHw7v9xQh",
       "content": "Beef strip curry and boiled rice",
       "date": "2026-05-30",
@@ -1257,31 +1239,47 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Beef Stir Fry Strips 357GSubstitutions: On",
+        "name": "Tesco Beef Stir Fry Strips 357GSubstitutions: On",
+        "quantity": 1,
+        "price": 6.4
+      },
+      {
+        "ingredient": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150gSubstitutions: On",
+        "name": "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150gSubstitutions: On",
+        "quantity": 1,
+        "price": 1.5
+      }
+    ],
     "missingItems": [
       "Tesco Blueberries 500GSubstitutions: On",
       "Tesco Boneless Salmon Fillets 4 Pack 520gSubstitutions: On",
       "Tesco Green Seedless Grapes Pack 500GSubstitutions: On",
       "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100gSubstitutions: On",
-      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Guacamole 163gSubstitutions: On",
-      "Tesco Tzatziki Dip 200GSubstitutions: On",
+      "Tesco finest Scottish Salmon Joint 500gSubstitutions: On",
+      "Tesco Perfectly Ripe Nectarines Minimum 3Substitutions: On",
       "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
+      "Tesco Finest Green Vegetable Gratin 300gSubstitutions: On",
+      "Tesco Potato Gratin 400gSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
+      "Tesco Tzatziki Dip 200GSubstitutions: On",
+      "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
+      "Tesco Finest Golden-Baked Potato Dauphinoise 400gSubstitutions: On",
+      "Tesco Pork Stir Fry Strips 250gSubstitutions: On",
       "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400gSubstitutions: On",
-      "\u2020 Fuller's London Pride Amber Ale Bottle 500mlSubstitutions: On",
-      "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
-      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-      "\u2020 Badger Golden Champion 500MlSubstitutions: On",
-      "Deli Kitchen Carb Lite Wheat Tortilla Wraps 6 Pack 300gSubstitutions: On",
-      "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-      "\u2020 Jiddler's Tipple Well Dressed Hazy IPA 440ml canSubstitutions: On",
       "Tesco Sweet Easy Peelers 600gSubstitutions: On",
-      "\u2020 Hogs Back Brewery Tea 500Ml (L)Substitutions: On",
-      "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
       "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-      "\u2020 Shipyard American IPA Ale Beer Bottle 500mlSubstitutions: On"
+      "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
+      "Deli Kitchen Carb Lite Wheat Tortilla Wraps 6 Pack 300gSubstitutions: On",
+      "\u2020 Calbee Asian Style Chips Umami Salt Flavour Potato Chips 130gSubstitutions: On",
+      "Happy Egg Free Range Eggs Medium 6 PackSubstitutions: On",
+      "Tesco Finest Extra Fruity Hot Cross Buns 4 packSubstitutions: On",
+      "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On"
     ]
   },
   {
@@ -1301,26 +1299,32 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Boneless Salmon Fillets 4 Pack 520gSubstitutions: On",
       "Tesco Green Seedless Grapes Pack 500GSubstitutions: On",
       "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100gSubstitutions: On",
-      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Guacamole 163gSubstitutions: On",
-      "Tesco Tzatziki Dip 200GSubstitutions: On",
+      "Tesco finest Scottish Salmon Joint 500gSubstitutions: On",
+      "Tesco Perfectly Ripe Nectarines Minimum 3Substitutions: On",
       "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
+      "Tesco Finest Green Vegetable Gratin 300gSubstitutions: On",
+      "Tesco Beef Stir Fry Strips 357GSubstitutions: On",
+      "Tesco Potato Gratin 400gSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
+      "Tesco Tzatziki Dip 200GSubstitutions: On",
+      "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
+      "Tesco Finest Golden-Baked Potato Dauphinoise 400gSubstitutions: On",
+      "Tesco Pork Stir Fry Strips 250gSubstitutions: On",
       "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400gSubstitutions: On",
-      "\u2020 Fuller's London Pride Amber Ale Bottle 500mlSubstitutions: On",
-      "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
-      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-      "\u2020 Badger Golden Champion 500MlSubstitutions: On",
-      "Deli Kitchen Carb Lite Wheat Tortilla Wraps 6 Pack 300gSubstitutions: On",
-      "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-      "\u2020 Jiddler's Tipple Well Dressed Hazy IPA 440ml canSubstitutions: On",
       "Tesco Sweet Easy Peelers 600gSubstitutions: On",
-      "\u2020 Hogs Back Brewery Tea 500Ml (L)Substitutions: On",
-      "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
       "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-      "\u2020 Shipyard American IPA Ale Beer Bottle 500mlSubstitutions: On"
+      "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
+      "Deli Kitchen Carb Lite Wheat Tortilla Wraps 6 Pack 300gSubstitutions: On",
+      "\u2020 Calbee Asian Style Chips Umami Salt Flavour Potato Chips 130gSubstitutions: On",
+      "Happy Egg Free Range Eggs Medium 6 PackSubstitutions: On",
+      "Tesco Finest Extra Fruity Hot Cross Buns 4 packSubstitutions: On",
+      "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
+      "\u2020 Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150gSubstitutions: On"
     ]
   }
 ];
+
 
 
 
