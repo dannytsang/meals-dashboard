@@ -33,7 +33,7 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
   const [selectedItem, setSelectedItem] = useState<{name: string, price: number, quantity: number, substitutedWith?: string} | null>(null);
   const [productInfo, setProductInfo] = useState<{description: string, storage: string, nutrition: string, image: string} | null>(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
-  const [showCount, setShowCount] = useState(20);
+  const [showCount, setShowCount] = useState(10);
   const [labelFilter, setLabelFilter] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
@@ -475,6 +475,12 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
                   );
                 })}
               </div>
+
+              {displayItems.length > showCount && (
+                <button onClick={() => setShowCount(prev => prev === 10 ? displayItems.length : 10)} style={{ marginTop: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '11px', fontWeight: '600', border: '1px solid var(--border-color)', cursor: 'pointer', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)', alignSelf: 'center' }}>
+                  {showCount === 10 ? `Show all ${displayItems.length} items` : 'Collapse to top 10'}
+                </button>
+              )}
             </div>
           </div>
         </div>
