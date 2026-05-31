@@ -147,7 +147,7 @@ export const realLatestOrder: CachedOrder = {
   "delivery_date": "2026-06-02",
   "delivery_sort": "",
   "order_number": "6221-8755-512",
-  "order_total": 45.35,
+  "order_total": 50.05,
   "items": [
     {
         "name": "Calbee Asian Style Chips Umami Salt Flavour Potato Chips 130g",
@@ -305,6 +305,11 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.5
     },
     {
+        "name": "Tesco Mango 450GSubstitutions: On",
+        "quantity": 1,
+        "price": 4.1
+    },
+    {
         "name": "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
         "quantity": 1,
         "price": 1.1
@@ -313,16 +318,6 @@ export const realLatestOrder: CachedOrder = {
         "name": "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
         "quantity": 1,
         "price": 3.9
-    },
-    {
-        "name": "Tesco Mango 450GSubstitutions: On",
-        "quantity": 1,
-        "price": 4.1
-    },
-    {
-        "name": "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
-        "quantity": 1,
-        "price": 1.2
     },
     {
         "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
@@ -340,11 +335,6 @@ export const realLatestOrder: CachedOrder = {
         "price": 0.95
     },
     {
-        "name": "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
-        "quantity": 1,
-        "price": 0.67
-    },
-    {
         "name": "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
         "quantity": 1,
         "price": 0.67
@@ -353,6 +343,26 @@ export const realLatestOrder: CachedOrder = {
         "name": "Tesco WatermelonSubstitutions: On",
         "quantity": 1,
         "price": 3.75
+    },
+    {
+        "name": "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
+        "quantity": 1,
+        "price": 6.4
+    },
+    {
+        "name": "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
+        "quantity": 1,
+        "price": 1.5
+    },
+    {
+        "name": "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
+        "quantity": 1,
+        "price": 0.67
+    },
+    {
+        "name": "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
+        "quantity": 1,
+        "price": 3.0
     },
     {
         "name": "Hayden's 4 Delicious Yum YumsSubstitutions: On",
@@ -366,6 +376,7 @@ export const realLatestOrder: CachedOrder = {
     }
 ]
 };
+
 
 
 
@@ -1046,6 +1057,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -1056,10 +1068,11 @@ export const realMealsCheckSummary = {
   "meals_covered": 0,
   "meals_total": 8,
   "missing": 8,
-  "order_total": 45.35,
+  "order_total": 50.05,
   "partial": 0,
-  "unmatched_groceries": 43
+  "unmatched_groceries": 45
 };
+
 
 
 
@@ -1337,16 +1350,18 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 0,
     "matchedItems": [],
     "missingItems": [
+      "Tesco Mango 450GSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
-      "Tesco Mango 450GSubstitutions: On",
-      "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "Tesco White Iced Ring Doughnuts 4 PackSubstitutions: On",
-      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
+      "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
+      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On"
     ]
@@ -1366,16 +1381,18 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 0,
     "matchedItems": [],
     "missingItems": [
+      "Tesco Mango 450GSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
-      "Tesco Mango 450GSubstitutions: On",
-      "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "Tesco White Iced Ring Doughnuts 4 PackSubstitutions: On",
-      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
+      "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
+      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On"
     ]
@@ -1395,16 +1412,18 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 0,
     "matchedItems": [],
     "missingItems": [
+      "Tesco Mango 450GSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
-      "Tesco Mango 450GSubstitutions: On",
-      "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "Tesco White Iced Ring Doughnuts 4 PackSubstitutions: On",
-      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
+      "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
+      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On"
     ]
@@ -1424,16 +1443,18 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 0,
     "matchedItems": [],
     "missingItems": [
+      "Tesco Mango 450GSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
-      "Tesco Mango 450GSubstitutions: On",
-      "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "Tesco White Iced Ring Doughnuts 4 PackSubstitutions: On",
-      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
+      "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
+      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On"
     ]
@@ -1455,16 +1476,18 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 0,
     "matchedItems": [],
     "missingItems": [
+      "Tesco Mango 450GSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
-      "Tesco Mango 450GSubstitutions: On",
-      "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "Tesco White Iced Ring Doughnuts 4 PackSubstitutions: On",
-      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
+      "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
+      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On"
     ]
@@ -1485,21 +1508,24 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 0,
     "matchedItems": [],
     "missingItems": [
+      "Tesco Mango 450GSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
-      "Tesco Mango 450GSubstitutions: On",
-      "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "Tesco White Iced Ring Doughnuts 4 PackSubstitutions: On",
-      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
+      "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
+      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
+      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On"
     ]
   }
 ];
+
 
 
 
