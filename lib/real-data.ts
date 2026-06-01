@@ -147,7 +147,7 @@ export const realLatestOrder: CachedOrder = {
   "delivery_date": "2026-06-02",
   "delivery_sort": "",
   "order_number": "6221-8755-512",
-  "order_total": 53.88,
+  "order_total": 55.93,
   "items": [
     {
         "name": "Calbee Asian Style Chips Umami Salt Flavour Potato Chips 130g",
@@ -320,6 +320,11 @@ export const realLatestOrder: CachedOrder = {
         "price": 4.1
     },
     {
+        "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
+        "quantity": 1,
+        "price": 2.75
+    },
+    {
         "name": "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
         "quantity": 1,
         "price": 1.1
@@ -327,7 +332,7 @@ export const realLatestOrder: CachedOrder = {
     {
         "name": "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
         "quantity": 1,
-        "price": 3.9
+        "price": 1.95
     },
     {
         "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
@@ -335,9 +340,14 @@ export const realLatestOrder: CachedOrder = {
         "price": 18.0
     },
     {
+        "name": "Acre Lane Lamb Mince 454GSubstitutions: On",
+        "quantity": 1,
+        "price": 5.7
+    },
+    {
         "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
         "quantity": 1,
-        "price": 3.6
+        "price": 1.8
     },
     {
         "name": "\u2020 Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75gSubstitutions: On",
@@ -375,19 +385,9 @@ export const realLatestOrder: CachedOrder = {
         "price": 1.5
     },
     {
-        "name": "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-    },
-    {
         "name": "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
         "quantity": 1,
         "price": 0.67
-    },
-    {
-        "name": "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
-        "quantity": 1,
-        "price": 3.0
     },
     {
         "name": "Hayden's 4 Delicious Yum YumsSubstitutions: On",
@@ -403,9 +403,15 @@ export const realLatestOrder: CachedOrder = {
         "name": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
         "quantity": 1,
         "price": 1.5
+    },
+    {
+        "name": "Tesco Italian Chopped Tomatoes 4 X 400GSubstitutions: On",
+        "quantity": 1,
+        "price": 1.85
     }
 ]
 };
+
 
 
 
@@ -706,18 +712,6 @@ export const realLatestOrder: CachedOrder = {
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "6gm39j7WvfwXrrh9",
-    "content": "Tony and Barbara cooking",
-    "date": "2026-05-31",
-    "labels": [
-      "adults",
-      "children",
-      "plusTonyandBarbara"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "6gm39mH34Fj3Fph9",
     "content": "Tony and Barbara cooking",
@@ -1090,6 +1084,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -1098,12 +1093,13 @@ export const realMealsCheckSummary = {
   "covered": 0,
   "delivery_date": "2026-06-02",
   "meals_covered": 0,
-  "meals_total": 8,
-  "missing": 8,
-  "order_total": 53.88,
+  "meals_total": 7,
+  "missing": 7,
+  "order_total": 55.93,
   "partial": 0,
-  "unmatched_groceries": 51
+  "unmatched_groceries": 52
 };
+
 
 
 
@@ -1269,56 +1265,6 @@ export const realMealsCheckSummary = {
 export const realCoverage: MealCoverage[] = [
   {
     "meal": {
-      "id": "6gm39j7WvfwXrrh9",
-      "content": "Tony and Barbara cooking",
-      "date": "2026-05-31",
-      "labels": [
-        "adults",
-        "children",
-        "plusTonyandBarbara"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "Calbee Asian Style Chips Umami Salt Flavour Potato Chips 130g",
-      "Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-      "Tesco Finest Extra Fruity Hot Cross Buns 4 pack",
-      "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g",
-      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
-      "Tesco Beef Stir Fry Strips 357G",
-      "Tesco Blueberries 500G",
-      "Tesco Boneless Salmon Fillets 4 Pack 520g",
-      "Tesco British Whole Milk 1.13L, 2 Pints",
-      "Tesco Green Seedless Grapes Pack 500G",
-      "Tesco Guacamole 163g",
-      "Tesco Italian Unsmoked Pancetta 2 X65g",
-      "Tesco Large Broccoli Pack 500G",
-      "Tesco Perfectly Ripe Nectarines Minimum 3",
-      "Tesco Tzatziki Dip 200G",
-      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
-      "\u2020\u00a0Cantabile Blueberry Flavored Ade 230ml",
-      "\u2020\u00a0Cantabile Green Grape Flavoured Ade 230ml",
-      "\u2020\u00a0Cantabile Peach Flavour Ice Tea 230ml",
-      "Deli Kitchen Carb Lite Wheat Tortilla Wraps 6 Pack 300g",
-      "Happy Egg Free Range Eggs Medium 6 Pack",
-      "\u2020\u00a0Hobgoblin King Goblin Ale Beer Bottle 500ml",
-      "\u2020\u00a0Oakham Ales Citra 500Ml",
-      "\u2020\u00a0St Austell Proper Job Ale 500Ml",
-      "\u2020\u00a0St Austell Tribute 500Ml",
-      "Tesco All Rounder Potatoes 2Kg",
-      "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
-      "Tesco Carrots 1Kg",
-      "\u2020\u00a0Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
-      "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre",
-      "Tesco Sweet Easy Peelers 600g"
-    ]
-  },
-  {
-    "meal": {
       "id": "6gm39mH34Fj3Fph9",
       "content": "Tony and Barbara cooking",
       "date": "2026-06-01",
@@ -1386,9 +1332,11 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
+      "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "\u2020 Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75gSubstitutions: On",
       "Tesco Red Peppers EachSubstitutions: On",
@@ -1397,12 +1345,11 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
       "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
       "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On",
-      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
+      "Tesco Italian Chopped Tomatoes 4 X 400GSubstitutions: On"
     ]
   },
   {
@@ -1423,9 +1370,11 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
+      "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "\u2020 Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75gSubstitutions: On",
       "Tesco Red Peppers EachSubstitutions: On",
@@ -1434,12 +1383,11 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
       "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
       "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On",
-      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
+      "Tesco Italian Chopped Tomatoes 4 X 400GSubstitutions: On"
     ]
   },
   {
@@ -1460,9 +1408,11 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
+      "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "\u2020 Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75gSubstitutions: On",
       "Tesco Red Peppers EachSubstitutions: On",
@@ -1471,12 +1421,11 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
       "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
       "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On",
-      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
+      "Tesco Italian Chopped Tomatoes 4 X 400GSubstitutions: On"
     ]
   },
   {
@@ -1497,9 +1446,11 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
+      "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "\u2020 Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75gSubstitutions: On",
       "Tesco Red Peppers EachSubstitutions: On",
@@ -1508,12 +1459,11 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
       "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
       "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On",
-      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
+      "Tesco Italian Chopped Tomatoes 4 X 400GSubstitutions: On"
     ]
   },
   {
@@ -1536,9 +1486,11 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
+      "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "\u2020 Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75gSubstitutions: On",
       "Tesco Red Peppers EachSubstitutions: On",
@@ -1547,12 +1499,11 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
       "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
       "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On",
-      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
+      "Tesco Italian Chopped Tomatoes 4 X 400GSubstitutions: On"
     ]
   },
   {
@@ -1574,9 +1525,11 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
+      "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "\u2020 Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75gSubstitutions: On",
       "Tesco Red Peppers EachSubstitutions: On",
@@ -1585,15 +1538,15 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "Tesco WatermelonSubstitutions: On",
       "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Mango 4X90gSubstitutions: On",
       "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
-      "Gogo Squeez Fruit Snack Apple Strawberry 4X90gSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On",
-      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
+      "Tesco Italian Chopped Tomatoes 4 X 400GSubstitutions: On"
     ]
   }
 ];
+
 
 
 
