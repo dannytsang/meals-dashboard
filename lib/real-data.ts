@@ -147,7 +147,7 @@ export const realLatestOrder: CachedOrder = {
   "delivery_date": "2026-06-02",
   "delivery_sort": "",
   "order_number": "6221-8755-512",
-  "order_total": 55.93,
+  "order_total": 70.92,
   "items": [
     {
         "name": "Calbee Asian Style Chips Umami Salt Flavour Potato Chips 130g",
@@ -320,6 +320,11 @@ export const realLatestOrder: CachedOrder = {
         "price": 4.1
     },
     {
+        "name": "Creamfields Red Leicester Cheese 400GSubstitutions: On",
+        "quantity": 1,
+        "price": 2.49
+    },
+    {
         "name": "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
         "quantity": 1,
         "price": 2.75
@@ -333,6 +338,16 @@ export const realLatestOrder: CachedOrder = {
         "name": "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
         "quantity": 1,
         "price": 1.95
+    },
+    {
+        "name": "Tesco Thin Cut Beef Steaks 395GSubstitutions: On",
+        "quantity": 1,
+        "price": 4.5
+    },
+    {
+        "name": "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
+        "quantity": 1,
+        "price": 8.0
     },
     {
         "name": "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
@@ -411,6 +426,7 @@ export const realLatestOrder: CachedOrder = {
     }
 ]
 };
+
 
 
 
@@ -1089,20 +1105,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 29,
-  "covered": 2,
+  "coverage_percentage": 43,
+  "covered": 3,
   "delivery_date": "2026-06-02",
-  "meals_covered": 2,
+  "meals_covered": 3,
   "meals_total": 7,
-  "missing": 5,
-  "order_total": 55.93,
+  "missing": 4,
+  "order_total": 70.92,
   "partial": 0,
-  "unmatched_groceries": 52
+  "unmatched_groceries": 53
 };
+
 
 
 
@@ -1307,13 +1325,27 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Thin Cut Beef Steaks 395GSubstitutions: On",
+        "name": "Tesco Thin Cut Beef Steaks 395GSubstitutions: On",
+        "quantity": 1,
+        "price": 4.5
+      },
+      {
+        "ingredient": "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
+        "name": "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
+        "quantity": 1,
+        "price": 8.0
+      }
+    ],
     "missingItems": [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Creamfields Red Leicester Cheese 400GSubstitutions: On",
       "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
@@ -1352,9 +1384,12 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Creamfields Red Leicester Cheese 400GSubstitutions: On",
       "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
+      "Tesco Thin Cut Beef Steaks 395GSubstitutions: On",
+      "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
@@ -1390,9 +1425,12 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Creamfields Red Leicester Cheese 400GSubstitutions: On",
       "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
+      "Tesco Thin Cut Beef Steaks 395GSubstitutions: On",
+      "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
@@ -1428,9 +1466,12 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Creamfields Red Leicester Cheese 400GSubstitutions: On",
       "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
+      "Tesco Thin Cut Beef Steaks 395GSubstitutions: On",
+      "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
@@ -1493,9 +1534,12 @@ export const realCoverage: MealCoverage[] = [
       "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
       "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
+      "Creamfields Red Leicester Cheese 400GSubstitutions: On",
       "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
       "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
       "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
+      "Tesco Thin Cut Beef Steaks 395GSubstitutions: On",
+      "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
       "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
       "Acre Lane Lamb Mince 454GSubstitutions: On",
       "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
@@ -1514,6 +1558,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
