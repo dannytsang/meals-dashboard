@@ -709,6 +709,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -1087,20 +1088,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 0,
-  "covered": 0,
+  "coverage_percentage": 29,
+  "covered": 2,
   "delivery_date": "2026-06-02",
-  "meals_covered": 0,
+  "meals_covered": 2,
   "meals_total": 7,
-  "missing": 7,
+  "missing": 5,
   "order_total": 55.93,
   "partial": 0,
   "unmatched_groceries": 52
 };
+
 
 
 
@@ -1279,42 +1282,18 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "Calbee Asian Style Chips Umami Salt Flavour Potato Chips 130g",
-      "Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-      "Tesco Finest Extra Fruity Hot Cross Buns 4 pack",
-      "Actimel Immune Support Live Yoghurt Drink - Multifruit 8x100g",
-      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
-      "Tesco Beef Stir Fry Strips 357G",
-      "Tesco Blueberries 500G",
-      "Tesco Boneless Salmon Fillets 4 Pack 520g",
-      "Tesco British Whole Milk 1.13L, 2 Pints",
-      "Tesco Green Seedless Grapes Pack 500G",
-      "Tesco Guacamole 163g",
-      "Tesco Italian Unsmoked Pancetta 2 X65g",
-      "Tesco Large Broccoli Pack 500G",
-      "Tesco Perfectly Ripe Nectarines Minimum 3",
-      "Tesco Tzatziki Dip 200G",
-      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
-      "\u2020\u00a0Cantabile Blueberry Flavored Ade 230ml",
-      "\u2020\u00a0Cantabile Green Grape Flavoured Ade 230ml",
-      "\u2020\u00a0Cantabile Peach Flavour Ice Tea 230ml",
-      "Deli Kitchen Carb Lite Wheat Tortilla Wraps 6 Pack 300g",
-      "Happy Egg Free Range Eggs Medium 6 Pack",
-      "\u2020\u00a0Hobgoblin King Goblin Ale Beer Bottle 500ml",
-      "\u2020\u00a0Oakham Ales Citra 500Ml",
-      "\u2020\u00a0St Austell Proper Job Ale 500Ml",
-      "\u2020\u00a0St Austell Tribute 500Ml",
-      "Tesco All Rounder Potatoes 2Kg",
-      "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
-      "Tesco Carrots 1Kg",
-      "\u2020\u00a0Tesco Finest Crinkle Cut Roast Beef & Horseradish Flavour Hand Cooked Crisps 150g",
-      "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre",
-      "Tesco Sweet Easy Peelers 600g"
-    ]
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "[external] Tony and Barbara cooking",
+        "name": "[external] Tony and Barbara cooking",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [],
+    "notes": "external"
   },
   {
     "meal": {
@@ -1482,32 +1461,18 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "Tesco British Mature Grated Cheddar Cheese 250 GSubstitutions: On",
-      "Tesco British Mature Cheddar Cheese 10 Slices, 250 GSubstitutions: On",
-      "Tesco Mango 450GSubstitutions: On",
-      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
-      "Tesco Cheese and Garlic Flatbread 230gSubstitutions: On",
-      "Tesco Italian Unsmoked Pancetta 2 X65gSubstitutions: On",
-      "La Famiglia Rana Tuscan Ragu Pappardelle 814gSubstitutions: On",
-      "Acre Lane Lamb Mince 454GSubstitutions: On",
-      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
-      "\u2020 Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75gSubstitutions: On",
-      "Tesco Red Peppers EachSubstitutions: On",
-      "Tesco White Iced Ring Doughnuts 4 PackSubstitutions: On",
-      "Tesco Naturally Sweet Sweetcorn 325GSubstitutions: On",
-      "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
-      "Tesco WatermelonSubstitutions: On",
-      "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-      "\u2020 Tesco Summer Fruits Sparkling Flavoured Water 1 LitreSubstitutions: On",
-      "Hayden's 4 Delicious Yum YumsSubstitutions: On",
-      "\u2020 Tesco Apple & Elderflower Sparkling Water 1 LitreSubstitutions: On",
-      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-      "Tesco Italian Chopped Tomatoes 4 X 400GSubstitutions: On"
-    ]
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "[external] Tony and Barbara cooking",
+        "name": "[external] Tony and Barbara cooking",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [],
+    "notes": "external"
   },
   {
     "meal": {
@@ -1549,6 +1514,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
