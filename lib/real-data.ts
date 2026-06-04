@@ -644,42 +644,11 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "6gm39q8WFFj8whvh",
-    "content": "Pizza (Leo)",
-    "date": "2026-06-03",
-    "labels": [
-      "children"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "6gjW67xrPHqWxQJ9",
-    "content": "Fried rice",
-    "date": "2026-06-03",
-    "labels": [
-      "adult"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "6gm39xgq2669Xq29",
-    "content": "Tony and Barbara cooking",
-    "date": "2026-06-04",
-    "labels": [
-      "adults",
-      "children",
-      "plusTonyandBarbara"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "6Rv6P5rj7RjvV6j9",
     "content": "chicken / garlic bread and chips",
@@ -1077,16 +1046,17 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 50,
-  "covered": 1,
+  "coverage_percentage": 56,
+  "covered": 0,
   "delivery_date": "2026-06-05",
-  "meals_covered": 6,
-  "meals_total": 12,
-  "missing": 6,
+  "meals_covered": 5,
+  "meals_total": 9,
+  "missing": 4,
   "order_total": 64.4,
   "partial": 5,
   "unmatched_groceries": 34
@@ -1259,112 +1229,9 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "6gm39q8WFFj8whvh",
-      "content": "Pizza (Leo)",
-      "date": "2026-06-03",
-      "labels": [
-        "children"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75g",
-      "Creamfields Red Leicester Cheese 400G",
-      "Tesco Mango 450G",
-      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
-      "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-      "Tesco Beef Steaks with Peppercorn Sauce 320g",
-      "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-      "Tesco British Mature Grated Cheddar Cheese 250 G",
-      "Tesco Cheese and Garlic Flatbread 230g",
-      "Tesco Italian Unsmoked Pancetta 2 X65g",
-      "Tesco Thin Cut Beef Steaks 395G",
-      "Acre Lane Lamb Mince 454G",
-      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-      "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
-      "\u2020\u00a0Tesco Apple & Elderflower Sparkling Water 1 Litre",
-      "Tesco Italian Chopped Tomatoes 4 X 400G",
-      "Tesco Naturally Sweet Sweetcorn 325G",
-      "Tesco Red Peppers Each",
-      "\u2020\u00a0Tesco Sparkling Water Lemon & Lime 1 Litre",
-      "Tesco Watermelon",
-      "Tesco White Iced Ring Doughnuts 4 Pack"
-    ]
-  },
-  {
-    "meal": {
-      "id": "6gjW67xrPHqWxQJ9",
-      "content": "Fried rice",
-      "date": "2026-06-03",
-      "labels": [
-        "adult"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75g",
-      "Creamfields Red Leicester Cheese 400G",
-      "Tesco Mango 450G",
-      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115g",
-      "La Famiglia Rana Tuscan Ragu Pappardelle 814g",
-      "Tesco Beef Steaks with Peppercorn Sauce 320g",
-      "Tesco British Mature Cheddar Cheese 10 Slices, 250 G",
-      "Tesco British Mature Grated Cheddar Cheese 250 G",
-      "Tesco Cheese and Garlic Flatbread 230g",
-      "Tesco Italian Unsmoked Pancetta 2 X65g",
-      "Tesco Thin Cut Beef Steaks 395G",
-      "Acre Lane Lamb Mince 454G",
-      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-      "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
-      "\u2020\u00a0Tesco Apple & Elderflower Sparkling Water 1 Litre",
-      "Tesco Italian Chopped Tomatoes 4 X 400G",
-      "Tesco Naturally Sweet Sweetcorn 325G",
-      "Tesco Red Peppers Each",
-      "\u2020\u00a0Tesco Sparkling Water Lemon & Lime 1 Litre",
-      "Tesco Watermelon",
-      "Tesco White Iced Ring Doughnuts 4 Pack"
-    ]
-  },
-  {
-    "meal": {
-      "id": "6gm39xgq2669Xq29",
-      "content": "Tony and Barbara cooking",
-      "date": "2026-06-04",
-      "labels": [
-        "adults",
-        "children",
-        "plusTonyandBarbara"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "[external] Tony and Barbara cooking",
-        "name": "[external] Tony and Barbara cooking",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [],
-    "notes": "external"
-  },
   {
     "meal": {
       "id": "6Rv6P5rj7RjvV6j9",
@@ -1697,6 +1564,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
