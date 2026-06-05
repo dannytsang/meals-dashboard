@@ -547,10 +547,32 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
+  {
+    "id": "6Rv6P5rj7RjvV6j9",
+    "content": "chicken / garlic bread and chips",
+    "date": "2026-06-05",
+    "labels": [
+      "children"
+    ],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "6gm3FPvHmFx6HRM9",
+    "content": "Rana",
+    "date": "2026-06-05",
+    "labels": [
+      "adults",
+      "plusTonyandBarbara"
+    ],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
   {
     "id": "6gm3FRVWGg36q5R9",
     "content": "Eastbourne",
@@ -930,18 +952,19 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 43,
+  "coverage_percentage": 44,
   "covered": 0,
   "delivery_date": "2026-06-09",
-  "meals_covered": 3,
-  "meals_total": 7,
-  "missing": 4,
+  "meals_covered": 4,
+  "meals_total": 9,
+  "missing": 5,
   "order_total": 10.7,
-  "partial": 3,
+  "partial": 4,
   "unmatched_groceries": 15
 };
 
@@ -1115,8 +1138,82 @@ export const realMealsCheckSummary = {
 
 
 
+
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
+  {
+    "meal": {
+      "id": "6Rv6P5rj7RjvV6j9",
+      "content": "chicken / garlic bread and chips",
+      "date": "2026-06-05",
+      "labels": [
+        "children"
+      ],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "partial",
+    "coverageScore": 50,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Fire Pit 4 Maple Bbq Chicken Kebabs 260GSubstitutions: On",
+        "name": "Tesco Fire Pit 4 Maple Bbq Chicken Kebabs 260GSubstitutions: On",
+        "quantity": 1,
+        "price": 4.0
+      }
+    ],
+    "missingItems": [
+      "Tesco Blueberries 500GSubstitutions: On",
+      "Tesco Finest Duck Ragu with Pappardelle 750g Substitutions: On",
+      "Tesco Beef Lasagne 750GSubstitutions: On",
+      "Tesco Garlic & Cheese Mushrooms 200gSubstitutions: On",
+      "Tesco Cheddar Mash 450GSubstitutions: On",
+      "Tesco Green Seedless Grapes Pack 500GSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
+      "Tesco 6 Boneless Salmon Fillets 780GSubstitutions: On",
+      "Tesco Parmentier Potatoes 400GSubstitutions: On",
+      "Tesco Cherries Punnet 200GSubstitutions: On",
+      "Tesco Fire Pit 4 Pork, Feta & Herb Kebabs 400GSubstitutions: On",
+      "Tesco Potato Slices 350GSubstitutions: On",
+      "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
+      "Tesco WatermelonSubstitutions: On",
+      "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On"
+    ]
+  },
+  {
+    "meal": {
+      "id": "6gm3FPvHmFx6HRM9",
+      "content": "Rana",
+      "date": "2026-06-05",
+      "labels": [
+        "adults",
+        "plusTonyandBarbara"
+      ],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [
+      "Tesco Blueberries 500GSubstitutions: On",
+      "Tesco Finest Duck Ragu with Pappardelle 750g Substitutions: On",
+      "Tesco Beef Lasagne 750GSubstitutions: On",
+      "Tesco Fire Pit 4 Maple Bbq Chicken Kebabs 260GSubstitutions: On",
+      "Tesco Garlic & Cheese Mushrooms 200gSubstitutions: On",
+      "Tesco Cheddar Mash 450GSubstitutions: On",
+      "Tesco Green Seedless Grapes Pack 500GSubstitutions: On",
+      "Activia Rhubarb Gut Health Yoghurt Multipack 4x115gSubstitutions: On",
+      "Tesco 6 Boneless Salmon Fillets 780GSubstitutions: On",
+      "Tesco Parmentier Potatoes 400GSubstitutions: On",
+      "Tesco Cherries Punnet 200GSubstitutions: On",
+      "Tesco Fire Pit 4 Pork, Feta & Herb Kebabs 400GSubstitutions: On",
+      "Tesco Potato Slices 350GSubstitutions: On",
+      "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
+      "Tesco WatermelonSubstitutions: On",
+      "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On"
+    ]
+  },
   {
     "meal": {
       "id": "6gm3FRVWGg36q5R9",
@@ -1356,6 +1453,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
