@@ -650,6 +650,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -1059,6 +1060,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -1071,8 +1073,9 @@ export const realMealsCheckSummary = {
   "missing": 1,
   "order_total": 57.15,
   "partial": 1,
-  "unmatched_groceries": 22
+  "unmatched_groceries": 23
 };
+
 
 
 
@@ -1361,12 +1364,6 @@ export const realCoverage: MealCoverage[] = [
         "price": 1.17
       },
       {
-        "ingredient": "Tesco Fire Pit 4 Maple Bbq Chicken Kebabs 260G",
-        "name": "Tesco Fire Pit 4 Maple Bbq Chicken Kebabs 260G",
-        "quantity": 1,
-        "price": 4.0
-      },
-      {
         "ingredient": "Tesco Garlic & Cheese Mushrooms 200g",
         "name": "Tesco Garlic & Cheese Mushrooms 200g",
         "quantity": 1,
@@ -1387,6 +1384,7 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Blueberries 500G",
       "Tesco Cheddar Mash 450G",
       "Tesco Finest Duck Ragu with Pappardelle 750g",
+      "Tesco Fire Pit 4 Maple Bbq Chicken Kebabs 260G",
       "Tesco Green Seedless Grapes Pack 500G",
       "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre",
@@ -1528,12 +1526,6 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
-        "name": "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
-        "quantity": 1,
-        "price": 3.6
-      },
-      {
         "ingredient": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814gSubstitutions: On",
         "name": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814gSubstitutions: On",
         "quantity": 1,
@@ -1579,6 +1571,7 @@ export const realCoverage: MealCoverage[] = [
     "missingItems": [
       "Tesco Raw King Prawns 165gSubstitutions: On",
       "Tesco Sweet Chilli Stir Fry Sauce 165gSubstitutions: On",
+      "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
       "Tesco Stonebaked Classic Margherita Pizza 306gSubstitutions: On",
       "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
@@ -1693,6 +1686,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
