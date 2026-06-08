@@ -647,6 +647,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -1053,20 +1054,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 89,
-  "covered": 8,
+  "coverage_percentage": 67,
+  "covered": 6,
   "delivery_date": "2026-06-09",
-  "meals_covered": 8,
+  "meals_covered": 6,
   "meals_total": 9,
-  "missing": 1,
+  "missing": 3,
   "order_total": 57.15,
   "partial": 0,
-  "unmatched_groceries": 26
+  "unmatched_groceries": 32
 };
+
 
 
 
@@ -1294,37 +1297,13 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
-        "name": "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
-        "quantity": 1,
-        "price": 3.6
-      },
-      {
-        "ingredient": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
-        "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
-        "quantity": 1,
-        "price": 1.8
-      },
-      {
-        "ingredient": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-      },
-      {
-        "ingredient": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-      }
-    ],
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
     "missingItems": [
       "Tesco Raw King Prawns 165gSubstitutions: On",
       "Tesco Sweet Chilli Stir Fry Sauce 165gSubstitutions: On",
+      "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
       "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814gSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
       "Tesco Crackling Pork Loin Joint 637GSubstitutions: On",
@@ -1334,9 +1313,12 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
       "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "Grower's Harvest Sweetcorn 907GSubstitutions: On",
+      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400gSubstitutions: On",
       "Tesco Chocolate Iced Ring Doughnuts 4 PackSubstitutions: On",
+      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
+      "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
       "\u2020 Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75mlSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Walkers Wotsits Cheese Multipack Crisps 20x16.5gSubstitutions: On",
@@ -1358,12 +1340,6 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
-        "name": "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
-        "quantity": 1,
-        "price": 3.6
-      },
-      {
         "ingredient": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814gSubstitutions: On",
         "name": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814gSubstitutions: On",
         "quantity": 1,
@@ -1380,23 +1356,12 @@ export const realCoverage: MealCoverage[] = [
         "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
         "quantity": 1,
         "price": 1.8
-      },
-      {
-        "ingredient": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-      },
-      {
-        "ingredient": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
       }
     ],
     "missingItems": [
       "Tesco Raw King Prawns 165gSubstitutions: On",
       "Tesco Sweet Chilli Stir Fry Sauce 165gSubstitutions: On",
+      "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
       "Tesco Stonebaked Classic Margherita Pizza 306gSubstitutions: On",
       "Tesco Egg Noodles 300GSubstitutions: On",
@@ -1406,7 +1371,9 @@ export const realCoverage: MealCoverage[] = [
       "Grower's Harvest Sweetcorn 907GSubstitutions: On",
       "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400gSubstitutions: On",
       "Tesco Chocolate Iced Ring Doughnuts 4 PackSubstitutions: On",
+      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
+      "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
       "\u2020 Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75mlSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Walkers Wotsits Cheese Multipack Crisps 20x16.5gSubstitutions: On",
@@ -1424,30 +1391,19 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Sweet Chilli Stir Fry Sauce 165gSubstitutions: On",
-        "name": "Tesco Sweet Chilli Stir Fry Sauce 165gSubstitutions: On",
-        "quantity": 1,
-        "price": 0.74
-      },
-      {
-        "ingredient": "Tesco Large Vegetable Stir Fry 570gSubstitutions: On",
-        "name": "Tesco Large Vegetable Stir Fry 570gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.28
-      }
-    ],
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
     "missingItems": [
       "Tesco Raw King Prawns 165gSubstitutions: On",
+      "Tesco Sweet Chilli Stir Fry Sauce 165gSubstitutions: On",
       "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
       "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814gSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
       "Tesco Crackling Pork Loin Joint 637GSubstitutions: On",
       "Tesco Stonebaked Classic Margherita Pizza 306gSubstitutions: On",
       "Tesco Egg Noodles 300GSubstitutions: On",
+      "Tesco Large Vegetable Stir Fry 570gSubstitutions: On",
       "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
       "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "Grower's Harvest Sweetcorn 907GSubstitutions: On",
@@ -1548,12 +1504,6 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 100,
     "matchedItems": [
       {
-        "ingredient": "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
-        "name": "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
-        "quantity": 1,
-        "price": 3.6
-      },
-      {
         "ingredient": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814gSubstitutions: On",
         "name": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814gSubstitutions: On",
         "quantity": 1,
@@ -1564,49 +1514,25 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Crackling Pork Loin Joint 637GSubstitutions: On",
         "quantity": 1,
         "price": 3.85
-      },
-      {
-        "ingredient": "Tesco Egg Noodles 300GSubstitutions: On",
-        "name": "Tesco Egg Noodles 300GSubstitutions: On",
-        "quantity": 1,
-        "price": 0.74
-      },
-      {
-        "ingredient": "Tesco Large Vegetable Stir Fry 570gSubstitutions: On",
-        "name": "Tesco Large Vegetable Stir Fry 570gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.28
-      },
-      {
-        "ingredient": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
-        "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
-        "quantity": 1,
-        "price": 1.8
-      },
-      {
-        "ingredient": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-      },
-      {
-        "ingredient": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
       }
     ],
     "missingItems": [
       "Tesco Raw King Prawns 165gSubstitutions: On",
       "Tesco Sweet Chilli Stir Fry Sauce 165gSubstitutions: On",
+      "Tesco Finest Beef Dripping Roast Potatoes 800GSubstitutions: On",
       "Tesco Mango 450GSubstitutions: On",
       "Tesco Stonebaked Classic Margherita Pizza 306gSubstitutions: On",
+      "Tesco Egg Noodles 300GSubstitutions: On",
+      "Tesco Large Vegetable Stir Fry 570gSubstitutions: On",
       "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
       "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "Grower's Harvest Sweetcorn 907GSubstitutions: On",
+      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400gSubstitutions: On",
       "Tesco Chocolate Iced Ring Doughnuts 4 PackSubstitutions: On",
+      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
+      "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
       "\u2020 Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75mlSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On",
       "\u2020 Walkers Wotsits Cheese Multipack Crisps 20x16.5gSubstitutions: On",
@@ -1677,18 +1603,6 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Crackling Pork Loin Joint 637GSubstitutions: On",
         "quantity": 1,
         "price": 3.85
-      },
-      {
-        "ingredient": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
-        "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
-        "quantity": 1,
-        "price": 1.8
-      },
-      {
-        "ingredient": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
       }
     ],
     "missingItems": [
@@ -1702,8 +1616,10 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Beef Steaks with Peppercorn Sauce 320gSubstitutions: On",
       "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
       "Grower's Harvest Sweetcorn 907GSubstitutions: On",
+      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
       "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400gSubstitutions: On",
       "Tesco Chocolate Iced Ring Doughnuts 4 PackSubstitutions: On",
+      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
       "\u2020 Tesco Sparkling Water Lemon & Lime 1 LitreSubstitutions: On",
       "\u2020 Calbee Seaweed & Salt Flavour Potato Chips 130gSubstitutions: On",
       "\u2020 Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75mlSubstitutions: On",
@@ -1713,6 +1629,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
