@@ -165,6 +165,15 @@ export function deriveCollapsedCoverageColor(meals: MealCoverage[]): string {
   return getCoverageColorFromScore(average);
 }
 
+export function isTodoistMealCompleted(meal: MealCoverage['meal'] | null | undefined): boolean {
+  return meal?.is_completed === true;
+}
+
+export function getTodoistCompletionLabel(meal: MealCoverage['meal'] | null | undefined): string | null {
+  if (!isTodoistMealCompleted(meal)) return null;
+  return meal?.completed_at ? `Completed in Todoist · ${meal.completed_at}` : 'Completed in Todoist';
+}
+
 export function getDisplayedProductName(name: string): string {
   return cleanItemName(name);
 }

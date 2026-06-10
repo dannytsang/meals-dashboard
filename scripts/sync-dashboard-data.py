@@ -398,6 +398,10 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
             }
             if m.get("meal_type"):
                 meal_entry["meal_type"] = m["meal_type"]
+            if m.get("is_completed"):
+                meal_entry["is_completed"] = True
+                if m.get("completed_at"):
+                    meal_entry["completed_at"] = m["completed_at"]
             meals_block.append(meal_entry)
             
             # Use matched item names directly from cache (already resolved by meal_coverage)

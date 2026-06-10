@@ -14,7 +14,9 @@ import {
   classifyOrderItemMatch,
   deriveCollapsedCoverageColor,
   getDisplayedProductName,
+  getTodoistCompletionLabel,
   getProductModalPrice,
+  isTodoistMealCompleted,
   transformCachedOrderSafely,
 } from '@/lib/dashboard-ui-utils';
 
@@ -365,6 +367,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
                                           return (
                                             <div key={idx} onClick={() => setSelectedMealData(meal)} style={{ padding: '0.5rem 0.5rem', borderRadius: '6px', backgroundColor: barColor, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', minHeight: '50px', boxSizing: 'border-box', cursor: 'pointer', outline: 'none', outlineOffset: '2px' }}>
                                               <span style={{ fontSize: '10px', fontWeight: '600', color: 'white', textAlign: 'center', lineHeight: '1.2', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{meal.meal.content}</span>
+                                              {isTodoistMealCompleted(meal.meal) && <span title={getTodoistCompletionLabel(meal.meal) || undefined} style={{ fontSize: '8px', fontWeight: '700', padding: '1px 4px', borderRadius: '999px', backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--accent-emerald)' }}>✓ Todoist</span>}
                                               {meal.meal.labels && meal.meal.labels.length > 0 && <span style={{ fontSize: '8px', fontWeight: '600', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.25)', color: 'white' }}>{meal.meal.labels.join(', ')}</span>}
                                               <span style={{ fontSize: '9px', fontWeight: '700', color: 'white', flexShrink: 0 }}>{meal.coverageScore}%</span>
                                             </div>
@@ -451,6 +454,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{selectedMealData.meal.content}</h3>
                 <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', backgroundColor: selectedMealData.status === 'covered' ? 'var(--accent-emerald-bg)' : selectedMealData.status === 'partial' ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)', color: selectedMealData.status === 'covered' ? 'var(--accent-emerald)' : selectedMealData.status === 'partial' ? 'var(--accent-amber)' : 'var(--accent-rose)', textTransform: 'capitalize' }}>{selectedMealData.status}</span>
+                {isTodoistMealCompleted(selectedMealData.meal) && <div style={{ marginTop: '0.5rem', fontSize: '11px', fontWeight: '700', padding: '4px 8px', borderRadius: '999px', backgroundColor: 'var(--accent-emerald-bg)', color: 'var(--accent-emerald)', display: 'inline-block' }}>{getTodoistCompletionLabel(selectedMealData.meal)}</div>}
               </div>
               <button onClick={() => setSelectedMealData(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '18px', padding: '0.25rem' }}>✕</button>
             </div>

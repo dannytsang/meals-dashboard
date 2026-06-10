@@ -16,6 +16,8 @@ export interface Meal {
   meal_type?: 'lunch' | 'dinner';
   priority?: number;
   description?: string;
+  is_completed?: boolean;
+  completed_at?: string;
 }
 
 export interface GroceryItem {

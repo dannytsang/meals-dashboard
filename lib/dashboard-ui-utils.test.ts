@@ -7,6 +7,8 @@ import {
   deriveCollapsedCoverageColor,
   getDisplayedProductName,
   getProductModalPrice,
+  getTodoistCompletionLabel,
+  isTodoistMealCompleted,
   transformCachedOrderSafely,
 } from './dashboard-ui-utils';
 
@@ -114,6 +116,18 @@ describe('deriveCollapsedCoverageColor', () => {
       { meal: { id: '1', content: 'Meal 1', date: '2026-06-12', labels: [], section: 'Planned' }, status: 'covered', coverageScore: 10, matchedItems: [], missingItems: [] },
       { meal: { id: '2', content: 'Meal 2', date: '2026-06-12', labels: [], section: 'Planned' }, status: 'covered', coverageScore: 20, matchedItems: [], missingItems: [] },
     ])).toBe('var(--accent-rose)');
+  });
+});
+
+describe('Todoist completion presentation', () => {
+  it('marks only generated meals with Todoist completion metadata as completed', () => {
+    expect(isTodoistMealCompleted({ id: '1', content: 'Duck pancakes', date: '2026-06-15', labels: [], section: 'Planned', is_completed: true })).toBe(true);
+    expect(isTodoistMealCompleted({ id: '2', content: 'Chicken pasta', date: '2026-06-15', labels: [], section: 'Planned' })).toBe(false);
+  });
+
+  it('shows completion timestamp when the generated meal includes one', () => {
+    expect(getTodoistCompletionLabel({ id: '1', content: 'Duck pancakes', date: '2026-06-15', labels: [], section: 'Planned', is_completed: true, completed_at: '2026-06-10T09:00:00Z' })).toBe('Completed in Todoist · 2026-06-10T09:00:00Z');
+    expect(getTodoistCompletionLabel({ id: '2', content: 'Chicken pasta', date: '2026-06-15', labels: [], section: 'Planned' })).toBeNull();
   });
 });
 
