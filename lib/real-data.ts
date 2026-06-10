@@ -577,6 +577,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -608,6 +609,36 @@ export const realMealPlan: Meal[] = [
     "date": "2026-06-12",
     "labels": [
       "adults"
+    ],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "6gpvwVFrrCXGWc4h",
+    "content": "Stir fry",
+    "date": "2026-06-10",
+    "labels": [
+      "adults"
+    ],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "6gpvwcxwrG7xg249",
+    "content": "Cheesy mash (Ashlee)",
+    "date": "2026-06-10",
+    "labels": [
+      "children"
+    ],
+    "section": "Planned",
+    "meal_type": "lunch"
+  },
+  {
+    "id": "6gpvwXf7Cr6gm57h",
+    "content": "Pizza (Leo)",
+    "date": "2026-06-10",
+    "labels": [
+      "children"
     ],
     "section": "Planned",
     "meal_type": "dinner"
@@ -990,20 +1021,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 89,
-  "covered": 5,
+  "coverage_percentage": 92,
+  "covered": 8,
   "delivery_date": "2026-06-12",
-  "meals_covered": 8,
-  "meals_total": 9,
+  "meals_covered": 11,
+  "meals_total": 12,
   "missing": 1,
   "order_total": 70.04,
   "partial": 3,
-  "unmatched_groceries": 24
+  "unmatched_groceries": 22
 };
+
 
 
 
@@ -1365,6 +1398,125 @@ export const realCoverage: MealCoverage[] = [
   },
   {
     "meal": {
+      "id": "6gpvwVFrrCXGWc4h",
+      "content": "Stir fry",
+      "date": "2026-06-10",
+      "labels": [
+        "adults"
+      ],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Large Vegetable Stir Fry 570g",
+        "name": "Tesco Large Vegetable Stir Fry 570g",
+        "quantity": null,
+        "price": null
+      },
+      {
+        "ingredient": "Tesco Sweet Chilli Stir Fry Sauce 165g",
+        "name": "Tesco Sweet Chilli Stir Fry Sauce 165g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [
+      "Tesco Beef Steaks with Peppercorn Sauce 320g",
+      "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
+      "Tesco British Whole Milk 1.13L, 2 Pints",
+      "Tesco Crackling Pork Loin Joint 637G",
+      "Tesco Egg Noodles 300G",
+      "Tesco Finest Beef Dripping Roast Potatoes 800G",
+      "Tesco Mango 450G",
+      "Tesco Raw King Prawns 165g",
+      "Tesco Stonebaked Classic Margherita Pizza 306g",
+      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
+      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
+      "Grower's Harvest Sweetcorn 907G",
+      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
+      "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
+      "\u2020\u00a0Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75ml",
+      "Hayden's 4 Delicious Yum Yums",
+      "\u2020\u00a0Tesco Apple & Elderflower Sparkling Water 1 Litre",
+      "Tesco Chocolate Iced Ring Doughnuts 4 Pack",
+      "\u2020\u00a0Tesco Sparkling Water Lemon & Lime 1 Litre",
+      "\u2020\u00a0Walkers Wotsits Cheese Multipack Crisps 20x16.5g"
+    ]
+  },
+  {
+    "meal": {
+      "id": "6gpvwcxwrG7xg249",
+      "content": "Cheesy mash (Ashlee)",
+      "date": "2026-06-10",
+      "labels": [
+        "children"
+      ],
+      "section": "Planned",
+      "meal_type": "lunch"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "[external] Cheesy mash (Ashlee)",
+        "name": "[external] Cheesy mash (Ashlee)",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [],
+    "notes": "external"
+  },
+  {
+    "meal": {
+      "id": "6gpvwXf7Cr6gm57h",
+      "content": "Pizza (Leo)",
+      "date": "2026-06-10",
+      "labels": [
+        "children"
+      ],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [
+      "Tesco Beef Steaks with Peppercorn Sauce 320g",
+      "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
+      "Tesco British Whole Milk 1.13L, 2 Pints",
+      "Tesco Crackling Pork Loin Joint 637G",
+      "Tesco Egg Noodles 300G",
+      "Tesco Finest Beef Dripping Roast Potatoes 800G",
+      "Tesco Large Vegetable Stir Fry 570g",
+      "Tesco Mango 450G",
+      "Tesco Raw King Prawns 165g",
+      "Tesco Sweet Chilli Stir Fry Sauce 165g",
+      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
+      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
+      "Grower's Harvest Sweetcorn 907G",
+      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
+      "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
+      "\u2020\u00a0Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75ml",
+      "Hayden's 4 Delicious Yum Yums",
+      "\u2020\u00a0Tesco Apple & Elderflower Sparkling Water 1 Litre",
+      "Tesco Chocolate Iced Ring Doughnuts 4 Pack",
+      "\u2020\u00a0Tesco Sparkling Water Lemon & Lime 1 Litre",
+      "\u2020\u00a0Walkers Wotsits Cheese Multipack Crisps 20x16.5g"
+    ]
+  },
+  {
+    "meal": {
       "id": "6gqRfc74rv9Xpr9h",
       "content": "Costco sausages (lunch - frozen)",
       "date": "2026-06-13",
@@ -1679,6 +1831,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
