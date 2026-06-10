@@ -28,6 +28,7 @@ interface CachedOrder {
     name: string;
     quantity: number;
     price: number;
+    substitutedWith?: string;
   }[];
 }
 
@@ -114,8 +115,11 @@ export function transformCachedOrder(order: CachedOrder): TescoReceipt {
       quantity: item.quantity,
       price: item.price,
       category: getCategory(item.name),
+      substitutedWith: item.substitutedWith,
     })),
-    substitutions: [],
+    substitutions: order.items
+      .filter(item => item.substitutedWith)
+      .map(item => ({ original: item.name, substitutedWith: item.substitutedWith as string })),
     unavailable: [],
     shortLifeItems,
   };

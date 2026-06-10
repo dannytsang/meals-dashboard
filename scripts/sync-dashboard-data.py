@@ -313,10 +313,26 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
     if receipt and receipt_start is not None and receipt_end is not None:
         # Filter items to only include fields that CachedOrder expects
         raw_items = receipt.get("items", [])
-        items = [
-            {"name": i.get("name", ""), "quantity": i.get("quantity", 1), "price": i.get("price", 0)}
-            for i in raw_items
-        ]
+        top_level_substitutions = receipt.get("substitutions", []) or []
+        substitutions_by_original = {}
+        for sub in top_level_substitutions:
+            original = sub.get("original") or sub.get("name")
+            substitute = sub.get("substitutedWith") or sub.get("substituted_with") or sub.get("substitution")
+            if isinstance(substitute, dict):
+                substitute = substitute.get("name") or substitute.get("product") or substitute.get("title")
+            if original and substitute:
+                substitutions_by_original[str(original).lower()] = str(substitute)
+
+        items = []
+        for i in raw_items:
+            item = {"name": i.get("name", ""), "quantity": i.get("quantity", 1), "price": i.get("price", 0)}
+            substituted_with = i.get("substitutedWith") or i.get("substituted_with") or i.get("substitution")
+            if isinstance(substituted_with, dict):
+                substituted_with = substituted_with.get("name") or substituted_with.get("product") or substituted_with.get("title")
+            substituted_with = substituted_with or substitutions_by_original.get(str(item["name"]).lower())
+            if substituted_with:
+                item["substitutedWith"] = str(substituted_with)
+            items.append(item)
         items_json = json.dumps(items, indent=4)
         order_total = receipt.get("total", 0)
         order_block = [

@@ -2,42 +2,37 @@
 
 import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { calculateCoverageSummary, getUpcomingDeliveries, Meal } from '@/lib/meals-data';
+import { getUpcomingDeliveries, GroceryItem, Meal } from '@/lib/meals-data';
 import { cleanItemName, deduplicateMatchedItems, MatchedItem } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
 import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
-import { realCoverage, realLatestOrder, realMealsCheckSummary, transformCachedOrder } from '@/lib/real-data';
-import { syncMeta } from '@/lib/sync-meta';
-import { DashboardState, filterCoverage } from '@/lib/dashboard-state';
+import { realCoverage, realLatestOrder, realMealsCheckSummary } from '@/lib/real-data';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { findProductInfo } from '@/lib/product-database';
+import {
+  buildHeadlineMetrics,
+  classifyOrderItemMatch,
+  deriveCollapsedCoverageColor,
+  getDisplayedProductName,
+  getProductModalPrice,
+  transformCachedOrderSafely,
+} from '@/lib/dashboard-ui-utils';
 
 interface DashboardClientProps {
   today: string;
   defaultDateRange?: { start: string; end: string };
 }
 
-export function DashboardClient({ today, defaultDateRange }: DashboardClientProps) {
-  const [state] = useState<DashboardState>({
-    selectedShop: 'current',
-    statusFilter: 'all',
-    expandedMealId: null,
-    dateRange: defaultDateRange ?? { start: '2026-04-13', end: '2026-04-19' },
-  });
-
+export function DashboardClient({ today }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
-  const [selectedMeal, setSelectedMeal] = useState<string | null>(null);
   const [selectedMealData, setSelectedMealData] = useState<{meal: Meal, status: string, coverageScore: number, matchedItems: MatchedItem[], missingItems: string[], notes?: string} | null>(null);
-  const [selectedItem, setSelectedItem] = useState<{name: string, price: number, quantity: number, substitutedWith?: string} | null>(null);
+  const [selectedItem, setSelectedItem] = useState<GroceryItem | null>(null);
   const [productInfo, setProductInfo] = useState<{description: string, storage: string, nutrition: string, image: string} | null>(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
   const [showCount, setShowCount] = useState(10);
-  const [labelFilter, setLabelFilter] = useState<string | null>(null);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
-  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   
   useEffect(() => {
     const checkWidth = () => setIsDesktop(window.innerWidth >= 1024);
@@ -46,24 +41,14 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
 
-  const receipt = transformCachedOrder(realLatestOrder);
-  const deliveries = getUpcomingDeliveries(realLatestOrder.delivery_date);
-  const coverage = realCoverage;
-
-  const filteredCoverage = filterCoverage(coverage, state.statusFilter);
-  const summary = calculateCoverageSummary(coverage);
-  const headlineSummary = realMealsCheckSummary;
+  const receipt = transformCachedOrderSafely(realLatestOrder);
+  const deliveries = getUpcomingDeliveries(realLatestOrder?.delivery_date ?? null);
+  const coverage = realCoverage ?? [];
+  const headlineMetrics = buildHeadlineMetrics(realMealsCheckSummary, receipt, coverage, deliveries);
   
   const unmatchedItems = receipt?.items || [];
 
-  const trulyUnmatchedItems = unmatchedItems.filter(item => {
-    const itemWords = item.name.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
-    const isMatched = coverage.some(c => {
-      const mealWords = c.meal.content.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
-      return itemWords.some(iw => mealWords.some(mw => mw.includes(iw) || iw.includes(mw)));
-    });
-    return !isMatched;
-  });
+  const trulyUnmatchedItems = unmatchedItems.filter(item => classifyOrderItemMatch(item, coverage) === 'unmatched');
 
   const itemsByCategory: Record<string, typeof unmatchedItems> = {};
   unmatchedItems.forEach(item => {
@@ -74,18 +59,7 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
 
   const categories = Object.keys(itemsByCategory).sort();
   
-  const maxItemPrice = unmatchedItems.length > 0 ? Math.max(...unmatchedItems.map(i => i.price || 0)) : 10;
-  
-  const getMatchedItemsForMeal = (mealContent: string) => {
-    const mealCoverage = coverage.find(c => c.meal.content === mealContent);
-    if (!mealCoverage) return [];
-    const mealWords = mealContent.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
-    return unmatchedItems.filter(item => {
-      const itemWords = item.name.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
-      return itemWords.some(iw => mealWords.some(mw => mw.includes(iw) || iw.includes(mw)));
-    });
-  };
-  
+
   const getCategoryIcon = (itemName: string): string => {
     const name = itemName.toLowerCase();
     if (name.includes('strawberr') || name.includes('blueberr') || name.includes('raspberr') || name.includes('blackberr') || name.includes('grape')) return '🍇';
@@ -140,27 +114,12 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
     setLoadingProduct(false);
   };
   
-  const clearAllFilters = () => {
-    setSelectedCategories(new Set());
-    setMatchedFilter('all');
-    setSelectedMeal(null);
-    setMaxPrice(null);
-    setShowCount(20);
-    setLabelFilter(null);
-  };
-  
   const displayItems = unmatchedItems.filter(item => {
     const catMatch = selectedCategories.size === 0 || selectedCategories.has(item.category || 'Pantry');
-    const priceMatch = maxPrice === null || (item.price || 0) <= maxPrice;
     const isUnmatched = trulyUnmatchedItems.includes(item);
     const isMatched = !isUnmatched;
     const matchedMatch = matchedFilter === 'all' || (matchedFilter === 'matched' && isMatched) || (matchedFilter === 'unmatched' && isUnmatched);
-    const mealMatch = !selectedMeal || (() => {
-      const mealWords = selectedMeal.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
-      const itemWords = item.name.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
-      return itemWords.some(iw => mealWords.some(mw => mw.includes(iw) || iw.includes(mw)));
-    })();
-    return catMatch && priceMatch && matchedMatch && mealMatch;
+    return catMatch && matchedMatch;
   });
 
   const coverageByDate: Record<string, typeof coverage> = {};
@@ -252,7 +211,7 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Order Total</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>£{headlineSummary.order_total?.toFixed(2) || receipt?.orderTotal.toFixed(2) || '—'}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{headlineMetrics.orderTotal !== null ? `£${headlineMetrics.orderTotal.toFixed(2)}` : '—'}</p>
           </div>
 
           <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
@@ -263,40 +222,40 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Delivery</p>
             <p style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-              {headlineSummary.delivery_date ? formatShortDayMonth(headlineSummary.delivery_date) : deliveries[0] ? formatShortDayMonth(deliveries[0].date) : '—'}
+              {headlineMetrics.deliveryDate ? formatShortDayMonth(headlineMetrics.deliveryDate) : '—'}
             </p>
           </div>
 
-          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', cursor: 'pointer' }} onClick={() => { setMatchedFilter(matchedFilter === 'matched' ? 'all' : 'matched'); setSelectedMeal(null); }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', cursor: 'pointer' }} onClick={() => setMatchedFilter(matchedFilter === 'matched' ? 'all' : 'matched')}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-emerald-bg)' }}>
                 <Check style={{ width: '20px', height: '20px', color: 'var(--accent-emerald)' }} />
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Meals Covered</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{headlineSummary.meals_covered ?? summary.covered}/{headlineSummary.meals_total ?? coverage.length}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{headlineMetrics.mealsCovered}/{headlineMetrics.mealsTotal}</p>
             {matchedFilter === 'matched' && <p style={{ fontSize: '9px', color: 'var(--accent-emerald)', fontWeight: '600', marginTop: '2px' }}>Filtered</p>}
           </div>
 
-          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', cursor: 'pointer' }} onClick={() => { setMatchedFilter(matchedFilter === 'unmatched' ? 'all' : 'unmatched'); setSelectedMeal(null); }}>
+          <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', cursor: 'pointer' }} onClick={() => setMatchedFilter(matchedFilter === 'unmatched' ? 'all' : 'unmatched')}>
             <div style={{ marginBottom: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--accent-rose-bg)' }}>
                 <X style={{ width: '20px', height: '20px', color: 'var(--accent-rose)' }} />
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unmatched</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{headlineSummary.unmatched_groceries ?? unmatchedItems.length}</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{headlineMetrics.unmatchedGroceries}</p>
             {matchedFilter === 'unmatched' && <p style={{ fontSize: '9px', color: 'var(--accent-rose)', fontWeight: '600', marginTop: '2px' }}>Filtered</p>}
           </div>
 
           <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ marginBottom: '0.5rem' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 80 ? 'var(--accent-emerald-bg)' : (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' }}>
-                <TrendingUp style={{ width: '20px', height: '20px', color: (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 80 ? 'var(--accent-emerald)' : (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }} />
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: headlineMetrics.coveragePercentage >= 80 ? 'var(--accent-emerald-bg)' : headlineMetrics.coveragePercentage >= 50 ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)' }}>
+                <TrendingUp style={{ width: '20px', height: '20px', color: headlineMetrics.coveragePercentage >= 80 ? 'var(--accent-emerald)' : headlineMetrics.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }} />
               </div>
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Coverage</p>
-            <p style={{ fontSize: '20px', fontWeight: 'bold', color: (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 80 ? 'var(--accent-emerald)' : (headlineSummary.coverage_percentage ?? summary.coveragePercentage) >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{headlineSummary.coverage_percentage ?? summary.coveragePercentage}%</p>
+            <p style={{ fontSize: '20px', fontWeight: 'bold', color: headlineMetrics.coveragePercentage >= 80 ? 'var(--accent-emerald)' : headlineMetrics.coveragePercentage >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{headlineMetrics.coveragePercentage}%</p>
           </div>
         </div>
 
@@ -379,7 +338,7 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
                                   const dayMeals = (coverageByDate[dataKey] || []).filter(c => getMealType(c.meal) === mealType);
                                   if (dayMeals.length === 0) return <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>—</span>;
                                   const avgCoverage = Math.round(dayMeals.reduce((sum, m) => sum + m.coverageScore, 0) / dayMeals.length);
-                                  const barColor = getStatusColor(dayMeals[0].status, avgCoverage);
+                                  const barColor = deriveCollapsedCoverageColor(dayMeals);
                                   return (
                                     <div style={{ padding: '0.4rem 0.5rem', borderRadius: '6px', backgroundColor: barColor, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50px', gap: '0.25rem' }}>
                                       {dayMeals.length > 1 && <span style={{ fontSize: '10px', fontWeight: '700', color: 'white' }}>{dayMeals.length} meals</span>}
@@ -432,7 +391,7 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
               <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>🛒 ORDER ITEMS BY CATEGORY</h2>
               
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center' }}>
-                <button onClick={() => { setSelectedCategories(new Set()); setMatchedFilter('all'); setSelectedMeal(null); }} style={{ padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '11px', fontWeight: '600', border: '1px solid', cursor: 'pointer', transition: 'all 0.15s', backgroundColor: selectedCategories.size === 0 && matchedFilter === 'all' ? 'var(--accent-emerald)' : 'transparent', borderColor: selectedCategories.size === 0 && matchedFilter === 'all' ? 'var(--accent-emerald)' : 'var(--border-color)', color: selectedCategories.size === 0 && matchedFilter === 'all' ? 'white' : 'var(--text-primary)' }}>All</button>
+                <button onClick={() => { setSelectedCategories(new Set()); setMatchedFilter('all'); }} style={{ padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '11px', fontWeight: '600', border: '1px solid', cursor: 'pointer', transition: 'all 0.15s', backgroundColor: selectedCategories.size === 0 && matchedFilter === 'all' ? 'var(--accent-emerald)' : 'transparent', borderColor: selectedCategories.size === 0 && matchedFilter === 'all' ? 'var(--accent-emerald)' : 'var(--border-color)', color: selectedCategories.size === 0 && matchedFilter === 'all' ? 'white' : 'var(--text-primary)' }}>All</button>
                 {categories.map(cat => {
                   const isSelected = selectedCategories.has(cat);
                   return (
@@ -460,8 +419,7 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
                   return (
                     <div key={idx} onClick={() => {
                       const sub = receipt?.substitutions?.find(s => s.original.toLowerCase() === item.name.toLowerCase());
-                      setSelectedMeal(null);
-                      setSelectedItem({ name: item.name, price: item.price || 0, quantity: item.quantity || 1, substitutedWith: sub?.substitutedWith });
+                      setSelectedItem({ ...item, substitutedWith: item.substitutedWith || sub?.substitutedWith });
                       fetchProductInfo(item.name);
                     }} style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: isUnmatched ? 1 : 0.7, borderLeft: isUnmatched ? '3px solid var(--accent-rose)' : '3px solid var(--accent-emerald)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
@@ -570,7 +528,7 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0, flex: 1 }}>{selectedItem.name}</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0, flex: 1 }}>{getDisplayedProductName(selectedItem.name)}</h3>
               <button
                 onClick={() => { setSelectedItem(null); setProductInfo(null); }}
                 style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: 'var(--text-secondary)', padding: '0 0 0 1rem' }}
@@ -620,7 +578,7 @@ export function DashboardClient({ today, defaultDateRange }: DashboardClientProp
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
                   <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Price</span>
-                  <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>£{((selectedItem.price || 0) * (selectedItem.quantity || 1)).toFixed(2)}</span>
+                  <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>£{getProductModalPrice(selectedItem).toFixed(2)}</span>
                 </div>
               </div>
             ) : (

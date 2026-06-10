@@ -24,6 +24,7 @@ export interface GroceryItem {
   unit?: string;
   price?: number;
   category?: string;
+  substitutedWith?: string;
 }
 
 export interface TescoReceipt {
