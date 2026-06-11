@@ -585,79 +585,11 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "6Rv6P5rj7RjvV6j9",
-    "content": "Rice / garlic bread",
-    "date": "2026-06-12",
-    "labels": [
-      "children"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "6gpvx26cwvh4rm69",
-    "content": "Spicy pork & nduja fettuccine",
-    "date": "2026-06-12",
-    "labels": [
-      "adults"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "6gpvwgWvVwrXhGvh",
-    "content": "Roast pork, roast potatoes and veg",
-    "date": "2026-06-11",
-    "labels": [
-      "adults",
-      "children"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner",
-    "is_completed": true,
-    "completed_at": "2026-06-11T19:22:45.984000Z"
-  },
-  {
-    "id": "6gpvwVFrrCXGWc4h",
-    "content": "Stir fry",
-    "date": "2026-06-10",
-    "labels": [
-      "adults"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner",
-    "is_completed": true,
-    "completed_at": "2026-06-10T16:50:41.925000Z"
-  },
-  {
-    "id": "6gpvwcxwrG7xg249",
-    "content": "Cheesy mash (Ashlee)",
-    "date": "2026-06-10",
-    "labels": [
-      "children"
-    ],
-    "section": "Planned",
-    "meal_type": "lunch",
-    "is_completed": true,
-    "completed_at": "2026-06-10T16:32:05.032432Z"
-  },
-  {
-    "id": "6gpvwXf7Cr6gm57h",
-    "content": "Pizza (Leo)",
-    "date": "2026-06-10",
-    "labels": [
-      "children"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner",
-    "is_completed": true,
-    "completed_at": "2026-06-10T16:32:04.105914Z"
-  },
   {
     "id": "6gqRfc74rv9Xpr9h",
     "content": "Costco sausages (lunch - frozen)",
@@ -753,8 +685,29 @@ export const realMealPlan: Meal[] = [
     "meal_type": "dinner",
     "is_completed": true,
     "completed_at": "2026-06-11T20:15:27.564219Z"
+  },
+  {
+    "id": "6gqh5rFmJv96P439",
+    "content": "Pizza (Leo)",
+    "date": "2026-06-17",
+    "labels": [
+      "children"
+    ],
+    "section": "Planned",
+    "meal_type": "dinner"
+  },
+  {
+    "id": "6gqh5w5f29mWr4p9",
+    "content": "Cheesy mash (Ashlee)",
+    "date": "2026-06-17",
+    "labels": [
+      "children"
+    ],
+    "section": "Planned",
+    "meal_type": "lunch"
   }
 ];
+
 
 
 
@@ -1083,16 +1036,17 @@ export const realMealPlan: Meal[] = [
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 93,
-  "covered": 9,
+  "coverage_percentage": 64,
+  "covered": 4,
   "delivery_date": "2026-06-12",
-  "meals_covered": 14,
-  "meals_total": 15,
-  "missing": 1,
+  "meals_covered": 7,
+  "meals_total": 11,
+  "missing": 4,
   "order_total": 57.14,
-  "partial": 5,
-  "unmatched_groceries": 21
+  "partial": 3,
+  "unmatched_groceries": 28
 };
+
 
 
 
@@ -1287,308 +1241,6 @@ export const realMealsCheckSummary = {
 export const realCoverage: MealCoverage[] = [
   {
     "meal": {
-      "id": "6Rv6P5rj7RjvV6j9",
-      "content": "Rice / garlic bread",
-      "date": "2026-06-12",
-      "labels": [
-        "children"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "Tesco Beef Steaks with Peppercorn Sauce 320g",
-      "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
-      "Tesco British Whole Milk 1.13L, 2 Pints",
-      "Tesco Crackling Pork Loin Joint 637G",
-      "Tesco Egg Noodles 300G",
-      "Tesco Finest Beef Dripping Roast Potatoes 800G",
-      "Tesco Large Vegetable Stir Fry 570g",
-      "Tesco Mango 450G",
-      "Tesco Raw King Prawns 165g",
-      "Tesco Stonebaked Classic Margherita Pizza 306g",
-      "Tesco Sweet Chilli Stir Fry Sauce 165g",
-      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
-      "Grower's Harvest Sweetcorn 907G",
-      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
-      "\u2020\u00a0Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75ml",
-      "Hayden's 4 Delicious Yum Yums",
-      "\u2020\u00a0Tesco Apple & Elderflower Sparkling Water 1 Litre",
-      "Tesco Chocolate Iced Ring Doughnuts 4 Pack",
-      "\u2020\u00a0Tesco Sparkling Water Lemon & Lime 1 Litre",
-      "\u2020\u00a0Walkers Wotsits Cheese Multipack Crisps 20x16.5g"
-    ]
-  },
-  {
-    "meal": {
-      "id": "6gpvx26cwvh4rm69",
-      "content": "Spicy pork & nduja fettuccine",
-      "date": "2026-06-12",
-      "labels": [
-        "adults"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
-        "name": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Crackling Pork Loin Joint 637G",
-        "name": "Tesco Crackling Pork Loin Joint 637G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-        "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-        "name": "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [
-      "Tesco Beef Steaks with Peppercorn Sauce 320g",
-      "Tesco British Whole Milk 1.13L, 2 Pints",
-      "Tesco Egg Noodles 300G",
-      "Tesco Finest Beef Dripping Roast Potatoes 800G",
-      "Tesco Large Vegetable Stir Fry 570g",
-      "Tesco Mango 450G",
-      "Tesco Raw King Prawns 165g",
-      "Tesco Stonebaked Classic Margherita Pizza 306g",
-      "Tesco Sweet Chilli Stir Fry Sauce 165g",
-      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
-      "Grower's Harvest Sweetcorn 907G",
-      "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
-      "\u2020\u00a0Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75ml",
-      "Hayden's 4 Delicious Yum Yums",
-      "\u2020\u00a0Tesco Apple & Elderflower Sparkling Water 1 Litre",
-      "Tesco Chocolate Iced Ring Doughnuts 4 Pack",
-      "\u2020\u00a0Tesco Sparkling Water Lemon & Lime 1 Litre",
-      "\u2020\u00a0Walkers Wotsits Cheese Multipack Crisps 20x16.5g"
-    ]
-  },
-  {
-    "meal": {
-      "id": "6gpvwgWvVwrXhGvh",
-      "content": "Roast pork, roast potatoes and veg",
-      "date": "2026-06-11",
-      "labels": [
-        "adults",
-        "children"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner",
-      "is_completed": true,
-      "completed_at": "2026-06-11T19:22:45.984000Z"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
-        "name": "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Crackling Pork Loin Joint 637G",
-        "name": "Tesco Crackling Pork Loin Joint 637G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Egg Noodles 300G",
-        "name": "Tesco Egg Noodles 300G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Large Vegetable Stir Fry 570g",
-        "name": "Tesco Large Vegetable Stir Fry 570g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-        "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-        "name": "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
-        "name": "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [
-      "Tesco Beef Steaks with Peppercorn Sauce 320g",
-      "Tesco British Whole Milk 1.13L, 2 Pints",
-      "Tesco Finest Beef Dripping Roast Potatoes 800G",
-      "Tesco Mango 450G",
-      "Tesco Raw King Prawns 165g",
-      "Tesco Stonebaked Classic Margherita Pizza 306g",
-      "Tesco Sweet Chilli Stir Fry Sauce 165g",
-      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
-      "Grower's Harvest Sweetcorn 907G",
-      "\u2020\u00a0Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75ml",
-      "Hayden's 4 Delicious Yum Yums",
-      "\u2020\u00a0Tesco Apple & Elderflower Sparkling Water 1 Litre",
-      "Tesco Chocolate Iced Ring Doughnuts 4 Pack",
-      "\u2020\u00a0Tesco Sparkling Water Lemon & Lime 1 Litre",
-      "\u2020\u00a0Walkers Wotsits Cheese Multipack Crisps 20x16.5g"
-    ]
-  },
-  {
-    "meal": {
-      "id": "6gpvwVFrrCXGWc4h",
-      "content": "Stir fry",
-      "date": "2026-06-10",
-      "labels": [
-        "adults"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner",
-      "is_completed": true,
-      "completed_at": "2026-06-10T16:50:41.925000Z"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Large Vegetable Stir Fry 570g",
-        "name": "Tesco Large Vegetable Stir Fry 570g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco Sweet Chilli Stir Fry Sauce 165g",
-        "name": "Tesco Sweet Chilli Stir Fry Sauce 165g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [
-      "Tesco Beef Steaks with Peppercorn Sauce 320g",
-      "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
-      "Tesco British Whole Milk 1.13L, 2 Pints",
-      "Tesco Crackling Pork Loin Joint 637G",
-      "Tesco Egg Noodles 300G",
-      "Tesco Finest Beef Dripping Roast Potatoes 800G",
-      "Tesco Mango 450G",
-      "Tesco Raw King Prawns 165g",
-      "Tesco Stonebaked Classic Margherita Pizza 306g",
-      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
-      "Grower's Harvest Sweetcorn 907G",
-      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
-      "\u2020\u00a0Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75ml",
-      "Hayden's 4 Delicious Yum Yums",
-      "\u2020\u00a0Tesco Apple & Elderflower Sparkling Water 1 Litre",
-      "Tesco Chocolate Iced Ring Doughnuts 4 Pack",
-      "\u2020\u00a0Tesco Sparkling Water Lemon & Lime 1 Litre",
-      "\u2020\u00a0Walkers Wotsits Cheese Multipack Crisps 20x16.5g"
-    ]
-  },
-  {
-    "meal": {
-      "id": "6gpvwcxwrG7xg249",
-      "content": "Cheesy mash (Ashlee)",
-      "date": "2026-06-10",
-      "labels": [
-        "children"
-      ],
-      "section": "Planned",
-      "meal_type": "lunch",
-      "is_completed": true,
-      "completed_at": "2026-06-10T16:32:05.032432Z"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "[external] Cheesy mash (Ashlee)",
-        "name": "[external] Cheesy mash (Ashlee)",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [],
-    "notes": "external"
-  },
-  {
-    "meal": {
-      "id": "6gpvwXf7Cr6gm57h",
-      "content": "Pizza (Leo)",
-      "date": "2026-06-10",
-      "labels": [
-        "children"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner",
-      "is_completed": true,
-      "completed_at": "2026-06-10T16:32:04.105914Z"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "name": "Tesco Stonebaked Classic Margherita Pizza 306g",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [
-      "Tesco Beef Steaks with Peppercorn Sauce 320g",
-      "La Famiglia Rana Spicy Pork & 'Nduja Fettuccine 814g",
-      "Tesco British Whole Milk 1.13L, 2 Pints",
-      "Tesco Crackling Pork Loin Joint 637G",
-      "Tesco Egg Noodles 300G",
-      "Tesco Finest Beef Dripping Roast Potatoes 800G",
-      "Tesco Large Vegetable Stir Fry 570g",
-      "Tesco Mango 450G",
-      "Tesco Raw King Prawns 165g",
-      "Tesco Sweet Chilli Stir Fry Sauce 165g",
-      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260G",
-      "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400g",
-      "Grower's Harvest Sweetcorn 907G",
-      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Seaweed & Salt Flavour Potato Chips 130g",
-      "\u2020\u00a0Corsodyl Active Gum Repair Toothpaste - Fresh Mint 75ml",
-      "Hayden's 4 Delicious Yum Yums",
-      "\u2020\u00a0Tesco Apple & Elderflower Sparkling Water 1 Litre",
-      "Tesco Chocolate Iced Ring Doughnuts 4 Pack",
-      "\u2020\u00a0Tesco Sparkling Water Lemon & Lime 1 Litre",
-      "\u2020\u00a0Walkers Wotsits Cheese Multipack Crisps 20x16.5g"
-    ]
-  },
-  {
-    "meal": {
       "id": "6gqRfc74rv9Xpr9h",
       "content": "Costco sausages (lunch - frozen)",
       "date": "2026-06-13",
@@ -1599,16 +1251,9 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "partial",
-    "coverageScore": 50,
-    "matchedItems": [
-      {
-        "ingredient": "Old El Paso Crunchy Taco Shells X12 156GSubstitutions: On",
-        "name": "Old El Paso Crunchy Taco Shells X12 156GSubstitutions: On",
-        "quantity": 1,
-        "price": 1.85
-      }
-    ],
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
     "missingItems": [
       "Yamas Authentic Greek Feta Pdo 150GSubstitutions: On",
       "Tesco Chicken & Vegetable Soup 600gSubstitutions: On",
@@ -1623,6 +1268,7 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Maris Piper Potatoes 2KgSubstitutions: On",
       "De Cecco Penne Rigate 500GSubstitutions: On",
       "De Cecco Conchiglie Rigate 500gSubstitutions: On",
+      "Old El Paso Crunchy Taco Shells X12 156GSubstitutions: On",
       "Old El Paso Cheesy Baked Enchilada Kit 663GSubstitutions: On",
       "Tesco Carrots 1KgSubstitutions: On",
       "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
@@ -1641,16 +1287,9 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "partial",
-    "coverageScore": 50,
-    "matchedItems": [
-      {
-        "ingredient": "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
-        "name": "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
-        "quantity": 1,
-        "price": 10.5
-      }
-    ],
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
     "missingItems": [
       "Yamas Authentic Greek Feta Pdo 150GSubstitutions: On",
       "Tesco Chicken & Vegetable Soup 600gSubstitutions: On",
@@ -1668,6 +1307,7 @@ export const realCoverage: MealCoverage[] = [
       "Old El Paso Crunchy Taco Shells X12 156GSubstitutions: On",
       "Old El Paso Cheesy Baked Enchilada Kit 663GSubstitutions: On",
       "Tesco Carrots 1KgSubstitutions: On",
+      "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
       "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
       "Hovis Best of Both Medium Bread 800gSubstitutions: On",
       "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
@@ -1709,18 +1349,6 @@ export const realCoverage: MealCoverage[] = [
         "name": "Hovis Best of Both Medium Bread 800gSubstitutions: On",
         "quantity": 1,
         "price": 1.15
-      },
-      {
-        "ingredient": "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
-        "name": "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
-        "quantity": 1,
-        "price": 2.57
-      },
-      {
-        "ingredient": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
       }
     ],
     "missingItems": [
@@ -1738,7 +1366,9 @@ export const realCoverage: MealCoverage[] = [
       "Old El Paso Cheesy Baked Enchilada Kit 663GSubstitutions: On",
       "Tesco Carrots 1KgSubstitutions: On",
       "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
-      "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On"
+      "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
+      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
     ]
   },
   {
@@ -1753,8 +1383,8 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
+    "status": "partial",
+    "coverageScore": 50,
     "matchedItems": [
       {
         "ingredient": "Tesco British Beef Medium Roasting Joint 1KGSubstitutions: On",
@@ -1769,12 +1399,6 @@ export const realCoverage: MealCoverage[] = [
         "price": 3.5
       },
       {
-        "ingredient": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-      },
-      {
         "ingredient": "Tesco Maris Piper Potatoes 2KgSubstitutions: On",
         "name": "Tesco Maris Piper Potatoes 2KgSubstitutions: On",
         "quantity": 1,
@@ -1785,12 +1409,6 @@ export const realCoverage: MealCoverage[] = [
         "name": "Tesco Carrots 1KgSubstitutions: On",
         "quantity": 1,
         "price": 0.69
-      },
-      {
-        "ingredient": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
       }
     ],
     "missingItems": [
@@ -1801,6 +1419,7 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Pure Apple Juice 1 LitreSubstitutions: On",
       "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
       "Patak's Indian Garlic & Coriander Mini Naan Breads 4 PackSubstitutions: On",
+      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
       "De Cecco Penne Rigate 500GSubstitutions: On",
       "De Cecco Conchiglie Rigate 500gSubstitutions: On",
       "Old El Paso Crunchy Taco Shells X12 156GSubstitutions: On",
@@ -1808,7 +1427,8 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
       "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
       "Hovis Best of Both Medium Bread 800gSubstitutions: On",
-      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On"
+      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
     ]
   },
   {
@@ -1827,22 +1447,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 50,
     "matchedItems": [
       {
-        "ingredient": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-      },
-      {
         "ingredient": "Tesco Maris Piper Potatoes 2KgSubstitutions: On",
         "name": "Tesco Maris Piper Potatoes 2KgSubstitutions: On",
         "quantity": 1,
         "price": 1.8
-      },
-      {
-        "ingredient": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
       }
     ],
     "missingItems": [
@@ -1855,6 +1463,7 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Pure Apple Juice 1 LitreSubstitutions: On",
       "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
       "Patak's Indian Garlic & Coriander Mini Naan Breads 4 PackSubstitutions: On",
+      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
       "De Cecco Penne Rigate 500GSubstitutions: On",
       "De Cecco Conchiglie Rigate 500gSubstitutions: On",
       "Old El Paso Crunchy Taco Shells X12 156GSubstitutions: On",
@@ -1863,7 +1472,8 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
       "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
       "Hovis Best of Both Medium Bread 800gSubstitutions: On",
-      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On"
+      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
     ]
   },
   {
@@ -1887,22 +1497,10 @@ export const realCoverage: MealCoverage[] = [
         "price": 1.5
       },
       {
-        "ingredient": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-      },
-      {
         "ingredient": "Tesco Maris Piper Potatoes 2KgSubstitutions: On",
         "name": "Tesco Maris Piper Potatoes 2KgSubstitutions: On",
         "quantity": 1,
         "price": 1.8
-      },
-      {
-        "ingredient": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
       }
     ],
     "missingItems": [
@@ -1914,6 +1512,7 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Pure Apple Juice 1 LitreSubstitutions: On",
       "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
       "Patak's Indian Garlic & Coriander Mini Naan Breads 4 PackSubstitutions: On",
+      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
       "De Cecco Penne Rigate 500GSubstitutions: On",
       "De Cecco Conchiglie Rigate 500gSubstitutions: On",
       "Old El Paso Crunchy Taco Shells X12 156GSubstitutions: On",
@@ -1922,7 +1521,8 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
       "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
       "Hovis Best of Both Medium Bread 800gSubstitutions: On",
-      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On"
+      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
     ]
   },
   {
@@ -1968,22 +1568,10 @@ export const realCoverage: MealCoverage[] = [
     "coverageScore": 50,
     "matchedItems": [
       {
-        "ingredient": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
-      },
-      {
         "ingredient": "Tesco Maris Piper Potatoes 2KgSubstitutions: On",
         "name": "Tesco Maris Piper Potatoes 2KgSubstitutions: On",
         "quantity": 1,
         "price": 1.8
-      },
-      {
-        "ingredient": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "name": "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On",
-        "quantity": 1,
-        "price": 1.5
       }
     ],
     "missingItems": [
@@ -1996,6 +1584,7 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Tesco Pure Apple Juice 1 LitreSubstitutions: On",
       "\u2020 Tesco Pure Orange Juice With Bits 1 LitreSubstitutions: On",
       "Patak's Indian Garlic & Coriander Mini Naan Breads 4 PackSubstitutions: On",
+      "\u2020 Calbee Hot & Spicy Flavour Potato Chips 130gSubstitutions: On",
       "De Cecco Penne Rigate 500GSubstitutions: On",
       "De Cecco Conchiglie Rigate 500gSubstitutions: On",
       "Old El Paso Crunchy Taco Shells X12 156GSubstitutions: On",
@@ -2004,7 +1593,8 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
       "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
       "Hovis Best of Both Medium Bread 800gSubstitutions: On",
-      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On"
+      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
+      "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
     ]
   },
   {
@@ -2021,26 +1611,14 @@ export const realCoverage: MealCoverage[] = [
       "is_completed": true,
       "completed_at": "2026-06-11T20:15:27.564219Z"
     },
-    "status": "partial",
-    "coverageScore": 50,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Green Seedless Grapes Pack 500GSubstitutions: On",
-        "name": "Tesco Green Seedless Grapes Pack 500GSubstitutions: On",
-        "quantity": 1,
-        "price": 1.8
-      },
-      {
-        "ingredient": "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
-        "name": "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
-        "quantity": 1,
-        "price": 2.57
-      }
-    ],
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
     "missingItems": [
       "Yamas Authentic Greek Feta Pdo 150GSubstitutions: On",
       "Tesco Chicken & Vegetable Soup 600gSubstitutions: On",
       "Tesco British Beef Medium Roasting Joint 1KGSubstitutions: On",
+      "Tesco Green Seedless Grapes Pack 500GSubstitutions: On",
       "Tesco 4 Smash Burger 340gSubstitutions: On",
       "\u2020 Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75gSubstitutions: On",
       "\u2020 Tesco Pure Apple Juice 1 LitreSubstitutions: On",
@@ -2056,10 +1634,67 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 Lenor In-Wash Scent Booster Gold Orchid 735gSubstitutions: On",
       "\u2020 Tesco Apple And Mango From Concentrate 1 LitreSubstitutions: On",
       "Hovis Best of Both Medium Bread 800gSubstitutions: On",
+      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220GSubstitutions: On",
       "\u2020 Calbee Honey Butter Flavour Potato Chips 130gSubstitutions: On"
     ]
+  },
+  {
+    "meal": {
+      "id": "6gqh5rFmJv96P439",
+      "content": "Pizza (Leo)",
+      "date": "2026-06-17",
+      "labels": [
+        "children"
+      ],
+      "section": "Planned",
+      "meal_type": "dinner"
+    },
+    "status": "missing",
+    "coverageScore": 0,
+    "matchedItems": [],
+    "missingItems": [
+      "Tesco Blueberries 500GSubstitutions: On",
+      "Tesco Mango 450GSubstitutions: On",
+      "Tesco Firepit Piri Piri Pork Riblets 380gSubstitutions: On",
+      "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
+      "Fire Pit Tesco 6 Tex Mex Sausage Skewers with Nacho Cheese Sauce 460gSubstitutions: On",
+      "Tesco Mini Hash Brown Bites 700gSubstitutions: On",
+      "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
+      "Tesco Waffle Fries 550gSubstitutions: On",
+      "Tesco Finest 2 Steak &Ale Pies 400gSubstitutions: On",
+      "Tesco White Iced Ring Doughnuts 4 PackSubstitutions: On",
+      "Suntrail Farms Soft Citrus Pack 600GSubstitutions: On",
+      "Tesco WatermelonSubstitutions: On",
+      "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
+      "Hayden's 4 Delicious Yum YumsSubstitutions: On"
+    ]
+  },
+  {
+    "meal": {
+      "id": "6gqh5w5f29mWr4p9",
+      "content": "Cheesy mash (Ashlee)",
+      "date": "2026-06-17",
+      "labels": [
+        "children"
+      ],
+      "section": "Planned",
+      "meal_type": "lunch"
+    },
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "[external] Cheesy mash (Ashlee)",
+        "name": "[external] Cheesy mash (Ashlee)",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [],
+    "notes": "external"
   }
 ];
+
 
 
 
