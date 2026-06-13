@@ -5,7 +5,7 @@
  * This replaces the mock data with actual data from Todoist and Tesco.
  */
 
-import { Meal, TescoReceipt, MealCoverage, DeliveryWindow } from './meals-data';
+import { Meal, TescoReceipt, MealCoverage, DeliveryWindow, GeneratedDeliveryMetadata, deliveryWindowsFromMetadata } from './meals-data';
 
 // Path to meals skill (relative to project root)
 const MEALS_SKILL_PATH = '../../skills/meals';
@@ -1079,6 +1079,9 @@ export const realMealsCheckSummary = {
   "partial": 2,
   "unmatched_groceries": 23
 };
+
+export const realDeliveryMetadata: GeneratedDeliveryMetadata[] = [];
+export const realDeliveryWindows: DeliveryWindow[] = deliveryWindowsFromMetadata(realDeliveryMetadata);
 
 
 

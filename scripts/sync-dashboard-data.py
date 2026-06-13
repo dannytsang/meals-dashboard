@@ -378,6 +378,27 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
                 insert_at += 1
             lines = lines[:insert_at] + [l + '\n' for l in summary_block] + lines[insert_at:]
         print("  ✓ Updated meals check summary data")
+
+        delivery_metadata = cache_data.get("delivery_metadata", [])
+        delivery_block = [
+            f'export const realDeliveryMetadata: GeneratedDeliveryMetadata[] = {json.dumps(delivery_metadata, indent=2)};',
+            'export const realDeliveryWindows: DeliveryWindow[] = deliveryWindowsFromMetadata(realDeliveryMetadata);',
+            '',
+        ]
+        delivery_start = None
+        delivery_end = None
+        for i, line in enumerate(lines):
+            if 'export const realDeliveryMetadata:' in line:
+                delivery_start = i
+            elif delivery_start is not None and delivery_end is None and line.strip().startswith('export const realDeliveryWindows:'):
+                delivery_end = i
+                break
+        if delivery_start is not None and delivery_end is not None:
+            lines = lines[:delivery_start] + [l + '\n' for l in delivery_block] + lines[delivery_end+1:]
+        elif summary_start is not None:
+            insert_at = summary_end + 1 if summary_end is not None else summary_start + 1
+            lines = lines[:insert_at] + [l + '\n' for l in ['', *delivery_block]] + lines[insert_at:]
+        print(f"  ✓ Updated delivery metadata ({len(delivery_metadata)} events)")
     
     # Update meal plan and coverage
     if meals:

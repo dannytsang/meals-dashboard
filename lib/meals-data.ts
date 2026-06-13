@@ -87,6 +87,14 @@ export interface DeliveryWindow {
   slot: string;
   orderTotal: number;
   status: 'pending' | 'delivered' | 'scheduled';
+  usableDate?: string;
+  summary?: string;
+}
+
+export interface GeneratedDeliveryMetadata {
+  actual_delivery_date: string;
+  delivery_usable_date?: string;
+  summary?: string;
 }
 
 // Mock data for development - will be replaced with actual skill integration
@@ -163,6 +171,21 @@ export function calculateCoverageSummary(coverage: MealCoverage[]): CoverageSumm
     unknown,
     coveragePercentage: Math.round(((covered + partial * 0.5) / total) * 100),
   };
+}
+
+export function deliveryWindowsFromMetadata(metadata: GeneratedDeliveryMetadata[] = []): DeliveryWindow[] {
+  return metadata.map((entry): DeliveryWindow => ({
+    date: entry.actual_delivery_date,
+    usableDate: entry.delivery_usable_date,
+    summary: entry.summary,
+    slot: 'Evening',
+    orderTotal: 0,
+    status: 'scheduled',
+  }));
+}
+
+export function hasGeneratedDeliveryOnDate(deliveries: Pick<DeliveryWindow, 'date'>[], date: string): boolean {
+  return deliveries.some(delivery => delivery.date === date);
 }
 
 /**

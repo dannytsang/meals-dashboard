@@ -2,11 +2,11 @@
 
 import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { getUpcomingDeliveries, GroceryItem, Meal, MealCoverage } from '@/lib/meals-data';
+import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/lib/meals-data';
 import { cleanItemName, deduplicateMatchedItems, MatchedItem } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
 import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
-import { realCoverage, realLatestOrder, realMealsCheckSummary } from '@/lib/real-data';
+import { realCoverage, realDeliveryWindows, realLatestOrder, realMealsCheckSummary } from '@/lib/real-data';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { findProductInfo } from '@/lib/product-database';
 import {
@@ -46,7 +46,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
   }, []);
 
   const receipt = transformCachedOrderSafely(realLatestOrder);
-  const deliveries = getUpcomingDeliveries(realLatestOrder?.delivery_date ?? null);
+  const deliveries = realDeliveryWindows;
   const coverage = realCoverage ?? [];
   const headlineMetrics = buildHeadlineMetrics(realMealsCheckSummary, receipt, coverage, deliveries);
   
@@ -314,7 +314,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
                               <span style={{ fontSize: '14px', fontWeight: 'bold', color: hasMeals ? 'var(--text-primary)' : 'var(--text-secondary)', display: 'block' }}>
                                 {formatDayMonthUpper(displayDate)}
                               </span>
-                              {deliveries.some(d => d.date === dataKey) && (
+                              {hasGeneratedDeliveryOnDate(deliveries, dataKey) && (
                                 <span style={{ fontSize: '8px', fontWeight: '700', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'var(--accent-blue)', color: 'white', textTransform: 'uppercase' }}>Delivery</span>
                               )}
                             </div>
@@ -366,18 +366,11 @@ export function DashboardClient({ today }: DashboardClientProps) {
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                                         {dayMeals.map((meal, idx) => {
                                           const barColor = getStatusColor(meal.status, meal.coverageScore);
-                                          const missingExplanation = getPartialMealMissingExplanation(meal);
                                           return (
                                             <div key={idx} onClick={() => setSelectedMealData(meal)} style={{ padding: '0.5rem 0.5rem', borderRadius: '6px', backgroundColor: barColor, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', minHeight: '50px', boxSizing: 'border-box', cursor: 'pointer', outline: 'none', outlineOffset: '2px' }}>
                                               <span style={{ fontSize: '10px', fontWeight: '600', color: 'white', textAlign: 'center', lineHeight: '1.2', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{meal.meal.content}</span>
                                               {isTodoistMealCompleted(meal.meal) && <span title={getTodoistCompletionLabel(meal.meal) || undefined} style={{ fontSize: '8px', fontWeight: '700', padding: '1px 4px', borderRadius: '999px', backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--accent-emerald)' }}>✓ Todoist</span>}
-                                              {meal.meal.labels && meal.meal.labels.length > 0 && <span style={{ fontSize: '8px', fontWeight: '600', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.25)', color: 'white' }}>{meal.meal.labels.join(', ')}</span>}
-                                              {missingExplanation.length > 0 && (
-                                                <div style={{ width: '100%', marginTop: '0.15rem', padding: '0.25rem 0.35rem', borderRadius: '4px', backgroundColor: 'rgba(255,255,255,0.18)', color: 'white', textAlign: 'left' as const }}>
-                                                  <div style={{ fontSize: '7px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.4px', opacity: 0.9 }}>Missing for 100%</div>
-                                                  <div style={{ fontSize: '8px', fontWeight: '600', lineHeight: 1.2 }}>{missingExplanation.join(', ')}</div>
-                                                </div>
-                                              )}
+                                              {meal.meal.labels && meal.meal.labels.length > 0 && <span style={{ fontSize: '8px', fontWeight: '600', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.25)', color: 'white' }}>🏷️ {meal.meal.labels.join(', ')}</span>}
                                               <span style={{ fontSize: '9px', fontWeight: '700', color: 'white', flexShrink: 0 }}>{meal.coverageScore}%</span>
                                             </div>
                                           );
@@ -502,6 +495,17 @@ export function DashboardClient({ today }: DashboardClientProps) {
                   })}
                 </div>
               </div>
+              );
+            })()}
+
+            {(() => {
+              const missingExplanation = getPartialMealMissingExplanation(selectedMealData);
+              if (missingExplanation.length === 0) return null;
+              return (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--accent-amber-bg)', border: '1px solid var(--accent-amber-border)' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-amber)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Missing for 100%</h4>
+                  <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{missingExplanation.join(', ')}</p>
+                </div>
               );
             })()}
 
