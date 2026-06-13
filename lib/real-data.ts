@@ -581,6 +581,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -1080,20 +1081,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
   "coverage_percentage": 67,
-  "covered": 7,
+  "covered": 8,
   "delivery_date": "2026-06-16",
   "meals_covered": 10,
   "meals_total": 15,
   "missing": 5,
   "order_total": 59.69,
-  "partial": 3,
+  "partial": 2,
   "unmatched_groceries": 23
 };
+
 
 
 
@@ -1441,8 +1444,8 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "partial",
-    "coverageScore": 50,
+    "status": "covered",
+    "coverageScore": 100,
     "matchedItems": [
       {
         "ingredient": "Tesco 4 Smash Burger 340g",
@@ -1930,6 +1933,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
