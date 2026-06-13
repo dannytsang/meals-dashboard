@@ -148,118 +148,104 @@ export function analyzeCoverage(meals: Meal[], receipt: TescoReceipt): MealCover
 export const realLatestOrder: CachedOrder = {
   "email_id": "",
   "email_date": "",
-  "delivery_date": "2026-06-12",
+  "delivery_date": "2026-06-16",
   "delivery_sort": "",
-  "order_number": "5421-8003-00",
-  "order_total": 55.16,
+  "order_number": "5421-8594-00",
+  "order_total": 59.69,
   "items": [
     {
-        "name": "Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75g",
+        "name": "Tesco Blueberries 500GSubstitutions: On",
         "quantity": 1,
-        "price": 1.5
+        "price": 4.55
     },
     {
-        "name": "Tesco 4 Smash Burger 340g",
+        "name": "Tesco Mango 450GSubstitutions: On",
         "quantity": 1,
-        "price": 3.5
+        "price": 4.25
     },
     {
-        "name": "Tesco British Beef Medium Roasting Joint 0.868KG",
+        "name": "Tesco Fire Pit 4 Sweet & Smoky Pork Kebabs 340GSubstitutions: On",
         "quantity": 1,
-        "price": 13.02
+        "price": 8.0
     },
     {
-        "name": "Tesco Chicken & Vegetable Soup 600g",
+        "name": "Tesco British Whole Milk 1.13L, 2 PintsSubstitutions: On",
         "quantity": 1,
-        "price": 1.5
+        "price": 1.2
     },
     {
-        "name": "Tesco Green Seedless Grapes Pack 500G",
+        "name": "Tesco Party Salad 455GSubstitutions: On",
+        "quantity": 1,
+        "price": 3.0
+    },
+    {
+        "name": "Tesco Mini Hash Brown Bites 700gSubstitutions: On",
+        "quantity": 1,
+        "price": 2.25
+    },
+    {
+        "name": "Firepit Tesco 4 Sweet & Smokey BBQ Salmon Skewers 250gSubstitutions: On",
+        "quantity": 1,
+        "price": 6.66
+    },
+    {
+        "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
         "quantity": 1,
         "price": 1.8
     },
     {
-        "name": "Yamas Authentic Greek Feta Pdo 150G",
+        "name": "Fire Pit Tesco 8 Pork, Mozzarella and Tomato Kofta Kebabs 320gSubstitutions: On",
         "quantity": 1,
-        "price": 1.5
+        "price": 3.34
     },
     {
-        "name": "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
+        "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400gSubstitutions: On",
         "quantity": 1,
-        "price": 1.5
+        "price": 4.5
     },
     {
-        "name": "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
+        "name": "Tesco Waffle Fries 550gSubstitutions: On",
         "quantity": 1,
-        "price": 1.5
+        "price": 2.1
     },
     {
-        "name": "De Cecco Conchiglie Rigate 500g",
+        "name": "Tesco Finest 2 Steak &Ale Pies 400gSubstitutions: On",
         "quantity": 1,
-        "price": 1.35
+        "price": 3.3
     },
     {
-        "name": "De Cecco Penne Rigate 500G",
+        "name": "Tesco White Iced Ring Doughnuts 4 PackSubstitutions: On",
         "quantity": 1,
-        "price": 1.35
+        "price": 0.95
     },
     {
-        "name": "Hovis Best of Both Medium Bread 800g",
+        "name": "Suntrail Farms Soft Citrus Pack 600GSubstitutions: On",
         "quantity": 1,
-        "price": 1.15
+        "price": 1.19
     },
     {
-        "name": "\u2020\u00a0Lenor In-Wash Scent Booster Gold Orchid 735g",
+        "name": "Tesco WatermelonSubstitutions: On",
         "quantity": 1,
-        "price": 10.5
+        "price": 3.75
     },
     {
-        "name": "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220G",
+        "name": "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
         "quantity": 1,
-        "price": 2.57
+        "price": 6.4
     },
     {
-        "name": "Old El Paso Cheesy Baked Enchilada Kit 663G",
+        "name": "\u2020 Tesco Health Ibuprofen 200mg Pain Relief Tablets 16sSubstitutions: On",
         "quantity": 1,
-        "price": 3.29
+        "price": 0.7
     },
     {
-        "name": "Old El Paso Crunchy Taco Shells X12 156G",
+        "name": "Hayden's 4 Delicious Yum YumsSubstitutions: On",
         "quantity": 1,
-        "price": 1.85
-    },
-    {
-        "name": "Patak's Indian Garlic & Coriander Mini Naan Breads 4 Pack",
-        "quantity": 1,
-        "price": 1.29
-    },
-    {
-        "name": "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
-        "quantity": 1,
-        "price": 1.17
-    },
-    {
-        "name": "Tesco Carrots 1Kg",
-        "quantity": 1,
-        "price": 0.69
-    },
-    {
-        "name": "Tesco Maris Piper Potatoes 2Kg",
-        "quantity": 1,
-        "price": 1.8
-    },
-    {
-        "name": "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
-        "quantity": 1,
-        "price": 1.16
-    },
-    {
-        "name": "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre",
-        "quantity": 1,
-        "price": 1.17
+        "price": 1.75
     }
 ]
 };
+
 
 
 
@@ -1093,20 +1079,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
   "coverage_percentage": 67,
   "covered": 7,
-  "delivery_date": "2026-06-12",
+  "delivery_date": "2026-06-16",
   "meals_covered": 10,
   "meals_total": 15,
   "missing": 5,
-  "order_total": 55.16,
+  "order_total": 59.69,
   "partial": 3,
   "unmatched_groceries": 23
 };
+
 
 
 
@@ -1399,26 +1387,26 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco 4 Smash Burger 340g",
         "name": "Tesco 4 Smash Burger 340g",
-        "quantity": 1,
-        "price": 3.5
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "Tesco British Beef Medium Roasting Joint 0.868KG",
         "name": "Tesco British Beef Medium Roasting Joint 0.868KG",
-        "quantity": 1,
-        "price": 13.02
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "Hovis Best of Both Medium Bread 800g",
         "name": "Hovis Best of Both Medium Bread 800g",
-        "quantity": 1,
-        "price": 1.15
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "Patak's Indian Garlic & Coriander Mini Naan Breads 4 Pack",
         "name": "Patak's Indian Garlic & Coriander Mini Naan Breads 4 Pack",
-        "quantity": 1,
-        "price": 1.29
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": [
@@ -1459,26 +1447,26 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco 4 Smash Burger 340g",
         "name": "Tesco 4 Smash Burger 340g",
-        "quantity": 1,
-        "price": 3.5
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "Tesco British Beef Medium Roasting Joint 0.868KG",
         "name": "Tesco British Beef Medium Roasting Joint 0.868KG",
-        "quantity": 1,
-        "price": 13.02
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "Tesco Carrots 1Kg",
         "name": "Tesco Carrots 1Kg",
-        "quantity": 1,
-        "price": 0.69
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "Tesco Maris Piper Potatoes 2Kg",
         "name": "Tesco Maris Piper Potatoes 2Kg",
-        "quantity": 1,
-        "price": 1.8
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": [
@@ -1519,8 +1507,8 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Maris Piper Potatoes 2Kg",
         "name": "Tesco Maris Piper Potatoes 2Kg",
-        "quantity": 1,
-        "price": 1.8
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": [
@@ -1563,20 +1551,20 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Chicken & Vegetable Soup 600g",
         "name": "Tesco Chicken & Vegetable Soup 600g",
-        "quantity": 1,
-        "price": 1.5
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
         "name": "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-        "quantity": 1,
-        "price": 1.5
+        "quantity": null,
+        "price": null
       },
       {
         "ingredient": "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
         "name": "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-        "quantity": 1,
-        "price": 1.5
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": [
@@ -1645,8 +1633,8 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Maris Piper Potatoes 2Kg",
         "name": "Tesco Maris Piper Potatoes 2Kg",
-        "quantity": 1,
-        "price": 1.8
+        "quantity": null,
+        "price": null
       }
     ],
     "missingItems": [
@@ -1789,14 +1777,14 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Mini Hash Brown Bites 700gSubstitutions: On",
         "name": "Tesco Mini Hash Brown Bites 700gSubstitutions: On",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 2.25
       },
       {
         "ingredient": "Tesco Finest 2 Steak &Ale Pies 400gSubstitutions: On",
         "name": "Tesco Finest 2 Steak &Ale Pies 400gSubstitutions: On",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 3.3
       }
     ],
     "missingItems": [
@@ -1862,32 +1850,32 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Fire Pit 4 Sweet & Smoky Pork Kebabs 340GSubstitutions: On",
         "name": "Tesco Fire Pit 4 Sweet & Smoky Pork Kebabs 340GSubstitutions: On",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 8.0
       },
       {
         "ingredient": "Tesco Party Salad 455GSubstitutions: On",
         "name": "Tesco Party Salad 455GSubstitutions: On",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 3.0
       },
       {
         "ingredient": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
         "name": "Bannisters Farm 4 Cheese & Bacon Potato Skins 260GSubstitutions: On",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 1.8
       },
       {
         "ingredient": "Fire Pit Tesco 8 Pork, Mozzarella and Tomato Kofta Kebabs 320gSubstitutions: On",
         "name": "Fire Pit Tesco 8 Pork, Mozzarella and Tomato Kofta Kebabs 320gSubstitutions: On",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 3.34
       },
       {
         "ingredient": "Tesco Waffle Fries 550gSubstitutions: On",
         "name": "Tesco Waffle Fries 550gSubstitutions: On",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 2.1
       }
     ],
     "missingItems": [
@@ -1942,6 +1930,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
