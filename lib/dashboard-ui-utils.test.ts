@@ -6,6 +6,8 @@ import {
   classifyOrderItemMatch,
   deriveCollapsedCoverageColor,
   getDisplayedProductName,
+  findReceiptItemForMatchedItem,
+  getPartialMealMissingExplanation,
   getProductModalPrice,
   getTodoistCompletionLabel,
   isTodoistMealCompleted,
@@ -139,5 +141,31 @@ describe('product detail presentation', () => {
   it('shows the receipt item total price without multiplying by quantity again', () => {
     const item: GroceryItem = { name: 'Two pizzas', quantity: 2, price: 6 };
     expect(getProductModalPrice(item)).toBe(6);
+  });
+
+  it('resolves a meal matched item to the same receipt item used by the product modal', () => {
+    const receiptItems: GroceryItem[] = [
+      { name: 'Tesco Maris Piper Potatoes 2Kg', quantity: 1, price: 2 },
+      { name: 'Tesco Broccoli 375g', quantity: 1, price: 1 },
+    ];
+
+    expect(findReceiptItemForMatchedItem({ ingredient: 'Potatoes', name: 'Tesco Maris Piper Potatoes 2Kg', quantity: null, price: null }, receiptItems)).toEqual(receiptItems[0]);
+  });
+});
+
+describe('partial meal missing explanations', () => {
+  it('shows targeted missing explanations for partial meals only', () => {
+    const partialMeal: MealCoverage = {
+      meal: { id: '1', content: 'Roast beef, roast potatoes, roast carrots, broccoli', date: '2026-06-14', labels: [], section: 'Planned' },
+      status: 'partial',
+      coverageScore: 50,
+      matchedItems: [],
+      missingItems: ['Tesco Blueberries 500G'],
+      missingExplanations: ['broccoli'],
+    };
+    const coveredMeal: MealCoverage = { ...partialMeal, status: 'covered', coverageScore: 100 };
+
+    expect(getPartialMealMissingExplanation(partialMeal)).toEqual(['broccoli']);
+    expect(getPartialMealMissingExplanation(coveredMeal)).toEqual([]);
   });
 });

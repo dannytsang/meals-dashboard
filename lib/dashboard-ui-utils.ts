@@ -1,4 +1,4 @@
-import { calculateCoverageSummary, DeliveryWindow, GroceryItem, MealCoverage, TescoReceipt } from './meals-data';
+import { calculateCoverageSummary, DeliveryWindow, GroceryItem, MatchedItem, MealCoverage, TescoReceipt } from './meals-data';
 import { cleanItemName } from './item-utils';
 
 export interface CachedOrderItem {
@@ -180,4 +180,28 @@ export function getDisplayedProductName(name: string): string {
 
 export function getProductModalPrice(item: Pick<GroceryItem, 'price'> | null | undefined): number {
   return item?.price ?? 0;
+}
+
+export function findReceiptItemForMatchedItem(
+  matchedItem: Pick<MatchedItem, 'name' | 'ingredient' | 'quantity' | 'price'>,
+  receiptItems: GroceryItem[],
+): GroceryItem {
+  const matchedName = matchedItem.name.toLowerCase();
+  const directMatch = receiptItems.find(item => item.name.toLowerCase() === matchedName);
+  if (directMatch) return directMatch;
+
+  const cleanedMatchedName = cleanItemName(matchedItem.name).toLowerCase();
+  const cleanedMatch = receiptItems.find(item => cleanItemName(item.name).toLowerCase() === cleanedMatchedName);
+  if (cleanedMatch) return cleanedMatch;
+
+  return {
+    name: matchedItem.name,
+    quantity: matchedItem.quantity ?? 1,
+    price: matchedItem.price ?? 0,
+  };
+}
+
+export function getPartialMealMissingExplanation(meal: MealCoverage): string[] {
+  if (meal.status !== 'partial') return [];
+  return meal.missingExplanations ?? [];
 }

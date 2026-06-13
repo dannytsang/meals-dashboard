@@ -439,6 +439,7 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
                 "coverageScore": m.get("coverage_score", 0),
                 "matchedItems": resolved_matched_items,
                 "missingItems": m.get("missing_items", []),
+                "missingExplanations": m.get("missing_explanations", []),
             }
             if m.get("notes"):
                 coverage_entry["notes"] = m["notes"]

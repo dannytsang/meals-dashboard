@@ -583,6 +583,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -1084,20 +1085,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 67,
-  "covered": 7,
+  "coverage_percentage": 73,
+  "covered": 8,
   "delivery_date": "2026-06-16",
-  "meals_covered": 10,
+  "meals_covered": 11,
   "meals_total": 15,
-  "missing": 5,
+  "missing": 4,
   "order_total": 59.69,
   "partial": 3,
   "unmatched_groceries": 23
 };
+
 
 
 
@@ -1340,7 +1343,8 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Maris Piper Potatoes 2Kg",
       "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ]
+    ],
+    "missingExplanations": []
   },
   {
     "meal": {
@@ -1351,32 +1355,19 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75g",
-      "Tesco 4 Smash Burger 340g",
-      "Tesco British Beef Medium Roasting Joint 0.868KG",
-      "Tesco Chicken & Vegetable Soup 600g",
-      "Tesco Green Seedless Grapes Pack 500G",
-      "Yamas Authentic Greek Feta Pdo 150G",
-      "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-      "De Cecco Conchiglie Rigate 500g",
-      "De Cecco Penne Rigate 500G",
-      "Hovis Best of Both Medium Bread 800g",
-      "\u2020\u00a0Lenor In-Wash Scent Booster Gold Orchid 735g",
-      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220G",
-      "Old El Paso Cheesy Baked Enchilada Kit 663G",
-      "Old El Paso Crunchy Taco Shells X12 156G",
-      "Patak's Indian Garlic & Coriander Mini Naan Breads 4 Pack",
-      "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
-      "Tesco Carrots 1Kg",
-      "Tesco Maris Piper Potatoes 2Kg",
-      "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
-      "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ]
+    "status": "covered",
+    "coverageScore": 100,
+    "matchedItems": [
+      {
+        "ingredient": "[external] Terina and Leo swimming",
+        "name": "[external] Terina and Leo swimming",
+        "quantity": null,
+        "price": null
+      }
+    ],
+    "missingItems": [],
+    "missingExplanations": [],
+    "notes": "external"
   },
   {
     "meal": {
@@ -1433,7 +1424,8 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Maris Piper Potatoes 2Kg",
       "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ]
+    ],
+    "missingExplanations": []
   },
   {
     "meal": {
@@ -1488,6 +1480,9 @@ export const realCoverage: MealCoverage[] = [
       "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
       "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
+    ],
+    "missingExplanations": [
+      "broccoli"
     ]
   },
   {
@@ -1533,7 +1528,8 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Carrots 1Kg",
       "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ]
+    ],
+    "missingExplanations": []
   },
   {
     "meal": {
@@ -1587,7 +1583,8 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Maris Piper Potatoes 2Kg",
       "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ]
+    ],
+    "missingExplanations": []
   },
   {
     "meal": {
@@ -1613,6 +1610,7 @@ export const realCoverage: MealCoverage[] = [
       }
     ],
     "missingItems": [],
+    "missingExplanations": [],
     "notes": "external"
   },
   {
@@ -1659,7 +1657,8 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Carrots 1Kg",
       "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ]
+    ],
+    "missingExplanations": []
   },
   {
     "meal": {
@@ -1700,7 +1699,8 @@ export const realCoverage: MealCoverage[] = [
       "Tesco Maris Piper Potatoes 2Kg",
       "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ]
+    ],
+    "missingExplanations": []
   },
   {
     "meal": {
@@ -1735,7 +1735,8 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
       "\u2020 Tesco Health Ibuprofen 200mg Pain Relief Tablets 16sSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On"
-    ]
+    ],
+    "missingExplanations": []
   },
   {
     "meal": {
@@ -1759,6 +1760,7 @@ export const realCoverage: MealCoverage[] = [
       }
     ],
     "missingItems": [],
+    "missingExplanations": [],
     "notes": "external"
   },
   {
@@ -1805,7 +1807,8 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
       "\u2020 Tesco Health Ibuprofen 200mg Pain Relief Tablets 16sSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On"
-    ]
+    ],
+    "missingExplanations": []
   },
   {
     "meal": {
@@ -1831,6 +1834,7 @@ export const realCoverage: MealCoverage[] = [
       }
     ],
     "missingItems": [],
+    "missingExplanations": [],
     "notes": "external"
   },
   {
@@ -1893,7 +1897,8 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
       "\u2020 Tesco Health Ibuprofen 200mg Pain Relief Tablets 16sSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On"
-    ]
+    ],
+    "missingExplanations": []
   },
   {
     "meal": {
@@ -1928,9 +1933,11 @@ export const realCoverage: MealCoverage[] = [
       "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
       "\u2020 Tesco Health Ibuprofen 200mg Pain Relief Tablets 16sSubstitutions: On",
       "Hayden's 4 Delicious Yum YumsSubstitutions: On"
-    ]
+    ],
+    "missingExplanations": []
   }
 ];
+
 
 
 

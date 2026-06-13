@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { getUpcomingDeliveries, GroceryItem, Meal } from '@/lib/meals-data';
+import { getUpcomingDeliveries, GroceryItem, Meal, MealCoverage } from '@/lib/meals-data';
 import { cleanItemName, deduplicateMatchedItems, MatchedItem } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
 import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
@@ -13,7 +13,9 @@ import {
   buildHeadlineMetrics,
   classifyOrderItemMatch,
   deriveCollapsedCoverageColor,
+  findReceiptItemForMatchedItem,
   getDisplayedProductName,
+  getPartialMealMissingExplanation,
   getTodoistCompletionLabel,
   getProductModalPrice,
   isTodoistMealCompleted,
@@ -29,7 +31,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
-  const [selectedMealData, setSelectedMealData] = useState<{meal: Meal, status: string, coverageScore: number, matchedItems: MatchedItem[], missingItems: string[], notes?: string} | null>(null);
+  const [selectedMealData, setSelectedMealData] = useState<MealCoverage | null>(null);
   const [selectedItem, setSelectedItem] = useState<GroceryItem | null>(null);
   const [productInfo, setProductInfo] = useState<{description: string, storage: string, nutrition: string, image: string} | null>(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
@@ -364,11 +366,18 @@ export function DashboardClient({ today }: DashboardClientProps) {
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                                         {dayMeals.map((meal, idx) => {
                                           const barColor = getStatusColor(meal.status, meal.coverageScore);
+                                          const missingExplanation = getPartialMealMissingExplanation(meal);
                                           return (
                                             <div key={idx} onClick={() => setSelectedMealData(meal)} style={{ padding: '0.5rem 0.5rem', borderRadius: '6px', backgroundColor: barColor, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.2rem', minHeight: '50px', boxSizing: 'border-box', cursor: 'pointer', outline: 'none', outlineOffset: '2px' }}>
                                               <span style={{ fontSize: '10px', fontWeight: '600', color: 'white', textAlign: 'center', lineHeight: '1.2', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{meal.meal.content}</span>
                                               {isTodoistMealCompleted(meal.meal) && <span title={getTodoistCompletionLabel(meal.meal) || undefined} style={{ fontSize: '8px', fontWeight: '700', padding: '1px 4px', borderRadius: '999px', backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--accent-emerald)' }}>✓ Todoist</span>}
                                               {meal.meal.labels && meal.meal.labels.length > 0 && <span style={{ fontSize: '8px', fontWeight: '600', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.25)', color: 'white' }}>{meal.meal.labels.join(', ')}</span>}
+                                              {missingExplanation.length > 0 && (
+                                                <div style={{ width: '100%', marginTop: '0.15rem', padding: '0.25rem 0.35rem', borderRadius: '4px', backgroundColor: 'rgba(255,255,255,0.18)', color: 'white', textAlign: 'left' as const }}>
+                                                  <div style={{ fontSize: '7px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.4px', opacity: 0.9 }}>Missing for 100%</div>
+                                                  <div style={{ fontSize: '8px', fontWeight: '600', lineHeight: 1.2 }}>{missingExplanation.join(', ')}</div>
+                                                </div>
+                                              )}
                                               <span style={{ fontSize: '9px', fontWeight: '700', color: 'white', flexShrink: 0 }}>{meal.coverageScore}%</span>
                                             </div>
                                           );
@@ -476,8 +485,10 @@ export function DashboardClient({ today }: DashboardClientProps) {
               <div style={{ marginBottom: '1rem' }}>
                 <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Matched Items</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  {deduped.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-emerald-bg)' }}>
+                  {deduped.map((item, idx) => {
+                    const productItem = findReceiptItemForMatchedItem(item, receipt.items);
+                    return (
+                    <button key={idx} type="button" onClick={() => { setSelectedItem(productItem); fetchProductInfo(productItem.name); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-emerald-bg)', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
                         <span style={{ color: 'var(--accent-emerald)', fontSize: '12px', flexShrink: 0 }}>✓</span>
                         <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(item.name)}</span>
@@ -486,21 +497,13 @@ export function DashboardClient({ today }: DashboardClientProps) {
                         {item.quantity && <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>× {item.quantity}</span>}
                         {item.price !== null && <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>£{item.price.toFixed(2)}</span>}
                       </div>
-                    </div>
-                  ))}
+                    </button>
+                    );
+                  })}
                 </div>
               </div>
               );
             })()}
-
-            {selectedMealData.missingItems && selectedMealData.missingItems.length > 0 && (
-              <div style={{ marginBottom: '1rem' }}>
-                <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Missing Items</h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {selectedMealData.missingItems.map((item, idx) => (<span key={idx} style={{ fontSize: '11px', fontWeight: '600', padding: '4px 8px', borderRadius: '6px', backgroundColor: 'var(--accent-rose-bg)', color: 'var(--accent-rose)' }}>✗ {item}</span>))}
-                </div>
-              </div>
-            )}
 
             {selectedMealData.notes && (<div style={{ marginBottom: '1rem' }}><h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Notes</h4><p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{selectedMealData.notes}</p></div>)}
 

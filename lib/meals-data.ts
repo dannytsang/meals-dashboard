@@ -69,6 +69,7 @@ export interface MealCoverage {
   coverageScore: number;
   matchedItems: MatchedItem[];
   missingItems: string[];
+  missingExplanations?: string[];
   notes?: string;
 }
 
