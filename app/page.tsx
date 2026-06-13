@@ -1,3 +1,4 @@
+import { AuthDebugBanner } from '@/components/auth-debug-banner';
 import { DashboardClient } from '@/components/dashboard-client';
 
 // Force SSR on every request so `today` is always current
@@ -12,5 +13,10 @@ export default function MealsDashboardPage() {
   twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
   const endDate = `${twoWeeksLater.getFullYear()}-${String(twoWeeksLater.getMonth() + 1).padStart(2, '0')}-${String(twoWeeksLater.getDate()).padStart(2, '0')}`;
 
-  return <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} />;
+  return (
+    <>
+      <AuthDebugBanner issuer={process.env.AUTHENTIK_ISSUER} />
+      <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} />
+    </>
+  );
 }
