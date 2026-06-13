@@ -8,9 +8,12 @@ import {
   getDisplayedProductName,
   findReceiptItemForMatchedItem,
   getPartialMealMissingExplanation,
+  getCoverageStatusLabel,
   getProductModalPrice,
   getTodoistCompletionLabel,
   isTodoistMealCompleted,
+  resolveProductInfoForItem,
+  sortOrderItems,
   transformCachedOrderSafely,
 } from './dashboard-ui-utils';
 
@@ -53,6 +56,29 @@ describe('transformCachedOrderSafely', () => {
     expect(receipt.substitutions).toEqual([
       { original: 'Original Dip Substitutions: On', substitutedWith: 'Better Dip' },
     ]);
+  });
+
+  it('preserves generated product metadata attached to receipt items', () => {
+    const receipt = transformCachedOrderSafely({
+      email_id: '',
+      email_date: '2026-06-10',
+      delivery_date: '2026-06-12',
+      delivery_sort: '',
+      order_number: '123',
+      order_total: 4,
+      items: [{
+        name: 'Tesco Product',
+        quantity: 1,
+        price: 1.25,
+        productMetadata: { title: 'Tesco Product Title', description: 'Generated Tesco details', source: 'tesco' },
+      }],
+    });
+
+    expect(receipt.items[0].productMetadata).toMatchObject({
+      title: 'Tesco Product Title',
+      description: 'Generated Tesco details',
+      source: 'tesco',
+    });
   });
 });
 
@@ -167,5 +193,65 @@ describe('partial meal missing explanations', () => {
 
     expect(getPartialMealMissingExplanation(partialMeal)).toEqual(['broccoli']);
     expect(getPartialMealMissingExplanation(coveredMeal)).toEqual([]);
+  });
+});
+
+describe('generated product metadata resolution', () => {
+  it('prefers generated product metadata over local product fallback', () => {
+    const item: GroceryItem = {
+      name: 'Tesco Unknown Thing',
+      quantity: 1,
+      price: 2,
+      productMetadata: { title: 'Generated Tesco Title', description: 'Generated description', imageUrl: 'https://example.test/item.jpg', storage: 'Keep chilled', source: 'tesco' },
+    };
+
+    expect(resolveProductInfoForItem(item)).toMatchObject({
+      title: 'Generated Tesco Title',
+      description: 'Generated description',
+      image: 'https://example.test/item.jpg',
+      storage: 'Keep chilled',
+      source: 'generated',
+    });
+  });
+
+  it('uses truthful fallback product text when generated metadata is absent', () => {
+    const item: GroceryItem = { name: 'Definitely Unknown Item', quantity: 1, price: 2 };
+
+    expect(resolveProductInfoForItem(item)).toMatchObject({
+      source: 'fallback',
+      description: 'Product information not available in generated data or the local product database.',
+    });
+  });
+});
+
+describe('order item sorting', () => {
+  const items: GroceryItem[] = [
+    { name: 'Tesco Zucchini Substitutions: On', quantity: 1, price: 3 },
+    { name: 'Apple Pack', quantity: 1, price: 2 },
+    { name: 'Loose Bananas', quantity: 1 },
+  ];
+
+  it('sorts alphabetically by cleaned display name by default', () => {
+    expect(sortOrderItems(items, 'name').map(item => item.name)).toEqual([
+      'Apple Pack',
+      'Loose Bananas',
+      'Tesco Zucchini Substitutions: On',
+    ]);
+  });
+
+  it('sorts by price with missing prices last', () => {
+    expect(sortOrderItems(items, 'price').map(item => item.name)).toEqual([
+      'Apple Pack',
+      'Tesco Zucchini Substitutions: On',
+      'Loose Bananas',
+    ]);
+  });
+});
+
+describe('RAG coverage labels', () => {
+  it('maps individual meal status to RAG labels instead of percentages', () => {
+    expect(getCoverageStatusLabel('covered')).toBe('Green · covered');
+    expect(getCoverageStatusLabel('partial')).toBe('Amber · partial');
+    expect(getCoverageStatusLabel('missing')).toBe('Red · missing');
   });
 });

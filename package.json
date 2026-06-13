@@ -8,11 +8,14 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "scan:static-private-data": "node scripts/scan-static-private-data.mjs",
+    "verify": "npm test && npm run build && npm run scan:static-private-data"
   },
   "dependencies": {
     "lucide-react": "^0.400.0",
     "next": "^15.0.0",
+    "next-auth": "^4.24.14",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

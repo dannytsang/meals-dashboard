@@ -27,6 +27,17 @@ export interface GroceryItem {
   price?: number;
   category?: string;
   substitutedWith?: string;
+  productMetadata?: GeneratedProductMetadata;
+}
+
+export interface GeneratedProductMetadata {
+  title?: string;
+  imageUrl?: string;
+  productUrl?: string;
+  description?: string;
+  storage?: string;
+  preparation?: string;
+  source?: string;
 }
 
 export interface TescoReceipt {

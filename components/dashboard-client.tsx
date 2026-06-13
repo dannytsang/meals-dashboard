@@ -6,9 +6,8 @@ import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/l
 import { cleanItemName, deduplicateMatchedItems, MatchedItem } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
 import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
-import { realCoverage, realDeliveryWindows, realLatestOrder, realMealsCheckSummary } from '@/lib/real-data';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
-import { findProductInfo } from '@/lib/product-database';
+import type { DashboardData } from '@/lib/dashboard-data';
 import {
   buildHeadlineMetrics,
   classifyOrderItemMatch,
@@ -16,25 +15,30 @@ import {
   findReceiptItemForMatchedItem,
   getDisplayedProductName,
   getPartialMealMissingExplanation,
+  getCoverageStatusColor,
+  getCoverageStatusLabel,
   getTodoistCompletionLabel,
   getProductModalPrice,
   isTodoistMealCompleted,
+  resolveProductInfoForItem,
+  sortOrderItems,
+  type OrderItemSortMode,
   transformCachedOrderSafely,
 } from '@/lib/dashboard-ui-utils';
 
 interface DashboardClientProps {
   today: string;
   defaultDateRange?: { start: string; end: string };
+  data: DashboardData;
 }
 
-export function DashboardClient({ today }: DashboardClientProps) {
+export function DashboardClient({ today, data }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
+  const [itemSort, setItemSort] = useState<OrderItemSortMode>('name');
   const [selectedMealData, setSelectedMealData] = useState<MealCoverage | null>(null);
   const [selectedItem, setSelectedItem] = useState<GroceryItem | null>(null);
-  const [productInfo, setProductInfo] = useState<{description: string, storage: string, nutrition: string, image: string} | null>(null);
-  const [loadingProduct, setLoadingProduct] = useState(false);
   const [showCount, setShowCount] = useState(10);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
   
@@ -45,10 +49,10 @@ export function DashboardClient({ today }: DashboardClientProps) {
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
 
-  const receipt = transformCachedOrderSafely(realLatestOrder);
-  const deliveries = realDeliveryWindows;
-  const coverage = realCoverage ?? [];
-  const headlineMetrics = buildHeadlineMetrics(realMealsCheckSummary, receipt, coverage, deliveries);
+  const receipt = transformCachedOrderSafely(data.latestOrder);
+  const deliveries = data.deliveryWindows;
+  const coverage = data.coverage ?? [];
+  const headlineMetrics = buildHeadlineMetrics(data.mealsCheckSummary, receipt, coverage, deliveries);
   
   const unmatchedItems = receipt?.items || [];
 
@@ -87,44 +91,13 @@ export function DashboardClient({ today }: DashboardClientProps) {
     return '📦';
   };
 
-  const fetchProductInfo = async (itemName: string) => {
-    setLoadingProduct(true);
-    setProductInfo(null);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const product = findProductInfo(itemName);
-    let imageUrl = product?.image || '';
-    if (!imageUrl) {
-      try {
-        const searchQuery = encodeURIComponent(itemName + ' tesco');
-        const searchUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${searchQuery}&json=1&page_size=1`;
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(searchUrl)}`;
-        const searchResponse = await fetch(proxyUrl);
-        const searchData = await searchResponse.json();
-        if (searchData.products && searchData.products.length > 0) {
-          const firstProduct = searchData.products[0];
-          if (firstProduct.image_front_url) {
-            imageUrl = firstProduct.image_front_url;
-          }
-        }
-      } catch (e) {
-        console.log('Open Food Facts lookup failed:', e);
-      }
-    }
-    if (product) {
-      setProductInfo({ description: product.description, storage: product.storage, nutrition: product.nutrition, image: imageUrl });
-    } else {
-      setProductInfo({ description: 'Product information not available in database.', storage: 'Check packaging for storage instructions.', nutrition: 'Nutrition information not available.', image: imageUrl });
-    }
-    setLoadingProduct(false);
-  };
-  
-  const displayItems = unmatchedItems.filter(item => {
+  const displayItems = sortOrderItems(unmatchedItems.filter(item => {
     const catMatch = selectedCategories.size === 0 || selectedCategories.has(item.category || 'Pantry');
     const isUnmatched = trulyUnmatchedItems.includes(item);
     const isMatched = !isUnmatched;
     const matchedMatch = matchedFilter === 'all' || (matchedFilter === 'matched' && isMatched) || (matchedFilter === 'unmatched' && isUnmatched);
     return catMatch && matchedMatch;
-  });
+  }), itemSort);
 
   const coverageByDate: Record<string, typeof coverage> = {};
   coverage.forEach(c => {
@@ -196,6 +169,8 @@ export function DashboardClient({ today }: DashboardClientProps) {
     Bakery: 'var(--accent-amber)', Frozen: 'var(--accent-cyan)', Pantry: 'var(--accent-purple)',
     Beverages: 'var(--accent-pink)',
   };
+
+  const selectedProductInfo = selectedItem ? resolveProductInfoForItem(selectedItem) : null;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -371,7 +346,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
                                               <span style={{ fontSize: '10px', fontWeight: '600', color: 'white', textAlign: 'center', lineHeight: '1.2', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{meal.meal.content}</span>
                                               {isTodoistMealCompleted(meal.meal) && <span title={getTodoistCompletionLabel(meal.meal) || undefined} style={{ fontSize: '8px', fontWeight: '700', padding: '1px 4px', borderRadius: '999px', backgroundColor: 'rgba(255,255,255,0.9)', color: 'var(--accent-emerald)' }}>✓ Todoist</span>}
                                               {meal.meal.labels && meal.meal.labels.length > 0 && <span style={{ fontSize: '8px', fontWeight: '600', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'rgba(255,255,255,0.25)', color: 'white' }}>🏷️ {meal.meal.labels.join(', ')}</span>}
-                                              <span style={{ fontSize: '9px', fontWeight: '700', color: 'white', flexShrink: 0 }}>{meal.coverageScore}%</span>
+                                              <span style={{ fontSize: '9px', fontWeight: '700', color: 'white', flexShrink: 0 }}>{getCoverageStatusLabel(meal.status)}</span>
                                             </div>
                                           );
                                         })}
@@ -395,22 +370,39 @@ export function DashboardClient({ today }: DashboardClientProps) {
             <div style={{ ...cardStyle, padding: '1rem' }}>
               <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>🛒 ORDER ITEMS BY CATEGORY</h2>
               
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem', justifyContent: 'center' }}>
-                <button onClick={() => { setSelectedCategories(new Set()); setMatchedFilter('all'); }} style={{ padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '11px', fontWeight: '600', border: '1px solid', cursor: 'pointer', transition: 'all 0.15s', backgroundColor: selectedCategories.size === 0 && matchedFilter === 'all' ? 'var(--accent-emerald)' : 'transparent', borderColor: selectedCategories.size === 0 && matchedFilter === 'all' ? 'var(--accent-emerald)' : 'var(--border-color)', color: selectedCategories.size === 0 && matchedFilter === 'all' ? 'white' : 'var(--text-primary)' }}>All</button>
-                {categories.map(cat => {
-                  const isSelected = selectedCategories.has(cat);
-                  return (
-                    <button key={cat} onClick={() => { const next = new Set(selectedCategories); next.has(cat) ? next.delete(cat) : next.add(cat); setSelectedCategories(next); }} style={{ padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '11px', fontWeight: '600', border: '1px solid', cursor: 'pointer', transition: 'all 0.15s', backgroundColor: isSelected ? categoryColors[cat] || 'var(--accent-blue)' : 'transparent', borderColor: isSelected ? categoryColors[cat] || 'var(--accent-blue)' : 'var(--border-color)', color: isSelected ? 'white' : 'var(--text-primary)' }}>
-                      {cat}
-                    </button>
-                  );
-                })}
-              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(0, 1fr) auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Categories</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <button onClick={() => { setSelectedCategories(new Set()); setMatchedFilter('all'); }} style={{ padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '11px', fontWeight: '600', border: '1px solid', cursor: 'pointer', transition: 'all 0.15s', backgroundColor: selectedCategories.size === 0 && matchedFilter === 'all' ? 'var(--accent-emerald)' : 'transparent', borderColor: selectedCategories.size === 0 && matchedFilter === 'all' ? 'var(--accent-emerald)' : 'var(--border-color)', color: selectedCategories.size === 0 && matchedFilter === 'all' ? 'white' : 'var(--text-primary)' }}>All</button>
+                    {categories.map(cat => {
+                      const isSelected = selectedCategories.has(cat);
+                      return (
+                        <button key={cat} onClick={() => { const next = new Set(selectedCategories); next.has(cat) ? next.delete(cat) : next.add(cat); setSelectedCategories(next); }} style={{ padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '11px', fontWeight: '600', border: '1px solid', cursor: 'pointer', transition: 'all 0.15s', backgroundColor: isSelected ? categoryColors[cat] || 'var(--accent-blue)' : 'transparent', borderColor: isSelected ? categoryColors[cat] || 'var(--accent-blue)' : 'var(--border-color)', color: isSelected ? 'white' : 'var(--text-primary)' }}>
+                          {cat}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {['all', 'matched', 'unmatched'].map(f => (
-                  <button key={f} onClick={() => setMatchedFilter(f as typeof matchedFilter)} style={{ padding: '0.3rem 0.7rem', borderRadius: '15px', fontSize: '10px', fontWeight: '600', border: '1px solid', cursor: 'pointer', backgroundColor: matchedFilter === f ? 'var(--accent-blue)' : 'transparent', borderColor: matchedFilter === f ? 'var(--accent-blue)' : 'var(--border-color)', color: matchedFilter === f ? 'white' : 'var(--text-secondary)', textTransform: 'capitalize' }}>{f}</button>
-                ))}
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Match</p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {['all', 'matched', 'unmatched'].map(f => (
+                      <button key={f} onClick={() => setMatchedFilter(f as typeof matchedFilter)} style={{ padding: '0.3rem 0.7rem', borderRadius: '15px', fontSize: '10px', fontWeight: '600', border: '1px solid', cursor: 'pointer', backgroundColor: matchedFilter === f ? 'var(--accent-blue)' : 'transparent', borderColor: matchedFilter === f ? 'var(--accent-blue)' : 'var(--border-color)', color: matchedFilter === f ? 'white' : 'var(--text-secondary)', textTransform: 'capitalize' }}>{f}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Sort</p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {(['name', 'price'] as OrderItemSortMode[]).map(sort => (
+                      <button key={sort} onClick={() => setItemSort(sort)} style={{ padding: '0.3rem 0.7rem', borderRadius: '15px', fontSize: '10px', fontWeight: '600', border: '1px solid', cursor: 'pointer', backgroundColor: itemSort === sort ? 'var(--accent-purple)' : 'transparent', borderColor: itemSort === sort ? 'var(--accent-purple)' : 'var(--border-color)', color: itemSort === sort ? 'white' : 'var(--text-secondary)', textTransform: 'capitalize' }}>{sort === 'name' ? 'A–Z' : 'Price'}</button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -425,7 +417,6 @@ export function DashboardClient({ today }: DashboardClientProps) {
                     <div key={idx} onClick={() => {
                       const sub = receipt?.substitutions?.find(s => s.original.toLowerCase() === item.name.toLowerCase());
                       setSelectedItem({ ...item, substitutedWith: item.substitutedWith || sub?.substitutedWith });
-                      fetchProductInfo(item.name);
                     }} style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: isUnmatched ? 1 : 0.7, borderLeft: isUnmatched ? '3px solid var(--accent-rose)' : '3px solid var(--accent-emerald)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
                         <span style={{ color: isUnmatched ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontSize: '14px', flexShrink: 0 }}>{isUnmatched ? '✗' : '✓'}</span>
@@ -462,13 +453,10 @@ export function DashboardClient({ today }: DashboardClientProps) {
             </div>
             
             <div style={{ marginBottom: '1rem', padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)' }}>
-              <p style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Coverage</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ flex: 1, height: '8px', borderRadius: '4px', backgroundColor: 'var(--bg-primary)', overflow: 'hidden' }}>
-                  <div style={{ width: `${selectedMealData.coverageScore}%`, height: '100%', backgroundColor: selectedMealData.coverageScore >= 80 ? 'var(--accent-emerald)' : selectedMealData.coverageScore >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)', borderRadius: '4px', transition: 'width 0.3s' }} />
-                </div>
-                <span style={{ fontSize: '14px', fontWeight: '700', color: selectedMealData.coverageScore >= 80 ? 'var(--accent-emerald)' : selectedMealData.coverageScore >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{selectedMealData.coverageScore}%</span>
-              </div>
+              <p style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Coverage status</p>
+              <span style={{ fontSize: '13px', fontWeight: '700', padding: '4px 10px', borderRadius: '999px', backgroundColor: selectedMealData.status === 'covered' ? 'var(--accent-emerald-bg)' : selectedMealData.status === 'partial' ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)', color: getCoverageStatusColor(selectedMealData.status) }}>
+                {getCoverageStatusLabel(selectedMealData.status)}
+              </span>
             </div>
 
             {(() => {
@@ -481,7 +469,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
                   {deduped.map((item, idx) => {
                     const productItem = findReceiptItemForMatchedItem(item, receipt.items);
                     return (
-                    <button key={idx} type="button" onClick={() => { setSelectedItem(productItem); fetchProductInfo(productItem.name); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-emerald-bg)', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
+                    <button key={idx} type="button" onClick={() => { setSelectedItem(productItem); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-emerald-bg)', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
                         <span style={{ color: 'var(--accent-emerald)', fontSize: '12px', flexShrink: 0 }}>✓</span>
                         <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(item.name)}</span>
@@ -503,7 +491,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
               if (missingExplanation.length === 0) return null;
               return (
                 <div style={{ marginBottom: '1rem', padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--accent-amber-bg)', border: '1px solid var(--accent-amber-border)' }}>
-                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-amber)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Missing for 100%</h4>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-amber)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Expected Items</h4>
                   <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{missingExplanation.join(', ')}</p>
                 </div>
               );
@@ -521,7 +509,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
       )}
 
       {/* Product Info Modal */}
-      {selectedItem && (
+      {selectedItem && selectedProductInfo && (
         <div
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -529,7 +517,7 @@ export function DashboardClient({ today }: DashboardClientProps) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 1000, padding: '1rem'
           }}
-          onClick={() => { setSelectedItem(null); setProductInfo(null); }}
+          onClick={() => { setSelectedItem(null); }}
         >
           <div
             style={{
@@ -539,64 +527,60 @@ export function DashboardClient({ today }: DashboardClientProps) {
             onClick={e => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0, flex: 1 }}>{getDisplayedProductName(selectedItem.name)}</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: 0, flex: 1 }}>{selectedProductInfo.title || getDisplayedProductName(selectedItem.name)}</h3>
               <button
-                onClick={() => { setSelectedItem(null); setProductInfo(null); }}
+                onClick={() => { setSelectedItem(null); }}
                 style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: 'var(--text-secondary)', padding: '0 0 0 1rem' }}
               >×</button>
             </div>
 
-            {loadingProduct ? (
-              <div style={{ textAlign: 'center', padding: '2rem' }}>
-                <p style={{ color: 'var(--text-secondary)' }}>Loading product info...</p>
-              </div>
-            ) : productInfo ? (
-              <div>
-                {productInfo.image ? (
-                  <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                    <img
-                      src={productInfo.image}
-                      alt={selectedItem.name}
-                      style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px' }}
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                    />
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', marginBottom: '1rem', padding: '2rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '64px' }}>{getCategoryIcon(selectedItem.name)}</span>
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Product image not available</p>
-                  </div>
-                )}
+            <div>
+              {selectedProductInfo.image ? (
+                <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                  <img
+                    src={selectedProductInfo.image}
+                    alt={selectedItem.name}
+                    style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px' }}
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', marginBottom: '1rem', padding: '2rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
+                  <span style={{ fontSize: '64px' }}>{getCategoryIcon(selectedItem.name)}</span>
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Product image not available</p>
+                </div>
+              )}
 
+              <div style={{ marginBottom: '1rem' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Description</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{selectedProductInfo.description}</p>
+              </div>
+
+              {selectedProductInfo.storage && (
                 <div style={{ marginBottom: '1rem' }}>
-                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Description</h4>
-                  <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{productInfo.description}</p>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Storage & Preparation</h4>
+                  <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{selectedProductInfo.storage}</p>
                 </div>
+              )}
 
-                {productInfo.storage && (
-                  <div style={{ marginBottom: '1rem' }}>
-                    <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Storage & Preparation</h4>
-                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{productInfo.storage}</p>
-                  </div>
-                )}
-
-                {selectedItem.substitutedWith && (
-                  <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'var(--accent-amber-bg)', border: '1px solid var(--accent-amber-border)', borderRadius: '8px' }}>
-                    <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-amber)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Substituted With</h4>
-                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.4' }}>{selectedItem.substitutedWith}</p>
-                  </div>
-                )}
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Price</span>
-                  <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>£{getProductModalPrice(selectedItem).toFixed(2)}</span>
+              {selectedProductInfo.productUrl && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <a href={selectedProductInfo.productUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '13px', fontWeight: '600', color: 'var(--accent-blue)', textDecoration: 'none' }}>Open product page →</a>
                 </div>
+              )}
+
+              {selectedItem.substitutedWith && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'var(--accent-amber-bg)', border: '1px solid var(--accent-amber-border)', borderRadius: '8px' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-amber)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Substituted With</h4>
+                  <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.4' }}>{selectedItem.substitutedWith}</p>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Price</span>
+                <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>£{getProductModalPrice(selectedItem).toFixed(2)}</span>
               </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '2rem' }}>
-                <p style={{ color: 'var(--text-secondary)' }}>Unable to load product information.</p>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       )}

@@ -1,9 +1,19 @@
+import { getServerSession } from 'next-auth';
+import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard-client';
+import { assertAuthConfigured, authOptions } from '@/lib/auth';
+import { getDashboardData } from '@/lib/dashboard-data';
 
-// Force SSR on every request so `today` is always current
+// Force SSR on every request so `today` is always current and private data stays server-loaded.
 export const dynamic = 'force-dynamic';
 
-export default function MealsDashboardPage() {
+export default async function MealsDashboardPage() {
+  assertAuthConfigured();
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    redirect('/api/auth/signin?callbackUrl=/');
+  }
+
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
@@ -12,5 +22,5 @@ export default function MealsDashboardPage() {
   twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
   const endDate = `${twoWeeksLater.getFullYear()}-${String(twoWeeksLater.getMonth() + 1).padStart(2, '0')}-${String(twoWeeksLater.getDate()).padStart(2, '0')}`;
 
-  return <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} />;
+  return <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} data={getDashboardData()} />;
 }

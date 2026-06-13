@@ -326,6 +326,9 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
         items = []
         for i in raw_items:
             item = {"name": i.get("name", ""), "quantity": i.get("quantity", 1), "price": i.get("price", 0)}
+            product_metadata = i.get("productMetadata") or i.get("product_metadata")
+            if isinstance(product_metadata, dict):
+                item["productMetadata"] = product_metadata
             substituted_with = i.get("substitutedWith") or i.get("substituted_with") or i.get("substitution")
             if isinstance(substituted_with, dict):
                 substituted_with = substituted_with.get("name") or substituted_with.get("product") or substituted_with.get("title")

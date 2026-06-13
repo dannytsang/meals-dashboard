@@ -1,11 +1,14 @@
-import { calculateCoverageSummary, DeliveryWindow, GroceryItem, MatchedItem, MealCoverage, TescoReceipt } from './meals-data';
+import { calculateCoverageSummary, DeliveryWindow, GeneratedProductMetadata, GroceryItem, MatchedItem, MealCoverage, TescoReceipt } from './meals-data';
 import { cleanItemName } from './item-utils';
+import { findProductInfo } from './product-database';
 
 export interface CachedOrderItem {
   name: string;
   quantity: number;
   price: number;
   substitutedWith?: string;
+  productMetadata?: GeneratedProductMetadata;
+  product_metadata?: GeneratedProductMetadata;
 }
 
 export interface CachedOrderLike {
@@ -116,6 +119,7 @@ export function transformCachedOrderSafely(order: CachedOrderLike | null | undef
       price: item.price,
       category: getCategoryForItem(item.name),
       substitutedWith: item.substitutedWith,
+      productMetadata: item.productMetadata ?? item.product_metadata,
     })),
     substitutions,
     unavailable: [],
@@ -180,6 +184,79 @@ export function getDisplayedProductName(name: string): string {
 
 export function getProductModalPrice(item: Pick<GroceryItem, 'price'> | null | undefined): number {
   return item?.price ?? 0;
+}
+
+export type OrderItemSortMode = 'name' | 'price';
+
+export function sortOrderItems<T extends Pick<GroceryItem, 'name' | 'price'>>(items: T[], sortMode: OrderItemSortMode): T[] {
+  const sorted = [...items];
+  if (sortMode === 'price') {
+    return sorted.sort((a, b) => {
+      const aPrice = typeof a.price === 'number' ? a.price : Number.POSITIVE_INFINITY;
+      const bPrice = typeof b.price === 'number' ? b.price : Number.POSITIVE_INFINITY;
+      if (aPrice !== bPrice) return aPrice - bPrice;
+      return cleanItemName(a.name).localeCompare(cleanItemName(b.name));
+    });
+  }
+  return sorted.sort((a, b) => cleanItemName(a.name).localeCompare(cleanItemName(b.name)));
+}
+
+export function getCoverageStatusLabel(status: MealCoverage['status']): string {
+  if (status === 'covered') return 'Green · covered';
+  if (status === 'partial') return 'Amber · partial';
+  return 'Red · missing';
+}
+
+export function getCoverageStatusColor(status: MealCoverage['status']): string {
+  if (status === 'covered') return 'var(--accent-emerald)';
+  if (status === 'partial') return 'var(--accent-amber)';
+  return 'var(--accent-rose)';
+}
+
+export interface ResolvedProductInfo {
+  title: string;
+  description: string;
+  storage: string;
+  nutrition: string;
+  image: string;
+  productUrl?: string;
+  source: 'generated' | 'local' | 'fallback';
+}
+
+export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInfo {
+  const generated = item.productMetadata;
+  if (generated) {
+    return {
+      title: generated.title || cleanItemName(item.name),
+      description: generated.description || 'Generated Tesco product details are incomplete for this item.',
+      storage: generated.storage || generated.preparation || 'Check packaging for storage and preparation instructions.',
+      nutrition: 'Nutrition information not available from generated Tesco metadata.',
+      image: generated.imageUrl || '',
+      productUrl: generated.productUrl,
+      source: 'generated',
+    };
+  }
+
+  const local = findProductInfo(item.name);
+  if (local) {
+    return {
+      title: cleanItemName(item.name),
+      description: local.description,
+      storage: local.storage,
+      nutrition: local.nutrition,
+      image: local.image || '',
+      source: 'local',
+    };
+  }
+
+  return {
+    title: cleanItemName(item.name),
+    description: 'Product information not available in generated data or the local product database.',
+    storage: 'Check packaging for storage instructions.',
+    nutrition: 'Nutrition information not available.',
+    image: '',
+    source: 'fallback',
+  };
 }
 
 export function findReceiptItemForMatchedItem(

@@ -29,6 +29,15 @@ interface CachedOrder {
     quantity: number;
     price: number;
     substitutedWith?: string;
+    productMetadata?: {
+      title?: string;
+      imageUrl?: string;
+      productUrl?: string;
+      description?: string;
+      storage?: string;
+      preparation?: string;
+      source?: string;
+    };
   }[];
 }
 
