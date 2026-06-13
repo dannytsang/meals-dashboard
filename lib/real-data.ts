@@ -584,6 +584,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -658,31 +659,6 @@ export const realMealPlan: Meal[] = [
     ],
     "section": "Planned",
     "meal_type": "dinner"
-  },
-  {
-    "id": "6gqRg2GhVJPvxxch",
-    "content": "Steak, sliced potatoes (frozen), frozen veg",
-    "date": "2026-06-15",
-    "labels": [
-      "adults"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner",
-    "is_completed": true,
-    "completed_at": "2026-06-11T20:16:33.873679Z"
-  },
-  {
-    "id": "6gqRg4qVPF7WcWQ9",
-    "content": "Duck pancakes, prawn toast, spring rolls",
-    "date": "2026-06-16",
-    "labels": [
-      "adults",
-      "children"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner",
-    "is_completed": true,
-    "completed_at": "2026-06-11T20:15:27.564219Z"
   },
   {
     "id": "6gqh5rFmJv96P439",
@@ -1086,20 +1062,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 73,
+  "coverage_percentage": 77,
   "covered": 8,
   "delivery_date": "2026-06-16",
-  "meals_covered": 11,
-  "meals_total": 15,
-  "missing": 4,
+  "meals_covered": 10,
+  "meals_total": 13,
+  "missing": 3,
   "order_total": 59.69,
-  "partial": 3,
+  "partial": 2,
   "unmatched_groceries": 23
 };
+
 
 
 
@@ -1615,95 +1593,6 @@ export const realCoverage: MealCoverage[] = [
   },
   {
     "meal": {
-      "id": "6gqRg2GhVJPvxxch",
-      "content": "Steak, sliced potatoes (frozen), frozen veg",
-      "date": "2026-06-15",
-      "labels": [
-        "adults"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner",
-      "is_completed": true,
-      "completed_at": "2026-06-11T20:16:33.873679Z"
-    },
-    "status": "partial",
-    "coverageScore": 50,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco Maris Piper Potatoes 2Kg",
-        "name": "Tesco Maris Piper Potatoes 2Kg",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [
-      "Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75g",
-      "Tesco 4 Smash Burger 340g",
-      "Tesco British Beef Medium Roasting Joint 0.868KG",
-      "Tesco Chicken & Vegetable Soup 600g",
-      "Tesco Green Seedless Grapes Pack 500G",
-      "Yamas Authentic Greek Feta Pdo 150G",
-      "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-      "De Cecco Conchiglie Rigate 500g",
-      "De Cecco Penne Rigate 500G",
-      "Hovis Best of Both Medium Bread 800g",
-      "\u2020\u00a0Lenor In-Wash Scent Booster Gold Orchid 735g",
-      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220G",
-      "Old El Paso Cheesy Baked Enchilada Kit 663G",
-      "Old El Paso Crunchy Taco Shells X12 156G",
-      "Patak's Indian Garlic & Coriander Mini Naan Breads 4 Pack",
-      "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
-      "Tesco Carrots 1Kg",
-      "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
-      "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ],
-    "missingExplanations": []
-  },
-  {
-    "meal": {
-      "id": "6gqRg4qVPF7WcWQ9",
-      "content": "Duck pancakes, prawn toast, spring rolls",
-      "date": "2026-06-16",
-      "labels": [
-        "adults",
-        "children"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner",
-      "is_completed": true,
-      "completed_at": "2026-06-11T20:15:27.564219Z"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75g",
-      "Tesco 4 Smash Burger 340g",
-      "Tesco British Beef Medium Roasting Joint 0.868KG",
-      "Tesco Chicken & Vegetable Soup 600g",
-      "Tesco Green Seedless Grapes Pack 500G",
-      "Yamas Authentic Greek Feta Pdo 150G",
-      "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-      "De Cecco Conchiglie Rigate 500g",
-      "De Cecco Penne Rigate 500G",
-      "Hovis Best of Both Medium Bread 800g",
-      "\u2020\u00a0Lenor In-Wash Scent Booster Gold Orchid 735g",
-      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220G",
-      "Old El Paso Cheesy Baked Enchilada Kit 663G",
-      "Old El Paso Crunchy Taco Shells X12 156G",
-      "Patak's Indian Garlic & Coriander Mini Naan Breads 4 Pack",
-      "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
-      "Tesco Carrots 1Kg",
-      "Tesco Maris Piper Potatoes 2Kg",
-      "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
-      "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ],
-    "missingExplanations": []
-  },
-  {
-    "meal": {
       "id": "6gqh5rFmJv96P439",
       "content": "Pizza (Leo)",
       "date": "2026-06-17",
@@ -1937,6 +1826,7 @@ export const realCoverage: MealCoverage[] = [
     "missingExplanations": []
   }
 ];
+
 
 
 
