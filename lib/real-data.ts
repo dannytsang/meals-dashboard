@@ -582,6 +582,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -1082,20 +1083,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
   "coverage_percentage": 67,
-  "covered": 8,
+  "covered": 7,
   "delivery_date": "2026-06-16",
   "meals_covered": 10,
   "meals_total": 15,
   "missing": 5,
   "order_total": 59.69,
-  "partial": 2,
+  "partial": 3,
   "unmatched_groceries": 23
 };
+
 
 
 
@@ -1444,15 +1447,9 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
+    "status": "partial",
+    "coverageScore": 50,
     "matchedItems": [
-      {
-        "ingredient": "Tesco 4 Smash Burger 340g",
-        "name": "Tesco 4 Smash Burger 340g",
-        "quantity": null,
-        "price": null
-      },
       {
         "ingredient": "Tesco British Beef Medium Roasting Joint 0.868KG",
         "name": "Tesco British Beef Medium Roasting Joint 0.868KG",
@@ -1474,6 +1471,7 @@ export const realCoverage: MealCoverage[] = [
     ],
     "missingItems": [
       "Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75g",
+      "Tesco 4 Smash Burger 340g",
       "Tesco Chicken & Vegetable Soup 600g",
       "Tesco Green Seedless Grapes Pack 500G",
       "Yamas Authentic Greek Feta Pdo 150G",
@@ -1933,6 +1931,7 @@ export const realCoverage: MealCoverage[] = [
     ]
   }
 ];
+
 
 
 
