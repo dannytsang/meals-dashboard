@@ -264,10 +264,10 @@ describe('order item sorting', () => {
   });
 });
 
-describe('RAG coverage labels', () => {
-  it('maps individual meal status to RAG labels instead of percentages', () => {
-    expect(getCoverageStatusLabel('covered')).toBe('Green · covered');
-    expect(getCoverageStatusLabel('partial')).toBe('Amber · partial');
-    expect(getCoverageStatusLabel('missing')).toBe('Red · missing');
+describe('simple coverage labels', () => {
+  it('maps individual meal status to simple labels without RAG wording or percentages', () => {
+    expect(getCoverageStatusLabel('covered')).toBe('Complete');
+    expect(getCoverageStatusLabel('partial')).toBe('Partial');
+    expect(getCoverageStatusLabel('missing')).toBe('Missing');
   });
 });

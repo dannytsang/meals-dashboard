@@ -451,7 +451,7 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{selectedMealData.meal.content}</h3>
-                <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', backgroundColor: selectedMealData.status === 'covered' ? 'var(--accent-emerald-bg)' : selectedMealData.status === 'partial' ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)', color: selectedMealData.status === 'covered' ? 'var(--accent-emerald)' : selectedMealData.status === 'partial' ? 'var(--accent-amber)' : 'var(--accent-rose)', textTransform: 'capitalize' }}>{selectedMealData.status}</span>
+                <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', backgroundColor: selectedMealData.status === 'covered' ? 'var(--accent-emerald-bg)' : selectedMealData.status === 'partial' ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)', color: selectedMealData.status === 'covered' ? 'var(--accent-emerald)' : selectedMealData.status === 'partial' ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{getCoverageStatusLabel(selectedMealData.status)}</span>
                 {isTodoistMealCompleted(selectedMealData.meal) && <div style={{ marginTop: '0.5rem', fontSize: '11px', fontWeight: '700', padding: '4px 8px', borderRadius: '999px', backgroundColor: 'var(--accent-emerald-bg)', color: 'var(--accent-emerald)', display: 'inline-block' }}>{getTodoistCompletionLabel(selectedMealData.meal)}</div>}
               </div>
               <button onClick={() => setSelectedMealData(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '18px', padding: '0.25rem' }}>✕</button>
@@ -499,7 +499,7 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                   <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Expected Items</h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                     {missingExplanation.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-amber-bg)', border: 'none', width: '100%', textAlign: 'left' }}>
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-amber-bg)', border: 'none', width: '100%', boxSizing: 'border-box', textAlign: 'left' }}>
                         <span style={{ color: 'var(--accent-amber)', fontSize: '12px', flexShrink: 0 }}>•</span>
                         <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item}</span>
                       </div>

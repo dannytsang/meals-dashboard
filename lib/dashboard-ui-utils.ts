@@ -209,9 +209,9 @@ export function sortOrderItems<T extends Pick<GroceryItem, 'name' | 'price'>>(it
 }
 
 export function getCoverageStatusLabel(status: MealCoverage['status']): string {
-  if (status === 'covered') return 'Green · covered';
-  if (status === 'partial') return 'Amber · partial';
-  return 'Red · missing';
+  if (status === 'covered') return 'Complete';
+  if (status === 'partial') return 'Partial';
+  return 'Missing';
 }
 
 export function getCoverageStatusColor(status: MealCoverage['status']): string {

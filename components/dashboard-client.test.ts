@@ -22,7 +22,7 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(source).toContain('>🏷️ {meal.meal.labels.join');
   });
 
-  it('uses RAG labels for individual meal card/detail display instead of coverage percentage bars', () => {
+  it('uses simple coverage labels for individual meal card/detail display instead of percentages or RAG wording', () => {
     const compactCardStart = source.indexOf('{dayMeals.map((meal, idx) => {');
     const compactCardEnd = source.indexOf('{selectedMealData && (');
     const compactCardSource = source.slice(compactCardStart, compactCardEnd);
@@ -31,7 +31,11 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(compactCardSource).toContain('getCoverageStatusLabel(meal.status)');
     expect(compactCardSource).not.toContain('{meal.coverageScore}%');
     expect(detailOverlaySource).toContain('Coverage status');
+    expect(detailOverlaySource).toContain('getCoverageStatusLabel(selectedMealData.status)');
     expect(detailOverlaySource).not.toContain('selectedMealData.coverageScore}%');
+    expect(source).not.toContain('Green · covered');
+    expect(source).not.toContain('Amber · partial');
+    expect(source).not.toContain('Red · missing');
   });
 
   it('does not import generated private data into the client component', () => {
@@ -58,11 +62,13 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(source).toContain('Price ↓');
   });
 
-  it('styles Expected Items like Matched Items with one boxed row per item', () => {
+  it('styles Expected Items like Matched Items with one boxed row per item and matching row width', () => {
     expect(source).toContain('Expected Items</h4>');
     expect(source).toContain('missingExplanation.map((item, idx)');
     expect(source).toContain("backgroundColor: 'var(--accent-amber-bg)'");
     expect(source).toContain("border: 'none'");
+    expect(source).toContain("width: '100%'");
+    expect(source).toContain("boxSizing: 'border-box'");
     expect(source).not.toContain('{missingExplanation.join(\', \')}');
   });
 });
