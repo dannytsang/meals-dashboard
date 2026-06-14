@@ -596,6 +596,7 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
@@ -1049,20 +1050,22 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
   "coverage_percentage": 80,
-  "covered": 6,
+  "covered": 5,
   "delivery_date": "2026-06-16",
   "meals_covered": 8,
   "meals_total": 10,
   "missing": 2,
   "order_total": 59.69,
-  "partial": 2,
+  "partial": 3,
   "unmatched_groceries": 26
 };
+
 
 
 export const realDeliveryMetadata: GeneratedDeliveryMetadata[] = [
@@ -1078,6 +1081,7 @@ export const realDeliveryMetadata: GeneratedDeliveryMetadata[] = [
   }
 ];
 export const realDeliveryWindows: DeliveryWindow[] = deliveryWindowsFromMetadata(realDeliveryMetadata);
+
 
 
 
@@ -1389,7 +1393,10 @@ export const realCoverage: MealCoverage[] = [
       "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
     ],
-    "missingExplanations": []
+    "missingExplanations": [
+      "salmon",
+      "frozen veg"
+    ]
   },
   {
     "meal": {
@@ -1402,8 +1409,8 @@ export const realCoverage: MealCoverage[] = [
       "section": "Planned",
       "meal_type": "dinner"
     },
-    "status": "covered",
-    "coverageScore": 100,
+    "status": "partial",
+    "coverageScore": 50,
     "matchedItems": [
       {
         "ingredient": "Tesco Chicken & Vegetable Soup 600g",
@@ -1444,7 +1451,9 @@ export const realCoverage: MealCoverage[] = [
       "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
       "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
     ],
-    "missingExplanations": []
+    "missingExplanations": [
+      "frozen veg"
+    ]
   },
   {
     "meal": {
@@ -1708,6 +1717,7 @@ export const realCoverage: MealCoverage[] = [
     "missingExplanations": []
   }
 ];
+
 
 
 
