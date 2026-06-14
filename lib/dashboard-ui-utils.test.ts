@@ -186,6 +186,17 @@ describe('product detail presentation', () => {
     expect(findReceiptItemForMatchedItem({ ingredient: 'pork kebab', name: 'pork kebab', quantity: null, price: null }, receiptItems)).toEqual(receiptItems[0]);
   });
 
+  it('keeps generated matched-item price when the item is from a different receipt window', () => {
+    expect(findReceiptItemForMatchedItem(
+      { ingredient: 'Tesco British Beef Medium Roasting Joint 0.868KG', name: 'Tesco British Beef Medium Roasting Joint 0.868KG', quantity: 1, price: 13.02 },
+      [],
+    )).toEqual({
+      name: 'Tesco British Beef Medium Roasting Joint 0.868KG',
+      quantity: 1,
+      price: 13.02,
+    });
+  });
+
   it('does not render a fabricated zero price when no product price is available', () => {
     expect(getProductModalPrice({})).toBeNull();
   });

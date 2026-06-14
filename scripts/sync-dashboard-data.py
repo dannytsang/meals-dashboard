@@ -388,6 +388,49 @@ def read_dashboard_cache() -> Optional[Dict]:
     return read_cache_json(DASHBOARD_CACHE)
 
 
+def resolve_matched_items_for_dashboard(matched_items, raw_items):
+    """Resolve cached matched items into dashboard MatchedItem records.
+
+    New cache entries carry receipt details directly as dicts. Older cache entries are
+    strings and are resolved against the visible receipt items when possible.
+    """
+    resolved_matched_items = []
+    for matched_item in matched_items or []:
+        if isinstance(matched_item, dict):
+            item_name = matched_item.get("name") or matched_item.get("product_name") or matched_item.get("ingredient") or ""
+            resolved_matched_items.append({
+                "ingredient": item_name,
+                "name": item_name,
+                "quantity": matched_item.get("quantity", matched_item.get("qty")),
+                "price": matched_item.get("price"),
+            })
+            continue
+
+        item_name = str(matched_item)
+        matched_receipt_item = None
+        for ri in raw_items:
+            if ri.get('name') == item_name:
+                matched_receipt_item = ri
+                break
+
+        if matched_receipt_item:
+            resolved_matched_items.append({
+                "ingredient": item_name,
+                "name": matched_receipt_item.get("name", item_name),
+                "quantity": matched_receipt_item.get("quantity", 1),
+                "price": matched_receipt_item.get("price", 0),
+            })
+        else:
+            # Older string-only cache entries had no receipt details available.
+            resolved_matched_items.append({
+                "ingredient": item_name,
+                "name": item_name,
+                "quantity": None,
+                "price": None,
+            })
+    return resolved_matched_items
+
+
 def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
     """Update lib/real-data.ts from dashboard cache data.
     
@@ -556,30 +599,7 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
             # Use matched item names directly from cache (already resolved by meal_coverage)
             # No need to re-run find_receipt_item_match() - meal_coverage already did the resolution
             matched_ingredient_names = m.get("matched_items", [])
-            resolved_matched_items = []
-            for item_name in matched_ingredient_names:
-                # Try to find the item in raw_items to get quantity and price
-                matched_receipt_item = None
-                for ri in raw_items:
-                    if ri.get('name') == item_name:
-                        matched_receipt_item = ri
-                        break
-                
-                if matched_receipt_item:
-                    resolved_matched_items.append({
-                        "ingredient": item_name,
-                        "name": matched_receipt_item.get("name", item_name),
-                        "quantity": matched_receipt_item.get("quantity", 1),
-                        "price": matched_receipt_item.get("price", 0),
-                    })
-                else:
-                    # Use the item name directly from cache (already a product name, not just ingredient)
-                    resolved_matched_items.append({
-                        "ingredient": item_name,
-                        "name": item_name,
-                        "quantity": None,
-                        "price": None,
-                    })
+            resolved_matched_items = resolve_matched_items_for_dashboard(matched_ingredient_names, raw_items)
             
             # Build coverage entry with resolved items
             coverage_entry = {

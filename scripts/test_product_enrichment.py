@@ -61,6 +61,30 @@ class ProductEnrichmentTests(unittest.TestCase):
 
         self.assertIsNone(metadata)
 
+    def test_resolve_matched_items_preserves_generated_details_from_cache(self):
+        raw_items = [{'name': 'Tesco Mini Hash Brown Bites 700gSubstitutions: On', 'quantity': 1, 'price': 2.25}]
+        matched_items = [
+            {'name': 'Tesco British Beef Medium Roasting Joint 0.868KG', 'quantity': 1, 'price': 10.42},
+            'Tesco Mini Hash Brown Bites 700gSubstitutions: On',
+        ]
+
+        resolved = sync_dashboard_data.resolve_matched_items_for_dashboard(matched_items, raw_items)
+
+        self.assertEqual(resolved, [
+            {
+                'ingredient': 'Tesco British Beef Medium Roasting Joint 0.868KG',
+                'name': 'Tesco British Beef Medium Roasting Joint 0.868KG',
+                'quantity': 1,
+                'price': 10.42,
+            },
+            {
+                'ingredient': 'Tesco Mini Hash Brown Bites 700gSubstitutions: On',
+                'name': 'Tesco Mini Hash Brown Bites 700gSubstitutions: On',
+                'quantity': 1,
+                'price': 2.25,
+            },
+        ])
+
 
 if __name__ == '__main__':
     unittest.main()
