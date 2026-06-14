@@ -940,7 +940,7 @@ def main():
     # POST to dashboard API
     print("[3] Posting data to dashboard Blob API...")
     api_url = os.environ.get("DASHBOARD_DATA_API_URL", "")
-    secret = os.environ.get("DASHBOARD_DATA_SECRET", "")
+    secret = os.environ.get("MEALS_DASHBOARD_DATA_SECRET", "")
     # Default to the production dashboard API
     if not api_url:
         api_url = "https://meals-dashboard.vercel.app/api/dashboard-data"
@@ -975,3 +975,7 @@ def main():
     print("SYNC COMPLETE")
     print("=" * 50)
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
