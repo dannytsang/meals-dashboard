@@ -1,4 +1,5 @@
 import 'server-only';
+import { list } from '@vercel/blob';
 
 const BLOB_FILE_NAME = 'dashboard-data.json';
 
@@ -18,8 +19,6 @@ interface DashboardBlobData {
 }
 
 async function fetchFromBlob(): Promise<DashboardBlobData | null> {
-  const { list } = await import('@vercel/blob');
-
   try {
     const blobs = await list({
       prefix: BLOB_FILE_NAME,
@@ -34,12 +33,17 @@ async function fetchFromBlob(): Promise<DashboardBlobData | null> {
     console.log('[dashboard-data] fetching blob URL:', latest.url);
 
     const res = await fetch(latest.url);
-    console.log('[dashboard-data] blob fetch status:', res.status);
-    if (!res.ok) return null;
+    console.log('[dashboard-data] blob fetch status:', res.status, 'content-length:', res.headers.get('content-length'));
+    if (!res.ok) {
+      console.error('[dashboard-data] blob fetch not ok:', res.status, res.statusText);
+      return null;
+    }
 
     const text = await res.text();
     console.log('[dashboard-data] blob content length:', text.length);
-    return JSON.parse(text) as DashboardBlobData;
+    const parsed = JSON.parse(text) as DashboardBlobData;
+    console.log('[dashboard-data] parsed OK, keys:', Object.keys(parsed).join(', '));
+    return parsed;
   } catch (err) {
     console.error('[dashboard-data] fetchFromBlob error:', err);
     return null;
@@ -48,11 +52,16 @@ async function fetchFromBlob(): Promise<DashboardBlobData | null> {
 
 export async function getDashboardData(): Promise<DashboardBlobData> {
   console.log('[dashboard-data] getDashboardData called');
-  const data = await fetchFromBlob();
-  console.log('[dashboard-data] fetchFromBlob result:', data ? `got ${Object.keys(data).join(', ')}` : 'null');
-  if (data) return data;
+  try {
+    const data = await fetchFromBlob();
+    console.log('[dashboard-data] fetchFromBlob result:', data ? `got ${Object.keys(data).join(', ')}` : 'null');
+    if (data) return data;
+  } catch (err) {
+    console.error('[dashboard-data] getDashboardData outer error:', err);
+  }
 
   // Graceful fallback — dashboard renders with empty state
+  console.log('[dashboard-data] returning fallback empty state');
   return {
     coverage: [],
     deliveryWindows: [],
