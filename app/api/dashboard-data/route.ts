@@ -2,7 +2,7 @@ import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 
-const DASHBOARD_DATA_SECRET = process.env.DASHBOARD_DATA_SECRET;
+const DASHBOARD_DATA_SECRET = process.env.MEALS_DASHBOARD_DATA_SECRET;
 const BLOB_STORE_NAME = process.env.BLOB_STORE_NAME ?? 'meals-dashboard-blob';
 const BLOB_FILE_NAME = 'dashboard-data.json';
 
