@@ -34,6 +34,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const result = await put(BLOB_FILE_NAME, payload, {
       access: 'private',
       token: process.env.BLOB_READ_WRITE_TOKEN,
+      allowOverwrite: true,
     });
 
     return NextResponse.json({ ok: true, url: result.url });
