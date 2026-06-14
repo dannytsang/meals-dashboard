@@ -25,15 +25,23 @@ async function fetchFromBlob(): Promise<DashboardBlobData | null> {
       prefix: BLOB_FILE_NAME,
       mode: 'folded',
     });
+    console.log('[dashboard-data] blob list result:', JSON.stringify(blobs));
     const latest = blobs.blobs[0];
-    if (!latest) return null;
+    if (!latest) {
+      console.log('[dashboard-data] no blob found with prefix:', BLOB_FILE_NAME);
+      return null;
+    }
+    console.log('[dashboard-data] fetching blob URL:', latest.url);
 
     const res = await fetch(latest.url);
+    console.log('[dashboard-data] blob fetch status:', res.status);
     if (!res.ok) return null;
 
     const text = await res.text();
+    console.log('[dashboard-data] blob content length:', text.length);
     return JSON.parse(text) as DashboardBlobData;
-  } catch {
+  } catch (err) {
+    console.error('[dashboard-data] fetchFromBlob error:', err);
     return null;
   }
 }
