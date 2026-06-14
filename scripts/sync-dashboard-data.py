@@ -19,9 +19,12 @@ import argparse
 import subprocess
 import re
 import os
+import time
+import urllib.parse
+import urllib.request
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, Optional, Tuple
+from typing import Callable, Dict, Any, Optional, Tuple
 
 # Base paths - use absolute paths for clarity. Defaults match Danny's Hermes chef profile
 # environment, but can be overridden for local/dev runs.
@@ -32,6 +35,126 @@ SYNC_META_PATH = DASHBOARD_PATH / 'lib' / 'sync-meta.ts'
 RECEIPT_CACHE = MEALS_SCRIPTS_PATH / 'data' / 'receipt_coverage_cache.json'
 MEAL_PLAN_CACHE = MEALS_SCRIPTS_PATH / 'data' / 'meal-plan-cache.json'
 DASHBOARD_CACHE = Path(os.environ.get('MEALS_DASHBOARD_CACHE', str(MEALS_SCRIPTS_PATH / 'data' / 'dashboard_cache.json'))).expanduser().resolve()
+PRODUCT_METADATA_CACHE = Path(os.environ.get('MEALS_PRODUCT_METADATA_CACHE', str(MEALS_SCRIPTS_PATH / 'data' / 'tesco_product_metadata_cache.json'))).expanduser().resolve()
+PRODUCT_ENRICHMENT_TIMEOUT_SECONDS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_TIMEOUT_SECONDS', '5'))
+PRODUCT_ENRICHMENT_DELAY_SECONDS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_DELAY_SECONDS', '0.2'))
+
+
+def _product_cache_key(item_name: str) -> str:
+    return re.sub(r'\s+', ' ', item_name).strip().lower()
+
+
+def _read_product_metadata_cache(cache_path: Path = PRODUCT_METADATA_CACHE) -> Dict[str, Dict[str, Any]]:
+    if not cache_path.exists():
+        return {}
+    try:
+        with open(cache_path) as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception as e:
+        print(f"  ⚠ Error reading product metadata cache: {e}")
+        return {}
+
+
+def _write_product_metadata_cache(cache: Dict[str, Dict[str, Any]], cache_path: Path = PRODUCT_METADATA_CACHE) -> None:
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(cache_path, 'w') as f:
+        json.dump(cache, f, indent=2, sort_keys=True)
+
+
+def _extract_tesco_product_metadata(item_name: str, html: str, search_url: str) -> Optional[Dict[str, Any]]:
+    """Extract a conservative product metadata match from a Tesco search page."""
+    product_match = re.search(r'href="(?P<path>/groceries/en-GB/products/[^"]+)"', html)
+    title_match = re.search(r'<title>(?P<title>.*?)</title>', html, flags=re.IGNORECASE | re.DOTALL)
+    image_match = re.search(r'(https://digitalcontent\.api\.tesco\.com/[^"\s<]+)', html)
+
+    if not product_match:
+        return None
+
+    cleaned_item = re.sub(r'\bSubstitutions:\s*On\b', '', item_name, flags=re.IGNORECASE).strip()
+    metadata: Dict[str, Any] = {
+        'title': cleaned_item,
+        'productUrl': urllib.parse.urljoin('https://www.tesco.com', product_match.group('path')),
+        'source': 'tesco',
+    }
+    if image_match:
+        metadata['imageUrl'] = image_match.group(1)
+    if title_match:
+        title = re.sub(r'\s+', ' ', re.sub(r'<.*?>', '', title_match.group('title'))).strip()
+        if title and 'tesco' not in title.lower():
+            metadata['description'] = title
+    return metadata
+
+
+def fetch_tesco_product_metadata(item_name: str, timeout: float = PRODUCT_ENRICHMENT_TIMEOUT_SECONDS) -> Optional[Dict[str, Any]]:
+    """Best-effort Tesco website metadata fetch.
+
+    Uses normal public Tesco search pages only. Failures, 403s, rate limits, and
+    no confident match return None so dashboard generation can keep truthful
+    fallback data.
+    """
+    cleaned = re.sub(r'\bSubstitutions:\s*On\b', '', item_name, flags=re.IGNORECASE).strip()
+    if not cleaned:
+        return None
+    search_url = 'https://www.tesco.com/groceries/en-GB/search?query=' + urllib.parse.quote(cleaned)
+    request = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0 meals-dashboard product enrichment'})
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            html = response.read(500_000).decode('utf-8', errors='ignore')
+    except Exception as e:
+        print(f"  ⚠ Tesco product enrichment fallback for {cleaned}: {e}")
+        return None
+    return _extract_tesco_product_metadata(cleaned, html, search_url)
+
+
+def enrich_order_items_with_product_metadata(
+    items: list,
+    cache_path: Path = PRODUCT_METADATA_CACHE,
+    fetcher: Callable[[str], Optional[Dict[str, Any]]] = fetch_tesco_product_metadata,
+    delay_seconds: float = PRODUCT_ENRICHMENT_DELAY_SECONDS,
+) -> list:
+    """Return order items with optional generated Tesco product metadata.
+
+    Existing item metadata is preserved. Failed/unmatched enrichment keeps the
+    original item unchanged; it never fabricates product details.
+    """
+    if os.environ.get('MEALS_PRODUCT_ENRICHMENT', '1') == '0':
+        return items
+
+    cache = _read_product_metadata_cache(cache_path)
+    changed_cache = False
+    enriched_items = []
+
+    for item in items:
+        enriched = dict(item)
+        existing_metadata = enriched.get('productMetadata') or enriched.get('product_metadata')
+        if isinstance(existing_metadata, dict) and existing_metadata:
+            enriched['productMetadata'] = existing_metadata
+            enriched_items.append(enriched)
+            continue
+
+        item_name = str(enriched.get('name', '')).strip()
+        cache_key = _product_cache_key(item_name)
+        metadata = cache.get(cache_key)
+        if metadata is None:
+            try:
+                metadata = fetcher(item_name)
+            except Exception as e:
+                print(f"  ⚠ Tesco product enrichment fallback for {item_name}: {e}")
+                metadata = None
+            if metadata:
+                cache[cache_key] = metadata
+                changed_cache = True
+            if delay_seconds > 0:
+                time.sleep(delay_seconds)
+
+        if metadata:
+            enriched['productMetadata'] = metadata
+        enriched_items.append(enriched)
+
+    if changed_cache:
+        _write_product_metadata_cache(cache, cache_path)
+    return enriched_items
 
 
 def run_command(cmd: list, timeout: int = 60, cwd: Path = None) -> Tuple[bool, str]:
@@ -313,6 +436,8 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
     if receipt and receipt_start is not None and receipt_end is not None:
         # Filter items to only include fields that CachedOrder expects
         raw_items = receipt.get("items", [])
+        raw_items = enrich_order_items_with_product_metadata(raw_items)
+        receipt["items"] = raw_items
         top_level_substitutions = receipt.get("substitutions", []) or []
         substitutions_by_original = {}
         for sub in top_level_substitutions:

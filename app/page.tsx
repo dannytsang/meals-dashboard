@@ -11,7 +11,7 @@ export default async function MealsDashboardPage() {
   assertAuthConfigured();
   const session = await getServerSession(authOptions);
   if (!session) {
-    redirect('/api/auth/signin?callbackUrl=/');
+    redirect('/auth/signin?callbackUrl=/');
   }
 
   const now = new Date();
