@@ -31,16 +31,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const payload =
       typeof body === 'string' ? body : JSON.stringify(body);
 
-    await put(BLOB_FILE_NAME, payload, {
+    const result = await put(BLOB_FILE_NAME, payload, {
       access: 'private',
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, url: result.url });
   } catch (err) {
-    console.error('[dashboard-data] Blob write failed:', err);
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[dashboard-data] Blob write failed:', message, err);
     return NextResponse.json(
-      { error: 'Failed to store data' },
+      { error: 'Failed to store data', detail: message },
       { status: 500 }
     );
   }
