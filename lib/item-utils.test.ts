@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cleanItemName, deduplicateMatchedItems, type MatchedItem } from './item-utils';
+import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal, type MatchedItem } from './item-utils';
 
 describe('cleanItemName', () => {
   it('strips "Substitutions: On" suffix', () => {
@@ -96,5 +96,17 @@ describe('deduplicateMatchedItems', () => {
     const result = deduplicateMatchedItems(items);
     expect(result).toHaveLength(1);
     expect(result[0].name).toBe('Doritos Mild Salsa Dip 300g');
+  });
+});
+
+describe('calculateMatchedItemsTotal', () => {
+  it('adds only matched item receipt prices and ignores unavailable prices', () => {
+    const items: MatchedItem[] = [
+      { ingredient: 'Beef', name: 'Tesco British Beef Medium Roasting Joint 0.868KG', quantity: 1, price: 13.02 },
+      { ingredient: 'Potatoes', name: 'Tesco Maris Piper Potatoes 2Kg', quantity: 1, price: 1.80 },
+      { ingredient: 'Unknown', name: 'Pantry gravy', quantity: null, price: null },
+    ];
+
+    expect(calculateMatchedItemsTotal(items)).toBe(14.82);
   });
 });

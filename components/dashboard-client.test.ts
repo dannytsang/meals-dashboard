@@ -71,6 +71,17 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(source).toContain('Price ↓');
   });
 
+  it('renders matched item rows as name, quantity, and price columns with a total row', () => {
+    const detailOverlayStart = source.indexOf('{selectedMealData && (');
+    const detailOverlayEnd = source.indexOf('{selectedItem && selectedProductInfo && (');
+    const detailOverlaySource = source.slice(detailOverlayStart, detailOverlayEnd);
+
+    expect(detailOverlaySource).toContain("gridTemplateColumns: 'minmax(0, 1fr) 56px 72px'");
+    expect(detailOverlaySource).toContain('Matched items total');
+    expect(detailOverlaySource).toContain('calculateMatchedItemsTotal(deduped)');
+    expect(detailOverlaySource).toContain('justifySelf');
+  });
+
   it('styles Expected Items like Matched Items with one boxed row per item and matching row width', () => {
     expect(source).toContain('Expected Items</h4>');
     expect(source).toContain('missingExplanation.map((item, idx)');

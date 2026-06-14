@@ -3,7 +3,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/lib/meals-data';
-import { cleanItemName, deduplicateMatchedItems, MatchedItem } from '@/lib/item-utils';
+import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
 import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
@@ -459,6 +459,7 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
             {(() => {
               const deduped = deduplicateMatchedItems(selectedMealData.matchedItems || []);
               if (deduped.length === 0) return null;
+              const matchedItemsTotal = calculateMatchedItemsTotal(deduped);
               return (
               <div style={{ marginBottom: '1rem' }}>
                 <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Matched Items</h4>
@@ -467,18 +468,20 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                     const productItem = findReceiptItemForMatchedItem(item, receipt.items);
                     const matchedItemPrice = getProductModalPrice(productItem);
                     return (
-                    <button key={idx} type="button" onClick={() => { setSelectedItem(productItem); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-emerald-bg)', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+                    <button key={idx} type="button" onClick={() => { setSelectedItem(productItem); }} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 56px 72px', columnGap: '0.75rem', alignItems: 'center', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-emerald-bg)', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
                         <span style={{ color: 'var(--accent-emerald)', fontSize: '12px', flexShrink: 0 }}>✓</span>
                         <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(item.name)}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                        {productItem.quantity && <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>× {productItem.quantity}</span>}
-                        {matchedItemPrice !== null && <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>£{matchedItemPrice.toFixed(2)}</span>}
-                      </div>
+                      <span style={{ fontSize: '11px', color: 'var(--text-secondary)', justifySelf: 'end', whiteSpace: 'nowrap' }}>{productItem.quantity ? `× ${productItem.quantity}` : '—'}</span>
+                      {matchedItemPrice !== null ? <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)', justifySelf: 'end', whiteSpace: 'nowrap' }}>£{matchedItemPrice.toFixed(2)}</span> : <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic', justifySelf: 'end', whiteSpace: 'nowrap' }}>N/A</span>}
                     </button>
                     );
                   })}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 56px 72px', columnGap: '0.75rem', alignItems: 'center', padding: '0.5rem 0.75rem', borderTop: '1px solid var(--border-color)' }}>
+                    <span style={{ gridColumn: '1 / 3', fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)' }}>Matched items total</span>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)', justifySelf: 'end', whiteSpace: 'nowrap' }}>£{matchedItemsTotal.toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
               );

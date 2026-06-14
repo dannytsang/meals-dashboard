@@ -37,3 +37,7 @@ export function deduplicateMatchedItems(items: MatchedItem[]): MatchedItem[] {
     return true;
   });
 }
+
+export function calculateMatchedItemsTotal(items: MatchedItem[]): number {
+  return items.reduce((total, item) => total + (typeof item.price === 'number' ? item.price : 0), 0);
+}
