@@ -398,12 +398,19 @@ def resolve_matched_items_for_dashboard(matched_items, raw_items):
     for matched_item in matched_items or []:
         if isinstance(matched_item, dict):
             item_name = matched_item.get("name") or matched_item.get("product_name") or matched_item.get("ingredient") or ""
-            resolved_matched_items.append({
+            resolved_item = {
                 "ingredient": item_name,
                 "name": item_name,
                 "quantity": matched_item.get("quantity", matched_item.get("qty")),
                 "price": matched_item.get("price"),
-            })
+            }
+            product_metadata = matched_item.get("productMetadata") or matched_item.get("product_metadata")
+            if isinstance(product_metadata, dict):
+                resolved_item["productMetadata"] = product_metadata
+            substituted_with = matched_item.get("substitutedWith") or matched_item.get("substituted_with") or matched_item.get("substitution")
+            if substituted_with:
+                resolved_item["substitutedWith"] = substituted_with
+            resolved_matched_items.append(resolved_item)
             continue
 
         item_name = str(matched_item)

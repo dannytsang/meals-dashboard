@@ -64,7 +64,12 @@ class ProductEnrichmentTests(unittest.TestCase):
     def test_resolve_matched_items_preserves_generated_details_from_cache(self):
         raw_items = [{'name': 'Tesco Mini Hash Brown Bites 700gSubstitutions: On', 'quantity': 1, 'price': 2.25}]
         matched_items = [
-            {'name': 'Tesco British Beef Medium Roasting Joint 0.868KG', 'quantity': 1, 'price': 10.42},
+            {
+                'name': 'Tesco British Beef Medium Roasting Joint 0.868KG',
+                'quantity': 1,
+                'price': 10.42,
+                'productMetadata': {'title': 'Roasting Joint', 'source': 'tesco'},
+            },
             'Tesco Mini Hash Brown Bites 700gSubstitutions: On',
         ]
 
@@ -76,6 +81,7 @@ class ProductEnrichmentTests(unittest.TestCase):
                 'name': 'Tesco British Beef Medium Roasting Joint 0.868KG',
                 'quantity': 1,
                 'price': 10.42,
+                'productMetadata': {'title': 'Roasting Joint', 'source': 'tesco'},
             },
             {
                 'ingredient': 'Tesco Mini Hash Brown Bites 700gSubstitutions: On',
