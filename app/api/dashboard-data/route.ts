@@ -1,9 +1,8 @@
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
+import { put, list } from '@vercel/blob';
 
 const DASHBOARD_DATA_SECRET = process.env.MEALS_DASHBOARD_DATA_SECRET;
-const BLOB_STORE_NAME = process.env.BLOB_STORE_NAME ?? 'meals-dashboard-blob';
 const BLOB_FILE_NAME = 'dashboard-data.json';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -47,3 +46,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 }
+
+export async function GET(): Promise<NextResponse> {
+  try {
+    const blobs = await list({ prefix: BLOB_FILE_NAME });
+    const latest = blobs.blobs[0];
+    if (!latest) {
+      return NextResponse.json({ error: 'No data found' }, { status: 404 });
+    }
+
+    const res = await fetch(latest.url);
+    if (!res.ok) {
+      return NextResponse.json({ error: 'Failed to fetch blob' }, { status: 500 });
+    }
+
+    const text = await res.text();
+    return NextResponse.json(JSON.parse(text));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[dashboard-data] Blob read failed:', message, err);
+    return NextResponse.json({ error: 'Failed to read data', detail: message }, { status: 500 });
+  }
+}
+
