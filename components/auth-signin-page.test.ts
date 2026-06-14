@@ -8,9 +8,11 @@ const signInComponentPath = join(process.cwd(), 'components/auth-signin-page.tsx
 describe('themed dashboard login page', () => {
   it('provides a custom sign-in page route instead of the default auth screen', () => {
     const authSource = readFileSync(join(process.cwd(), 'lib/auth.ts'), 'utf8');
+    const middlewareSource = readFileSync(join(process.cwd(), 'middleware.ts'), 'utf8');
     expect(existsSync(signInPagePath)).toBe(true);
     expect(readFileSync(signInPagePath, 'utf8')).toContain('AuthSignInPage');
     expect(authSource).toContain("signIn: '/auth/signin'");
+    expect(middlewareSource).toContain("signIn: '/auth/signin'");
   });
 
   it('uses the meals dashboard theme variables for dark and light login styling without private data imports', () => {
