@@ -9,6 +9,9 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 
+# Next.js build output
+.next/
+
 # Environment variables
 .env
 .env.local
