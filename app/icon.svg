@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Meals dashboard favicon">
+  <style>
+    .bg { fill: #0f172a; }
+    .plate { fill: #f8fafc; }
+    .plate-ring { fill: none; stroke: #cbd5e1; stroke-width: 2.6; }
+    .fork, .knife { stroke: #94a3b8; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+    .leaf { fill: #22c55e; }
+    .tick { fill: none; stroke: #f97316; stroke-width: 4.4; stroke-linecap: round; stroke-linejoin: round; }
+
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #fff7ed; }
+      .plate { fill: #ffffff; }
+      .plate-ring { stroke: #fed7aa; }
+      .fork, .knife { stroke: #7c2d12; }
+      .leaf { fill: #16a34a; }
+      .tick { stroke: #ea580c; }
+    }
+  </style>
+
+  <rect class="bg" width="64" height="64" rx="14" />
+
+  <!-- cutlery -->
+  <path class="fork" d="M15 13v17M10 13v12M20 13v12M10 25h10M15 30v21" />
+  <path class="knife" d="M49 13c-5 5-7 11-7 19v19M49 13v38" />
+
+  <!-- plate -->
+  <circle class="plate" cx="32" cy="34" r="18" />
+  <circle class="plate-ring" cx="32" cy="34" r="12" />
+
+  <!-- small fresh leaf -->
+  <path class="leaf" d="M35 21c7-3 12 1 12 1s-2 7-9 8c-4 .5-7-2-7-2s1-5 4-7Z" />
+  <path class="leaf" d="M33 27c4-1 8-2 12-5" opacity="0.35" />
+
+  <!-- coverage check -->
+  <path class="tick" d="M24 35l6 6 12-15" />
+</svg>
