@@ -25,7 +25,7 @@ async function fetchFromBlob(): Promise<DashboardBlobData | null> {
       prefix: BLOB_FILE_NAME,
       mode: 'folded',
     });
-    console.log('[dashboard-data] blob list result:', JSON.stringify(blobs));
+    console.log('[dashboard-data] blob list result:', JSON.stringify({ count: blobs.blobs.length, hasMore: blobs.hasMore }));
     const latest = blobs.blobs[0];
     if (!latest) {
       console.log('[dashboard-data] no blob found with prefix:', BLOB_FILE_NAME);
@@ -47,7 +47,9 @@ async function fetchFromBlob(): Promise<DashboardBlobData | null> {
 }
 
 export async function getDashboardData(): Promise<DashboardBlobData> {
+  console.log('[dashboard-data] getDashboardData called');
   const data = await fetchFromBlob();
+  console.log('[dashboard-data] fetchFromBlob result:', data ? `got ${Object.keys(data).join(', ')}` : 'null');
   if (data) return data;
 
   // Graceful fallback — dashboard renders with empty state
