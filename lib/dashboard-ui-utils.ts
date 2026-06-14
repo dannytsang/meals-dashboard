@@ -5,7 +5,7 @@ import { findProductInfo } from './product-database';
 export interface CachedOrderItem {
   name: string;
   quantity: number;
-  price: number;
+  price?: number;
   substitutedWith?: string;
   productMetadata?: GeneratedProductMetadata;
   product_metadata?: GeneratedProductMetadata;

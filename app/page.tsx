@@ -22,5 +22,5 @@ export default async function MealsDashboardPage() {
   twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
   const endDate = `${twoWeeksLater.getFullYear()}-${String(twoWeeksLater.getMonth() + 1).padStart(2, '0')}-${String(twoWeeksLater.getDate()).padStart(2, '0')}`;
 
-  return <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} data={getDashboardData()} />;
+  return <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} data={await getDashboardData()} />;
 }
