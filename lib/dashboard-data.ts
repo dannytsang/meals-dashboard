@@ -22,7 +22,6 @@ async function fetchFromBlob(): Promise<DashboardBlobData | null> {
   try {
     const blobs = await list({
       prefix: BLOB_FILE_NAME,
-      mode: 'folded',
     });
     console.log('[dashboard-data] blob list result:', JSON.stringify({ count: blobs.blobs.length, hasMore: blobs.hasMore }));
     const latest = blobs.blobs[0];
