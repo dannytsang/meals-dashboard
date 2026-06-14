@@ -595,37 +595,11 @@ export const realLatestOrder: CachedOrder = {
 
 
 
+
 // Real meal plan from Todoist (April 13-19, 2026)
 // section_id 6gJfvHHqHrCMPcp9 = Ashlee's lunch section -> meal_type: 'lunch'
 // section_id 6Rv6PrQrrFWQRg7h = Planned section -> meal_type: 'dinner'
 export const realMealPlan: Meal[] = [
-  {
-    "id": "6gqRfc74rv9Xpr9h",
-    "content": "Costco sausages (lunch - frozen)",
-    "date": "2026-06-13",
-    "labels": [
-      "adults",
-      "children"
-    ],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "6gqRffWGfCHW3mWh",
-    "content": "Terina and Leo swimming",
-    "date": "2026-06-13",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
-  {
-    "id": "6gqj7Cjg89J3cVJ9",
-    "content": "Burger flat bread salad",
-    "date": "2026-06-13",
-    "labels": [],
-    "section": "Planned",
-    "meal_type": "dinner"
-  },
   {
     "id": "6gqRfhhXmm83g459",
     "content": "Roast beef, roast potatoes, roast carrots, broccoli",
@@ -1074,23 +1048,37 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
 export const realMealsCheckSummary = {
-  "coverage_percentage": 77,
-  "covered": 8,
+  "coverage_percentage": 80,
+  "covered": 6,
   "delivery_date": "2026-06-16",
-  "meals_covered": 10,
-  "meals_total": 13,
-  "missing": 3,
+  "meals_covered": 8,
+  "meals_total": 10,
+  "missing": 2,
   "order_total": 59.69,
   "partial": 2,
-  "unmatched_groceries": 23
+  "unmatched_groceries": 26
 };
 
-export const realDeliveryMetadata: GeneratedDeliveryMetadata[] = [];
+
+export const realDeliveryMetadata: GeneratedDeliveryMetadata[] = [
+  {
+    "actual_delivery_date": "2026-06-16",
+    "delivery_usable_date": "2026-06-17",
+    "summary": "Tesco order due"
+  },
+  {
+    "actual_delivery_date": "2026-06-19",
+    "delivery_usable_date": "2026-06-20",
+    "summary": "Tesco order due"
+  }
+];
 export const realDeliveryWindows: DeliveryWindow[] = deliveryWindowsFromMetadata(realDeliveryMetadata);
+
 
 
 
@@ -1299,127 +1287,6 @@ export const realDeliveryWindows: DeliveryWindow[] = deliveryWindowsFromMetadata
 
 // Coverage data - pre-computed by sync script (do not edit manually)
 export const realCoverage: MealCoverage[] = [
-  {
-    "meal": {
-      "id": "6gqRfc74rv9Xpr9h",
-      "content": "Costco sausages (lunch - frozen)",
-      "date": "2026-06-13",
-      "labels": [
-        "adults",
-        "children"
-      ],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "missing",
-    "coverageScore": 0,
-    "matchedItems": [],
-    "missingItems": [
-      "Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75g",
-      "Tesco 4 Smash Burger 340g",
-      "Tesco British Beef Medium Roasting Joint 0.868KG",
-      "Tesco Chicken & Vegetable Soup 600g",
-      "Tesco Green Seedless Grapes Pack 500G",
-      "Yamas Authentic Greek Feta Pdo 150G",
-      "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-      "De Cecco Conchiglie Rigate 500g",
-      "De Cecco Penne Rigate 500G",
-      "Hovis Best of Both Medium Bread 800g",
-      "\u2020\u00a0Lenor In-Wash Scent Booster Gold Orchid 735g",
-      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220G",
-      "Old El Paso Cheesy Baked Enchilada Kit 663G",
-      "Old El Paso Crunchy Taco Shells X12 156G",
-      "Patak's Indian Garlic & Coriander Mini Naan Breads 4 Pack",
-      "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
-      "Tesco Carrots 1Kg",
-      "Tesco Maris Piper Potatoes 2Kg",
-      "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
-      "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ],
-    "missingExplanations": []
-  },
-  {
-    "meal": {
-      "id": "6gqRffWGfCHW3mWh",
-      "content": "Terina and Leo swimming",
-      "date": "2026-06-13",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "[external] Terina and Leo swimming",
-        "name": "[external] Terina and Leo swimming",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [],
-    "missingExplanations": [],
-    "notes": "external"
-  },
-  {
-    "meal": {
-      "id": "6gqj7Cjg89J3cVJ9",
-      "content": "Burger flat bread salad",
-      "date": "2026-06-13",
-      "labels": [],
-      "section": "Planned",
-      "meal_type": "dinner"
-    },
-    "status": "covered",
-    "coverageScore": 100,
-    "matchedItems": [
-      {
-        "ingredient": "Tesco 4 Smash Burger 340g",
-        "name": "Tesco 4 Smash Burger 340g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Tesco British Beef Medium Roasting Joint 0.868KG",
-        "name": "Tesco British Beef Medium Roasting Joint 0.868KG",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Hovis Best of Both Medium Bread 800g",
-        "name": "Hovis Best of Both Medium Bread 800g",
-        "quantity": null,
-        "price": null
-      },
-      {
-        "ingredient": "Patak's Indian Garlic & Coriander Mini Naan Breads 4 Pack",
-        "name": "Patak's Indian Garlic & Coriander Mini Naan Breads 4 Pack",
-        "quantity": null,
-        "price": null
-      }
-    ],
-    "missingItems": [
-      "Calbee Takoyaki Ball Japanese Style BBQ Sauce Flavour Corn Puffs 75g",
-      "Tesco Chicken & Vegetable Soup 600g",
-      "Tesco Green Seedless Grapes Pack 500G",
-      "Yamas Authentic Greek Feta Pdo 150G",
-      "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-      "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-      "De Cecco Conchiglie Rigate 500g",
-      "De Cecco Penne Rigate 500G",
-      "\u2020\u00a0Lenor In-Wash Scent Booster Gold Orchid 735g",
-      "Loyd Grossman Flame Baked Pizza Bases 2 Pack 220G",
-      "Old El Paso Cheesy Baked Enchilada Kit 663G",
-      "Old El Paso Crunchy Taco Shells X12 156G",
-      "\u2020\u00a0Tesco Apple And Mango From Concentrate 1 Litre",
-      "Tesco Carrots 1Kg",
-      "Tesco Maris Piper Potatoes 2Kg",
-      "\u2020\u00a0Tesco Pure Apple Juice 1 Litre",
-      "\u2020\u00a0Tesco Pure Orange Juice With Bits 1 Litre"
-    ],
-    "missingExplanations": []
-  },
   {
     "meal": {
       "id": "6gqRfhhXmm83g459",
@@ -1841,6 +1708,7 @@ export const realCoverage: MealCoverage[] = [
     "missingExplanations": []
   }
 ];
+
 
 
 
