@@ -26,10 +26,14 @@ export async function getDashboardData(): Promise<DashboardBlobData> {
       return getEmptyState();
     }
 
-    // Use the blob URL directly — @vercel/blob handles auth internally in serverless
-    const res = await fetch(latest.url);
+    const token = process.env.BLOB_READ_WRITE_TOKEN ?? '';
+    const res = await fetch(latest.url, {
+      headers: {
+        Authorization: 'Bearer ' + token,
+      },
+    });
     if (!res.ok) {
-      console.error('[dashboard-data] blob fetch failed:', res.status);
+      console.error('[dashboard-data] blob fetch failed:', res.status, res.statusText);
       return getEmptyState();
     }
 
