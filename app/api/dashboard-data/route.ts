@@ -50,12 +50,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 export async function GET(): Promise<NextResponse> {
   try {
     const blobs = await list({ prefix: BLOB_FILE_NAME });
+    console.log('[dashboard-data] list blobs count:', blobs.blobs.length);
+    if (blobs.blobs.length > 0) {
+      console.log('[dashboard-data] first blob url:', blobs.blobs[0].url);
+    }
     const latest = blobs.blobs[0];
     if (!latest) {
       return NextResponse.json({ error: 'No data found' }, { status: 404 });
     }
 
-    const res = await fetch(latest.url);
+    const res = await fetch(latest.url, {
+      headers: { Authorization: 'Bearer ' + process.env.BLOB_READ_WRITE_TOKEN },
+    });
+    console.log('[dashboard-data] fetch status:', res.status);
     if (!res.ok) {
       return NextResponse.json({ error: 'Failed to fetch blob' }, { status: 500 });
     }
@@ -68,4 +75,3 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Failed to read data', detail: message }, { status: 500 });
   }
 }
-
