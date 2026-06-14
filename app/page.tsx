@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 export default async function MealsDashboardPage() {
   assertAuthConfigured();
   const session = await getServerSession(authOptions);
+  console.log('[page] session:', session ? 'authenticated' : 'NOT authenticated');
   if (!session) {
     redirect('/auth/signin?callbackUrl=/');
   }
@@ -22,5 +23,12 @@ export default async function MealsDashboardPage() {
   twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
   const endDate = `${twoWeeksLater.getFullYear()}-${String(twoWeeksLater.getMonth() + 1).padStart(2, '0')}-${String(twoWeeksLater.getDate()).padStart(2, '0')}`;
 
-  return <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} data={await getDashboardData()} />;
+  const data = await getDashboardData();
+  console.log('[page] data loaded:', {
+    coverageCount: data.coverage.length,
+    mealsCount: data.mealsCheckSummary ? 'has summary' : 'no summary',
+    latestOrder: data.latestOrder ? 'has order' : 'no order',
+  });
+
+  return <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} data={data} />;
 }

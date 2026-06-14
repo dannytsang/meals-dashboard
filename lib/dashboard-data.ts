@@ -1,6 +1,6 @@
 import 'server-only';
+import { list } from '@vercel/blob';
 
-const API_BASE = '';
 const BLOB_FILE_NAME = 'dashboard-data.json';
 
 interface DashboardBlobData {
@@ -20,13 +20,21 @@ interface DashboardBlobData {
 
 export async function getDashboardData(): Promise<DashboardBlobData> {
   try {
-    const res = await fetch(`${API_BASE}/api/dashboard-data`);
-    if (!res.ok) {
-      console.error('[dashboard-data] GET /api/dashboard-data failed:', res.status);
+    const blobs = await list({ prefix: BLOB_FILE_NAME });
+    const latest = blobs.blobs[0];
+    if (!latest) {
       return getEmptyState();
     }
-    const data = await res.json() as DashboardBlobData;
-    return data;
+
+    // Use the blob URL directly — @vercel/blob handles auth internally in serverless
+    const res = await fetch(latest.url);
+    if (!res.ok) {
+      console.error('[dashboard-data] blob fetch failed:', res.status);
+      return getEmptyState();
+    }
+
+    const text = await res.text();
+    return JSON.parse(text) as DashboardBlobData;
   } catch (err) {
     console.error('[dashboard-data] getDashboardData error:', err);
     return getEmptyState();
