@@ -36,7 +36,7 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
-  const [itemSort, setItemSort] = useState<OrderItemSortMode>('name');
+  const [itemSort, setItemSort] = useState<OrderItemSortMode>('name-asc');
   const [selectedMealData, setSelectedMealData] = useState<MealCoverage | null>(null);
   const [selectedItem, setSelectedItem] = useState<GroceryItem | null>(null);
   const [showCount, setShowCount] = useState(10);
@@ -398,8 +398,13 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                 <div>
                   <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Sort</p>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {(['name', 'price'] as OrderItemSortMode[]).map(sort => (
-                      <button key={sort} onClick={() => setItemSort(sort)} style={{ padding: '0.3rem 0.7rem', borderRadius: '15px', fontSize: '10px', fontWeight: '600', border: '1px solid', cursor: 'pointer', backgroundColor: itemSort === sort ? 'var(--accent-purple)' : 'transparent', borderColor: itemSort === sort ? 'var(--accent-purple)' : 'var(--border-color)', color: itemSort === sort ? 'white' : 'var(--text-secondary)', textTransform: 'capitalize' }}>{sort === 'name' ? 'A–Z' : 'Price'}</button>
+                    {([
+                      ['name-asc', 'Name A–Z'],
+                      ['name-desc', 'Name Z–A'],
+                      ['price-asc', 'Price ↑'],
+                      ['price-desc', 'Price ↓'],
+                    ] as [OrderItemSortMode, string][]).map(([sort, label]) => (
+                      <button key={sort} onClick={() => setItemSort(sort)} style={{ padding: '0.3rem 0.7rem', borderRadius: '15px', fontSize: '10px', fontWeight: '600', border: '1px solid', cursor: 'pointer', backgroundColor: itemSort === sort ? 'var(--accent-purple)' : 'transparent', borderColor: itemSort === sort ? 'var(--accent-purple)' : 'var(--border-color)', color: itemSort === sort ? 'white' : 'var(--text-secondary)' }}>{label}</button>
                     ))}
                   </div>
                 </div>
@@ -490,9 +495,16 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
               const missingExplanation = getPartialMealMissingExplanation(selectedMealData);
               if (missingExplanation.length === 0) return null;
               return (
-                <div style={{ marginBottom: '1rem', padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--accent-amber-bg)', border: '1px solid var(--accent-amber-border)' }}>
-                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-amber)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Expected Items</h4>
-                  <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{missingExplanation.join(', ')}</p>
+                <div style={{ marginBottom: '1rem' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Expected Items</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    {missingExplanation.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-amber-bg)', border: 'none', width: '100%', textAlign: 'left' }}>
+                        <span style={{ color: 'var(--accent-amber)', fontSize: '12px', flexShrink: 0 }}>•</span>
+                        <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               );
             })()}

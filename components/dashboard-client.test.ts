@@ -52,5 +52,17 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(source).toContain('Match</p>');
     expect(source).toContain('Sort</p>');
     expect(source).toContain("setItemSort(sort)");
+    expect(source).toContain('Name A–Z');
+    expect(source).toContain('Name Z–A');
+    expect(source).toContain('Price ↑');
+    expect(source).toContain('Price ↓');
+  });
+
+  it('styles Expected Items like Matched Items with one boxed row per item', () => {
+    expect(source).toContain('Expected Items</h4>');
+    expect(source).toContain('missingExplanation.map((item, idx)');
+    expect(source).toContain("backgroundColor: 'var(--accent-amber-bg)'");
+    expect(source).toContain("border: 'none'");
+    expect(source).not.toContain('{missingExplanation.join(\', \')}');
   });
 });

@@ -231,18 +231,34 @@ describe('order item sorting', () => {
     { name: 'Loose Bananas', quantity: 1 },
   ];
 
-  it('sorts alphabetically by cleaned display name by default', () => {
-    expect(sortOrderItems(items, 'name').map(item => item.name)).toEqual([
+  it('sorts alphabetically by cleaned display name ascending by default', () => {
+    expect(sortOrderItems(items, 'name-asc').map(item => item.name)).toEqual([
       'Apple Pack',
       'Loose Bananas',
       'Tesco Zucchini Substitutions: On',
     ]);
   });
 
-  it('sorts by price with missing prices last', () => {
-    expect(sortOrderItems(items, 'price').map(item => item.name)).toEqual([
+  it('sorts alphabetically by cleaned display name descending', () => {
+    expect(sortOrderItems(items, 'name-desc').map(item => item.name)).toEqual([
+      'Tesco Zucchini Substitutions: On',
+      'Loose Bananas',
+      'Apple Pack',
+    ]);
+  });
+
+  it('sorts by price low-to-high with missing prices last', () => {
+    expect(sortOrderItems(items, 'price-asc').map(item => item.name)).toEqual([
       'Apple Pack',
       'Tesco Zucchini Substitutions: On',
+      'Loose Bananas',
+    ]);
+  });
+
+  it('sorts by price high-to-low with missing prices last', () => {
+    expect(sortOrderItems(items, 'price-desc').map(item => item.name)).toEqual([
+      'Tesco Zucchini Substitutions: On',
+      'Apple Pack',
       'Loose Bananas',
     ]);
   });

@@ -186,19 +186,26 @@ export function getProductModalPrice(item: Pick<GroceryItem, 'price'> | null | u
   return item?.price ?? 0;
 }
 
-export type OrderItemSortMode = 'name' | 'price';
+export type OrderItemSortMode = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
 
 export function sortOrderItems<T extends Pick<GroceryItem, 'name' | 'price'>>(items: T[], sortMode: OrderItemSortMode): T[] {
   const sorted = [...items];
-  if (sortMode === 'price') {
+  const compareNames = (a: T, b: T) => cleanItemName(a.name).localeCompare(cleanItemName(b.name));
+
+  if (sortMode === 'price-asc' || sortMode === 'price-desc') {
     return sorted.sort((a, b) => {
-      const aPrice = typeof a.price === 'number' ? a.price : Number.POSITIVE_INFINITY;
-      const bPrice = typeof b.price === 'number' ? b.price : Number.POSITIVE_INFINITY;
-      if (aPrice !== bPrice) return aPrice - bPrice;
-      return cleanItemName(a.name).localeCompare(cleanItemName(b.name));
+      const aHasPrice = typeof a.price === 'number';
+      const bHasPrice = typeof b.price === 'number';
+      if (aHasPrice !== bHasPrice) return aHasPrice ? -1 : 1;
+      if (aHasPrice && bHasPrice && a.price !== b.price) {
+        return sortMode === 'price-asc' ? (a.price as number) - (b.price as number) : (b.price as number) - (a.price as number);
+      }
+      return compareNames(a, b);
     });
   }
-  return sorted.sort((a, b) => cleanItemName(a.name).localeCompare(cleanItemName(b.name)));
+
+  const nameResult = sorted.sort(compareNames);
+  return sortMode === 'name-desc' ? nameResult.reverse() : nameResult;
 }
 
 export function getCoverageStatusLabel(status: MealCoverage['status']): string {
