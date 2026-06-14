@@ -174,7 +174,7 @@ export const realLatestOrder: CachedOrder = {
     },
     {
         "name": "Tesco Fire Pit 4 Sweet & Smoky Pork Kebabs 340GSubstitutions: On",
-        "quantity": 1,
+        "quantity": 2,
         "price": 8.0
     },
     {
@@ -194,7 +194,7 @@ export const realLatestOrder: CachedOrder = {
     },
     {
         "name": "Firepit Tesco 4 Sweet & Smokey BBQ Salmon Skewers 250gSubstitutions: On",
-        "quantity": 1,
+        "quantity": 2,
         "price": 6.66
     },
     {
@@ -209,7 +209,7 @@ export const realLatestOrder: CachedOrder = {
     },
     {
         "name": "Birds Eye Steamfresh Mushroom Tagliatelle with a Creamy Sauce Meal for 1 400gSubstitutions: On",
-        "quantity": 1,
+        "quantity": 2,
         "price": 4.5
     },
     {
@@ -239,12 +239,12 @@ export const realLatestOrder: CachedOrder = {
     },
     {
         "name": "\u2020 TRESemme Heat Defence Care & Protect Spray 60mlSubstitutions: On",
-        "quantity": 1,
+        "quantity": 3,
         "price": 6.4
     },
     {
         "name": "\u2020 Tesco Health Ibuprofen 200mg Pain Relief Tablets 16sSubstitutions: On",
-        "quantity": 1,
+        "quantity": 2,
         "price": 0.7
     },
     {
@@ -254,6 +254,7 @@ export const realLatestOrder: CachedOrder = {
     }
 ]
 };
+
 
 
 
@@ -1053,6 +1054,7 @@ export const realMealPlan: Meal[] = [
 
 
 
+
 // Transform and export
 export const realReceipt = transformCachedOrder(realLatestOrder);
 
@@ -1071,6 +1073,7 @@ export const realMealsCheckSummary = {
 
 
 
+
 export const realDeliveryMetadata: GeneratedDeliveryMetadata[] = [
   {
     "actual_delivery_date": "2026-06-16",
@@ -1084,6 +1087,7 @@ export const realDeliveryMetadata: GeneratedDeliveryMetadata[] = [
   }
 ];
 export const realDeliveryWindows: DeliveryWindow[] = deliveryWindowsFromMetadata(realDeliveryMetadata);
+
 
 
 
@@ -1313,20 +1317,20 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco British Beef Medium Roasting Joint 0.868KG",
         "name": "Tesco British Beef Medium Roasting Joint 0.868KG",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 13.02
       },
       {
         "ingredient": "Tesco Carrots 1Kg",
         "name": "Tesco Carrots 1Kg",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 0.69
       },
       {
         "ingredient": "Tesco Maris Piper Potatoes 2Kg",
         "name": "Tesco Maris Piper Potatoes 2Kg",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 1.8
       }
     ],
     "missingItems": [
@@ -1371,8 +1375,8 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Maris Piper Potatoes 2Kg",
         "name": "Tesco Maris Piper Potatoes 2Kg",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 1.8
       }
     ],
     "missingItems": [
@@ -1419,20 +1423,20 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Chicken & Vegetable Soup 600g",
         "name": "Tesco Chicken & Vegetable Soup 600g",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 1.5
       },
       {
         "ingredient": "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
         "name": "\u2020\u00a0Calbee Honey Butter Flavour Potato Chips\u00a0130g",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 1.5
       },
       {
         "ingredient": "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
         "name": "\u2020\u00a0Calbee Hot & Spicy Flavour Potato Chips\u00a0130g",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 1.5
       }
     ],
     "missingItems": [
@@ -1478,8 +1482,8 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "[external] Tony and Barbara cooking",
         "name": "[external] Tony and Barbara cooking",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 0
       }
     ],
     "missingItems": [],
@@ -1539,8 +1543,8 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "[external] Cheesy mash (Ashlee)",
         "name": "[external] Cheesy mash (Ashlee)",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 0
       }
     ],
     "missingItems": [],
@@ -1613,8 +1617,8 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "[external] Tony and Barbara cooking",
         "name": "[external] Tony and Barbara cooking",
-        "quantity": null,
-        "price": null
+        "quantity": 1,
+        "price": 0
       }
     ],
     "missingItems": [],
@@ -1639,7 +1643,7 @@ export const realCoverage: MealCoverage[] = [
       {
         "ingredient": "Tesco Fire Pit 4 Sweet & Smoky Pork Kebabs 340GSubstitutions: On",
         "name": "Tesco Fire Pit 4 Sweet & Smoky Pork Kebabs 340GSubstitutions: On",
-        "quantity": 1,
+        "quantity": 2,
         "price": 8.0
       },
       {
@@ -1721,6 +1725,7 @@ export const realCoverage: MealCoverage[] = [
     "missingExplanations": []
   }
 ];
+
 
 
 
