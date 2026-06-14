@@ -15,7 +15,6 @@ import {
   findReceiptItemForMatchedItem,
   getDisplayedProductName,
   getPartialMealMissingExplanation,
-  getCoverageStatusColor,
   getCoverageStatusLabel,
   getTodoistCompletionLabel,
   getProductModalPrice,
@@ -457,13 +456,6 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
               <button onClick={() => setSelectedMealData(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '18px', padding: '0.25rem' }}>✕</button>
             </div>
             
-            <div style={{ marginBottom: '1rem', padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)' }}>
-              <p style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Coverage status</p>
-              <span style={{ fontSize: '13px', fontWeight: '700', padding: '4px 10px', borderRadius: '999px', backgroundColor: selectedMealData.status === 'covered' ? 'var(--accent-emerald-bg)' : selectedMealData.status === 'partial' ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)', color: getCoverageStatusColor(selectedMealData.status) }}>
-                {getCoverageStatusLabel(selectedMealData.status)}
-              </span>
-            </div>
-
             {(() => {
               const deduped = deduplicateMatchedItems(selectedMealData.matchedItems || []);
               if (deduped.length === 0) return null;
@@ -473,6 +465,7 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                   {deduped.map((item, idx) => {
                     const productItem = findReceiptItemForMatchedItem(item, receipt.items);
+                    const matchedItemPrice = getProductModalPrice(productItem);
                     return (
                     <button key={idx} type="button" onClick={() => { setSelectedItem(productItem); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-emerald-bg)', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
@@ -480,8 +473,8 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                         <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(item.name)}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                        {item.quantity && <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>× {item.quantity}</span>}
-                        {item.price !== null && <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>£{item.price.toFixed(2)}</span>}
+                        {productItem.quantity && <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>× {productItem.quantity}</span>}
+                        {matchedItemPrice !== null && <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>£{matchedItemPrice.toFixed(2)}</span>}
                       </div>
                     </button>
                     );
@@ -590,7 +583,14 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px' }}>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Price</span>
-                <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>£{getProductModalPrice(selectedItem).toFixed(2)}</span>
+                {(() => {
+                  const modalPrice = getProductModalPrice(selectedItem);
+                  return modalPrice !== null ? (
+                    <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>£{modalPrice.toFixed(2)}</span>
+                  ) : (
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', fontStyle: 'italic' }}>price N/A</span>
+                  );
+                })()}
               </div>
             </div>
           </div>

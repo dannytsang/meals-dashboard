@@ -177,6 +177,26 @@ describe('product detail presentation', () => {
 
     expect(findReceiptItemForMatchedItem({ ingredient: 'Potatoes', name: 'Tesco Maris Piper Potatoes 2Kg', quantity: null, price: null }, receiptItems)).toEqual(receiptItems[0]);
   });
+
+  it('uses the receipt price when a matched meal ingredient is a shorter phrase than the order item name', () => {
+    const receiptItems: GroceryItem[] = [
+      { name: 'Tesco Fire Pit 4 Sweet & Smoky Pork Kebabs 340GSubstitutions: On', quantity: 1, price: 8 },
+    ];
+
+    expect(findReceiptItemForMatchedItem({ ingredient: 'pork kebab', name: 'pork kebab', quantity: null, price: null }, receiptItems)).toEqual(receiptItems[0]);
+  });
+
+  it('does not render a fabricated zero price when no product price is available', () => {
+    expect(getProductModalPrice({})).toBeNull();
+  });
+
+  it('does not fabricate quantity when no receipt item can be resolved', () => {
+    expect(findReceiptItemForMatchedItem({ ingredient: 'external', name: '[external] cooking', quantity: null, price: null }, [])).toMatchObject({
+      name: '[external] cooking',
+      quantity: 0,
+      price: undefined,
+    });
+  });
 });
 
 describe('partial meal missing explanations', () => {

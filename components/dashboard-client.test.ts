@@ -30,12 +30,21 @@ describe('DashboardClient meal card/detail contract', () => {
 
     expect(compactCardSource).toContain('getCoverageStatusLabel(meal.status)');
     expect(compactCardSource).not.toContain('{meal.coverageScore}%');
-    expect(detailOverlaySource).toContain('Coverage status');
     expect(detailOverlaySource).toContain('getCoverageStatusLabel(selectedMealData.status)');
+    expect(detailOverlaySource).not.toContain('Coverage status');
     expect(detailOverlaySource).not.toContain('selectedMealData.coverageScore}%');
     expect(source).not.toContain('Green · covered');
     expect(source).not.toContain('Amber · partial');
     expect(source).not.toContain('Red · missing');
+  });
+
+  it('does not duplicate the meal detail coverage status section below the title badge', () => {
+    const detailOverlayStart = source.indexOf('{selectedMealData && (');
+    const detailOverlayEnd = source.indexOf('{selectedItem && selectedProductInfo && (');
+    const detailOverlaySource = source.slice(detailOverlayStart, detailOverlayEnd);
+
+    expect(detailOverlaySource).toContain('getCoverageStatusLabel(selectedMealData.status)');
+    expect(detailOverlaySource).not.toContain('Coverage status');
   });
 
   it('does not import generated private data into the client component', () => {

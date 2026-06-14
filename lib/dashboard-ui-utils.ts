@@ -182,8 +182,8 @@ export function getDisplayedProductName(name: string): string {
   return cleanItemName(name);
 }
 
-export function getProductModalPrice(item: Pick<GroceryItem, 'price'> | null | undefined): number {
-  return item?.price ?? 0;
+export function getProductModalPrice(item: Pick<GroceryItem, 'price'> | null | undefined): number | null {
+  return typeof item?.price === 'number' ? item.price : null;
 }
 
 export type OrderItemSortMode = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
@@ -266,22 +266,51 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
   };
 }
 
+function normalizeProductMatchText(value: string): string {
+  return cleanItemName(value)
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\b(kebabs|potatoes|fries|pies|bites|skins)\b/g, match => match.slice(0, -1))
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function containsAllSignificantTokens(haystack: string, needle: string): boolean {
+  const tokens = normalizeProductMatchText(needle)
+    .split(' ')
+    .filter(token => token.length > 2 && !['tesco', 'finest', 'fire', 'pit'].includes(token));
+  if (tokens.length === 0) return false;
+  const normalizedHaystack = normalizeProductMatchText(haystack);
+  return tokens.every(token => normalizedHaystack.split(' ').some(haystackToken => haystackToken === token || haystackToken.startsWith(token) || token.startsWith(haystackToken)));
+}
+
 export function findReceiptItemForMatchedItem(
   matchedItem: Pick<MatchedItem, 'name' | 'ingredient' | 'quantity' | 'price'>,
   receiptItems: GroceryItem[],
 ): GroceryItem {
-  const matchedName = matchedItem.name.toLowerCase();
-  const directMatch = receiptItems.find(item => item.name.toLowerCase() === matchedName);
-  if (directMatch) return directMatch;
+  const candidates = [matchedItem.name, matchedItem.ingredient].filter(Boolean);
 
-  const cleanedMatchedName = cleanItemName(matchedItem.name).toLowerCase();
-  const cleanedMatch = receiptItems.find(item => cleanItemName(item.name).toLowerCase() === cleanedMatchedName);
-  if (cleanedMatch) return cleanedMatch;
+  for (const candidate of candidates) {
+    const directMatch = receiptItems.find(item => item.name.toLowerCase() === candidate.toLowerCase());
+    if (directMatch) return directMatch;
+  }
+
+  for (const candidate of candidates) {
+    const normalizedCandidate = normalizeProductMatchText(candidate);
+    const cleanedMatch = receiptItems.find(item => normalizeProductMatchText(item.name) === normalizedCandidate);
+    if (cleanedMatch) return cleanedMatch;
+  }
+
+  for (const candidate of candidates) {
+    const containmentMatch = receiptItems.find(item => containsAllSignificantTokens(item.name, candidate));
+    if (containmentMatch) return containmentMatch;
+  }
 
   return {
     name: matchedItem.name,
-    quantity: matchedItem.quantity ?? 1,
-    price: matchedItem.price ?? 0,
+    quantity: matchedItem.quantity ?? 0,
+    price: matchedItem.price ?? undefined,
   };
 }
 
