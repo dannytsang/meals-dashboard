@@ -7,6 +7,7 @@ export default defineConfig({
     alias: {
       // `server-only` is a no-op marker from Next.js; vitest can't resolve it.
       'server-only': new URL('./lib/__server-only-shim__.ts', import.meta.url).pathname,
+      '@': new URL('./', import.meta.url).pathname,
     },
   },
   test: {
