@@ -18,13 +18,14 @@ describe('themed dashboard login page', () => {
   it('uses the meals dashboard theme variables for dark and light login styling without private data imports', () => {
     expect(existsSync(signInComponentPath)).toBe(true);
     const source = readFileSync(signInComponentPath, 'utf8');
+    const themeSource = readFileSync(join(process.cwd(), 'lib/theme.tsx'), 'utf8');
 
     expect(source).toContain('useTheme()');
     expect(source).toContain('var(--bg-primary)');
     expect(source).toContain('var(--bg-secondary)');
     expect(source).toContain('var(--text-primary)');
     expect(source).toContain('var(--accent-emerald)');
-    expect(source).toContain('meals-dashboard-theme');
+    expect(themeSource).toContain('meals-dashboard-theme');
     expect(source).not.toContain('@/lib/real-data');
     expect(source).not.toContain('AUTHENTIK_CLIENT_SECRET');
     expect(source).not.toContain('NEXTAUTH_SECRET');
