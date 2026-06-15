@@ -113,6 +113,24 @@ describe('getDashboardData — split layout', () => {
     expect(data.mealsCheckSummary?.order_total).toBe(57.43);
   });
 
+  it('Spec 018 — preserves order status and refund amount from split order blobs', async () => {
+    const payload = samplePayload();
+    payload.orders[0] = {
+      ...payload.orders[0]!,
+      status: 'refunded',
+      refundAmount: 4.5,
+    };
+
+    await syncDashboardLayout(payload, client);
+    const data = await getDashboardData({
+      coverageWindow: ['2026-06-15'],
+      reader: readerOf(client),
+    });
+
+    expect(data.latestOrder?.orderStatus).toBe('refunded');
+    expect(data.latestOrder?.refundAmount).toBe(4.5);
+  });
+
   it('loads all dates in a window, not just start/end exact dates', async () => {
     const payload = samplePayload();
     payload.coverageWindow = ['2026-06-15', '2026-06-16', '2026-06-17'];

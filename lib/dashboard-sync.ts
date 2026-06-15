@@ -55,6 +55,8 @@ export interface OrderBlob {
   shortLifeItems: Array<{ name: string; daysRemaining: number }>;
   /** Set by spec 018 — defaults to 'active' in 016. */
   status?: 'active' | 'cancelled' | 'superseded' | 'refunded';
+  /** Set by spec 018 when a post-delivery refund reduces the order. */
+  refundAmount?: number;
 }
 
 export interface SplitLayoutPayload {

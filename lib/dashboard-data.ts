@@ -199,6 +199,8 @@ function orderBlobToTescoReceipt(o: OrderBlob): TescoReceipt {
     substitutions: o.substitutions as TescoReceipt['substitutions'],
     unavailable: o.unavailable as TescoReceipt['unavailable'],
     shortLifeItems: o.shortLifeItems as TescoReceipt['shortLifeItems'],
+    orderStatus: o.status,
+    refundAmount: o.refundAmount,
   };
 }
 

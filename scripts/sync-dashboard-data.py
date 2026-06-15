@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 from datetime import datetime
-from typing import Callable, Dict, Any, Optional, Tuple
+from typing import Callable, Dict, Any, Optional, Tuple, MutableMapping
 
 # Base paths - use absolute paths for clarity. Defaults match Danny's Hermes chef profile
 # environment, but can be overridden for local/dev runs.
@@ -38,6 +38,38 @@ DASHBOARD_CACHE = Path(os.environ.get('MEALS_DASHBOARD_CACHE', str(MEALS_SCRIPTS
 PRODUCT_METADATA_CACHE = Path(os.environ.get('MEALS_PRODUCT_METADATA_CACHE', str(MEALS_SCRIPTS_PATH / 'data' / 'tesco_product_metadata_cache.json'))).expanduser().resolve()
 PRODUCT_ENRICHMENT_TIMEOUT_SECONDS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_TIMEOUT_SECONDS', '5'))
 PRODUCT_ENRICHMENT_DELAY_SECONDS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_DELAY_SECONDS', '0.2'))
+
+
+def load_dashboard_env(env: Optional[MutableMapping[str, str]] = None, env_path: Optional[Path] = None) -> MutableMapping[str, str]:
+    """Load dashboard sync env vars from the Hermes env file if missing.
+
+    The canonical meals pipeline already passes these values to this script, but
+    direct/manual runs should work the same way. Existing process values win;
+    values from ``~/.hermes/.env`` only fill gaps.
+    """
+    target_env = env if env is not None else os.environ
+    path = env_path if env_path is not None else Path.home() / ".hermes" / ".env"
+    if not path.exists():
+        return target_env
+
+    wanted = {"MEALS_DASHBOARD_DATA_SECRET", "BLOB_READ_WRITE_TOKEN", "DASHBOARD_DATA_API_URL"}
+    try:
+        with open(path) as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                if key not in wanted or target_env.get(key):
+                    continue
+                value = value.strip()
+                if len(value) >= 2 and value[0] == value[-1] and value[0] in {'\"', "'"}:
+                    value = value[1:-1]
+                target_env[key] = value
+    except Exception as e:
+        print(f"  ⚠ Error loading dashboard env from {path}: {e}")
+    return target_env
 
 
 def _product_cache_key(item_name: str) -> str:
@@ -991,6 +1023,10 @@ def main():
     parser.add_argument("--no-build", action="store_true", help="Skip build step")
     parser.add_argument("--force-deploy", action="store_true", help="Trigger Vercel deploy even on dry-run")
     args = parser.parse_args()
+
+    # Direct/manual syncs should behave like the canonical meals pipeline:
+    # load ~/.hermes/.env before looking up the dashboard sync secret.
+    load_dashboard_env()
 
     print("=" * 50)
     print("DASHBOARD DATA SYNC (Blob)")
