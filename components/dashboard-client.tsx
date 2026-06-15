@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { SignOutButton } from '@/components/sign-out-button';
 import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/lib/meals-data';
 import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
@@ -176,7 +177,10 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
       <header style={{ position: 'sticky', top: 0, zIndex: 50, padding: '0.75rem 1rem', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>🍽️ Meals Dashboard</h1>
-          <ThemeToggle />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ThemeToggle />
+            <SignOutButton />
+          </div>
         </div>
       </header>
 
