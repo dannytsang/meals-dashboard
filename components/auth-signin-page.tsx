@@ -61,7 +61,7 @@ export function AuthSignInPage() {
         </div>
 
         <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-          Private meal plans, Tesco order details, and coverage checks are protected by Authentik.
+          The meals dashboard shows your upcoming meal plans alongside your next Tesco delivery — letting you see at a glance whether the items you've ordered will cover the meals you're planning to cook. It tracks delivery dates, highlights missing or refunded items, and shows which meals are fully covered, partially covered, or still need attention.
         </p>
 
         <button
@@ -84,7 +84,6 @@ export function AuthSignInPage() {
         </button>
 
         <p style={{ color: 'var(--text-tertiary)', fontSize: '0.82rem', lineHeight: 1.5, margin: '1rem 0 0' }}>
-          Theme preference is read from meals-dashboard-theme locally; no meal or order data is loaded on this sign-in page.
         </p>
       </section>
     </main>
