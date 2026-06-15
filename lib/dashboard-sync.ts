@@ -42,6 +42,13 @@ export interface CoverageMealEntry {
   staleReason?: string | null;
   /** Set by spec 020 — null/absent in 016. */
   source?: 'order' | 'grocy' | 'manual_override';
+  /** Spec 019 / FR-06 — list of items that were refunded and caused
+   *  the meal to transition to partial. Renders in a distinct section
+   *  with a "£X refunded" badge. */
+  refundedItems?: string[];
+  /** Spec 019 / FR-08 — manual override annotation when Danny marked
+   *  the meal covered/partial via the "I have this" button. */
+  manualOverride?: { reason: string; item: string; status: string };
 }
 
 export interface OrderBlob {

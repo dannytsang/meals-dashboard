@@ -187,6 +187,32 @@ export function getDisplayedProductName(name: string): string {
   return cleanItemName(name);
 }
 
+/**
+ * Format a use-by ISO date (YYYY-MM-DD) into a human-readable label
+ * like "Sat 19th". Used by the meal detail "Use today" section.
+ * Spec 019 / FR-05.
+ */
+export function formatUseByDate(isoDate: string): string {
+  if (!isoDate) return '';
+  const parts = isoDate.split('-');
+  if (parts.length !== 3) return isoDate;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return isoDate;
+  const d = new Date(year, month, day);
+  const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+  const suffix = (() => {
+    if (day >= 11 && day <= 13) return 'th';
+    const last = day % 10;
+    if (last === 1) return 'st';
+    if (last === 2) return 'nd';
+    if (last === 3) return 'rd';
+    return 'th';
+  })();
+  return `${weekday} ${day}${suffix}`;
+}
+
 export function getProductModalPrice(item: Pick<GroceryItem, 'price'> | null | undefined): number | null {
   return typeof item?.price === 'number' ? item.price : null;
 }

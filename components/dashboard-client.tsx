@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SignOutButton } from '@/components/sign-out-button';
 import { OrderStatusBadge } from '@/components/order-status-badge';
@@ -10,11 +11,13 @@ import { getMealType } from '@/lib/meal-type';
 import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
 import type { DashboardData } from '@/lib/dashboard-data';
+import { submitManualOverrideAction } from '@/app/actions/manual-override-action';
 import {
   buildHeadlineMetrics,
   classifyOrderItemMatch,
   deriveCollapsedCoverageColor,
   findReceiptItemForMatchedItem,
+  formatUseByDate,
   getDisplayedProductName,
   getPartialMealMissingExplanation,
   getCoverageStatusLabel,
@@ -42,13 +45,84 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
   const [selectedItem, setSelectedItem] = useState<GroceryItem | null>(null);
   const [showCount, setShowCount] = useState(10);
   const [collapsedMealTypes, setCollapsedMealTypes] = useState<Set<string>>(new Set(['breakfast', 'lunch']));
-  
+  const [overridePendingItem, setOverridePendingItem] = useState<string | null>(null);
+  const [overrideError, setOverrideError] = useState<string | null>(null);
+  const [overrideSuccess, setOverrideSuccess] = useState<string | null>(null);
+
   useEffect(() => {
     const checkWidth = () => setIsDesktop(window.innerWidth >= 1024);
     checkWidth();
     window.addEventListener('resize', checkWidth);
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
+
+  // Spec 019 / FR-07 / T061 — the "I have this" button submits a
+  // server action (`submitManualOverrideAction`) that runs on the
+  // server, authenticates via the NextAuth session, and invokes the
+  // Python `apply_manual_override()` pipeline via a subprocess. The
+  // page is revalidated on success so the new "manual_override"
+  // source flows through the dashboard on the next render.
+  const router = useRouter();
+  const [pendingTransition, startTransition] = useTransition();
+
+  async function applyManualOverrideForItem(item: GroceryItem) {
+    setOverrideError(null);
+    setOverrideSuccess(null);
+
+    // Choose a meal context: prefer the meal currently open in the
+    // overlay; fall back to the first planned meal in the upcoming
+    // window so the button has a sensible no-picker default.
+    let mealDate: string | null = null;
+    let mealName: string | null = null;
+    if (selectedMealData) {
+      mealDate = selectedMealData.meal.date;
+      mealName = selectedMealData.meal.content;
+    } else {
+      const upcoming = [...coverage]
+        .filter((c) => c.meal.date >= today)
+        .sort((a, b) => a.meal.date.localeCompare(b.meal.date));
+      const first = upcoming[0];
+      if (first) {
+        mealDate = first.meal.date;
+        mealName = first.meal.content;
+      }
+    }
+
+    if (!mealDate || !mealName) {
+      setOverrideError('No upcoming meal to attach the override to');
+      return;
+    }
+
+    const itemName = item.name;
+    setOverridePendingItem(itemName);
+    try {
+      const formData = new FormData();
+      formData.set('meal_date', mealDate);
+      formData.set('meal_name', mealName);
+      formData.set('item_name', itemName);
+      formData.set('quantity', String(item.quantity ?? 1));
+      formData.set('reason', 'user_clicked_i_have_this');
+
+      const result = await submitManualOverrideAction(formData);
+      if (!result.ok) {
+        setOverrideError(result.error || 'Override failed');
+        return;
+      }
+      setOverrideSuccess(itemName);
+      // Re-fetch the dashboard data so the new "manual_override"
+      // source flows through. The page is a server component fed
+      // by getDashboardData, so router.refresh() re-runs the loader
+      // and merges the new state without a full page reload.
+      startTransition(() => {
+        router.refresh();
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setOverrideError(`Override failed: ${message}`);
+    } finally {
+      setOverridePendingItem(null);
+    }
+  }
 
   const receipt = transformCachedOrderSafely(data.latestOrder);
   const deliveries = data.deliveryWindows;
@@ -438,6 +512,27 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
                         {unitPrice > 0 ? (<><span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}</span><span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>£{totalPrice.toFixed(2)}</span></>) : <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>(price N/A)</span>}
+                        {isUnmatched && (
+                          <button
+                            data-testid="i-have-this-button"
+                            type="button"
+                            disabled={overridePendingItem === item.name}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Spec 019 / FR-07 / T061 — wire the click to
+                              // the applyManualOverrideForItem handler
+                              // defined above. The handler POSTs to
+                              // /api/manual-override with the meal
+                              // context, surfaces errors, and reloads
+                              // the page on success so the new
+                              // manual_override source flows through.
+                              void applyManualOverrideForItem(item);
+                            }}
+                            style={{ fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '6px', backgroundColor: overridePendingItem === item.name ? 'var(--text-muted)' : 'var(--accent-blue)', color: 'var(--bg-primary)', border: 'none', cursor: overridePendingItem === item.name ? 'wait' : 'pointer' }}
+                          >
+                            {overridePendingItem === item.name ? 'Saving…' : overrideSuccess === item.name ? '✓ Saved' : 'I have this'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -460,28 +555,129 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{selectedMealData.meal.content}</h3>
-                <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', backgroundColor: selectedMealData.status === 'covered' ? 'var(--accent-emerald-bg)' : selectedMealData.status === 'partial' ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)', color: selectedMealData.status === 'covered' ? 'var(--accent-emerald)' : selectedMealData.status === 'partial' ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{getCoverageStatusLabel(selectedMealData.status)}</span>
-                {isTodoistMealCompleted(selectedMealData.meal) && <div style={{ marginTop: '0.5rem', fontSize: '11px', fontWeight: '700', padding: '4px 8px', borderRadius: '999px', backgroundColor: 'var(--accent-emerald-bg)', color: 'var(--accent-emerald)', display: 'inline-block' }}>{getTodoistCompletionLabel(selectedMealData.meal)}</div>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', backgroundColor: selectedMealData.status === 'covered' ? 'var(--accent-emerald-bg)' : selectedMealData.status === 'partial' ? 'var(--accent-amber-bg)' : 'var(--accent-rose-bg)', color: selectedMealData.status === 'covered' ? 'var(--accent-emerald)' : selectedMealData.status === 'partial' ? 'var(--accent-amber)' : 'var(--accent-rose)' }}>{getCoverageStatusLabel(selectedMealData.status)}</span>
+                  {isTodoistMealCompleted(selectedMealData.meal) && <div style={{ fontSize: '11px', fontWeight: '700', padding: '4px 8px', borderRadius: '999px', backgroundColor: 'var(--accent-emerald-bg)', color: 'var(--accent-emerald)', display: 'inline-block' }}>{getTodoistCompletionLabel(selectedMealData.meal)}</div>}
+                  {(() => {
+                    // Spec 019 / FR-05 — perishable badge when any matched
+                    // item has use_by_warning: true. The badge is the meal-
+                    // summary ⚠️ indicator, distinct from the in-section
+                    // "Use today" items.
+                    const hasPerishable = (selectedMealData.matchedItems || []).some(
+                      (it) => it.use_by_warning
+                    );
+                    if (!hasPerishable) return null;
+                    return (
+                      <span
+                        data-testid="perishable-badge"
+                        style={{ fontSize: '11px', fontWeight: '700', padding: '4px 8px', borderRadius: '999px', backgroundColor: 'var(--accent-amber-bg)', color: 'var(--accent-amber)', display: 'inline-block' }}
+                      >
+                        ⚠️ Use today
+                      </span>
+                    );
+                  })()}
+                </div>
               </div>
               <button onClick={() => setSelectedMealData(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '18px', padding: '0.25rem' }}>✕</button>
             </div>
-            
+
+            {(() => {
+              // Spec 019 / FR-05 — "Use today" section at the top of the
+              // meal detail overlay. Lists only the matched items with
+              // use_by_warning: true, each with its use_by date badge.
+              // Distinct from the main Matched Items section below.
+              const useTodayItems = deduplicateMatchedItems(
+                (selectedMealData.matchedItems || []).filter((it) => it.use_by_warning)
+              );
+              if (useTodayItems.length === 0) return null;
+              return (
+                <div data-testid="use-today-section" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'var(--accent-amber-bg)', borderRadius: '8px', border: '1px solid var(--accent-amber-border, var(--accent-amber))' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-amber)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>⚠️ Use today</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    {useTodayItems.map((item, idx) => {
+                      const productItem = findReceiptItemForMatchedItem(item, receipt.items);
+                      const price = getProductModalPrice(productItem);
+                      return (
+                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto 72px', columnGap: '0.75rem', alignItems: 'center', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--bg-secondary)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                            <span style={{ fontSize: '12px', flexShrink: 0 }}>⚠️</span>
+                            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(item.name)}</span>
+                          </div>
+                          {item.use_by_date ? (
+                            <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '6px', backgroundColor: 'var(--accent-amber)', color: 'var(--bg-primary)' }}>Use by {formatUseByDate(item.use_by_date)}</span>
+                          ) : <span />}
+                          {price !== null ? <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', justifySelf: 'end', whiteSpace: 'nowrap' }}>£{price.toFixed(2)}</span> : <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic', justifySelf: 'end' }}>N/A</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {(() => {
+              // Spec 019 / FR-06 — refunded items section. The list of
+              // refunded items comes from `selectedMealData.refundedItems`
+              // (an array of names, populated by `process_refund` in the
+              // Python pipeline). Each rendered with a red "£X refunded"
+              // badge.
+              const refunded = selectedMealData.refundedItems || [];
+              if (refunded.length === 0) return null;
+              return (
+                <div data-testid="refunded-items-section" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'var(--accent-rose-bg)', borderRadius: '8px' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-rose)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Refunded</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    {refunded.map((name, idx) => {
+                      const productItem = (receipt.items || []).find((it) => it.name === name);
+                      const price = productItem ? productItem.price : null;
+                      return (
+                        <div key={idx} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', columnGap: '0.75rem', alignItems: 'center', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--bg-secondary)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                            <span style={{ fontSize: '12px', flexShrink: 0 }}>↩</span>
+                            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(name)}</span>
+                          </div>
+                          {price !== null && price !== undefined ? (
+                            <span style={{ fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '6px', backgroundColor: 'var(--accent-rose)', color: 'var(--bg-primary)' }}>£{price.toFixed(2)} refunded</span>
+                          ) : <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>refunded</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             {(() => {
               const deduped = deduplicateMatchedItems(selectedMealData.matchedItems || []);
-              if (deduped.length === 0) return null;
-              const matchedItemsTotal = calculateMatchedItemsTotal(deduped);
+              // Filter out items already shown in the "Use today" section
+              const nonPerishableMatches = deduped.filter((it) => !it.use_by_warning);
+              if (nonPerishableMatches.length === 0) return null;
+              const matchedItemsTotal = calculateMatchedItemsTotal(nonPerishableMatches);
               return (
               <div style={{ marginBottom: '1rem' }}>
                 <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Matched Items</h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  {deduped.map((item, idx) => {
+                  {nonPerishableMatches.map((item, idx) => {
                     const productItem = findReceiptItemForMatchedItem(item, receipt.items);
                     const matchedItemPrice = getProductModalPrice(productItem);
+                    // Spec 019 / FR-08 — manual override badge on items
+                    // whose source is "manual_override" (set by the
+                    // apply_manual_overrides function in the Python
+                    // pipeline after the "I have this" button click).
+                    const isOverride = item.source === 'manual_override';
                     return (
                     <button key={idx} type="button" onClick={() => { setSelectedItem(productItem); }} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 56px 72px', columnGap: '0.75rem', alignItems: 'center', padding: '0.5rem 0.75rem', borderRadius: '6px', backgroundColor: 'var(--accent-emerald-bg)', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
                         <span style={{ color: 'var(--accent-emerald)', fontSize: '12px', flexShrink: 0 }}>✓</span>
                         <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(item.name)}</span>
+                        {isOverride && (
+                          <span
+                            data-testid="manual-override-badge"
+                            style={{ fontSize: '10px', fontWeight: '700', padding: '2px 6px', borderRadius: '6px', backgroundColor: 'var(--accent-blue)', color: 'var(--bg-primary)' }}
+                          >
+                            ✓ We have it
+                          </span>
+                        )}
                       </div>
                       <span style={{ fontSize: '11px', color: 'var(--text-secondary)', justifySelf: 'end', whiteSpace: 'nowrap' }}>{productItem.quantity ? `× ${productItem.quantity}` : '—'}</span>
                       {matchedItemPrice !== null ? <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)', justifySelf: 'end', whiteSpace: 'nowrap' }}>£{matchedItemPrice.toFixed(2)}</span> : <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic', justifySelf: 'end', whiteSpace: 'nowrap' }}>N/A</span>}

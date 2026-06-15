@@ -177,6 +177,13 @@ function coverageMealToDashboardCoverage(m: CoverageMealEntry): MealCoverage {
     name: mi.name,
     quantity: mi.quantity,
     price: mi.price,
+    // Spec 019 / FR-04 — preserve shelf-life metadata through the adapter.
+    // These are populated by `annotate_shelf_life` in the Python pipeline
+    // and are needed by the "Use today" panel + ⚠️ badge in the meal detail.
+    source: mi.source,
+    shelf_life_days: mi.shelf_life_days,
+    use_by_warning: mi.use_by_warning,
+    use_by_date: mi.use_by_date,
   }));
   return {
     meal: m.meal as Meal,
@@ -186,6 +193,12 @@ function coverageMealToDashboardCoverage(m: CoverageMealEntry): MealCoverage {
     missingItems: m.missingItems ?? [],
     missingExplanations: m.missingExplanations,
     notes: m.notes,
+    // Spec 019 / FR-06 — refunded items carried through the adapter so the
+    // meal detail can render them in a distinct "refunded" section with
+    // the "£X refunded" badge.
+    refundedItems: m.refundedItems,
+    // Spec 019 / FR-08 — manual override annotation carried through.
+    manualOverride: m.manualOverride,
   };
 }
 
