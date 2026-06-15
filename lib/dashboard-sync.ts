@@ -116,17 +116,22 @@ export async function syncDashboardLayout(
     : {};
   const isInitialSync = !pointer;
 
+  // Spec 019 / FR-02 + FR-04 — normalise defaults on the payload so the
+  // contract is enforced at the Blob-write boundary regardless of payload
+  // provenance (Python sync, hand-built tests, future producers).
+  const normalisedPayload = normaliseSplitLayoutPayload(payload);
+
   // Step 3: build local data blobs.
   // Each blob is keyed by its path; we serialise once and reuse the string for hashing.
   const dataBlobs: Array<{ path: string; content: string }> = [];
-  for (const order of payload.orders) {
+  for (const order of normalisedPayload.orders) {
     dataBlobs.push({ path: order.orderBlobPath, content: JSON.stringify(order, null, 2) });
   }
-  for (const cov of payload.coverage) {
+  for (const cov of normalisedPayload.coverage) {
     dataBlobs.push({ path: cov.coverageBlobPath, content: JSON.stringify(cov, null, 2) });
   }
   // Summary is also a content-addressable data blob (FR-13).
-  const summaryContent = JSON.stringify(payload.summary, null, 2);
+  const summaryContent = JSON.stringify(normalisedPayload.summary, null, 2);
   const summaryHash = client.computeHash(summaryContent);
   const summaryPath = SUMMARY_PATH_FOR(summaryHash);
   dataBlobs.push({ path: summaryPath, content: summaryContent });
@@ -198,4 +203,168 @@ export function buildOrderBlobPath(deliveryDate: string, orderNumber: string): s
 
 export function buildCoverageBlobPath(date: string): string {
   return `coverage/${date}.json`;
+}
+
+/**
+ * Spec 019 / FR-01 — coverage invalidation trigger.
+ *
+ * When an order changes (amendment content, cancellation, move, refund),
+ * the meals-check pipeline should invalidate every coverage blob whose
+ * `sourceOrderBlobPath` matches the affected order. The trigger rewrites
+ * each matching blob twice:
+ *
+ *   1. transient write with `stale: true` + `staleReason = reason`
+ *      (race-condition safety: a read during this window shows the
+ *      "⚠️ stale coverage" indicator and does not use the data)
+ *   2. fresh write with `stale: false` + `staleReason = null`
+ *      (the data is the same content; the recalculation is owned by
+ *      the Python pipeline which decides what new coverage to compute)
+ *
+ * Coverage blobs whose `sourceOrderBlobPath` does not match the
+ * affected order are left untouched.
+ *
+ * @param orderPath The order blob path (e.g. `orders/2026-06-15/5421-8594-00.json`).
+ * @param reason One of `order_updated`, `order_cancelled`, `order_superseded`, `order_refunded`.
+ * @param client The Blob storage client (in-memory in tests, real Vercel SDK in prod).
+ */
+export async function invalidateCoverageForOrder(
+  orderPath: string,
+  reason: 'order_updated' | 'order_cancelled' | 'order_superseded' | 'order_refunded',
+  client: BlobStorageClient,
+  options: { dryRun?: boolean } = {}
+): Promise<SyncResult> {
+  const { dryRun = false } = options;
+
+  const pointer = await client.readPointer();
+  if (!pointer) {
+    throw new Error(
+      `invalidateCoverageForOrder: no manifest pointer exists yet; cannot invalidate coverage for ${orderPath} before an initial sync.`
+    );
+  }
+  const currentManifest: Manifest = await client.readManifest(pointer.manifestPath);
+
+  // Identify coverage blobs whose sourceOrderBlobPath matches the affected order.
+  const matchingPaths: string[] = [];
+  for (const [blobPath, _hash] of Object.entries(currentManifest)) {
+    if (!blobPath.startsWith('coverage/') || !blobPath.endsWith('.json')) continue;
+    const blob = await client.readJsonBlob<{ sourceOrderBlobPath?: string | null }>(blobPath);
+    if (blob && blob.sourceOrderBlobPath === orderPath) {
+      matchingPaths.push(blobPath);
+    }
+  }
+
+  const writtenPaths: string[] = [];
+  const newManifest: Manifest = { ...currentManifest };
+
+  if (!dryRun) {
+    // (1) transient stale write per matching blob
+    for (const path of matchingPaths) {
+      const blob = await client.readJsonBlob<{
+        date: string;
+        sourceOrderBlobPath: string | null;
+        meals: Array<Record<string, unknown>>;
+      }>(path);
+      if (!blob) continue;
+      const staleContent = JSON.stringify(
+        {
+          ...blob,
+          meals: blob.meals.map((meal) => ({
+            ...meal,
+            stale: true,
+            staleReason: reason,
+          })),
+        },
+        null,
+        2
+      );
+      const staleResult = await client.writeBlobIfChanged(path, staleContent, currentManifest);
+      newManifest[path] = staleResult.hash;
+      if (staleResult.written) writtenPaths.push(path);
+    }
+
+    // (2) fresh write per matching blob (same content, stale cleared)
+    for (const path of matchingPaths) {
+      const blob = await client.readJsonBlob<{
+        date: string;
+        sourceOrderBlobPath: string | null;
+        meals: Array<Record<string, unknown>>;
+      }>(path);
+      if (!blob) continue;
+      const freshContent = JSON.stringify(
+        {
+          ...blob,
+          meals: blob.meals.map((meal) => ({
+            ...meal,
+            stale: false,
+            staleReason: null,
+          })),
+        },
+        null,
+        2
+      );
+      const freshResult = await client.writeBlobIfChanged(path, freshContent, newManifest);
+      newManifest[path] = freshResult.hash;
+      if (freshResult.written) writtenPaths.push(path);
+    }
+
+    // (3) new manifest + pointer update
+    const { manifestPath, manifestHash } = await client.writeManifest(newManifest);
+    await client.writePointer(manifestPath);
+
+    return {
+      manifestPath,
+      manifestHash,
+      writtenPaths,
+      skippedPaths: [],
+      // The trigger does not write a summary; only +manifest +pointer overhead
+      // beyond the matching coverage rewrites.
+      totalOps: writtenPaths.length + 2,
+      isInitialSync: false,
+    };
+  } else {
+    // Dry run: report what would be written without making any changes.
+    for (const path of matchingPaths) {
+      writtenPaths.push(path);
+      writtenPaths.push(path);
+    }
+    return {
+      manifestPath: pointer.manifestPath,
+      manifestHash: 'dry-run',
+      writtenPaths,
+      skippedPaths: [],
+      totalOps: writtenPaths.length + 2,
+      isInitialSync: false,
+    };
+  }
+}
+
+/**
+ * Spec 019 / FR-02 + FR-04 — normalise coverage and matched-item schema
+ * defaults at the Blob-write boundary so the contract is enforced
+ * regardless of payload provenance.
+ *
+ * - Each CoverageMealEntry gets `stale: false` and `staleReason: null`.
+ * - Each MatchedItem gets `source: "order"` and `use_by_warning: false`.
+ *   `shelf_life_days` and `use_by_date` are intentionally left absent
+ *   (undefined) when the source is order and no shelf-life data is
+ *   present; per FR-04 those fields are optional and only present when
+ *   enrichment data supplies them.
+ */
+export function normaliseSplitLayoutPayload(payload: SplitLayoutPayload): SplitLayoutPayload {
+  return {
+    ...payload,
+    coverage: payload.coverage.map((cov) => ({
+      ...cov,
+      meals: cov.meals.map((meal) => ({
+        ...meal,
+        stale: meal.stale ?? false,
+        staleReason: meal.staleReason ?? null,
+        matchedItems: meal.matchedItems.map((item) => ({
+          ...item,
+          source: (item.source ?? 'order') as MatchedItem['source'],
+          use_by_warning: item.use_by_warning ?? false,
+        })),
+      })),
+    })),
+  };
 }

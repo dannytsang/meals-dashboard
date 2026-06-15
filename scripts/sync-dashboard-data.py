@@ -983,6 +983,12 @@ def build_dashboard_payload(cache_data: Dict) -> Dict[str, Any]:
 
             matched_input = m.get("matched_items", [])
             resolved_matched = resolve_matched_items_for_dashboard(matched_input, raw_items or [])
+            # Spec 019 / FR-04 — every matched item carries source + shelf-life defaults
+            # so the dashboard read path can distinguish order / grocy / manual_override
+            # sources and surface freshness warnings without re-deriving them.
+            for item in resolved_matched:
+                item.setdefault("source", "order")
+                item.setdefault("use_by_warning", False)
             coverage_entry = {
                 "meal": meal_entry,
                 "status": m.get("status", "unknown"),
@@ -990,6 +996,11 @@ def build_dashboard_payload(cache_data: Dict) -> Dict[str, Any]:
                 "matchedItems": resolved_matched,
                 "missingItems": m.get("missing_items", []),
                 "missingExplanations": m.get("missing_explanations", []),
+                # Spec 019 / FR-02 — coverage blob carries stale/staleReason; the
+                # invalidation trigger (T020) sets stale=true transiently then
+                # overwrites with fresh false once recalculation completes.
+                "stale": False,
+                "staleReason": None,
             }
             if m.get("notes"):
                 coverage_entry["notes"] = m["notes"]

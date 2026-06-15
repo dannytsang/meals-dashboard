@@ -92,6 +92,12 @@ export interface MatchedItem {
   name: string;
   quantity: number | null;
   price: number | null;
+  /** Set by spec 019 / FR-04 — default "order" populated at Blob-write boundary. */
+  source?: 'order' | 'grocy' | 'manual_override';
+  /** Set by spec 019 / FR-04 — populated by enrichment when short-dated. */
+  shelf_life_days?: number;
+  use_by_warning?: boolean;
+  use_by_date?: string;
 }
 
 export interface MealCoverage {

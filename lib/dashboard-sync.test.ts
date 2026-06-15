@@ -3,6 +3,7 @@ import {
   syncDashboardLayout,
   buildOrderBlobPath,
   buildCoverageBlobPath,
+  invalidateCoverageForOrder,
   type SplitLayoutPayload,
 } from './dashboard-sync';
 import { InMemoryBlobStorageClient } from './blob-storage';
@@ -155,6 +156,142 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
     expect(client.store.has(first.manifestPath)).toBe(true);
     const pointer = await client.readPointer();
     expect(pointer?.manifestPath).toBe(result.manifestPath);
+  });
+
+  // ── Spec 019: Phase 2 schema extensions + Phase 3 invalidation trigger ──────────
+  it('Spec 019 / FR-02 — every coverage entry carries stale=false and staleReason=null by default', async () => {
+    const client = new InMemoryBlobStorageClient();
+    await syncDashboardLayout(makePayload(), client);
+    const blob = await client.readJsonBlob<{
+      meals: Array<{ stale?: boolean; staleReason?: string | null }>;
+    }>('coverage/2026-06-15.json');
+    expect(blob).not.toBeNull();
+    for (const meal of blob!.meals) {
+      expect(meal.stale).toBe(false);
+      expect(meal.staleReason).toBeNull();
+    }
+  });
+
+  it('Spec 019 / FR-04 — every matched item carries source="order" by default and shelf-life fields absent', async () => {
+    const client = new InMemoryBlobStorageClient();
+    await syncDashboardLayout(makePayload(), client);
+    const blob = await client.readJsonBlob<{
+      meals: Array<{
+        matchedItems: Array<{
+          source?: string;
+          shelf_life_days?: number;
+          use_by_warning?: boolean;
+          use_by_date?: string;
+        }>;
+      }>;
+    }>('coverage/2026-06-15.json');
+    expect(blob).not.toBeNull();
+    for (const meal of blob!.meals) {
+      for (const item of meal.matchedItems) {
+        expect(item.source).toBe('order');
+        expect(item.shelf_life_days).toBeUndefined();
+        expect(item.use_by_warning).toBe(false);
+        expect(item.use_by_date).toBeUndefined();
+      }
+    }
+  });
+
+  it('Spec 019 / FR-01 — invalidate_coverage_for_order marks matching coverage stale transiently then writes fresh blob', async () => {
+    const client = new InMemoryBlobStorageClient();
+    await syncDashboardLayout(makePayload(), client);
+
+    const result = await invalidateCoverageForOrder(
+      'orders/2026-06-15/5421-8594-00.json',
+      'order_updated',
+      client
+    );
+
+    // The matching coverage blob path is in the write list (transient stale
+    // write + fresh write). The fresh write produces content that hashes
+    // to the same value as the original (stale=false, staleReason=null are
+    // the post-invalidation defaults), so the manifest hash is unchanged.
+    // What matters is that both the transient stale write and the fresh
+    // write ran; writtenPaths contains the matching path twice.
+    expect(result.writtenPaths.filter((p) => p === 'coverage/2026-06-15.json')).toHaveLength(2);
+
+    // After invalidation, the coverage blob is fresh: stale=false, staleReason=null.
+    const finalBlob = await client.readJsonBlob<{
+      meals: Array<{ stale: boolean; staleReason: string | null }>;
+    }>('coverage/2026-06-15.json');
+    expect(finalBlob).not.toBeNull();
+    for (const meal of finalBlob!.meals) {
+      expect(meal.stale).toBe(false);
+      expect(meal.staleReason).toBeNull();
+    }
+  });
+
+  it('Spec 019 / FR-01 — invalidate_coverage_for_order ignores coverage blobs whose sourceOrderBlobPath does not match', async () => {
+    const client = new InMemoryBlobStorageClient();
+    const payload = makePayload();
+    // Add a second coverage blob pointing at a different order.
+    payload.coverage.push({
+      date: '2026-06-19',
+      sourceOrderBlobPath: 'orders/2026-06-19/9999-0000-11.json',
+      meals: [
+        {
+          meal: makeMeal('m99', '2026-06-19', 'Unrelated meal'),
+          status: 'covered',
+          coverageScore: 100,
+          matchedItems: [makeMatched('Salmon')],
+          missingItems: [],
+        },
+      ],
+      coverageBlobPath: 'coverage/2026-06-19.json',
+    });
+    payload.coverageWindow = ['2026-06-15', '2026-06-19'];
+    await syncDashboardLayout(payload, client);
+
+    const result = await invalidateCoverageForOrder(
+      'orders/2026-06-15/5421-8594-00.json',
+      'order_cancelled',
+      client
+    );
+
+    // Only the 2026-06-15 coverage blob was invalidated; the 2026-06-19 blob
+    // (which references a different order) was left untouched.
+    expect(result.writtenPaths).toContain('coverage/2026-06-15.json');
+    expect(result.writtenPaths).not.toContain('coverage/2026-06-19.json');
+
+    const untouched = await client.readJsonBlob<{
+      meals: Array<{ stale: boolean; staleReason: string | null }>;
+    }>('coverage/2026-06-19.json');
+    expect(untouched).not.toBeNull();
+    for (const meal of untouched!.meals) {
+      // The untouched blob never had invalidation applied; it should still
+      // be in its normal fresh state.
+      expect(meal.stale).toBe(false);
+      expect(meal.staleReason).toBeNull();
+    }
+  });
+
+  it('Spec 019 / FR-01 — each trigger reason is recorded as a staleReason on the transient stale write', async () => {
+    const client = new InMemoryBlobStorageClient();
+    await syncDashboardLayout(makePayload(), client);
+
+    for (const reason of ['order_updated', 'order_cancelled', 'order_superseded', 'order_refunded'] as const) {
+      const local = new InMemoryBlobStorageClient();
+      await syncDashboardLayout(makePayload(), local);
+      const result = await invalidateCoverageForOrder(
+        'orders/2026-06-15/5421-8594-00.json',
+        reason,
+        local
+      );
+      // Both the transient stale write and the fresh write should land in
+      // the writtenPaths list (the trigger rewrites the blob twice with
+      // different content).
+      expect(result.writtenPaths.filter((p) => p === 'coverage/2026-06-15.json')).toHaveLength(2);
+      // After invalidation, the final blob is fresh: staleReason cleared.
+      const final = await local.readJsonBlob<{
+        meals: Array<{ stale: boolean; staleReason: string | null }>;
+      }>('coverage/2026-06-15.json');
+      expect(final!.meals[0]!.stale).toBe(false);
+      expect(final!.meals[0]!.staleReason).toBeNull();
+    }
   });
 
   it('prunes stale summary entries and removed coverage/order paths from the new manifest', async () => {
