@@ -3,6 +3,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SignOutButton } from '@/components/sign-out-button';
+import { OrderStatusBadge } from '@/components/order-status-badge';
 import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/lib/meals-data';
 import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
@@ -194,6 +195,11 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
             </div>
             <p style={{ fontSize: '10px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Order Total</p>
             <p style={{ fontSize: '20px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{headlineMetrics.orderTotal !== null ? `£${headlineMetrics.orderTotal.toFixed(2)}` : '—'}</p>
+            {receipt.orderStatus && receipt.orderStatus !== 'active' && (
+              <div style={{ marginTop: '0.4rem' }}>
+                <OrderStatusBadge status={receipt.orderStatus} />
+              </div>
+            )}
           </div>
 
           <div style={{ ...cardStyle, padding: '0.75rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>

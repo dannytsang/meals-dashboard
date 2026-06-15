@@ -896,6 +896,21 @@ def build_dashboard_payload(cache_data: Dict) -> Dict[str, Any]:
 
     orders = []
     if receipt:
+        # Spec 018 — order status tracking. The Python pipeline projects the
+        # `status` field onto the receipt (see `write_dashboard_cache`); honour
+        # that here so the OrderBlob gets the right value. Fall back to a
+        # status derived from `email_type` for backwards compatibility with
+        # older dashboard caches.
+        receipt_email_type = receipt.get("email_type") or ""
+        if receipt.get("status") in {"active", "cancelled", "superseded", "refunded"}:
+            order_status = receipt["status"]
+        elif receipt_email_type == "cancelled":
+            order_status = "cancelled"
+        elif receipt_email_type == "refund":
+            order_status = "refunded"
+        else:
+            order_status = "active"
+
         orders.append({
             "orderNumber": order_number,
             "deliveryDate": delivery_date,
@@ -905,7 +920,7 @@ def build_dashboard_payload(cache_data: Dict) -> Dict[str, Any]:
             "substitutions": receipt.get("substitutions", []) or [],
             "unavailable": receipt.get("unavailable", []) or [],
             "shortLifeItems": receipt.get("short_life_items", []) or [],
-            "status": "active",
+            "status": order_status,
             "orderBlobPath": order_blob_path,
         })
 

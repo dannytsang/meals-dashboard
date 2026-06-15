@@ -73,12 +73,55 @@ describe('transformCachedOrderSafely', () => {
         productMetadata: { title: 'Tesco Product Title', description: 'Generated Tesco details', source: 'tesco' },
       }],
     });
-
     expect(receipt.items[0].productMetadata).toMatchObject({
       title: 'Tesco Product Title',
       description: 'Generated Tesco details',
       source: 'tesco',
     });
+  });
+
+  // Spec 018 — order status tracking plumb-through.
+  it('passes order status through to the receipt when present', () => {
+    const receipt = transformCachedOrderSafely({
+      email_id: '',
+      email_date: '2026-06-10',
+      delivery_date: '2026-06-12',
+      delivery_sort: '',
+      order_number: '123',
+      order_total: 4,
+      status: 'cancelled',
+      items: [],
+    });
+    expect(receipt.orderStatus).toBe('cancelled');
+  });
+
+  it('passes refund amount through to the receipt when present', () => {
+    const receipt = transformCachedOrderSafely({
+      email_id: '',
+      email_date: '2026-06-10',
+      delivery_date: '2026-06-12',
+      delivery_sort: '',
+      order_number: '123',
+      order_total: 4,
+      status: 'refunded',
+      refund_amount: 3.5,
+      items: [],
+    });
+    expect(receipt.refundAmount).toBe(3.5);
+  });
+
+  it('omits orderStatus when no status is provided (pre-018 default)', () => {
+    const receipt = transformCachedOrderSafely({
+      email_id: '',
+      email_date: '2026-06-10',
+      delivery_date: '2026-06-12',
+      delivery_sort: '',
+      order_number: '123',
+      order_total: 4,
+      items: [],
+    });
+    expect(receipt.orderStatus).toBeUndefined();
+    expect(receipt.refundAmount).toBeUndefined();
   });
 });
 

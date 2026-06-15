@@ -49,7 +49,27 @@ export interface TescoReceipt {
   substitutions: Substitution[];
   unavailable: UnavailableItem[];
   shortLifeItems: ShortLifeItem[];
+  /**
+   * Spec 018 — order status tracking. Optional; absent means "active" (the
+   * pre-018 default). Active orders are not badged; non-active orders display
+   * a status badge in the dashboard's Order Total card.
+   */
+  orderStatus?: OrderStatus;
+  /**
+   * Spec 018 — refund amount recorded by the Python pipeline when the
+   * dashboard cache receipt carries `email_type: "refund"`. Sum of the prices
+   * of items removed via `apply_refund_to_items()`. Zero / absent when the
+   * order is not refunded.
+   */
+  refundAmount?: number;
 }
+
+/**
+ * Spec 018 — order status enum. Stored on `OrderBlob` (storage layer) and
+ * `TescoReceipt.orderStatus` (dashboard surface). "active" is the implicit
+ * default and is not badged; the other three surface a coloured pill.
+ */
+export type OrderStatus = 'active' | 'cancelled' | 'superseded' | 'refunded';
 
 export interface Substitution {
   original: string;

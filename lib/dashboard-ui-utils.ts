@@ -27,6 +27,9 @@ export interface CachedOrderLike {
     substituted_with?: string;
     substitution?: string;
   }[];
+  // Spec 018 — order status tracking. Optional; absent means "active".
+  status?: 'active' | 'cancelled' | 'superseded' | 'refunded';
+  refund_amount?: number;
 }
 
 export interface MealsCheckSummaryLike {
@@ -124,6 +127,8 @@ export function transformCachedOrderSafely(order: CachedOrderLike | null | undef
     substitutions,
     unavailable: [],
     shortLifeItems,
+    orderStatus: order.status,
+    refundAmount: order.refund_amount,
   };
 }
 
