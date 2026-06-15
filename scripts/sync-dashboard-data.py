@@ -789,16 +789,25 @@ def trigger_vercel_deploy() -> Tuple[bool, str]:
         return False, str(e)
 
 
-def post_dashboard_data_to_api(payload: Dict[str, Any], api_url: str, secret: str) -> Tuple[bool, str]:
-    """POST dashboard data to the dashboard's private API endpoint."""
+def post_dashboard_data_to_api(payload: Dict[str, Any], api_url: str, secret: str, dry_run: bool = False) -> Tuple[bool, Dict[str, Any]]:
+    """POST dashboard data to the dashboard's private API endpoint.
+
+    When dry_run=True the request is sent to the split-layout endpoint with `?dryRun=1`.
+    The server computes hashes and reports what would change, but performs no Blob writes.
+    """
     if not api_url:
-        return False, "DASHBOARD_DATA_API_URL not configured"
+        return False, {"error": "DASHBOARD_DATA_API_URL not configured"}
     if not secret:
-        return False, "DASHBOARD_DATA_SECRET not configured"
+        return False, {"error": "DASHBOARD_DATA_SECRET not configured"}
+
+    effective_url = api_url
+    if dry_run:
+        separator = '&' if '?' in api_url else '?'
+        effective_url = f"{api_url}{separator}dryRun=1"
 
     data = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(
-        api_url,
+        effective_url,
         data=data,
         headers={
             'Content-Type': 'application/json',
@@ -809,21 +818,30 @@ def post_dashboard_data_to_api(payload: Dict[str, Any], api_url: str, secret: st
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
             body = resp.read().decode('utf-8')
+            parsed = json.loads(body) if body else {}
             if resp.status in (200, 201):
-                print(f"  ✓ Dashboard data stored to Blob")
-                return True, ""
-            return False, f"API returned {resp.status}: {body[:200]}"
+                if dry_run:
+                    print("  ✓ Dashboard split-layout dry-run accepted")
+                else:
+                    print("  ✓ Dashboard split-layout stored to Blob")
+                return True, parsed
+            return False, {"error": f"API returned {resp.status}", "body": body[:500]}
     except urllib.error.HTTPError as e:
         body = e.read().decode('utf-8') if e.fp else ''
+        parsed = {}
+        try:
+            parsed = json.loads(body) if body else {}
+        except Exception:
+            parsed = {"body": body[:500]}
         if e.code == 401:
-            return False, f"Unauthorized (check DASHBOARD_DATA_SECRET)"
-        return False, f"HTTP {e.code}: {body[:200]}"
+            return False, {"error": "Unauthorized (check DASHBOARD_DATA_SECRET)", **parsed}
+        return False, {"error": f"HTTP {e.code}", **parsed}
     except Exception as e:
-        return False, f"POST failed: {e}"
+        return False, {"error": f"POST failed: {e}"}
 
 
 def compute_delivery_windows(delivery_metadata: list) -> list:
-    """Compute DeliveryWindow entries from raw delivery metadata (pure Python, mirrors TypeScript logic)."""
+    """Compute DeliveryWindow entries from raw delivery metadata (shape matches TS DeliveryWindow)."""
     windows = []
     for event in (delivery_metadata or []):
         actual = event.get("actual_delivery_date")
@@ -832,66 +850,120 @@ def compute_delivery_windows(delivery_metadata: list) -> list:
         usable = event.get("delivery_usable_date", actual)
         windows.append({
             "date": actual,
-            "deliveryDate": actual,
+            "slot": event.get("slot", ""),
+            "orderTotal": event.get("order_total", 0),
+            "status": event.get("status", "pending"),
             "usableDate": usable,
-            "label": event.get("summary", f"Delivery {actual}"),
+            "summary": event.get("summary", f"Delivery {actual}"),
         })
     return windows
 
 
 def build_dashboard_payload(cache_data: Dict) -> Dict[str, Any]:
-    """Build the dashboard data payload from cache for POSTing to Blob."""
-    meals = cache_data.get("meals", [])
-    receipt = cache_data.get("receipt", {})
-    meals_check_summary = cache_data.get("meals_check_summary", {})
-    delivery_metadata = cache_data.get("delivery_metadata", [])
+    """Build the split-layout dashboard payload for POSTing to /api/dashboard-sync.
 
-    # Enrich receipt items with product metadata before sending
-    raw_items = receipt.get("items", [])
+    Output shape matches the new server-side route:
+      {
+        orders: [{...orderBlob, orderBlobPath}],
+        coverage: [{...coverageBlob, coverageBlobPath}],
+        summary: {...},
+        deliveryWindows: [...],
+        coverageWindow: ["YYYY-MM-DD", ...]
+      }
+
+    Notes:
+    - 016/017 in this turn only require the current latest receipt to be projected into
+      one order blob. Historical-order backfill arrives naturally as future syncs post
+      new order blobs; no migration script is bundled into this step.
+    - Coverage is grouped by meal-date into one `coverage/{date}.json` blob per date.
+    - The read path flattens these per-date coverage blobs back into the existing
+      `DashboardData.coverage: MealCoverage[]` shape for the client.
+    """
+    meals = cache_data.get("meals", [])
+    receipt = dict(cache_data.get("receipt", {}) or {})
+    meals_check_summary = dict(cache_data.get("meals_check_summary", {}) or {})
+    delivery_metadata = cache_data.get("delivery_metadata", []) or []
+
+    # Enrich receipt items with product metadata before sending.
+    raw_items = receipt.get("items", []) or []
     if raw_items:
         raw_items = enrich_order_items_with_product_metadata(raw_items)
-        receipt = dict(receipt)
         receipt["items"] = raw_items
 
-    # Build coverage entries with matched items
-    coverage_entries = []
+    delivery_date = receipt.get("delivery_date") or meals_check_summary.get("delivery_date") or ""
+    order_number = receipt.get("order_number") or "unknown-order"
+    order_blob_path = f"orders/{delivery_date}/{order_number}.json" if delivery_date else f"orders/unknown/{order_number}.json"
+
+    orders = []
+    if receipt:
+        orders.append({
+            "orderNumber": order_number,
+            "deliveryDate": delivery_date,
+            "deliverySlot": receipt.get("delivery_slot", ""),
+            "orderTotal": receipt.get("total", meals_check_summary.get("order_total", 0)),
+            "items": raw_items,
+            "substitutions": receipt.get("substitutions", []) or [],
+            "unavailable": receipt.get("unavailable", []) or [],
+            "shortLifeItems": receipt.get("short_life_items", []) or [],
+            "status": "active",
+            "orderBlobPath": order_blob_path,
+        })
+
+    grouped_by_date = {}
     for m in meals:
-        meal_entry = {
-            "id": m.get("id", ""),
-            "content": m.get("content", ""),
-            "date": m.get("date", ""),
-            "labels": m.get("labels", []),
-            "section": m.get("section", "Planned"),
-        }
-        if m.get("meal_type"):
-            meal_entry["meal_type"] = m["meal_type"]
-        if m.get("is_completed"):
-            meal_entry["is_completed"] = True
-            if m.get("completed_at"):
-                meal_entry["completed_at"] = m["completed_at"]
+        meal_date = m.get("date", "")
+        if not meal_date:
+            continue
+        grouped_by_date.setdefault(meal_date, []).append(m)
 
-        matched_ingredient_names = m.get("matched_items", [])
-        resolved_matched = resolve_matched_items_for_dashboard(matched_ingredient_names, raw_items or [])
+    coverage = []
+    for meal_date in sorted(grouped_by_date.keys()):
+        grouped_meals = []
+        for m in grouped_by_date[meal_date]:
+            meal_entry = {
+                "id": m.get("id", ""),
+                "content": m.get("content", ""),
+                "date": meal_date,
+                "labels": m.get("labels", []),
+                "section": m.get("section", "Planned"),
+            }
+            if m.get("meal_type"):
+                meal_entry["meal_type"] = m["meal_type"]
+            if m.get("is_completed"):
+                meal_entry["is_completed"] = True
+                if m.get("completed_at"):
+                    meal_entry["completed_at"] = m["completed_at"]
 
-        coverage_entry = {
-            "meal": meal_entry,
-            "status": m.get("status", "unknown"),
-            "coverageScore": m.get("coverage_score", 0),
-            "matchedItems": resolved_matched,
-            "missingItems": m.get("missing_items", []),
-            "missingExplanations": m.get("missing_explanations", []),
-        }
-        if m.get("notes"):
-            coverage_entry["notes"] = m["notes"]
-        coverage_entries.append(coverage_entry)
+            matched_input = m.get("matched_items", [])
+            resolved_matched = resolve_matched_items_for_dashboard(matched_input, raw_items or [])
+            coverage_entry = {
+                "meal": meal_entry,
+                "status": m.get("status", "unknown"),
+                "coverageScore": m.get("coverage_score", 0),
+                "matchedItems": resolved_matched,
+                "missingItems": m.get("missing_items", []),
+                "missingExplanations": m.get("missing_explanations", []),
+            }
+            if m.get("notes"):
+                coverage_entry["notes"] = m["notes"]
+            grouped_meals.append(coverage_entry)
+
+        coverage.append({
+            "date": meal_date,
+            "sourceOrderBlobPath": order_blob_path if orders else None,
+            "meals": grouped_meals,
+            "coverageBlobPath": f"coverage/{meal_date}.json",
+        })
 
     delivery_windows = compute_delivery_windows(delivery_metadata)
+    coverage_window = sorted(grouped_by_date.keys())
 
     return {
-        "coverage": coverage_entries,
+        "orders": orders,
+        "coverage": coverage,
+        "summary": meals_check_summary,
         "deliveryWindows": delivery_windows,
-        "latestOrder": receipt,
-        "mealsCheckSummary": meals_check_summary,
+        "coverageWindow": coverage_window,
     }
 
 
@@ -924,31 +996,38 @@ def main():
     print(f"  Receipt items: {len(dashboard_cache.get('receipt', {}).get('items', []))}")
     print()
 
-    if args.dry_run:
-        print("[dry-run] Would POST dashboard data to Blob API.")
-        print("  No files, commits, pushes, or deployments were changed.")
-        return 0
-
     # Build payload
-    print("[2] Building dashboard payload...")
+    print("[2] Building dashboard split-layout payload...")
     payload = build_dashboard_payload(dashboard_cache)
-    print(f"  Coverage entries: {len(payload['coverage'])}")
+    print(f"  Order blobs: {len(payload['orders'])}")
+    print(f"  Coverage blobs: {len(payload['coverage'])}")
     print(f"  Delivery windows: {len(payload['deliveryWindows'])}")
-    print(f"  Has order: {payload['latestOrder'] is not None}")
+    print(f"  Coverage window dates: {len(payload['coverageWindow'])}")
     print()
 
     # POST to dashboard API
     print("[3] Posting data to dashboard Blob API...")
     api_url = os.environ.get("DASHBOARD_DATA_API_URL", "")
     secret = os.environ.get("MEALS_DASHBOARD_DATA_SECRET", "")
-    # Default to the production dashboard API
+    # Default to the production split-layout API
     if not api_url:
-        api_url = "https://meals-dashboard.vercel.app/api/dashboard-data"
-    success, error = post_dashboard_data_to_api(payload, api_url, secret)
+        api_url = "https://meals-dashboard.vercel.app/api/dashboard-sync"
+    success, response = post_dashboard_data_to_api(payload, api_url, secret, dry_run=args.dry_run)
     if not success:
-        print(f"  ✗ Failed to post data: {error}")
+        print(f"  ✗ Failed to post data: {response.get('error', 'unknown error')}")
+        detail = response.get('detail') or response.get('body')
+        if detail:
+            print(f"    {str(detail)[:300]}")
         return 1
+    print(f"  Manifest path: {response.get('manifestPath', 'n/a')}")
+    if 'written' in response or 'skipped' in response:
+        print(f"  Written: {len(response.get('written', []))} | Skipped: {len(response.get('skipped', []))} | Total ops: {response.get('totalOps', 'n/a')}")
     print()
+
+    if args.dry_run:
+        print("[dry-run] Split-layout API exercised successfully.")
+        print("  No Blob writes, commits, pushes, or deployments were performed.")
+        return 0
 
     # Build dashboard (unless skipped)
     if not args.no_build:

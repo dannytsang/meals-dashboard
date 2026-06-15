@@ -50,7 +50,8 @@ describe('DashboardClient meal card/detail contract', () => {
   it('does not import generated private data into the client component', () => {
     expect(source).not.toContain("@/lib/real-data");
     expect(pageSource).toContain('getServerSession(authOptions)');
-    expect(pageSource).toContain('getDashboardData()');
+    expect(pageSource).toContain('buildCoverageWindowDates(today, endDate)');
+    expect(pageSource).toContain('getDashboardData({ coverageWindow })');
   });
 
   it('does not perform slow client-side product search on modal open', () => {
