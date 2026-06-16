@@ -1175,7 +1175,7 @@ def build_dashboard_payload(cache_data: Dict, overrides: Optional[List[Dict[str,
         result = subprocess.run(
             ["git", "log", "-1", "--format=%ct"],
             capture_output=True, text=True,
-            cwd=str(Path(__file__).parent.parent / "meals-dashboard"),
+            cwd=str(Path(__file__).parent.parent),
             timeout=10,
         )
         if result.returncode == 0 and result.stdout.strip():
