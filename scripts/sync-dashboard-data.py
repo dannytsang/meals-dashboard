@@ -436,6 +436,22 @@ def resolve_matched_items_for_dashboard(matched_items, raw_items):
                 "quantity": matched_item.get("quantity", matched_item.get("qty")),
                 "price": matched_item.get("price"),
             }
+            # Spec 019 / FR-07 — preserve the override metadata that
+            # apply_manual_overrides_to_meals() attaches to dict
+            # entries. Without this, the override's `source` and
+            # `manualOverride` fields get dropped at this resolution
+            # step, and the dashboard can't distinguish a
+            # manual_override entry from a normal order match.
+            if matched_item.get("source"):
+                resolved_item["source"] = matched_item["source"]
+            if matched_item.get("manualOverride"):
+                resolved_item["manualOverride"] = matched_item["manualOverride"]
+            if matched_item.get("use_by_warning") is not None:
+                resolved_item["use_by_warning"] = matched_item["use_by_warning"]
+            if matched_item.get("use_by_date"):
+                resolved_item["use_by_date"] = matched_item["use_by_date"]
+            if matched_item.get("shelf_life_days") is not None:
+                resolved_item["shelf_life_days"] = matched_item["shelf_life_days"]
             product_metadata = matched_item.get("productMetadata") or matched_item.get("product_metadata")
             if isinstance(product_metadata, dict):
                 resolved_item["productMetadata"] = product_metadata
