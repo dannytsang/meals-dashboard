@@ -50,6 +50,8 @@ export interface GeneratedProductMetadata {
   category?: string;
   source?: string;
   lastFetched?: string;
+  /** ISO 8601 timestamp — computed client-side as lastFetched + TTL. Not stored in blob. */
+  expiresAt?: string;
 }
 
 export interface TescoReceipt {

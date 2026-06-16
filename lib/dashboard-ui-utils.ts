@@ -2,6 +2,17 @@ import { calculateCoverageSummary, DeliveryWindow, GeneratedProductMetadata, Gro
 import { cleanItemName } from './item-utils';
 import { findProductInfo } from './product-database';
 
+/** Product metadata TTL in days. Must match PRODUCT_ENRICHMENT_MAX_AGE_DAYS in sync-dashboard-data.py (default 21). */
+export const PRODUCT_METADATA_TTL_DAYS = 21;
+
+function _computeExpiresAt(lastFetched: string | undefined): string | undefined {
+  if (!lastFetched) return undefined;
+  const d = new Date(lastFetched);
+  if (isNaN(d.getTime())) return undefined;
+  d.setDate(d.getDate() + PRODUCT_METADATA_TTL_DAYS);
+  return d.toISOString();
+}
+
 export interface CachedOrderItem {
   name: string;
   quantity: number;
@@ -261,12 +272,15 @@ export interface ResolvedProductInfo {
   nutrition: string;
   image: string;
   productUrl?: string;
+  lastFetched?: string;
+  expiresAt?: string;
   source: 'generated' | 'local' | 'fallback';
 }
 
 export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInfo {
   const generated = item.productMetadata;
   if (generated) {
+    const expiresAt = _computeExpiresAt(generated.lastFetched);
     return {
       title: generated.title || cleanItemName(item.name),
       description: generated.description || 'Generated Tesco product details are incomplete for this item.',
@@ -277,6 +291,8 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
       nutrition: generated.nutrition || 'Nutrition information not available from generated Tesco metadata.',
       image: generated.imageUrl || '',
       productUrl: generated.productUrl,
+      lastFetched: generated.lastFetched,
+      expiresAt,
       source: 'generated',
     };
   }
@@ -292,6 +308,8 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
       allergens: '',
       nutrition: local.nutrition,
       image: local.image || '',
+      lastFetched: undefined,
+      expiresAt: undefined,
       source: 'local',
     };
   }
@@ -305,6 +323,8 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
     allergens: '',
     nutrition: 'Nutrition information not available.',
     image: '',
+    lastFetched: undefined,
+    expiresAt: undefined,
     source: 'fallback',
   };
 }

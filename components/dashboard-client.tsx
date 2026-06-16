@@ -754,6 +754,35 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                 <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{selectedProductInfo.description}</p>
               </div>
 
+              {selectedProductInfo.expiresAt && (
+                (() => {
+                  const expiresAt = new Date(selectedProductInfo.expiresAt!);
+                  const now = new Date();
+                  const isExpired = now > expiresAt;
+                  const daysUntilExpiry = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      {selectedProductInfo.lastFetched && (
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                          Fetched {new Date(selectedProductInfo.lastFetched).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      )}
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        backgroundColor: isExpired ? 'var(--accent-amber-bg)' : 'var(--bg-tertiary)',
+                        color: isExpired ? 'var(--accent-amber)' : 'var(--text-secondary)',
+                        border: isExpired ? '1px solid var(--accent-amber-border)' : 'none',
+                      }}>
+                        {isExpired ? `Refresh overdue (${daysUntilExpiry < 0 ? Math.abs(daysUntilExpiry) + 'd ago' : 'expired'})` : `Refreshes ${expiresAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+                      </span>
+                    </div>
+                  );
+                })()
+              )}
+
               {selectedProductInfo.storage && (
                 <div style={{ marginBottom: '1rem' }}>
                   <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Storage</h4>
