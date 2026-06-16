@@ -31,13 +31,25 @@ export interface GroceryItem {
 }
 
 export interface GeneratedProductMetadata {
+  /** Tesco product numeric ID. */
+  tpnc?: string | null;
+  gtin?: string | null;
+  tpnb?: string | null;
   title?: string;
   imageUrl?: string;
   productUrl?: string;
   description?: string;
   storage?: string;
   preparation?: string;
+  ingredients?: string;
+  allergens?: string;
+  /** Markdown table rendered from the Apollo nutrition data. */
+  nutrition?: string;
+  brand?: string;
+  /** Department / Aisle / Shelf joined with " / ". */
+  category?: string;
   source?: string;
+  lastFetched?: string;
 }
 
 export interface TescoReceipt {

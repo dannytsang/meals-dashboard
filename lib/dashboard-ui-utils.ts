@@ -255,6 +255,9 @@ export interface ResolvedProductInfo {
   title: string;
   description: string;
   storage: string;
+  preparation: string;
+  ingredients: string;
+  allergens: string;
   nutrition: string;
   image: string;
   productUrl?: string;
@@ -267,8 +270,11 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
     return {
       title: generated.title || cleanItemName(item.name),
       description: generated.description || 'Generated Tesco product details are incomplete for this item.',
-      storage: generated.storage || generated.preparation || 'Check packaging for storage and preparation instructions.',
-      nutrition: 'Nutrition information not available from generated Tesco metadata.',
+      storage: generated.storage || 'Check packaging for storage instructions.',
+      preparation: generated.preparation || '',
+      ingredients: generated.ingredients || '',
+      allergens: generated.allergens || '',
+      nutrition: generated.nutrition || 'Nutrition information not available from generated Tesco metadata.',
       image: generated.imageUrl || '',
       productUrl: generated.productUrl,
       source: 'generated',
@@ -281,6 +287,9 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
       title: cleanItemName(item.name),
       description: local.description,
       storage: local.storage,
+      preparation: '',
+      ingredients: '',
+      allergens: '',
       nutrition: local.nutrition,
       image: local.image || '',
       source: 'local',
@@ -291,6 +300,9 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
     title: cleanItemName(item.name),
     description: 'Product information not available in generated data or the local product database.',
     storage: 'Check packaging for storage instructions.',
+    preparation: '',
+    ingredients: '',
+    allergens: '',
     nutrition: 'Nutrition information not available.',
     image: '',
     source: 'fallback',

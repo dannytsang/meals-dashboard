@@ -756,8 +756,36 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
 
               {selectedProductInfo.storage && (
                 <div style={{ marginBottom: '1rem' }}>
-                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Storage & Preparation</h4>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Storage</h4>
                   <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{selectedProductInfo.storage}</p>
+                </div>
+              )}
+
+              {selectedProductInfo.preparation && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Preparation</h4>
+                  <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{selectedProductInfo.preparation}</p>
+                </div>
+              )}
+
+              {selectedProductInfo.ingredients && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Ingredients</h4>
+                  <p style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{selectedProductInfo.ingredients}</p>
+                </div>
+              )}
+
+              {selectedProductInfo.allergens && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'var(--accent-amber-bg)', border: '1px solid var(--accent-amber-border)', borderRadius: '8px' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--accent-amber)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Allergens</h4>
+                  <p style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{selectedProductInfo.allergens}</p>
+                </div>
+              )}
+
+              {selectedProductInfo.nutrition && !selectedProductInfo.nutrition.includes('not available') && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Nutrition</h4>
+                  <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{selectedProductInfo.nutrition}</div>
                 </div>
               )}
 
