@@ -341,13 +341,148 @@ def _extract_tesco_product_metadata(item_name: str, html: str, search_url: str) 
     return metadata
 
 
+def _fetch_via_hermes_agent(item_name: str, timeout: int = 45) -> Optional[Dict[str, Any]]:
+    """Last-resort fallback: invoke hermes chat with web toolset to search Tesco.
+
+    Runs ``hermes chat -t web -Q --max-turns 1`` with a Tesco-focused query.
+    Parses the text output for the first product URL and extracts tpnc, title,
+    description, and image from the response.
+
+    This is slow (~15-25s per item) so only called after direct HTTP search
+    AND Apollo cache both return nothing. The result is not cached (it's a
+    last-resort rescue attempt — cache writes happen in the caller).
+
+    Returns None on any failure: timeout, parse error, or no result found.
+    """
+    # Escape quotes and build a focused search query
+    escaped = item_name.replace('"', '\\"')
+    query = (
+        f'Search for "{escaped}" on the Tesco groceries website '
+        'and return the product URL (https://www.tesco.com/groceries/en-GB/products/NUMBER), '
+        'the product title, and a short description. '
+        'Focus on exact match or closest own-brand Tesco product.'
+    )
+
+    try:
+        proc = subprocess.run(
+            [
+                'hermes', 'chat',
+                '-q', query,
+                '-t', 'web',
+                '--max-turns', '1',
+                '-Q',
+            ],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except (subprocess.TimeoutExpired, OSError) as e:
+        print(f"  ⚠ hermes subprocess failed for {item_name}: {e}")
+        return None
+
+    if proc.returncode != 0:
+        print(f"  ⚠ hermes exit {proc.returncode} for {item_name}")
+        return None
+
+    output = proc.stdout
+
+    # Extract first product URL → tpnc
+    url_match = re.search(r'https://www\.tesco\.com/groceries/en-GB/products/(\d+)', output)
+    if not url_match:
+        # Try /shop/ variant
+        url_match = re.search(r'https://www\.tesco\.com/shop/en-GB/products/(\d+)', output)
+
+    tpnc = url_match.group(1) if url_match else None
+    product_url = f'https://www.tesco.com/groceries/en-GB/products/{tpnc}' if tpnc else None
+
+    # Extract title — skip system/progress lines (⚠, >>>, Iteration, etc.)
+    SKIP_PREFIXES = ('⚠', '>>>', 'Iteration', 'Session', 'Duration', 'No results',
+                      'Which', 'A few', 'Fresh', 'Frozen', 'Prepared', 'Dried',
+                      'Snack', 'Full search', 'Category', 'Closely')
+    title_match = re.search(r'\*{2}Title:\*{2}\s*(.+?)(?:\n|$)', output)
+    if not title_match:
+        title_match = re.search(r'product title[:\s]+(.+?)(?:\n|$)', output, re.IGNORECASE)
+    if not title_match:
+        # Fall back to first meaningful line
+        title = item_name
+        for line in output.split('\n'):
+            stripped = line.strip().strip('*')
+            if (len(stripped) > 5 and
+                    not stripped.startswith(('⚠', '>>>', 'Iteration', 'No results',
+                                            'Which', 'A few', 'Fresh', 'Frozen', 'Prepared',
+                                            'Dried', 'Snack', 'Full', 'Category', 'Closely',
+                                            'https://', 'Session', 'Duration', 'TF-'))):
+                title = stripped
+                break
+    else:
+        title = title_match.group(1).strip()
+
+    # Clean up title: truncate at em-dash, ellipsis, "exact match", "— found", etc.
+    title = re.sub(r'\s+[—–-]\s+.*$', '', title)       # "Title — extra info"
+    title = re.sub(r'\s+[⋯...]+\s+.*$', '', title)   # "Title ... more"
+    title = re.sub(r'\s+exact match.*$', '', title, flags=re.IGNORECASE)
+    title = re.sub(r'\s+found it,? darling.*$', '', title, flags=re.IGNORECASE)
+    title = re.sub(r'\s+related.*$', '', title, flags=re.IGNORECASE)
+    title = title.strip().strip('"').strip("'")
+    if not title:
+        title = item_name
+
+    # Extract description (looks like: "Description: ...", or content in parentheses after URL)
+    desc_match = re.search(r'Description[:\s]+(.+?)(?:\n\n|\n[A-Z]|$)', output, re.IGNORECASE | re.DOTALL)
+    description = desc_match.group(1).strip() if desc_match else ''
+
+    if not description:
+        # Try to extract content between URL and the next blank line / list item
+        if url_match:
+            after_url = output[url_match.end():]
+            # Skip until we find a blank line or a list
+            lines = after_url.split('\n')
+            desc_lines = []
+            for line in lines:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('http') or stripped.startswith('*') or stripped.startswith('Which'):
+                    break
+                if len(stripped) > 10:
+                    desc_lines.append(stripped)
+            description = ' '.join(desc_lines)[:500]
+
+    # Extract image URL from response (sometimes appears in output)
+    img_match = re.search(r'(https://digitalcontent\.api\.tesco\.com/[^\s<>"{}|\\^`\[\]]+)', output)
+    image_url = img_match.group(1) if img_match else None
+
+    # Nothing useful found — detect model failure responses
+    FAILURE_INDICATORS = (
+        "can't give you", "cannot give you", "don't have enough",
+        "not confident", "sorry sweetheart", "no results",
+        "couldn't find", "can't find", "unable to find",
+        "do not have enough", "uncertain",
+    )
+    if tpnc is None:
+        # Only accept a None-tpnc result if description is genuinely useful
+        if not description or len(description) < 20:
+            return None
+        if any(indicator in (description or '').lower() for indicator in FAILURE_INDICATORS):
+            return None
+
+    return {
+        'tpnc': tpnc,
+        'title': title if title else item_name,
+        'description': description,
+        'productUrl': product_url,
+        'imageUrl': image_url,
+        'source': 'tesco-hermes-web',
+        'lastFetched': datetime.now(timezone.utc).isoformat(),
+    }
+
+
 def fetch_tesco_product_metadata(item_name: str, timeout: float = PRODUCT_ENRICHMENT_TIMEOUT_SECONDS) -> Optional[Dict[str, Any]]:
     """Best-effort Tesco website metadata fetch with Apollo cache enrichment.
 
     Strategy:
-    1. Search for item name to resolve tpnc (if not already known from existing metadata).
-    2. Fetch the product page at /shop/en-GB/products/<tpnc> and extract Apollo cache.
-    3. Map all Apollo fields (storage, preparation, ingredients, allergens, nutrition, etc.).
+    1. Search for item name to resolve tpnc via direct HTTP (fast path).
+    2. Fetch the product page at /groceries/en-GB/products/<tpnc> and extract Apollo cache.
+    3. Fall back to Hermes web subprocess (slow, ~15-25s) for description/image/tpnc
+       when both steps 1 and 2 return nothing.
 
     Failures, 403s, rate limits, and no confident match return None so the
     dashboard generation can keep truthful fallback data. No fabrication.
@@ -356,7 +491,7 @@ def fetch_tesco_product_metadata(item_name: str, timeout: float = PRODUCT_ENRICH
     if not cleaned:
         return None
 
-    # Step 1: search to resolve tpnc
+    # Step 1: search to resolve tpnc via direct HTTP (fast path)
     search_url = 'https://www.tesco.com/groceries/en-GB/search?query=' + urllib.parse.quote(cleaned)
     request = urllib.request.Request(search_url, headers={
         'User-Agent': 'Mozilla/5.0 meals-dashboard product enrichment',
@@ -366,25 +501,32 @@ def fetch_tesco_product_metadata(item_name: str, timeout: float = PRODUCT_ENRICH
         with urllib.request.urlopen(request, timeout=timeout) as response:
             html = response.read(500_000).decode('utf-8', errors='ignore')
     except Exception as e:
-        print(f"  \u26a0 Tesco search failed for {cleaned}: {e}")
-        return None
+        print(f"  ⚠ Tesco search failed for {cleaned}: {e}")
+        html = ''
 
-    basic = _extract_tesco_product_metadata(cleaned, html, search_url)
-    if basic is None:
-        return None
+    basic = _extract_tesco_product_metadata(cleaned, html, search_url) if html else None
 
-    tpnc = basic.get('tpnc')
-    if not tpnc:
-        return basic
+    tpnc = basic.get('tpnc') if basic else None
 
     # Step 2: fetch product page and extract Apollo cache
-    product = _fetch_tesco_apollo_cache(tpnc, timeout=timeout)
-    if product is None:
-        # Fall back to basic search-page metadata (title/image/productUrl only)
-        return basic
+    if tpnc:
+        product = _fetch_tesco_apollo_cache(tpnc, timeout=timeout)
+        if product is not None:
+            return apollo_cache_to_product_info(product, original_name=cleaned)
 
-    # Step 3: map Apollo fields to ProductInfo shape
-    return apollo_cache_to_product_info(product, original_name=cleaned)
+    # Step 3: Hermes web subprocess fallback — slow but reliable for description/image/tpnc.
+    # Called only when HTTP search + Apollo cache both failed. Skipped if
+    # MEALS_PRODUCT_ENRICHMENT_USE_HERMES_FALLBACK=0 (for CI/unit tests).
+    if os.environ.get('MEALS_PRODUCT_ENRICHMENT_USE_HERMES_FALLBACK', '1') != '0':
+        hermes_result = _fetch_via_hermes_agent(cleaned)
+        if hermes_result:
+            # If Step 1 already found something partial, merge Hermes result on top
+            if basic:
+                return {**basic, **hermes_result}
+            return hermes_result
+
+    # Final fallback: basic search-page metadata (title/image/productUrl only)
+    return basic
 
 
 PRODUCT_ENRICHMENT_MAX_AGE_DAYS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_MAX_AGE_DAYS', '21'))
