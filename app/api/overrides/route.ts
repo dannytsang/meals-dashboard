@@ -110,7 +110,7 @@ async function writeOverridesBlob(entries: ManualOverrideEntry[]): Promise<void>
 }
 
 function applyUpsert(entries: ManualOverrideEntry[], body: UpsertRequestBody): ManualOverrideEntry[] {
-  const triple = (body.meal_date, body.meal_name, body.item_name);
+  const triple: [string, string, string] = [body.meal_date, body.meal_name, body.item_name];
   const now = new Date().toISOString();
   const quantity = body.quantity ?? 1;
   const reason = body.reason ?? 'manual override';

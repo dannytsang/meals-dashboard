@@ -219,6 +219,17 @@ describe('Durable manual override route (/api/overrides)', () => {
     expect(routeSrc).toContain('isUpsertRequestBody');
     expect(routeSrc).toContain('meal_date, meal_name, item_name are required');
   });
+
+  it('uses a 3-tuple for the (meal_date, meal_name, item_name) key, not the comma operator', () => {
+    // Regression: the previous code used
+    //   const triple = (body.meal_date, body.meal_name, body.item_name);
+    // which is the JavaScript comma operator — it returns ONLY the
+    // last value, so triple[0] / triple[1] were undefined or the first
+    // character of one of the strings. The fix wraps the three values
+    // in an array literal.
+    expect(routeSrc).toMatch(/\[body\.meal_date\s*,\s*body\.meal_name\s*,\s*body\.item_name\s*\]/);
+    expect(routeSrc).not.toMatch(/triple\s*=\s*\(body\.meal_date\s*,\s*body\.meal_name\s*,\s*body\.item_name\)/);
+  });
 });
 
 describe('Manual override server action (durable flow)', () => {
