@@ -649,8 +649,10 @@ def enrich_order_items_with_product_metadata(
         if metadata:
             tpnc = metadata.get('tpnc')
             if tpnc:
-                # FR-003: set productBlobPath reference instead of embedding full metadata.
+                # FR-003: set productBlobPath and tpnc on the item so the
+                # dashboard read path and API payload can access both.
                 enriched['productBlobPath'] = f'products/{tpnc}.json'
+                enriched['tpnc'] = tpnc
                 # Collect the product blob for Vercel Blob write (deduped by tpnc).
                 if tpnc not in product_blobs:
                     product_blobs[tpnc] = {
@@ -1557,6 +1559,13 @@ def build_dashboard_payload(
     receipt = dict(cache_data.get("receipt", {}) or {})
     meals_check_summary = dict(cache_data.get("meals_check_summary", {}) or {})
     delivery_metadata = cache_data.get("delivery_metadata", []) or []
+
+    # Spec 021 / FR-003: apply environment fallbacks so enrichment writes product
+    # blobs to Vercel Blob even when called with no explicit api_url/api_secret.
+    if not api_url:
+        api_url = os.environ.get('DASHBOARD_DATA_API_URL', '') or 'https://meals-dashboard.vercel.app/api/dashboard-sync'
+    if not api_secret:
+        api_secret = os.environ.get('MEALS_DASHBOARD_DATA_SECRET', '')
 
     # Enrich receipt items with product metadata before sending.
     # FR-003/FR-012: enrichment sets productBlobPath (not productMetadata) on each item.
