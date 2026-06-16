@@ -387,7 +387,7 @@ def fetch_tesco_product_metadata(item_name: str, timeout: float = PRODUCT_ENRICH
     return apollo_cache_to_product_info(product, original_name=cleaned)
 
 
-PRODUCT_ENRICHMENT_MAX_AGE_DAYS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_MAX_AGE_DAYS', '14'))
+PRODUCT_ENRICHMENT_MAX_AGE_DAYS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_MAX_AGE_DAYS', '21'))
 
 
 def _is_cache_fresh(entry: Dict[str, Any]) -> Optional[bool]:
