@@ -395,36 +395,54 @@ def _fetch_via_hermes_agent(item_name: str, timeout: int = 45) -> Optional[Dict[
     tpnc = url_match.group(1) if url_match else None
     product_url = f'https://www.tesco.com/groceries/en-GB/products/{tpnc}' if tpnc else None
 
-    # Extract title — skip system/progress lines (⚠, >>>, Iteration, etc.)
-    SKIP_PREFIXES = ('⚠', '>>>', 'Iteration', 'Session', 'Duration', 'No results',
-                      'Which', 'A few', 'Fresh', 'Frozen', 'Prepared', 'Dried',
-                      'Snack', 'Full search', 'Category', 'Closely')
+    # Extract title — skip system/progress lines (⚠, >>>, Iteration, Session, etc.)
+    TITLE_SKIP_PREFIXES = (
+        '⚠', '>>>', 'Iteration', 'Session', 'Duration', 'No results',
+        'Which', 'A few', 'Fresh', 'Frozen', 'Prepared', 'Dried',
+        'Snack', 'Full search', 'Category', 'Closely', 'Found it',
+        'Exact match', 'Here you go', 'Darling, found',
+    )
+    TITLE_SKIP_PATTERNS = (
+        re.compile(r'^found it[,.\s]*', re.IGNORECASE),
+        re.compile(r'^exact match found[,.\s]*', re.IGNORECASE),
+        re.compile(r'^found an?[,.\s]+', re.IGNORECASE),
+        re.compile(r'^here you go, sweetheart[,.\s]*', re.IGNORECASE),
+        re.compile(r"^darling[,.\s]+", re.IGNORECASE),
+        re.compile(r"^no[,.\s]+", re.IGNORECASE),
+        re.compile(r"^found the lot.*", re.IGNORECASE),
+    )
     title_match = re.search(r'\*{2}Title:\*{2}\s*(.+?)(?:\n|$)', output)
     if not title_match:
         title_match = re.search(r'product title[:\s]+(.+?)(?:\n|$)', output, re.IGNORECASE)
     if not title_match:
-        # Fall back to first meaningful line
         title = item_name
         for line in output.split('\n'):
             stripped = line.strip().strip('*')
-            if (len(stripped) > 5 and
-                    not stripped.startswith(('⚠', '>>>', 'Iteration', 'No results',
-                                            'Which', 'A few', 'Fresh', 'Frozen', 'Prepared',
-                                            'Dried', 'Snack', 'Full', 'Category', 'Closely',
-                                            'https://', 'Session', 'Duration', 'TF-'))):
+            lower = stripped.lower()
+            # Skip system/progress lines and lines that are mostly artefacts
+            if (len(stripped) > 4
+                    and not stripped.startswith(('⚠', '>>>', 'https://', 'http://'))
+                    and not lower.startswith(TITLE_SKIP_PREFIXES)
+                    and not any(p.match(stripped) for p in TITLE_SKIP_PATTERNS)
+                    and not any(stripped.lower().startswith(p) for p in TITLE_SKIP_PREFIXES)):
                 title = stripped
                 break
     else:
         title = title_match.group(1).strip()
 
-    # Clean up title: truncate at em-dash, ellipsis, "exact match", "— found", etc.
-    title = re.sub(r'\s+[—–-]\s+.*$', '', title)       # "Title — extra info"
-    title = re.sub(r'\s+[⋯...]+\s+.*$', '', title)   # "Title ... more"
-    title = re.sub(r'\s+exact match.*$', '', title, flags=re.IGNORECASE)
-    title = re.sub(r'\s+found it,? darling.*$', '', title, flags=re.IGNORECASE)
-    title = re.sub(r'\s+related.*$', '', title, flags=re.IGNORECASE)
-    title = title.strip().strip('"').strip("'")
-    if not title:
+    # Clean up title: remove trailing artefacts
+    title = re.sub(r'\s+[—–-]\s+.*$', '', title)           # "Title — extra info"
+    title = re.sub(r'\s+[⋯...]+\s+.*$', '', title)         # "Title ... more"
+    title = re.sub(r'\s+on the first (pass|try|swing)[,.\s]*$', '', title, flags=re.IGNORECASE)
+    title = re.sub(r'\s+sweetheart[,.\s]*$', '', title, flags=re.IGNORECASE)
+    title = re.sub(r"[,.\s]+darling[,.\s]*$", '', title, flags=re.IGNORECASE)
+    title = re.sub(r"^found it[,.\s]+", '', title, flags=re.IGNORECASE)
+    title = re.sub(r"^exact match found[,.\s]*", '', title, flags=re.IGNORECASE)
+    title = re.sub(r"^found an?[,.\s]+", '', title, flags=re.IGNORECASE)
+    title = re.sub(r"^here you go[,.\s]*", '', title, flags=re.IGNORECASE)
+    title = re.sub(r"^darling[,.\s]+", '', title, flags=re.IGNORECASE)
+    title = title.strip().strip('"').strip("'").rstrip(',.:').strip()
+    if not title or len(title) < 3:
         title = item_name
 
     # Extract description (looks like: "Description: ...", or content in parentheses after URL)
