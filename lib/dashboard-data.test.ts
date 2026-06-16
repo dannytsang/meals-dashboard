@@ -208,6 +208,8 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
       deliveryWindows: [],
       latestOrder: null,
       mealsCheckSummary: null,
+      dataGeneratedAt: '',
+      uiUpdatedAt: '',
     });
   });
 
@@ -219,7 +221,7 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
       listPaths: async () => ['dashboard-data.json'],
     };
     const data = await getDashboardData({ coverageWindow: ['2026-06-15'], reader: brokenReader });
-    expect(data).toEqual({ coverage: [], deliveryWindows: [], latestOrder: null, mealsCheckSummary: null });
+    expect(data).toEqual({ coverage: [], deliveryWindows: [], latestOrder: null, mealsCheckSummary: null, dataGeneratedAt: '', uiUpdatedAt: '' });
   });
 
   it('falls back to null/empty for missing coverage blob without crashing', async () => {

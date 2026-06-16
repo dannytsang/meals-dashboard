@@ -30,7 +30,9 @@ const COVERAGE_BLOB_PATH_RE = /^coverage\/\d{4}-\d{2}-\d{2}\.json$/;
  *     "coverage": [{...coverageBlob..., "coverageBlobPath": "coverage/...json"}],
  *     "summary": {...},
  *     "deliveryWindows": [...],
- *     "coverageWindow": ["2026-06-15", ...]
+ *     "coverageWindow": ["2026-06-15", ...],
+ *     "dataGeneratedAt": "2026-06-16T07:38:33+00:00",
+ *     "uiUpdatedAt": "2026-06-16T00:41:00+00:00"
  *   }
  *
  * Response:
@@ -140,6 +142,8 @@ function parseSplitLayoutPayload(
       summary: b.summary as SplitLayoutPayload['summary'],
       deliveryWindows: b.deliveryWindows as SplitLayoutPayload['deliveryWindows'],
       coverageWindow: b.coverageWindow as string[],
+      dataGeneratedAt: (b as Record<string, unknown>).dataGeneratedAt as string ?? '',
+      uiUpdatedAt: (b as Record<string, unknown>).uiUpdatedAt as string ?? '',
     },
   };
 }

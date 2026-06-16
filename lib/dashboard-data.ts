@@ -40,6 +40,10 @@ export interface DashboardBlobData {
   deliveryWindows: DeliveryWindow[];
   latestOrder: TescoReceipt | null;
   mealsCheckSummary: DashboardSummary | null;
+  /** When the meals-check pipeline generated this data (ISO string, from cache generated_at). */
+  dataGeneratedAt: string;
+  /** When the dashboard UI was last deployed (ISO string, git HEAD commit time at sync time). */
+  uiUpdatedAt: string;
 }
 
 export interface DashboardData extends DashboardBlobData {}
@@ -164,6 +168,8 @@ async function readFromSplitLayout(
       deliveryWindows,
       latestOrder,
       mealsCheckSummary: summary ?? null,
+      dataGeneratedAt: (summary as Record<string, unknown> | null)?.dataGeneratedAt as string ?? '',
+      uiUpdatedAt: (summary as Record<string, unknown> | null)?.uiUpdatedAt as string ?? '',
     };
   } catch (err) {
     console.error('[dashboard-data] split-layout read failed, falling back:', err);
@@ -241,5 +247,7 @@ function getEmptyState(): DashboardBlobData {
     deliveryWindows: [],
     latestOrder: null,
     mealsCheckSummary: null,
+    dataGeneratedAt: '',
+    uiUpdatedAt: '',
   };
 }

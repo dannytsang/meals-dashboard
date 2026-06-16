@@ -15,6 +15,10 @@ export interface DashboardSummary {
   meals_covered: number;
   order_total: number;
   delivery_date: string;
+  /** When the meals-check pipeline generated this data (ISO string). */
+  dataGeneratedAt?: string;
+  /** When the dashboard UI was last deployed (git HEAD commit time at sync time, ISO string). */
+  uiUpdatedAt?: string;
 }
 
 /**
@@ -73,6 +77,10 @@ export interface SplitLayoutPayload {
   deliveryWindows: DeliveryWindow[];
   /** ISO date strings in the visible coverage window. */
   coverageWindow: string[];
+  /** When the meals-check pipeline generated this data. */
+  dataGeneratedAt: string;
+  /** When the dashboard UI was last deployed (git HEAD commit time at sync time). */
+  uiUpdatedAt: string;
 }
 
 export interface SyncResult {
@@ -138,7 +146,13 @@ export async function syncDashboardLayout(
     dataBlobs.push({ path: cov.coverageBlobPath, content: JSON.stringify(cov, null, 2) });
   }
   // Summary is also a content-addressable data blob (FR-13).
-  const summaryContent = JSON.stringify(normalisedPayload.summary, null, 2);
+  // Inject timestamps into the summary so they survive Blob storage and round-trip.
+  const summaryWithTimestamps = {
+    ...normalisedPayload.summary,
+    dataGeneratedAt: normalisedPayload.dataGeneratedAt ?? '',
+    uiUpdatedAt: normalisedPayload.uiUpdatedAt ?? '',
+  };
+  const summaryContent = JSON.stringify(summaryWithTimestamps, null, 2);
   const summaryHash = client.computeHash(summaryContent);
   const summaryPath = SUMMARY_PATH_FOR(summaryHash);
   dataBlobs.push({ path: summaryPath, content: summaryContent });

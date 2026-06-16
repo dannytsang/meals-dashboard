@@ -501,21 +501,9 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                   const unitPrice = item.price ? item.price / qty : 0;
                   const totalPrice = item.price || 0;
                   const isUnmatched = trulyUnmatchedItems.includes(item);
-                  // Spec 019 / FR-07 / T061 — defensive guard. The
-                  // `I have this` button only makes sense when we have
-                  // coverage data to classify against. If the coverage
-                  // array is empty (stale blob, sync failure, etc.),
-                  // `trulyUnmatchedItems` defaults to "everything", which
-                  // would surface the button on every receipt item —
-                  // including items that ARE covered. Hide the button
-                  // entirely when coverage is missing; the user can
-                  // re-trigger a sync to recover.
-                  const canShowOverrideButton = isUnmatched && coverage.length > 0;
-                  // When coverage data is missing, treat the item as
-                  // "unknown" rather than as either matched or unmatched.
-                  // The visual signal: no ✓/✗ icon, neutral border, full
-                  // opacity. Once a sync lands, the classification kicks
-                  // in and the row gets its proper colour.
+                  // When coverage data is missing (stale blob, sync failure), show a neutral
+                  // "?" classification instead of an incorrect ✓/✗, and treat the item as
+                  // neither matched nor unmatched so the row stays visually neutral.
                   const classificationUnknown = coverage.length === 0;
                   const showUnmatched = isUnmatched && !classificationUnknown;
                   return (
@@ -529,27 +517,6 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
                         {unitPrice > 0 ? (<><span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}</span><span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>£{totalPrice.toFixed(2)}</span></>) : <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>(price N/A)</span>}
-                        {canShowOverrideButton && (
-                          <button
-                            data-testid="i-have-this-button"
-                            type="button"
-                            disabled={overridePendingItem === item.name}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Spec 019 / FR-07 / T061 — wire the click to
-                              // the applyManualOverrideForItem handler
-                              // defined above. The handler POSTs to
-                              // /api/manual-override with the meal
-                              // context, surfaces errors, and reloads
-                              // the page on success so the new
-                              // manual_override source flows through.
-                              void applyManualOverrideForItem(item);
-                            }}
-                            style={{ fontSize: '10px', fontWeight: '700', padding: '4px 8px', borderRadius: '6px', backgroundColor: overridePendingItem === item.name ? 'var(--text-muted)' : 'var(--accent-blue)', color: 'var(--bg-primary)', border: 'none', cursor: overridePendingItem === item.name ? 'wait' : 'pointer' }}
-                          >
-                            {overridePendingItem === item.name ? 'Saving…' : overrideSuccess === item.name ? '✓ Saved' : 'I have this'}
-                          </button>
-                        )}
                       </div>
                     </div>
                   );
@@ -820,6 +787,27 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Footer with timestamps */}
+      {(data.dataGeneratedAt || data.uiUpdatedAt) && (
+        <div style={{
+          padding: '0.6rem 1rem',
+          borderTop: '1px solid var(--border-color)',
+          backgroundColor: 'var(--bg-secondary)',
+          display: 'flex',
+          gap: '1.5rem',
+          fontSize: '11px',
+          color: 'var(--text-tertiary)',
+          flexWrap: 'wrap',
+        }}>
+          {data.dataGeneratedAt && (
+            <span>Data: {new Date(data.dataGeneratedAt).toLocaleString('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+          )}
+          {data.uiUpdatedAt && (
+            <span>UI: {new Date(data.uiUpdatedAt).toLocaleString('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+          )}
         </div>
       )}
     </div>

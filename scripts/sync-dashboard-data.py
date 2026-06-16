@@ -23,7 +23,7 @@ import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable, Dict, Any, List, Optional, Tuple, MutableMapping
 
 # Base paths - use absolute paths for clarity. Defaults match Danny's Hermes chef profile
@@ -1166,12 +1166,32 @@ def build_dashboard_payload(cache_data: Dict, overrides: Optional[List[Dict[str,
     delivery_windows = compute_delivery_windows(delivery_metadata)
     coverage_window = sorted(grouped_by_date.keys())
 
+    # Timestamps for the dashboard footer:
+    #   dataGeneratedAt — when the meals-check pipeline generated this data (from cache)
+    #   uiUpdatedAt     — when the dashboard UI was last deployed (git HEAD commit time)
+    data_generated_at = cache_data.get("generated_at", "")
+    ui_updated_at = ""
+    try:
+        result = subprocess.run(
+            ["git", "log", "-1", "--format=%ct"],
+            capture_output=True, text=True,
+            cwd=str(Path(__file__).parent.parent / "meals-dashboard"),
+            timeout=10,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            ts = int(result.stdout.strip())
+            ui_updated_at = datetime.fromtimestamp(ts, tz=datetime.timezone.utc).isoformat()
+    except Exception:
+        pass
+
     return {
         "orders": orders,
         "coverage": coverage,
         "summary": meals_check_summary,
         "deliveryWindows": delivery_windows,
         "coverageWindow": coverage_window,
+        "dataGeneratedAt": data_generated_at,
+        "uiUpdatedAt": ui_updated_at,
     }
 
 
