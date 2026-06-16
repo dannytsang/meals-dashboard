@@ -77,17 +77,34 @@ async function readOverridesBlob(): Promise<ManualOverrideEntry[]> {
     throw new Error('BLOB_READ_WRITE_TOKEN not configured');
   }
   try {
-    const res = await list({ prefix: OVERRIDES_BLOB_PATH, token: BLOB_TOKEN });
+    // The Vercel `list` API treats `prefix` as a server-side filter.
+    // Using the exact pathname as the prefix can fail to return the
+    // file on some Vercel blob versions (the filter seems to expect
+    // a folder-like prefix). Using the directory prefix is more
+    // robust: list('overrides/') returns all blobs under the
+    // overrides/ directory, including overrides/manual.json.
+    const res = await list({ prefix: 'overrides/', token: BLOB_TOKEN, limit: 1000 });
+    console.log('[overrides] list returned', res.blobs.length, 'blobs with prefix overrides/');
+    for (const b of res.blobs) {
+      console.log('[overrides]   blob:', b.pathname, 'size:', b.size);
+    }
     const match = res.blobs.find((b) => b.pathname === OVERRIDES_BLOB_PATH);
-    if (!match) return [];
+    if (!match) {
+      console.log('[overrides] no match for', OVERRIDES_BLOB_PATH);
+      return [];
+    }
     const resp = await fetch(match.url);
-    if (!resp.ok) return [];
+    if (!resp.ok) {
+      console.log('[overrides] fetch failed:', resp.status);
+      return [];
+    }
     const text = await resp.text();
     const parsed = JSON.parse(text);
     return Array.isArray(parsed) ? (parsed as ManualOverrideEntry[]) : [];
   } catch (err) {
     // If the blob doesn't exist yet, list() will throw or return no match.
     // Treat that as "no overrides" so the first POST starts from an empty list.
+    console.log('[overrides] readOverridesBlob error:', err instanceof Error ? err.message : String(err));
     return [];
   }
 }
