@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+"""
+Backfill tesco_product_metadata_cache.json with full Apollo cache metadata.
+
+Upgrades existing cache entries that have only basic search-page metadata
+(title/image/productUrl) to full ProductInfo fields from the product page
+Apollo cache. Old /groceries/ URL shapes are re-searched by name.
+
+Usage:
+    python3 scripts/backfill_tesco_product_metadata.py [--dry-run] [--force] [--limit N]
+
+Exit codes:
+    0  success (or dry-run with no error)
+    1  fatal error (cache unreadable, etc.)
+    2  partial failure (some items could not be upgraded — see summary)
+"""
+import sys
+import json
+import argparse
+import re
+import os
+import time
+import urllib.parse
+import urllib.request
+from pathlib import Path
+from datetime import datetime, timezone
+from typing import Dict, Any, Optional
+
+DASHBOARD_PATH = Path(__file__).resolve().parent.parent
+MEALS_SCRIPTS_PATH = Path(os.environ.get('MEALS_CHECK_SCRIPTS', '/home/hermes/.hermes/scripts')).resolve()
+PRODUCT_METADATA_CACHE = Path(os.environ.get(
+    'MEALS_PRODUCT_METADATA_CACHE',
+    str(MEALS_SCRIPTS_PATH / 'data' / 'tesco_product_metadata_cache.json')
+)).expanduser().resolve()
+TIMEOUT_SECONDS = 10
+RATE_LIMIT_SECONDS = 0.5
+USER_AGENT = 'Mozilla/5.0 meals-dashboard product enrichment'
+ACCEPT_LANGUAGE = 'en-GB,en;q=0.9'
+
+# Import sync_dashboard_data from the same directory
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import importlib
+sync_dashboard_data = importlib.import_module('sync-dashboard-data')
+
+
+def _read_cache(path: Path) -> Dict[str, Dict[str, Any]]:
+    if not path.exists():
+        return {}
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except Exception as e:
+        print(f"FATAL: cannot read cache {path}: {e}")
+        sys.exit(1)
+
+
+def _write_cache(cache: Dict[str, Dict[str, Any]], path: Path) -> None:
+    tmp = path.with_suffix('.tmp')
+    with open(tmp, 'w') as f:
+        json.dump(cache, f, indent=2, sort_keys=True)
+    os.replace(tmp, path)
+
+
+def _search_tpnc(item_name: str) -> Optional[str]:
+    """Search Tesco and return the first tpnc found in the search HTML."""
+    cleaned = re.sub(r'\bSubstitutions:\s*On\b', '', item_name, flags=re.IGNORECASE).strip()
+    if not cleaned:
+        return None
+    url = 'https://www.tesco.com/groceries/en-GB/search?query=' + urllib.parse.quote(cleaned)
+    req = urllib.request.Request(url, headers={
+        'User-Agent': USER_AGENT,
+        'Accept-Language': ACCEPT_LANGUAGE,
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
+            html = resp.read(500_000).decode('utf-8', errors='ignore')
+    except Exception:
+        return None
+
+    # New URL pattern: /shop/en-GB/products/<numeric-tpnc>
+    match = re.search(r'href="(?P<path>/shop/en-GB/products/\d+)"', html)
+    if not match:
+        return None
+    tpnc_match = re.search(r'/shop/en-GB/products/(\d+)', match.group('path'))
+    return tpnc_match.group(1) if tpnc_match else None
+
+
+def _resolve_tpnc(entry: Dict[str, Any], item_name: str) -> Optional[str]:
+    """Resolve a tpnc for a cache entry.
+
+    Priority:
+    1. tpnc already in the entry.
+    2. Parse from existing productUrl if it is the new /shop/ form.
+    3. Search by item_name.
+    """
+    # Already have tpnc
+    if entry.get('tpnc'):
+        return entry['tpnc']
+
+    # Parse from existing productUrl
+    product_url = entry.get('productUrl', '')
+    if '/shop/en-GB/products/' in product_url:
+        m = re.search(r'/shop/en-GB/products/(\d+)', product_url)
+        if m:
+            return m.group(1)
+
+    # Search by name
+    return _search_tpnc(item_name)
+
+
+def backfill_entry(
+    entry: Dict[str, Any],
+    item_name: str,
+    force: bool = False,
+) -> Dict[str, Any]:
+    """Backfill a single cache entry.
+
+    Returns the upgraded entry (or the original with 'unmatched' set if failed).
+    """
+    tpnc = _resolve_tpnc(entry, item_name)
+    if not tpnc:
+        entry['unmatched'] = 'could not resolve tpnc'
+        return entry
+
+    # Fetch product page
+    product = sync_dashboard_data._fetch_tesco_apollo_cache(tpnc, timeout=TIMEOUT_SECONDS)
+    if product is None:
+        entry['unmatched'] = f'product page fetch failed for tpnc {tpnc}'
+        return entry
+
+    # Upgrade with full Apollo fields
+    upgraded = sync_dashboard_data.apollo_cache_to_product_info(product, original_name=item_name)
+    # Preserve original title if the Apollo title is different (the item may have been renamed)
+    if entry.get('title') and not upgraded.get('title'):
+        upgraded['title'] = entry['title']
+    # If Apollo title differs from cache entry name, keep the original name context
+    if entry.get('title') and upgraded.get('title') != entry.get('title'):
+        # Don't overwrite — Tesco may have renamed the product; use what the receipt had
+        pass
+    return upgraded
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description='Backfill tesco_product_metadata_cache.json with full Apollo metadata.')
+    parser.add_argument('--dry-run', action='store_true', help='Show what would be done without writing changes')
+    parser.add_argument('--force', action='store_true', help='Re-fetch even fresh cache entries')
+    parser.add_argument('--limit', type=int, default=0, help='Process at most N entries (0 = all)')
+    args = parser.parse_args()
+
+    cache = _read_cache(PRODUCT_METADATA_CACHE)
+    total = len(cache)
+    upgraded = 0
+    already_complete = 0
+    unmatched = 0
+    skipped = 0
+
+    items = list(cache.items())
+    if args.limit > 0:
+        items = items[:args.limit]
+
+    for key, entry in items:
+        item_name = key  # cache key is the lowercased item name
+        is_tpnc_key = key.isdigit()  # tpnc keys are numeric strings
+
+        # Determine the display name for searching
+        display_name = entry.get('title', '') or key
+
+        # Check if already fully enriched (has tpnc + lastFetched)
+        has_tpnc = bool(entry.get('tpnc'))
+        has_last_fetched = bool(entry.get('lastFetched'))
+        is_apollo_enriched = has_tpnc and has_last_fetched and entry.get('source') == 'tesco.com'
+
+        if is_apollo_enriched and not args.force:
+            already_complete += 1
+            skipped += 1
+            print(f"  SKIP {key}: already enriched")
+            continue
+
+        # Check freshness
+        if not args.force and sync_dashboard_data._is_cache_fresh(entry):
+            already_complete += 1
+            skipped += 1
+            print(f"  SKIP {key}: fresh (force to re-fetch)")
+            continue
+
+        if args.dry_run:
+            print(f"  WOULD BACKFILL {key}: {display_name}")
+            upgraded += 1
+            continue
+
+        # Perform backfill
+        try:
+            result = backfill_entry(entry, display_name, force=args.force)
+        except Exception as e:
+            print(f"  ERROR {key}: {e}")
+            entry['unmatched'] = f'backfill error: {e}'
+            unmatched += 1
+            continue
+
+        if result.get('unmatched'):
+            print(f"  UNMATCHED {key}: {result['unmatched']}")
+            cache[key] = result  # write the unmatched reason
+            unmatched += 1
+        else:
+            print(f"  UPGRADED {key}: tpnc={result.get('tpnc')} image={bool(result.get('imageUrl'))} storage={bool(result.get('storage'))} prep={bool(result.get('preparation'))}")
+            # Write under both key and tpnc
+            cache[key] = result
+            if result.get('tpnc') and result['tpnc'] != key:
+                cache[result['tpnc']] = result
+            upgraded += 1
+
+        time.sleep(RATE_LIMIT_SECONDS)
+
+    # Write back if not dry-run
+    if not args.dry_run:
+        _write_cache(cache, PRODUCT_METADATA_CACHE)
+
+    summary = f"\nSummary: upgraded={upgraded} already_complete={already_complete} unmatched={unmatched} total={total}"
+    print(summary)
+    print(f"Cache written to {PRODUCT_METADATA_CACHE}")
+
+    # Exit 0 if no fatal errors; 2 if any unmatched
+    sys.exit(0 if unmatched == 0 else 2)
+
+
+if __name__ == '__main__':
+    main()

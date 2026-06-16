@@ -116,11 +116,14 @@ export function MealList({ coverage }: MealListProps) {
                       <p className="text-xs text-slate-500 mb-1">Matched items:</p>
                       <div className="flex flex-wrap gap-1">
                         {item.matchedItems.map((matched, idx) => (
-                          <span 
+                          <span
                             key={idx}
                             className="text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-300"
                           >
                             {matched.name}
+                            {matched.source === 'grocy' && (
+                              <span title="In your Grocy pantry" className="ml-1">🏠</span>
+                            )}
                           </span>
                         ))}
                       </div>

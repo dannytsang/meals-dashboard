@@ -90,23 +90,246 @@ def _read_product_metadata_cache(cache_path: Path = PRODUCT_METADATA_CACHE) -> D
 
 def _write_product_metadata_cache(cache: Dict[str, Dict[str, Any]], cache_path: Path = PRODUCT_METADATA_CACHE) -> None:
     cache_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(cache_path, 'w') as f:
+    tmp = cache_path.with_suffix('.tmp')
+    with open(tmp, 'w') as f:
         json.dump(cache, f, indent=2, sort_keys=True)
+    os.replace(tmp, cache_path)
+
+
+def _fetch_tesco_apollo_cache(tpnc: str, timeout: float = PRODUCT_ENRICHMENT_TIMEOUT_SECONDS) -> Optional[Dict[str, Any]]:
+    """Fetch and extract the Apollo cache ProductType entry for a Tesco product.
+
+    Returns the parsed Apollo cache dict or None on any failure.
+    Uses the string-aware brace-counter walker from the spike notes.
+    """
+    url = f'https://www.tesco.com/shop/en-GB/products/{tpnc}'
+    request = urllib.request.Request(url, headers={
+        'User-Agent': 'Mozilla/5.0 meals-dashboard product enrichment',
+        'Accept-Language': 'en-GB,en;q=0.9',
+    })
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            text = response.read().decode('utf-8', errors='ignore')
+    except Exception as e:
+        print(f"  ⚠ Apollo cache fetch failed for {tpnc}: {e}")
+        return None
+
+    key = f'"ProductType:{tpnc}":'
+    i = text.find(key)
+    if i == -1:
+        print(f"  ⚠ Apollo cache: no ProductType:{tpnc} entity in {url}")
+        return None
+
+    val_start = text.find('{', i + len(key))
+    if val_start == -1:
+        print(f"  ⚠ Apollo cache: no '{{' after ProductType:{tpnc} key in {url}")
+        return None
+
+    depth = 0
+    in_str = False
+    esc = False
+    for k in range(val_start, len(text)):
+        ch = text[k]
+        if esc:
+            esc = False
+            continue
+        if in_str:
+            if ch == '\\':
+                esc = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch == '{':
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 0:
+                val_end = k
+                break
+    else:
+        print(f"  ⚠ Apollo cache: unclosed object for ProductType:{tpnc} in {url}")
+        return None
+
+    try:
+        product = json.loads(text[val_start:val_end + 1])
+    except json.JSONDecodeError as e:
+        print(f"  ⚠ Apollo cache JSON parse error for ProductType:{tpnc}: {e}")
+        return None
+
+    return product
+
+
+def _join_field(value: Any) -> str:
+    """Join a list or return a string value, stripping surrounding whitespace."""
+    if value is None:
+        return ''
+    if isinstance(value, list):
+        return ' '.join(str(v).strip() for v in value if v).strip()
+    return str(value).strip()
+
+
+def _strip_html(text: str) -> str:
+    """Remove HTML tags and collapse whitespace."""
+    return re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', text or '')).strip()
+
+
+def _decode_json_urls(value: Any) -> Any:
+    """Recursively decode \u002F and \u0026 escapes in JSON strings."""
+    if isinstance(value, str):
+        return value.replace('\u002F', '/').replace('\u0026', '&')
+    if isinstance(value, list):
+        return [_decode_json_urls(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _decode_json_urls(v) for k, v in value.items()}
+    return value
+
+
+def _flatten_cooking_instructions(instructions: Any) -> str:
+    """Flatten oven/microwave/grill x chilled/frozen cooking instructions to a string."""
+    if not instructions or not isinstance(instructions, dict):
+        return ''
+    lines = []
+    for method_key in ('oven', 'microwave', 'grill'):
+        method_data = instructions.get(method_key)
+        if not method_data or not isinstance(method_data, dict):
+            continue
+        method_label = method_key.capitalize()
+        for state_key in ('chilled', 'frozen'):
+            state_data = method_data.get(state_key)
+            if not state_data or not isinstance(state_data, dict):
+                continue
+            instr = state_data.get('instructions', '')
+            temp = state_data.get('temperature', '')
+            if instr:
+                label = f"{method_label} ({state_key})"
+                if temp:
+                    label += f" {temp}"
+                lines.append(f"{label}: {instr}")
+    return ' | '.join(lines) if lines else ''
+
+
+def _render_nutrition_table(nutrition: Any) -> str:
+    """Render a nutrition list as a markdown table."""
+    if not nutrition or not isinstance(nutrition, list):
+        return ''
+    rows = []
+    for item in nutrition:
+        if not isinstance(item, dict):
+            continue
+        name = item.get('name', '')
+        vals = [item.get(f'value{i}', '') for i in range(1, 5)]
+        vals = [str(v) for v in vals if v]
+        if name or vals:
+            rows.append(f"| {name} | {' | '.join(vals)} |")
+    if not rows:
+        return ''
+    header = "| Nutrient | Value |"
+    sep = "| --- | --- |"
+    return "\n".join([header, sep] + rows)
+
+
+def apollo_cache_to_product_info(product: Dict[str, Any], original_name: str = '') -> Dict[str, Any]:
+    """Map a Tesco Apollo ProductType cache dict to the dashboard ProductInfo shape.
+
+    FR-007 through FR-010: all fields from the Apollo cache are mapped.
+    Missing fields are returned as empty string / None - no fabrication.
+    """
+    details = product.get('details') or {}
+
+    desc_parts = [_join_field(product.get('description', '')), _join_field(details.get('productMarketing', ''))]
+    description = ' '.join(p for p in desc_parts if p)
+
+    storage_parts = [_join_field(details.get('storage', ''))]
+    if details.get('freezingInstructions'):
+        storage_parts.append(_join_field(details.get('freezingInstructions', '')))
+    storage = ' '.join(p for p in storage_parts if p)
+
+    prep_parts = [_join_field(details.get('preparationAndUsage', ''))]
+    cooking = _flatten_cooking_instructions(details.get('cookingInstructions', {}))
+    if cooking:
+        prep_parts.append(cooking)
+    preparation = ' '.join(p for p in prep_parts if p)
+
+    raw_ingredients = details.get('ingredients')
+    if isinstance(raw_ingredients, list):
+        ingredients = _strip_html(', '.join(str(v) for v in raw_ingredients if v))
+    else:
+        ingredients = _strip_html(str(raw_ingredients) if raw_ingredients else '')
+
+    allergen_parts = []
+    for allergen in (details.get('allergens') or []):
+        if isinstance(allergen, dict):
+            vals = allergen.get('values') or []
+            for v in vals:
+                if v:
+                    allergen_parts.append(str(v))
+    allergens = '; '.join(allergen_parts)
+
+    nutrition_md = _render_nutrition_table(details.get('nutrition'))
+
+    image_url = ''
+    media = product.get('media') or {}
+    images = media.get('images')
+    if isinstance(images, list) and len(images) > 0:
+        raw_url = images[0].get('url', '') or ''
+        image_url = _decode_json_urls(raw_url)
+    if not image_url:
+        raw_default = product.get('defaultImageUrl', '') or ''
+        image_url = _decode_json_urls(raw_default)
+
+    def _d(s):
+        return _decode_json_urls(s) if isinstance(s, str) else s
+
+    product_url = f"https://www.tesco.com/shop/en-GB/products/{product.get('tpnc', '')}"
+
+    return {
+        'tpnc': _d(product.get('tpnc', '')) or None,
+        'gtin': _d(product.get('gtin', '')) or None,
+        'tpnb': _d(product.get('tpnb', '')) or None,
+        'title': _d(_join_field(product.get('title', ''))) or original_name,
+        'description': _d(description),
+        'storage': _d(storage),
+        'preparation': _d(preparation),
+        'ingredients': _d(ingredients),
+        'allergens': _d(allergens),
+        'nutrition': _d(nutrition_md),
+        'brand': _d(_join_field(product.get('brandName', ''))),
+        'category': _d(' / '.join(filter(None, [
+            _join_field(product.get('departmentName', '')),
+            _join_field(product.get('aisleName', '')),
+            _join_field(product.get('shelfName', '')),
+        ]))),
+        'imageUrl': image_url,
+        'productUrl': product_url,
+        'source': 'tesco.com',
+        'lastFetched': datetime.now(timezone.utc).isoformat(),
+    }
 
 
 def _extract_tesco_product_metadata(item_name: str, html: str, search_url: str) -> Optional[Dict[str, Any]]:
-    """Extract a conservative product metadata match from a Tesco search page."""
-    product_match = re.search(r'href="(?P<path>/groceries/en-GB/products/[^"]+)"', html)
+    """Extract tpnc and basic metadata from a Tesco search page HTML.
+
+    Returns basic metadata including tpnc (for product-page re-fetch) or None.
+    Uses the /shop/ URL pattern (new, working) not the old /groceries/ path.
+    """
+    product_match = re.search(r'href="(?P<path>/shop/en-GB/products/[^"]+)"', html)
+    tpnc_match = re.search(r'/shop/en-GB/products/(?P<tpnc>\d+)', product_match.group('path') if product_match else '')
     title_match = re.search(r'<title>(?P<title>.*?)</title>', html, flags=re.IGNORECASE | re.DOTALL)
     image_match = re.search(r'(https://digitalcontent\.api\.tesco\.com/[^"\s<]+)', html)
 
-    if not product_match:
+    if not tpnc_match:
         return None
 
-    cleaned_item = re.sub(r'\bSubstitutions:\s*On\b', '', item_name, flags=re.IGNORECASE).strip()
+    tpnc = tpnc_match.group('tpnc')
+    product_url = f'https://www.tesco.com/shop/en-GB/products/{tpnc}'
+    cleaned_item = re.sub(r'Substitutions:\s*On', '', item_name, flags=re.IGNORECASE).strip()
+
     metadata: Dict[str, Any] = {
+        'tpnc': tpnc,
         'title': cleaned_item,
-        'productUrl': urllib.parse.urljoin('https://www.tesco.com', product_match.group('path')),
+        'productUrl': product_url,
         'source': 'tesco',
     }
     if image_match:
@@ -119,24 +342,73 @@ def _extract_tesco_product_metadata(item_name: str, html: str, search_url: str) 
 
 
 def fetch_tesco_product_metadata(item_name: str, timeout: float = PRODUCT_ENRICHMENT_TIMEOUT_SECONDS) -> Optional[Dict[str, Any]]:
-    """Best-effort Tesco website metadata fetch.
+    """Best-effort Tesco website metadata fetch with Apollo cache enrichment.
 
-    Uses normal public Tesco search pages only. Failures, 403s, rate limits, and
-    no confident match return None so dashboard generation can keep truthful
-    fallback data.
+    Strategy:
+    1. Search for item name to resolve tpnc (if not already known from existing metadata).
+    2. Fetch the product page at /shop/en-GB/products/<tpnc> and extract Apollo cache.
+    3. Map all Apollo fields (storage, preparation, ingredients, allergens, nutrition, etc.).
+
+    Failures, 403s, rate limits, and no confident match return None so the
+    dashboard generation can keep truthful fallback data. No fabrication.
     """
     cleaned = re.sub(r'\bSubstitutions:\s*On\b', '', item_name, flags=re.IGNORECASE).strip()
     if not cleaned:
         return None
+
+    # Step 1: search to resolve tpnc
     search_url = 'https://www.tesco.com/groceries/en-GB/search?query=' + urllib.parse.quote(cleaned)
-    request = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0 meals-dashboard product enrichment'})
+    request = urllib.request.Request(search_url, headers={
+        'User-Agent': 'Mozilla/5.0 meals-dashboard product enrichment',
+        'Accept-Language': 'en-GB,en;q=0.9',
+    })
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             html = response.read(500_000).decode('utf-8', errors='ignore')
     except Exception as e:
-        print(f"  ⚠ Tesco product enrichment fallback for {cleaned}: {e}")
+        print(f"  \u26a0 Tesco search failed for {cleaned}: {e}")
         return None
-    return _extract_tesco_product_metadata(cleaned, html, search_url)
+
+    basic = _extract_tesco_product_metadata(cleaned, html, search_url)
+    if basic is None:
+        return None
+
+    tpnc = basic.get('tpnc')
+    if not tpnc:
+        return basic
+
+    # Step 2: fetch product page and extract Apollo cache
+    product = _fetch_tesco_apollo_cache(tpnc, timeout=timeout)
+    if product is None:
+        # Fall back to basic search-page metadata (title/image/productUrl only)
+        return basic
+
+    # Step 3: map Apollo fields to ProductInfo shape
+    return apollo_cache_to_product_info(product, original_name=cleaned)
+
+
+PRODUCT_ENRICHMENT_MAX_AGE_DAYS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_MAX_AGE_DAYS', '14'))
+
+
+def _is_cache_fresh(entry: Dict[str, Any]) -> Optional[bool]:
+    """Check if a cache entry is within the freshness window.
+
+    Returns True  = fresh, skip network fetch.
+    Returns False = stale (outside freshness window), re-fetch.
+    Returns None  = no lastFetched field (legacy entry).  Legacy entries are
+                    treated as direct cache hits (used as-is, never re-fetched
+                    in the background) — they are upgraded only when a fresh
+                    entry arrives via normal re-fetch.
+    """
+    last_fetched = entry.get('lastFetched')
+    if not last_fetched:
+        return None
+    try:
+        fetched = datetime.fromisoformat(last_fetched.replace('Z', '+00:00'))
+        age_days = (datetime.now(timezone.utc) - fetched.replace(tzinfo=timezone.utc)).total_seconds() / 86400
+        return age_days <= PRODUCT_ENRICHMENT_MAX_AGE_DAYS
+    except (ValueError, TypeError):
+        return False
 
 
 def enrich_order_items_with_product_metadata(
@@ -147,8 +419,18 @@ def enrich_order_items_with_product_metadata(
 ) -> list:
     """Return order items with optional generated Tesco product metadata.
 
-    Existing item metadata is preserved. Failed/unmatched enrichment keeps the
-    original item unchanged; it never fabricates product details.
+    Strategy:
+    1. Check existing metadata on the item (preserved as-is).
+    2. Try tpnc-keyed cache lookup — if fresh, use it directly.
+    3. Try name-keyed cache lookup — if fresh, use it directly.
+    4. Legacy entries (no tpnc, no lastFetched) are direct cache hits — used
+       as-is, never re-fetched in the background.
+    5. On any miss: fetcher call (search + product page + Apollo extract).
+    6. New entries are stored under both tpnc and name keys.
+
+    Atomic write (FR-003): writes to *.tmp then os.replace().
+    Freshness window (FR-011): entries older than PRODUCT_ENRICHMENT_MAX_AGE_DAYS
+    (default 14 days) are re-fetched.
     """
     if os.environ.get('MEALS_PRODUCT_ENRICHMENT', '1') == '0':
         return items
@@ -166,16 +448,45 @@ def enrich_order_items_with_product_metadata(
             continue
 
         item_name = str(enriched.get('name', '')).strip()
-        cache_key = _product_cache_key(item_name)
-        metadata = cache.get(cache_key)
+        name_key = _product_cache_key(item_name)
+        metadata = None
+
+        # Try tpnc-keyed lookup first (FR-002: tpnc is a cache key)
+        item_tpnc = (existing_metadata or {}).get('tpnc') if isinstance(existing_metadata, dict) else None
+        if item_tpnc:
+            cached = cache.get(item_tpnc)
+            freshness = _is_cache_fresh(cached) if cached is not None else None
+            if freshness is True:
+                metadata = cached  # fresh — use it directly
+            elif freshness is False:
+                metadata = None  # stale — re-fetch
+            # freshness=None (legacy): fall through to name-keyed lookup
+
+        # Try name-keyed lookup, checking freshness
+        if metadata is None:
+            cached = cache.get(name_key)
+            freshness = _is_cache_fresh(cached) if cached is not None else None
+            if freshness is True:
+                metadata = cached  # fresh — use it directly
+            elif freshness is False:
+                metadata = None  # stale — re-fetch
+            else:
+                # freshness=None (legacy, no lastFetched): use as direct hit.
+                # No background refresh — legacy entries are upgraded only via
+                # explicit backfill script or when a subsequent fresh entry arrives.
+                metadata = cached  # direct hit, no re-fetch
+
         if metadata is None:
             try:
                 metadata = fetcher(item_name)
             except Exception as e:
-                print(f"  ⚠ Tesco product enrichment fallback for {item_name}: {e}")
+                print(f"  \u26a0 Tesco product enrichment fallback for {item_name}: {e}")
                 metadata = None
             if metadata:
-                cache[cache_key] = metadata
+                # Store under both tpnc key (if known) and name key
+                cache[name_key] = metadata
+                if metadata.get('tpnc'):
+                    cache[metadata['tpnc']] = metadata
                 changed_cache = True
             if delay_seconds > 0:
                 time.sleep(delay_seconds)
