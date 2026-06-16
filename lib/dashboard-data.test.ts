@@ -63,6 +63,8 @@ function samplePayload(overrides: Partial<SplitLayoutPayload> = {}): SplitLayout
       { date: '2026-06-15', slot: '20:00-21:00', orderTotal: 57.43, status: 'pending' },
     ],
     coverageWindow: ['2026-06-15'],
+    dataGeneratedAt: '2026-06-15T12:00:00Z',
+    uiUpdatedAt: '2026-06-15T12:00:00Z',
     ...overrides,
   };
 }
