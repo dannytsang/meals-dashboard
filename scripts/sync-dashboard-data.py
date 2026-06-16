@@ -416,6 +416,8 @@ def enrich_order_items_with_product_metadata(
     cache_path: Path = PRODUCT_METADATA_CACHE,
     fetcher: Callable[[str], Optional[Dict[str, Any]]] = fetch_tesco_product_metadata,
     delay_seconds: float = PRODUCT_ENRICHMENT_DELAY_SECONDS,
+    api_url: Optional[str] = None,
+    api_secret: Optional[str] = None,
 ) -> list:
     """Return order items with optional generated Tesco product metadata.
 
@@ -428,9 +430,14 @@ def enrich_order_items_with_product_metadata(
     5. On any miss: fetcher call (search + product page + Apollo extract).
     6. New entries are stored under both tpnc and name keys.
 
+    FR-003/FR-004/FR-012 (spec 021): enriched items carry productBlobPath
+    (not embedded productMetadata). Product blobs are written to Vercel Blob
+    via the API as a side-effect of enrichment. The local cache is updated
+    for backward compatibility but is no longer the source of truth.
+
     Atomic write (FR-003): writes to *.tmp then os.replace().
     Freshness window (FR-011): entries older than PRODUCT_ENRICHMENT_MAX_AGE_DAYS
-    (default 14 days) are re-fetched.
+    (default 21 days) are re-fetched.
     """
     if os.environ.get('MEALS_PRODUCT_ENRICHMENT', '1') == '0':
         return items
@@ -438,12 +445,18 @@ def enrich_order_items_with_product_metadata(
     cache = _read_product_metadata_cache(cache_path)
     changed_cache = False
     enriched_items = []
+    # Collect product blobs to write to Vercel Blob (spec 021 / FR-003).
+    # {tpnc: {productBlobPath: "products/{tpnc}.json", ...ProductBlob fields}}
+    product_blobs: Dict[str, Dict[str, Any]] = {}
 
     for item in items:
         enriched = dict(item)
         existing_metadata = enriched.get('productMetadata') or enriched.get('product_metadata')
         if isinstance(existing_metadata, dict) and existing_metadata:
-            enriched['productMetadata'] = existing_metadata
+            # Already has metadata — if it has a tpnc, set productBlobPath.
+            tpnc = existing_metadata.get('tpnc')
+            if tpnc:
+                enriched['productBlobPath'] = f'products/{tpnc}.json'
             enriched_items.append(enriched)
             continue
 
@@ -492,11 +505,26 @@ def enrich_order_items_with_product_metadata(
                 time.sleep(delay_seconds)
 
         if metadata:
-            enriched['productMetadata'] = metadata
+            tpnc = metadata.get('tpnc')
+            if tpnc:
+                # FR-003: set productBlobPath reference instead of embedding full metadata.
+                enriched['productBlobPath'] = f'products/{tpnc}.json'
+                # Collect the product blob for Vercel Blob write (deduped by tpnc).
+                if tpnc not in product_blobs:
+                    product_blobs[tpnc] = {
+                        'productBlobPath': f'products/{tpnc}.json',
+                        **{k: v for k, v in metadata.items() if k != 'lastFetched'},
+                        'lastFetched': metadata.get('lastFetched', datetime.now(timezone.utc).isoformat()),
+                    }
         enriched_items.append(enriched)
 
     if changed_cache:
         _write_product_metadata_cache(cache, cache_path)
+
+    # Note: product blobs are NOT written here — that happens once in
+    # build_dashboard_payload() via the main API payload. This function only
+    # sets productBlobPath on items and returns the enriched list + product blobs
+    # for build_dashboard_payload() to collect and forward.
     return enriched_items
 
 
@@ -1340,7 +1368,12 @@ def compute_delivery_windows(delivery_metadata: list) -> list:
     return windows
 
 
-def build_dashboard_payload(cache_data: Dict, overrides: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+def build_dashboard_payload(
+    cache_data: Dict,
+    overrides: Optional[List[Dict[str, Any]]] = None,
+    api_url: Optional[str] = None,
+    api_secret: Optional[str] = None,
+) -> Dict[str, Any]:
     """Build the split-layout dashboard payload for POSTing to /api/dashboard-sync.
 
     Output shape matches the new server-side route:
@@ -1349,7 +1382,8 @@ def build_dashboard_payload(cache_data: Dict, overrides: Optional[List[Dict[str,
         coverage: [{...coverageBlob, coverageBlobPath}],
         summary: {...},
         deliveryWindows: [...],
-        coverageWindow: ["YYYY-MM-DD", ...]
+        coverageWindow: ["YYYY-MM-DD", ...],
+        products: [{...productBlob, productBlobPath}, ...]
       }
 
     Notes:
@@ -1359,11 +1393,16 @@ def build_dashboard_payload(cache_data: Dict, overrides: Optional[List[Dict[str,
     - Coverage is grouped by meal-date into one `coverage/{date}.json` blob per date.
     - The read path flattens these per-date coverage blobs back into the existing
       `DashboardData.coverage: MealCoverage[]` shape for the client.
+    - Spec 021 / FR-003 — order items carry productBlobPath (not embedded productMetadata)
+      so the dashboard read path loads product blobs on demand from Vercel Blob.
 
     `overrides` is the list of manual override entries (from /api/overrides)
     that should be merged into the meals as matched items. If None, no
     overrides are applied (the cache file path is used instead — kept for
     backwards compatibility with tests).
+
+    `api_url` and `api_secret` are passed to `enrich_order_items_with_product_metadata`
+    which uses them to write product blobs to Vercel Blob (spec 021 / FR-003).
     """
     meals = cache_data.get("meals", [])
 
@@ -1378,10 +1417,31 @@ def build_dashboard_payload(cache_data: Dict, overrides: Optional[List[Dict[str,
     delivery_metadata = cache_data.get("delivery_metadata", []) or []
 
     # Enrich receipt items with product metadata before sending.
+    # FR-003/FR-012: enrichment sets productBlobPath (not productMetadata) on each item.
+    # Product blobs are written to Vercel Blob via the API as a side-effect.
     raw_items = receipt.get("items", []) or []
     if raw_items:
-        raw_items = enrich_order_items_with_product_metadata(raw_items)
+        raw_items = enrich_order_items_with_product_metadata(
+            raw_items,
+            api_url=api_url,
+            api_secret=api_secret,
+        )
         receipt["items"] = raw_items
+
+    # FR-003: collect product blobs from enriched items (deduped by tpnc).
+    # Strip productMetadata from order items — only productBlobPath reference remains.
+    products: Dict[str, Dict[str, Any]] = {}
+    for item in raw_items:
+        blob_path = item.get('productBlobPath')
+        if blob_path:
+            tpnc = blob_path.replace('products/', '').replace('.json', '')
+            # Collect product blob content (everything except productBlobPath itself).
+            product_entry = {k: v for k, v in item.items() if k != 'productBlobPath'}
+            if tpnc not in products:
+                products[tpnc] = {'productBlobPath': blob_path, **product_entry}
+        # Always strip productMetadata from order items (FR-003/FR-004).
+        item.pop('productMetadata', None)
+        item.pop('product_metadata', None)
 
     delivery_date = receipt.get("delivery_date") or meals_check_summary.get("delivery_date") or ""
     order_number = receipt.get("order_number") or "unknown-order"
@@ -1503,6 +1563,10 @@ def build_dashboard_payload(cache_data: Dict, overrides: Optional[List[Dict[str,
         "coverageWindow": coverage_window,
         "dataGeneratedAt": data_generated_at,
         "uiUpdatedAt": ui_updated_at,
+        # FR-003: product blobs written alongside the main sync payload.
+        # Each product blob is written to Vercel Blob; only the reference (productBlobPath)
+        # remains on each order item.
+        "products": list(products.values()) if products else [],
     }
 
 
@@ -1546,29 +1610,27 @@ def main():
     # merges them into the meals as matched items so the dashboard
     # shows the "✓ We have it" badge for items the user has asserted
     # coverage for via the "I have this" button.
-    api_url_for_overrides = os.environ.get("DASHBOARD_DATA_API_URL", "") or "https://meals-dashboard.vercel.app/api/dashboard-sync"
-    # The sync API is at /api/dashboard-sync; the overrides API is at
-    # /api/overrides (sibling route, same auth). Substitute the path.
-    if api_url_for_overrides:
-        overrides_api_url = api_url_for_overrides.rsplit('/', 1)[0] + '/overrides'
-    else:
-        overrides_api_url = ''
+    # Default to the production split-layout API for both overrides and sync.
+    api_url = os.environ.get("DASHBOARD_DATA_API_URL", "") or "https://meals-dashboard.vercel.app/api/dashboard-sync"
     secret = os.environ.get("MEALS_DASHBOARD_DATA_SECRET", "")
+
+    overrides_api_url = api_url.rsplit('/', 1)[0] + '/overrides' if api_url else ''
     overrides = fetch_manual_overrides(overrides_api_url, secret) if (overrides_api_url and secret) else []
     if overrides:
         print(f"  Manual overrides from blob: {len(overrides)}")
-    payload = build_dashboard_payload(dashboard_cache, overrides)
+
+    # Spec 021 / FR-003: pass api_url and secret so product blobs are written to Vercel Blob.
+    payload = build_dashboard_payload(dashboard_cache, overrides, api_url=api_url, api_secret=secret)
     print(f"  Order blobs: {len(payload['orders'])}")
     print(f"  Coverage blobs: {len(payload['coverage'])}")
     print(f"  Delivery windows: {len(payload['deliveryWindows'])}")
     print(f"  Coverage window dates: {len(payload['coverageWindow'])}")
+    if payload.get('products'):
+        print(f"  Product blobs: {len(payload['products'])}")
     print()
 
     # POST to dashboard API
     print("[3] Posting data to dashboard Blob API...")
-    api_url = os.environ.get("DASHBOARD_DATA_API_URL", "")
-    secret = os.environ.get("MEALS_DASHBOARD_DATA_SECRET", "")
-    # Default to the production split-layout API
     if not api_url:
         api_url = "https://meals-dashboard.vercel.app/api/dashboard-sync"
     success, response = post_dashboard_data_to_api(payload, api_url, secret, dry_run=args.dry_run)

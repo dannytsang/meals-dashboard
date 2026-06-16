@@ -5,6 +5,8 @@ import type {
   TescoReceipt,
   MatchedItem,
   Meal,
+  GroceryItem,
+  GeneratedProductMetadata,
 } from './meals-data';
 import { VercelBlobStorageClient, type BlobStorageClient } from './blob-storage';
 import type { CoverageBlob, CoverageMealEntry, DashboardSummary, OrderBlob } from './dashboard-sync';
@@ -130,12 +132,54 @@ async function readFromSplitLayout(
         return m ? coverageWindow.includes(m[1]!) : false;
       });
 
+    // Spec 021 / FR-005 — resolve product blobs by productBlobPath reference.
+    // Read the products manifest if present, then fetch product blobs in parallel
+    // with orders so item.productMetadata can be injected before composition.
+    let productsManifest: Record<string, string> = {};
+    if (pointer.productsManifestPath) {
+      try {
+        const pmRaw = await reader.readJsonBlob<Record<string, string>>(pointer.productsManifestPath);
+        if (pmRaw) productsManifest = pmRaw;
+      } catch {
+        // Products manifest unavailable — skip product enrichment (FR-006 fallback).
+        console.warn('[dashboard-data] products manifest unavailable, skipping product enrichment');
+      }
+    }
+
     // 3. Parallel fetches (FR-05, FR-02): summary + coverage + orders in parallel.
     const [summary, coverageResults, orderResults] = await Promise.all([
       summaryPath ? reader.readJsonBlob<DashboardSummary>(summaryPath) : Promise.resolve(null),
       Promise.all(coveragePaths.map((p) => reader.readJsonBlob<CoverageBlob>(p))),
       Promise.all(orderPaths.map((p) => reader.readJsonBlob<OrderBlob>(p))),
     ]);
+
+    // 4. Inject productMetadata into order items from product blobs (FR-005).
+    // Fetch all referenced product blobs in parallel; individual failures are silent.
+    const productBlobPaths = orderResults
+      .flatMap((o) => (o?.items ?? []) as GroceryItem[])
+      .map((item) => item.productBlobPath)
+      .filter((p): p is string => Boolean(p));
+
+    const uniqueProductPaths = [...new Set(productBlobPaths)];
+    const productBlobResults = await Promise.all(
+      uniqueProductPaths.map((p) => reader.readJsonBlob<GeneratedProductMetadata>(p))
+    );
+    const productBlobMap = new Map<string, GeneratedProductMetadata>();
+    for (let i = 0; i < uniqueProductPaths.length; i++) {
+      if (productBlobResults[i]) {
+        productBlobMap.set(uniqueProductPaths[i]!, productBlobResults[i]!);
+      }
+    }
+
+    // Inject resolved productMetadata into each GroceryItem.
+    for (const order of orderResults) {
+      if (!order || !Array.isArray(order.items)) continue;
+      for (const item of order.items as GroceryItem[]) {
+        if (item.productBlobPath && productBlobMap.has(item.productBlobPath)) {
+          item.productMetadata = productBlobMap.get(item.productBlobPath)!;
+        }
+      }
+    }
 
     // 4. Compose into the existing DashboardData shape.
     const coverage: MealCoverage[] = [];

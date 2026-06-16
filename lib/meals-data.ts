@@ -27,6 +27,13 @@ export interface GroceryItem {
   price?: number;
   category?: string;
   substitutedWith?: string;
+  /**
+   * Spec 021 / FR-004 — path to the product blob in Vercel Blob.
+   * The dashboard read path resolves this to productMetadata at read time.
+   * Present only when enrichment succeeded and the product blob was written.
+   */
+  productBlobPath?: string;
+  /** In-memory product metadata, injected by the dashboard read path from productBlobPath. */
   productMetadata?: GeneratedProductMetadata;
 }
 

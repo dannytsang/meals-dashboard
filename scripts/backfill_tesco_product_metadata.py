@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Backfill tesco_product_metadata_cache.json with full Apollo cache metadata.
+Backfill tesco_product_metadata_cache.json with full Apollo cache metadata AND
+write product blobs to Vercel Blob (spec 021 / FR-014 / FR-015).
 
 Upgrades existing cache entries that have only basic search-page metadata
 (title/image/productUrl) to full ProductInfo fields from the product page
@@ -19,6 +20,7 @@ import json
 import argparse
 import re
 import os
+import hashlib
 import time
 import urllib.parse
 import urllib.request
@@ -141,12 +143,66 @@ def backfill_entry(
     return upgraded
 
 
+def _write_products_to_api(
+    products: Dict[str, Dict[str, Any]],
+    api_url: str,
+    secret: str,
+) -> Optional[str]:
+    """Write product blobs to Vercel Blob via the dashboard-sync API.
+
+    Sends a complete SplitLayoutPayload with empty orders/coverage so the
+    API route accepts it. The API will write the products + products manifest
+    and return productsManifestPath.
+
+    Returns the productsManifestPath on success, None on failure.
+    """
+    if not products:
+        return None
+
+    # Build a complete SplitLayoutPayload (orders/coverage required by API).
+    payload = {
+        'products': list(products.values()),
+        'orders': [],
+        'coverage': [],
+        'summary': {},
+        'deliveryWindows': [],
+        'coverageWindow': [],
+        'dataGeneratedAt': datetime.now(timezone.utc).isoformat(),
+        'uiUpdatedAt': datetime.now(timezone.utc).isoformat(),
+    }
+    body_bytes = json.dumps(payload).encode('utf-8')
+    req = urllib.request.Request(
+        api_url,
+        data=body_bytes,
+        headers={
+            'Content-Type': 'application/json',
+            'x-dashboard-secret': secret,
+        },
+        method='POST',
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            if resp.status in (200, 201):
+                resp_body = resp.read().decode('utf-8')
+                result = json.loads(resp_body) if resp_body else {}
+                return result.get('productsManifestPath')
+            return None
+    except Exception as e:
+        print(f"  ⚠ API write failed: {e}")
+        return None
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description='Backfill tesco_product_metadata_cache.json with full Apollo metadata.')
+    parser = argparse.ArgumentParser(description='Backfill tesco_product_metadata_cache.json with full Apollo metadata and write product blobs to Vercel Blob.')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without writing changes')
     parser.add_argument('--force', action='store_true', help='Re-fetch even fresh cache entries')
     parser.add_argument('--limit', type=int, default=0, help='Process at most N entries (0 = all)')
     args = parser.parse_args()
+
+    # Load env for API credentials
+    sync_dashboard_data.load_dashboard_env()
+    api_url = os.environ.get('DASHBOARD_DATA_API_URL', '') or 'https://meals-dashboard.vercel.app/api/dashboard-sync'
+    secret = os.environ.get('MEALS_DASHBOARD_DATA_SECRET', '')
 
     cache = _read_cache(PRODUCT_METADATA_CACHE)
     total = len(cache)
@@ -154,6 +210,11 @@ def main() -> int:
     already_complete = 0
     unmatched = 0
     skipped = 0
+
+    # Products manifest: tpnc → productBlobPath (spec 021 / FR-015).
+    products_manifest: Dict[str, str] = {}
+    # Collect product blobs to write.
+    product_blobs: Dict[str, Dict[str, Any]] = {}
 
     items = list(cache.items())
     if args.limit > 0:
@@ -174,6 +235,12 @@ def main() -> int:
         if is_apollo_enriched and not args.force:
             already_complete += 1
             skipped += 1
+            # Collect product blob for manifest even if already complete (FR-014).
+            tpnc = entry.get('tpnc')
+            if tpnc:
+                blob_path = f'products/{tpnc}.json'
+                products_manifest[tpnc] = blob_path
+                product_blobs[tpnc] = {'productBlobPath': blob_path, **entry}
             print(f"  SKIP {key}: already enriched")
             continue
 
@@ -181,6 +248,11 @@ def main() -> int:
         if not args.force and sync_dashboard_data._is_cache_fresh(entry):
             already_complete += 1
             skipped += 1
+            tpnc = entry.get('tpnc')
+            if tpnc:
+                blob_path = f'products/{tpnc}.json'
+                products_manifest[tpnc] = blob_path
+                product_blobs[tpnc] = {'productBlobPath': blob_path, **entry}
             print(f"  SKIP {key}: fresh (force to re-fetch)")
             continue
 
@@ -203,25 +275,46 @@ def main() -> int:
             cache[key] = result  # write the unmatched reason
             unmatched += 1
         else:
-            print(f"  UPGRADED {key}: tpnc={result.get('tpnc')} image={bool(result.get('imageUrl'))} storage={bool(result.get('storage'))} prep={bool(result.get('preparation'))}")
+            tpnc = result.get('tpnc')
+            print(f"  UPGRADED {key}: tpnc={tpnc} image={bool(result.get('imageUrl'))} storage={bool(result.get('storage'))} prep={bool(result.get('preparation'))}")
             # Write under both key and tpnc
             cache[key] = result
-            if result.get('tpnc') and result['tpnc'] != key:
-                cache[result['tpnc']] = result
+            if tpnc and tpnc != key:
+                cache[tpnc] = result
             upgraded += 1
+
+            # Collect product blob for Vercel Blob write (FR-014/FR-015).
+            if tpnc:
+                blob_path = f'products/{tpnc}.json'
+                products_manifest[tpnc] = blob_path
+                product_blobs[tpnc] = {
+                    'productBlobPath': blob_path,
+                    **{k: v for k, v in result.items() if k != 'lastFetched'},
+                    'lastFetched': result.get('lastFetched', datetime.now(timezone.utc).isoformat()),
+                }
 
         time.sleep(RATE_LIMIT_SECONDS)
 
-    # Write back if not dry-run
+    # Write back local cache if not dry-run
     if not args.dry_run:
         _write_cache(cache, PRODUCT_METADATA_CACHE)
 
-    summary = f"\nSummary: upgraded={upgraded} already_complete={already_complete} unmatched={unmatched} total={total}"
-    print(summary)
-    print(f"Cache written to {PRODUCT_METADATA_CACHE}")
+    # FR-015: write product blobs to Vercel Blob via API, then write products manifest.
+    if not args.dry_run and product_blobs and api_url and secret:
+        manifest_path = _write_products_to_api(product_blobs, api_url, secret)
+        if manifest_path:
+            print(f"  ✓ Wrote {len(product_blobs)} product blobs; manifest: {manifest_path}")
+        else:
+            print(f"  \u26a0 Failed to write product blobs to Vercel Blob (API error)")
 
-    # Exit 0 if no fatal errors; 2 if any unmatched
-    sys.exit(0 if unmatched == 0 else 2)
+    summary = f"\nSummary: upgraded={upgraded} already_complete={already_complete} unmatched={unmatched} skipped={skipped} total={total}"
+    print(summary)
+    if not args.dry_run:
+        print(f"Cache written to {PRODUCT_METADATA_CACHE}")
+
+    # Exit 0 always — unmatched items are reported but don't cause non-zero exit.
+    # The spec says "Exit 0" for the backfill script.
+    sys.exit(0)
 
 
 if __name__ == '__main__':

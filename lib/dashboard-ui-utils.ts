@@ -18,6 +18,8 @@ export interface CachedOrderItem {
   quantity: number;
   price?: number;
   substitutedWith?: string;
+  /** Spec 021 / FR-004 — blob path; resolved to productMetadata at dashboard read time. */
+  productBlobPath?: string;
   productMetadata?: GeneratedProductMetadata;
   product_metadata?: GeneratedProductMetadata;
 }
