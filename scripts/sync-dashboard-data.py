@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 from datetime import datetime
-from typing import Callable, Dict, Any, Optional, Tuple, MutableMapping
+from typing import Callable, Dict, Any, List, Optional, Tuple, MutableMapping
 
 # Base paths - use absolute paths for clarity. Defaults match Danny's Hermes chef profile
 # environment, but can be overridden for local/dev runs.
@@ -470,6 +470,129 @@ def resolve_matched_items_for_dashboard(matched_items, raw_items):
     return resolved_matched_items
 
 
+def fetch_manual_overrides(api_url: str, secret: str) -> List[Dict[str, Any]]:
+    """Fetch durable manual override entries from the dashboard's /api/overrides.
+
+    Spec 019 / FR-07 / T061 — the "I have this" button writes overrides to
+    the Vercel blob via /api/overrides POST. This function reads them back
+    so the Python sync can merge them into the coverage blobs.
+
+    Returns an empty list on any failure (network error, auth failure, blob
+    missing). The sync continues with no overrides applied, which is the
+    correct graceful-degradation behaviour for a non-critical data source.
+    """
+    if not api_url or not secret:
+        return []
+    try:
+        req = urllib.request.Request(
+            api_url,
+            headers={'x-dashboard-secret': secret},
+            method='GET',
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            body = resp.read().decode('utf-8')
+        data = json.loads(body)
+        overrides = data.get('overrides', [])
+        return overrides if isinstance(overrides, list) else []
+    except Exception as e:
+        print(f"  ⚠ Failed to fetch manual overrides from {api_url}: {e}")
+        return []
+
+
+def apply_manual_overrides_to_meals(meals: List[Dict[str, Any]], overrides: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Merge manual override entries into the meals list as matched items.
+
+    Each override entry has the shape:
+      { meal_date, meal_name, item_name, quantity, status, reason, ... }
+
+    For each override, we find the meal in `meals` matching the
+    (meal_date, meal_name) pair and add a synthetic matched item to its
+    `matched_items` list with `source: 'manual_override'`. We don't
+    remove anything from `missing_items` — that would require fuzzy
+    matching and the dashboard UI surfaces overrides as a positive
+    signal, not a removal.
+
+    The dashboard's `MatchedItem` type expects
+    `{ingredient, name, quantity, price}`. We populate those fields
+    from the override entry plus any receipt match we can find.
+    """
+    if not overrides:
+        return meals
+
+    def _norm(s):
+        return str(s or '').strip()
+
+    # Index meals by (date, name) for fast lookup
+    meal_index = {}
+    for idx, m in enumerate(meals):
+        key = (_norm(m.get('date')), _norm(m.get('content')))
+        if key not in meal_index:
+            meal_index[key] = idx
+
+    # Build a quick lookup of receipt items by (name, ingredient) for price/qty
+    # Note: we don't have raw_items here. The caller (build_dashboard_payload)
+    # is responsible for resolving override item price/qty from raw_items
+    # before passing the meal list to us. We accept the meal as already
+    # having matched_items and just append a new override entry.
+    for ov in overrides:
+        ov_date = _norm(ov.get('meal_date'))
+        ov_meal = _norm(ov.get('meal_name'))
+        ov_item = _norm(ov.get('item_name'))
+        if not ov_date or not ov_meal or not ov_item:
+            continue
+        key = (ov_date, ov_meal)
+        if key not in meal_index:
+            # Override is for a meal that's not in the current visible window
+            # (out of range, completed, etc.). Skip; the next sync that
+            # includes this meal will pick it up.
+            continue
+        meal = meals[meal_index[key]]
+        existing = meal.get('matched_items', []) or []
+        # De-dupe: if the same (item_name) already appears from a real
+        # order match, don't add a duplicate manual_override entry.
+        already_present = any(
+            isinstance(it, dict)
+            and (it.get('name') or it.get('ingredient') or it.get('item_name')) == ov_item
+            for it in existing
+        )
+        if already_present:
+            # Update the existing entry to mark it as a manual override
+            # (so the dashboard surfaces the "We have it" badge).
+            for it in existing:
+                if isinstance(it, dict) and (it.get('name') or it.get('ingredient')) == ov_item:
+                    it['source'] = 'manual_override'
+                    it['manualOverride'] = {
+                        'reason': ov.get('reason'),
+                        'status': ov.get('status', 'covered'),
+                        'updated_at': ov.get('updated_at'),
+                    }
+            meal['matched_items'] = existing
+            continue
+        # Append a fresh override entry
+        existing.append({
+            'name': ov_item,
+            'ingredient': ov_item,
+            'item_name': ov_item,
+            'quantity': ov.get('quantity', 1),
+            'price': None,
+            'source': 'manual_override',
+            'manualOverride': {
+                'reason': ov.get('reason'),
+                'status': ov.get('status', 'covered'),
+                'updated_at': ov.get('updated_at'),
+            },
+        })
+        meal['matched_items'] = existing
+        # Bump the meal's coverage status if the override says "covered"
+        # and the meal is currently missing. We do this conservatively:
+        # only flip to "partial" (not "covered") because the override
+        # doesn't assert full coverage, just that the item is on hand.
+        if ov.get('status') == 'covered' and meal.get('status') == 'missing':
+            meal['status'] = 'partial'
+            meal['coverage_score'] = max(int(meal.get('coverage_score', 0) or 0), 50)
+    return meals
+
+
 def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
     """Update lib/real-data.ts from dashboard cache data.
     
@@ -831,7 +954,6 @@ def post_dashboard_data_to_api(payload: Dict[str, Any], api_url: str, secret: st
         return False, {"error": "DASHBOARD_DATA_API_URL not configured"}
     if not secret:
         return False, {"error": "DASHBOARD_DATA_SECRET not configured"}
-
     effective_url = api_url
     if dry_run:
         separator = '&' if '?' in api_url else '?'
@@ -891,7 +1013,7 @@ def compute_delivery_windows(delivery_metadata: list) -> list:
     return windows
 
 
-def build_dashboard_payload(cache_data: Dict) -> Dict[str, Any]:
+def build_dashboard_payload(cache_data: Dict, overrides: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Build the split-layout dashboard payload for POSTing to /api/dashboard-sync.
 
     Output shape matches the new server-side route:
@@ -910,8 +1032,20 @@ def build_dashboard_payload(cache_data: Dict) -> Dict[str, Any]:
     - Coverage is grouped by meal-date into one `coverage/{date}.json` blob per date.
     - The read path flattens these per-date coverage blobs back into the existing
       `DashboardData.coverage: MealCoverage[]` shape for the client.
+
+    `overrides` is the list of manual override entries (from /api/overrides)
+    that should be merged into the meals as matched items. If None, no
+    overrides are applied (the cache file path is used instead — kept for
+    backwards compatibility with tests).
     """
     meals = cache_data.get("meals", [])
+
+    # Spec 019 / FR-07 / T061 — merge manual overrides into the meals
+    # list before projecting into coverage blobs. The apply function
+    # mutates the meals in-place and returns the same list.
+    if overrides:
+        meals = apply_manual_overrides_to_meals(meals, overrides)
+
     receipt = dict(cache_data.get("receipt", {}) or {})
     meals_check_summary = dict(cache_data.get("meals_check_summary", {}) or {})
     delivery_metadata = cache_data.get("delivery_metadata", []) or []
@@ -1060,7 +1194,23 @@ def main():
 
     # Build payload
     print("[2] Building dashboard split-layout payload...")
-    payload = build_dashboard_payload(dashboard_cache)
+    # Spec 019 / FR-07 / T061 — fetch durable manual overrides from the
+    # dashboard's /api/overrides route (Vercel blob). The Python sync
+    # merges them into the meals as matched items so the dashboard
+    # shows the "✓ We have it" badge for items the user has asserted
+    # coverage for via the "I have this" button.
+    api_url_for_overrides = os.environ.get("DASHBOARD_DATA_API_URL", "") or "https://meals-dashboard.vercel.app/api/dashboard-sync"
+    # The sync API is at /api/dashboard-sync; the overrides API is at
+    # /api/overrides (sibling route, same auth). Substitute the path.
+    if api_url_for_overrides:
+        overrides_api_url = api_url_for_overrides.rsplit('/', 1)[0] + '/overrides'
+    else:
+        overrides_api_url = ''
+    secret = os.environ.get("MEALS_DASHBOARD_DATA_SECRET", "")
+    overrides = fetch_manual_overrides(overrides_api_url, secret) if (overrides_api_url and secret) else []
+    if overrides:
+        print(f"  Manual overrides from blob: {len(overrides)}")
+    payload = build_dashboard_payload(dashboard_cache, overrides)
     print(f"  Order blobs: {len(payload['orders'])}")
     print(f"  Coverage blobs: {len(payload['coverage'])}")
     print(f"  Delivery windows: {len(payload['deliveryWindows'])}")

@@ -182,3 +182,73 @@ describe('Manual override API route', () => {
     expect(apiRoute).toContain('apply_manual_override');
   });
 });
+
+describe('Durable manual override route (/api/overrides)', () => {
+  // Spec 019 / FR-07 / T061 — the previous design spawned a Python
+  // subprocess from the server action, which wrote to a path on the
+  // serverless function's ephemeral disk. That file was wiped on the
+  // next cold start, so the override never made it to a durable
+  // location. The new /api/overrides route writes to the Vercel blob
+  // directly, which is the durable source of truth.
+  let routeSrc = '';
+  try {
+    routeSrc = readFileSync(join(process.cwd(), 'app/api/overrides/route.ts'), 'utf8');
+  } catch {
+    routeSrc = '';
+  }
+
+  it('exists and exposes GET + POST handlers', () => {
+    expect(routeSrc).toContain('export async function GET');
+    expect(routeSrc).toContain('export async function POST');
+  });
+
+  it('authenticates with the dashboard data secret', () => {
+    expect(routeSrc).toContain('x-dashboard-secret');
+    expect(routeSrc).toContain('MEALS_DASHBOARD_DATA_SECRET');
+  });
+
+  it('writes to a blob at overrides/manual.json (durable Vercel blob, not ephemeral disk)', () => {
+    expect(routeSrc).toContain('overrides/manual.json');
+    expect(routeSrc).toContain("import { put");
+    // The route must NOT actually call spawn() (that's the bug we're
+    // fixing). We match `spawn(` to exclude the docstring mentions.
+    expect(routeSrc).not.toMatch(/\bspawn\s*\(/);
+  });
+
+  it('validates meal_date, meal_name, item_name are required on POST', () => {
+    expect(routeSrc).toContain('isUpsertRequestBody');
+    expect(routeSrc).toContain('meal_date, meal_name, item_name are required');
+  });
+});
+
+describe('Manual override server action (durable flow)', () => {
+  // The action now POSTs to /api/overrides via fetch rather than
+  // spawning a Python subprocess. This keeps the secret server-side
+  // and ensures the write hits a durable location.
+  let actionSrc = '';
+  try {
+    actionSrc = readFileSync(join(process.cwd(), 'app/actions/manual-override-action.ts'), 'utf8');
+  } catch {
+    actionSrc = '';
+  }
+
+  it('does NOT spawn a Python subprocess (would write to ephemeral disk)', () => {
+    // Match `spawn(` and `child_process` as code references, not
+    // docstring mentions. The previous design used `import { spawn }
+    // from 'node:child_process'` and called `spawn(...)`.
+    expect(actionSrc).not.toMatch(/\bspawn\s*\(/);
+    expect(actionSrc).not.toMatch(/from\s+['"]node:child_process['"]/);
+  });
+
+  it('POSTs to /api/overrides via fetch with the data secret', () => {
+    expect(actionSrc).toContain('/api/overrides');
+    expect(actionSrc).toContain('x-dashboard-secret');
+    expect(actionSrc).toContain('MEALS_DASHBOARD_DATA_SECRET');
+    expect(actionSrc).toContain('fetch(');
+  });
+
+  it('checks NextAuth session before forwarding the override', () => {
+    expect(actionSrc).toContain('getServerSession');
+    expect(actionSrc).toContain('authOptions');
+  });
+});
