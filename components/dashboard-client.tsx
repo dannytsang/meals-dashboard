@@ -501,18 +501,35 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
                   const unitPrice = item.price ? item.price / qty : 0;
                   const totalPrice = item.price || 0;
                   const isUnmatched = trulyUnmatchedItems.includes(item);
+                  // Spec 019 / FR-07 / T061 — defensive guard. The
+                  // `I have this` button only makes sense when we have
+                  // coverage data to classify against. If the coverage
+                  // array is empty (stale blob, sync failure, etc.),
+                  // `trulyUnmatchedItems` defaults to "everything", which
+                  // would surface the button on every receipt item —
+                  // including items that ARE covered. Hide the button
+                  // entirely when coverage is missing; the user can
+                  // re-trigger a sync to recover.
+                  const canShowOverrideButton = isUnmatched && coverage.length > 0;
+                  // When coverage data is missing, treat the item as
+                  // "unknown" rather than as either matched or unmatched.
+                  // The visual signal: no ✓/✗ icon, neutral border, full
+                  // opacity. Once a sync lands, the classification kicks
+                  // in and the row gets its proper colour.
+                  const classificationUnknown = coverage.length === 0;
+                  const showUnmatched = isUnmatched && !classificationUnknown;
                   return (
                     <div key={idx} onClick={() => {
                       const sub = receipt?.substitutions?.find(s => s.original.toLowerCase() === item.name.toLowerCase());
                       setSelectedItem({ ...item, substitutedWith: item.substitutedWith || sub?.substitutedWith });
-                    }} style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: isUnmatched ? 1 : 0.7, borderLeft: isUnmatched ? '3px solid var(--accent-rose)' : '3px solid var(--accent-emerald)' }}>
+                    }} style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: 1, borderLeft: classificationUnknown ? '3px solid var(--text-muted)' : showUnmatched ? '3px solid var(--accent-rose)' : '3px solid var(--accent-emerald)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-                        <span style={{ color: isUnmatched ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontSize: '14px', flexShrink: 0 }}>{isUnmatched ? '✗' : '✓'}</span>
+                        <span style={{ color: classificationUnknown ? 'var(--text-muted)' : showUnmatched ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontSize: '14px', flexShrink: 0 }}>{classificationUnknown ? '?' : showUnmatched ? '✗' : '✓'}</span>
                         <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(item.name)}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
                         {unitPrice > 0 ? (<><span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}</span><span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>£{totalPrice.toFixed(2)}</span></>) : <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>(price N/A)</span>}
-                        {isUnmatched && (
+                        {canShowOverrideButton && (
                           <button
                             data-testid="i-have-this-button"
                             type="button"

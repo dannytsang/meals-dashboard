@@ -140,6 +140,21 @@ describe('DashboardClient meal card/detail contract', () => {
   it('provides an "I have this" button for the dashboard override flow', () => {
     expect(source).toContain('I have this');
   });
+
+  // Defensive guard for stale/missing coverage data: if `coverage.length === 0`,
+  // the word-overlap heuristic can't classify anything and would otherwise
+  // surface the "I have this" button on every receipt item — including
+  // covered ones. Hide the button in that case and show a neutral "?"
+  // classification icon.
+  it('hides the "I have this" button when coverage data is missing', () => {
+    // The button visibility is now driven by `canShowOverrideButton`,
+    // which is `isUnmatched && coverage.length > 0`. The JSX must
+    // reference both `canShowOverrideButton` (or its underlying
+    // `coverage.length` check) and a visual signal for the unknown
+    // state.
+    expect(source).toContain('canShowOverrideButton');
+    expect(source).toContain('classificationUnknown');
+  });
 });
 
 describe('Manual override API route', () => {
