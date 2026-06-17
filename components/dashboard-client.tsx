@@ -4,6 +4,7 @@ import { useState, useEffect, Fragment, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SignOutButton } from '@/components/sign-out-button';
+import { DemoModeChip } from '@/components/demo-mode-chip';
 import { OrderStatusBadge } from '@/components/order-status-badge';
 import dynamic from 'next/dynamic';
 // Spec 022 / Rev 3 / NFR-002: the in-header Debug toggle is
@@ -62,9 +63,14 @@ interface DashboardClientProps {
    *  this prop is false in production AND in preview when the
    *  per-user cookie is unset. */
   debugOn?: boolean;
+  /** Spec 024 / FR-018: server-gated demo mode. True when the
+   *  runtime is in demo mode (no BLOB_READ_WRITE_TOKEN). Drives the
+   *  demo-mode chip in the header and the data-demo-mode attribute
+   *  on the root element. */
+  demoMode?: boolean;
 }
 
-export function DashboardClient({ today, data, debugOn }: DashboardClientProps) {
+export function DashboardClient({ today, data, debugOn, demoMode }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
@@ -276,11 +282,22 @@ export function DashboardClient({ today, data, debugOn }: DashboardClientProps) 
   const selectedProductInfo = selectedItem ? resolveProductInfoForItem(selectedItem) : null;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div
+      className="min-h-screen"
+      data-demo-mode={demoMode ? 'true' : 'false'}
+      style={{ backgroundColor: 'var(--bg-primary)' }}
+    >
       <header style={{ position: 'sticky', top: 0, zIndex: 50, padding: '0.75rem 1rem', backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>🍽️ Meals Dashboard</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/*
+              Spec 024 / FR-017: the demo-mode chip is the first
+              element in the action row when demo mode is active.
+              Server-rendered (returns null when demoMode is false).
+              Sits leftmost in the row so the eye lands on it first.
+            */}
+            <DemoModeChip demoMode={!!demoMode} />
             {/*
               Spec 022 / Rev 3: in-header Debug toggle. The server
               (app/page.tsx) gates whether to render the toggle at
