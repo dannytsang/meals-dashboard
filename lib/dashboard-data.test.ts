@@ -302,3 +302,90 @@ describe('getDashboardData — legacy single-blob fallback', () => {
     expect(data.latestOrder?.orderNumber).toBe('legacy-1');
   });
 });
+
+
+/* -------------------------------------------------------------------------- */
+/* Regression coverage for spec 017 / FR-03 + 'past order in latestOrder'.   */
+/* The original file's tests use deliveryDate='2026-06-15', which lies inside */
+/* the default coverage window. The bug only surfaced when an order's         */
+/* deliveryDate falls before `today` (server's local now), which can happen   */
+/* when the order's actual_delivery_date is older than today but the order    */
+/* is still the most recent one we have. The reader must include the latest  */
+/* past order in `latestOrder` so the dashboard ORDER ITEMS list renders.     */
+/* -------------------------------------------------------------------------- */
+
+async function seedPastOrderDashboard(): Promise<InMemoryBlobStorageClient> {
+  const client = new InMemoryBlobStorageClient();
+  client.seed(
+    'orders/2026-06-16/5421-8594-00.json',
+    JSON.stringify({
+      orderNumber: '5421-8594-00',
+      deliveryDate: '2026-06-16',
+      deliverySlot: '20:00-21:00',
+      orderTotal: 57.43,
+      items: [{ name: 'Beef mince 500g', quantity: 1, price: 4.5 }],
+      substitutions: [],
+      unavailable: [],
+      shortLifeItems: [],
+      status: 'active',
+    }),
+  );
+  client.seed(
+    'coverage/2026-06-17.json',
+    JSON.stringify({
+      date: '2026-06-17',
+      sourceOrderBlobPath: 'orders/2026-06-16/5421-8594-00.json',
+      meals: [],
+    }),
+  );
+  client.seed(
+    'coverage/2026-06-18.json',
+    JSON.stringify({
+      date: '2026-06-18',
+      sourceOrderBlobPath: 'orders/2026-06-16/5421-8594-00.json',
+      meals: [],
+    }),
+  );
+  client.seed(
+    'meta/summary-fixture.json',
+    JSON.stringify({
+      dataGeneratedAt: '2026-06-17T00:00:00Z',
+      uiUpdatedAt: '2026-06-17T00:00:00Z',
+      coverage_percentage: 0,
+      covered: 0,
+      missing: 0,
+      meals_total: 0,
+      meals_covered: 0,
+      order_total: 57.43,
+      delivery_date: '2026-06-17',
+    }),
+  );
+
+  // Build manifest with hashes.
+  const manifest: Record<string, string> = {};
+  const paths = await client.listPaths('');
+  for (const path of paths) {
+    const blob = await client.readJsonBlob<unknown>(path);
+    if (blob !== null) {
+      manifest[path] = client.computeHash(JSON.stringify(blob));
+    }
+  }
+  const { manifestPath } = await client.writeManifest(manifest);
+  await client.writePointer(manifestPath);
+  return client;
+}
+
+describe('getDashboardData — past order inclusion (window-edge regression)', () => {
+  it('returns latestOrder for an order whose deliveryDate is yesterday (outside window)', async () => {
+    const window: string[] = [];
+    for (let d = 17; d <= 30; d++) {
+      window.push(`2026-06-${String(d).padStart(2, '0')}`);
+    }
+    const client = await seedPastOrderDashboard();
+    const data = await getDashboardData({ coverageWindow: window, reader: client });
+    expect(data.latestOrder).not.toBeNull();
+    expect(data.latestOrder?.orderNumber).toBe('5421-8594-00');
+    expect(data.latestOrder?.deliveryDate).toBe('2026-06-16');
+    expect(data.latestOrder?.items.length).toBe(1);
+  });
+});

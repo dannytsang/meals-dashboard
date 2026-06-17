@@ -124,13 +124,24 @@ async function readFromSplitLayout(
       .map((d) => `coverage/${d}.json`)
       .filter((p) => p in manifest);
 
-    // Find the order blobs whose delivery date falls within the coverage window.
-    const orderPaths = Object.keys(manifest)
-      .filter((p) => p.startsWith('orders/'))
-      .filter((p) => {
-        const m = /^orders\/(\d{4}-\d{2}-\d{2})\//.exec(p);
-        return m ? coverageWindow.includes(m[1]!) : false;
-      });
+    // Find order blobs in the coverage window OR the most recent past order.
+    // The window filter alone misses the latest order once its delivery date
+    // is older than `today` (e.g. midnight UTC vs local rollover, or the
+    // order's actual_delivery_date / delivery_usable_date mismatch).
+    // The dashboard always wants the freshest order displayed, so we keep
+    // window-matching orders plus the single most-recent past order.
+    const allOrderPaths = Object.keys(manifest)
+      .filter((p) => p.startsWith('orders/'));
+    const inWindow = allOrderPaths.filter((p) => {
+      const m = /^orders\/(\d{4}-\d{2}-\d{2})\//.exec(p);
+      return m ? coverageWindow.includes(m[1]!) : false;
+    });
+    const pastOrders = allOrderPaths
+      .filter((p) => !inWindow.includes(p))
+      .filter((p) => /^orders\/(\d{4}-\d{2}-\d{2})\//.test(p))
+      .sort()
+      .reverse();
+    const orderPaths = [...inWindow, ...pastOrders.slice(0, 1)];
 
     // Spec 021 / FR-005 — resolve product blobs by productBlobPath reference.
     // Read the products manifest if present, then fetch product blobs in parallel
