@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard-client';
 import { assertAuthConfigured, authOptions } from '@/lib/auth';
+import { resolveUserChipName } from '@/lib/user-chip';
 import { getDashboardData, buildCoverageWindowDates, type DashboardDataReader } from '@/lib/dashboard-data';
 import { effectiveDebugMode } from '@/lib/debug-mode';
 import { DEBUG_COOKIE_NAME } from '@/lib/debug-cookie';
@@ -40,6 +41,10 @@ export default async function MealsDashboardPage() {
   if (!session) {
     redirect('/auth/signin?callbackUrl=/');
   }
+
+  // Spec 023 / FR-002: derive userName from the session, page-level.
+  // The helper guarantees a non-empty string (name > email > fallback).
+  const userName = resolveUserChipName(session.user);
 
   // Spec 022 / Rev 3: the per-user signed cookie is the only gate.
   // The env-var is gone; the cookie decides whether the inline debug
@@ -77,6 +82,7 @@ export default async function MealsDashboardPage() {
       data={data}
       debugOn={debugOn}
       demoMode={demoMode}
+      userName={userName}
     />
   );
 }

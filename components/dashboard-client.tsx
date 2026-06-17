@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SignOutButton } from '@/components/sign-out-button';
 import { DemoModeChip } from '@/components/demo-mode-chip';
+import { UserChip } from '@/components/user-chip';
 import { OrderStatusBadge } from '@/components/order-status-badge';
 import dynamic from 'next/dynamic';
 // Spec 022 / Rev 3 / NFR-002: the in-header Debug toggle is
@@ -68,9 +69,13 @@ interface DashboardClientProps {
    *  demo-mode chip in the header and the data-demo-mode attribute
    *  on the root element. */
   demoMode?: boolean;
+  /** Spec 023 / FR-009: server-resolved display name for the
+   *  user chip. Always non-empty — the page-level helper
+   *  (`resolveUserChipName`) guarantees a string fallback. */
+  userName: string;
 }
 
-export function DashboardClient({ today, data, debugOn, demoMode }: DashboardClientProps) {
+export function DashboardClient({ today, data, debugOn, demoMode, userName }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
@@ -298,6 +303,14 @@ export function DashboardClient({ today, data, debugOn, demoMode }: DashboardCli
               Sits leftmost in the row so the eye lands on it first.
             */}
             <DemoModeChip demoMode={!!demoMode} />
+            {/*
+              Spec 023 / FR-001: read-only user chip. Server-rendered
+              (`<span>`, no client hooks). Sits between DemoModeChip
+              and DebugToggle. Content is only the 👤 emoji +
+              "Welcome, " + resolved display name. No other session
+              claims are exposed.
+            */}
+            <UserChip userName={userName} />
             {/*
               Spec 022 / Rev 3: in-header Debug toggle. The server
               (app/page.tsx) gates whether to render the toggle at
