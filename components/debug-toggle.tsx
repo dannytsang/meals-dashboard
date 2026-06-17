@@ -1,11 +1,12 @@
 /**
  * components/debug-toggle.tsx
  *
- * Spec 022 / FR-008, US2: the in-header UI control that flips the
- * per-user `meals_debug_mode` cookie. Server-rendered with the
- * initial visual state (which depends on env-gate + cookie), and
- * client-side click handling that POSTs to /api/debug/toggle and
- * optimistically updates.
+ * Spec 022 / Rev 3 / FR-008, US2: the in-header UI control that
+ * flips the per-user `meals_debug_mode` cookie. The cookie is
+ * HMAC-signed and is the ONLY gate — there is no env-var kill
+ * switch. The server (app/page.tsx) reads the cookie and decides
+ * whether to render this component at all (cookie unset → 404 on
+ * /debug, toggle chip hidden in the header).
  *
  * The component is a thin client wrapper: it does not read the
  * cookie itself (the server has already decided what to send).
@@ -15,10 +16,6 @@
  * the new server-rendered state (including the inline debug chips
  * on the main dashboard, which the server only renders when the
  * cookie is set).
- *
- * When the env-gate is off, the toggle is hidden entirely —
- * see `app/page.tsx` for the gate. The component itself does not
- * need to know about the env-gate (the server wouldn't render it).
  */
 'use client';
 
@@ -29,22 +26,15 @@ import { Bug } from 'lucide-react';
 interface DebugToggleProps {
   /** Server-rendered initial state from the cookie. */
   initialEnabled: boolean;
-  /** Whether the env-gate is on. When false, the toggle is
-   *  rendered as visibly disabled (greyed out + tooltip) rather
-   *  than completely hidden — the operator can see why it's not
-   *  working. The server still has to render it for this option
-   *  to apply. */
-  envEnabled: boolean;
 }
 
-export function DebugToggle({ initialEnabled, envEnabled }: DebugToggleProps) {
+export function DebugToggle({ initialEnabled }: DebugToggleProps) {
   const router = useRouter();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const handleClick = () => {
-    if (!envEnabled) return; // belt + braces; the server route is also gated
     setError(null);
     const next = !enabled;
     // Optimistic update; revert on error.
@@ -59,7 +49,7 @@ export function DebugToggle({ initialEnabled, envEnabled }: DebugToggleProps) {
         if (!res.ok) {
           // Revert on failure.
           setEnabled(!next);
-          setError(res.status === 404 ? 'Debug mode is disabled in this deployment.' : `Toggle failed (HTTP ${res.status})`);
+          setError(`Toggle failed (HTTP ${res.status})`);
           return;
         }
         // Pick up the new server-rendered state (toggle + chips).
@@ -72,21 +62,17 @@ export function DebugToggle({ initialEnabled, envEnabled }: DebugToggleProps) {
   };
 
   const label = enabled ? 'Debug mode is on — click to turn off' : 'Debug mode is off — click to turn on';
-  const envTooltip = envEnabled
-    ? label
-    : 'Debug mode is disabled in this deployment. Set MEALS_DEBUG_MODE=1 in the Vercel env to enable.';
 
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={!envEnabled || pending}
-      aria-label={envTooltip}
+      disabled={pending}
+      aria-label={label}
       aria-pressed={enabled}
-      title={envTooltip}
+      title={label}
       data-testid="debug-toggle"
       data-debug-state={enabled ? 'on' : 'off'}
-      data-env-state={envEnabled ? 'on' : 'off'}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -100,11 +86,8 @@ export function DebugToggle({ initialEnabled, envEnabled }: DebugToggleProps) {
           : 'var(--bg-tertiary)',
         color: enabled
           ? 'var(--accent-amber, #f59e0b)'
-          : envEnabled
-            ? 'var(--text-secondary)'
-            : 'var(--text-secondary)',
-        opacity: envEnabled ? 1 : 0.45,
-        cursor: envEnabled && !pending ? 'pointer' : 'not-allowed',
+          : 'var(--text-secondary)',
+        cursor: pending ? 'not-allowed' : 'pointer',
         fontSize: '0.8rem',
         fontWeight: 600,
         transition: 'background-color 120ms, color 120ms, opacity 120ms',
@@ -112,7 +95,7 @@ export function DebugToggle({ initialEnabled, envEnabled }: DebugToggleProps) {
     >
       <Bug style={{ width: '14px', height: '14px' }} aria-hidden="true" />
       <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-        {pending ? '…' : enabled ? 'Debug' : 'Debug'}
+        {pending ? '…' : 'Debug'}
       </span>
       {error && (
         <span

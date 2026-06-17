@@ -6,14 +6,13 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { SignOutButton } from '@/components/sign-out-button';
 import { OrderStatusBadge } from '@/components/order-status-badge';
 import dynamic from 'next/dynamic';
-// Spec 022 / Rev 2 / NFR-002: the in-header Debug toggle is
+// Spec 022 / Rev 3 / NFR-002: the in-header Debug toggle is
 // dynamically imported so its code (including the /api/debug/toggle
 // URL and the "meals_debug_mode" cookie name) does NOT appear in
 // the main page bundle. The toggle button itself is small and the
-// flash is acceptable. With MEALS_DEBUG_MODE off, the server still
-// doesn't render the toggle (it conditionally renders the component
-// based on envEnabled), so the dynamic chunk is only fetched when
-// the env is on.
+// flash is acceptable. With the debug cookie unset, the server
+// doesn't render the toggle at all, so the dynamic chunk is only
+// fetched after the user enables debug mode.
 const DebugToggle = dynamic(
   () => import('@/components/debug-toggle').then((m) => m.DebugToggle),
   { ssr: false }
@@ -22,8 +21,8 @@ import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/l
 
 // Spec 022 / NFR-002: the debug chip component is dynamically imported
 // so its JS lives in a separate chunk that's only fetched when the
-// effective debug mode is on. With debug off (env or cookie), the
-// chip is never rendered and its code never reaches the main bundle.
+// debug cookie is set. With the cookie unset, the chip is never
+// rendered and its code never reaches the main bundle.
 const DashboardDebugChips = dynamic(
   () => import('@/components/dashboard-debug-chips').then((m) => m.DashboardDebugChips),
   { ssr: false }
@@ -56,20 +55,16 @@ interface DashboardClientProps {
   today: string;
   defaultDateRange?: { start: string; end: string };
   data: DashboardData;
-  /** Spec 022 / Rev 2: server-gated effective debug mode. When true,
-   *  the inline debug chips (initially: items-by-category) are
-   *  rendered next to the Order Items by Category heading. The
-   *  env-gate check is also server-side; this prop is false in
-   *  production and false when the per-user cookie is unset. */
+  /** Spec 022 / Rev 3: server-gated effective debug mode (cookie
+   *  only — no env-var). When true, the inline debug chips
+   *  (initially: items-by-category) are rendered next to the Order
+   *  Items by Category heading. The cookie check is also server-side;
+   *  this prop is false in production AND in preview when the
+   *  per-user cookie is unset. */
   debugOn?: boolean;
-  /** Spec 022 / Rev 2: whether MEALS_DEBUG_MODE is on for this
-   *  deployment. Controls whether the in-header Debug toggle is
-   *  rendered as interactive (envEnabled=true) or visibly disabled
-   *  with a tooltip explaining the feature is killed (envEnabled=false). */
-  envEnabled?: boolean;
 }
 
-export function DashboardClient({ today, data, debugOn, envEnabled }: DashboardClientProps) {
+export function DashboardClient({ today, data, debugOn }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
@@ -287,13 +282,13 @@ export function DashboardClient({ today, data, debugOn, envEnabled }: DashboardC
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>🍽️ Meals Dashboard</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {/*
-              Spec 022 / Rev 2: in-header Debug toggle. The toggle is
-              rendered unconditionally (server-side gate in app/page.tsx
-              is on the chip and the toggle's `envEnabled` prop). When
-              `envEnabled=false`, the toggle is visibly disabled with a
-              tooltip explaining the feature is killed for the deployment.
+              Spec 022 / Rev 3: in-header Debug toggle. The server
+              (app/page.tsx) gates whether to render the toggle at
+              all based on the debug cookie — when the cookie is
+              unset, the chip is not rendered. When rendered, the
+              toggle is always interactive (no env-var kill switch).
             */}
-            <DebugToggle initialEnabled={!!debugOn} envEnabled={!!envEnabled} />
+            <DebugToggle initialEnabled={!!debugOn} />
             <ThemeToggle />
             <SignOutButton />
           </div>

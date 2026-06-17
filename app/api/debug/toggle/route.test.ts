@@ -1,29 +1,23 @@
 /**
  * app/api/debug/toggle/route.test.ts
  *
- * Spec 022 / FR-008, FR-015: integration test for the toggle route.
- * The route is server-only; we mock `isDebugModeEnabled` and
- * `next/headers` `cookies()` so the test runs in isolation.
+ * Spec 022 / Rev 3 / FR-008, FR-015: integration test for the toggle
+ * route. The route is server-only; we mock `next/headers` `cookies()`
+ * so the test runs in isolation.
  *
  * Coverage:
- *   - 404 when env-gate is off (toggle has no effect)
- *   - 200 + sets a signed Set-Cookie when env is on and body is empty (flip)
- *   - 200 + sets a signed Set-Cookie when body specifies an explicit value
+ *   - 200 + sets signed Set-Cookie when body is empty (flip)
+ *   - 200 + sets signed Set-Cookie when body specifies an explicit value
  *   - The new cookie is HMAC-signed and decodes back to the requested value
  *   - The Set-Cookie attributes (HttpOnly / SameSite / Path / MaxAge) are correct
  *   - Secure is set in production only
+ *   - No env-var gate (Rev 3): the route always returns 200
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mocks must be declared before importing the route module.
-const mockIsDebugModeEnabled = vi.fn();
 const mockGet = vi.fn();
 
 const cookieJar: Record<string, { value: string } | undefined> = {};
-
-vi.mock('@/lib/debug-mode', () => ({
-  isDebugModeEnabled: () => mockIsDebugModeEnabled(),
-}));
 
 vi.mock('next/headers', () => ({
   cookies: async () => ({
@@ -78,7 +72,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   for (const k of Object.keys(cookieJar)) delete cookieJar[k];
   mockGet.mockImplementation((name: string) => cookieJar[name]);
-  delete process.env.MEALS_DEBUG_MODE;
   delete (process.env as Record<string, string | undefined>).NODE_ENV;
 });
 
@@ -86,27 +79,7 @@ afterEach(() => {
   process.env = { ...ORIGINAL_ENV };
 });
 
-describe('POST /api/debug/toggle — gating', () => {
-  it('returns 404 when env-gate is off', async () => {
-    mockIsDebugModeEnabled.mockReturnValue(false);
-    const res = await POST(makeRequest({ value: '1' }) as unknown as import('next/server').NextRequest);
-    expect(res.status).toBe(404);
-    const body = await res.json();
-    expect(body.error).toBe('debug-mode-disabled-in-deployment');
-  });
-
-  it('does not set a Set-Cookie when env-gate is off', async () => {
-    mockIsDebugModeEnabled.mockReturnValue(false);
-    const res = await POST(makeRequest({ value: '1' }) as unknown as import('next/server').NextRequest);
-    expect(getSetCookie(res)).toBeNull();
-  });
-});
-
-describe('POST /api/debug/toggle — happy path (env on)', () => {
-  beforeEach(() => {
-    mockIsDebugModeEnabled.mockReturnValue(true);
-  });
-
+describe('POST /api/debug/toggle — happy path (Rev 3: no env-var gate)', () => {
   it('flips from unset to "1" with no body', async () => {
     const res = await POST(makeRequest(undefined) as unknown as import('next/server').NextRequest);
     expect(res.status).toBe(200);
@@ -197,5 +170,14 @@ describe('POST /api/debug/toggle — happy path (env on)', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ enabled: true, value: '1' });
+  });
+
+  it('always returns 200 (no env-var gate to 404 on — Rev 3)', async () => {
+    // The route used to 404 when MEALS_DEBUG_MODE was unset. Rev 3
+    // removes that gate entirely. Verify by sending with the cookie
+    // already in a valid state — should still 200, not 404.
+    cookieJar[DEBUG_COOKIE_NAME] = { value: signDebugCookie('1') };
+    const res = await POST(makeRequest({ value: '1' }) as unknown as import('next/server').NextRequest);
+    expect(res.status).toBe(200);
   });
 });

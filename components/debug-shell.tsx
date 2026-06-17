@@ -31,20 +31,17 @@ const PANELS: readonly DebugPanelMeta[] = [
 ];
 
 interface DebugShellProps {
-  status: {
-    enabled: boolean;
-    raw: string;
-    deploymentId: string | null;
-  };
   /** Spec 022 / FR-007: the current per-user cookie's signed-decoded
    *  value. Either `'0'`, `'1'`, or `'unset'` if the cookie is missing
    *  or malformed. Displayed in the footer so the operator can verify
    *  the cookie is set the way they expect. */
   cookieValue: '0' | '1' | 'unset';
+  /** VERCEL_DEPLOYMENT_ID at request time, or null if unset. */
+  deploymentId: string | null;
   origin: string;
 }
 
-export function DebugShell({ status, cookieValue, origin }: DebugShellProps) {
+export function DebugShell({ cookieValue, deploymentId, origin }: DebugShellProps) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [panelsOpen, setPanelsOpen] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
@@ -63,7 +60,7 @@ export function DebugShell({ status, cookieValue, origin }: DebugShellProps) {
   return (
     <div
       data-testid="debug-shell"
-      data-debug-mode={status.enabled ? 'on' : 'off'}
+      data-debug-cookie={cookieValue}
       style={{ padding: '1.5rem', maxWidth: '1200px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}
     >
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -162,14 +159,11 @@ export function DebugShell({ status, cookieValue, origin }: DebugShellProps) {
           gap: '0.25rem',
         }}
       >
-        <div data-testid="debug-footer-env">
-          <strong>MEALS_DEBUG_MODE</strong>: {JSON.stringify(status.raw)} (env-gate: {status.enabled ? 'on' : 'off'})
-        </div>
         <div data-testid="debug-footer-cookie">
-          <strong>meals_debug_mode cookie</strong>: {cookieValue} (effective: {cookieValue === '1' && status.enabled ? 'on' : 'off'})
+          <strong>meals_debug_mode cookie</strong>: {cookieValue} (effective: {cookieValue === '1' ? 'on' : 'off'})
         </div>
         <div data-testid="debug-footer-deployment">
-          <strong>VERCEL_DEPLOYMENT_ID</strong>: {status.deploymentId ?? 'unset'}
+          <strong>VERCEL_DEPLOYMENT_ID</strong>: {deploymentId ?? 'unset'}
         </div>
         <div data-testid="debug-footer-curl">
           <strong>curl</strong>: <code style={{ background: 'var(--bg-secondary)', padding: '0.1rem 0.3rem', borderRadius: '3px' }}>curl -i {origin}/api/debug/items-by-category</code>

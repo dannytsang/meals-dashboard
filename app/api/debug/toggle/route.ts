@@ -3,7 +3,8 @@
  *
  * POST /api/debug/toggle — flip the per-user `meals_debug_mode` cookie.
  *
- * Spec 022 / FR-008. The toggle is what makes the per-user switch work.
+ * Spec 022 / Rev 3 / FR-008. The toggle is what makes the per-user
+ * switch work. The cookie is the only gate; the env-var is gone.
  *
  * Contract:
  *   - Request: POST with optional JSON body `{ "value": "0" | "1" }`.
@@ -11,8 +12,7 @@
  *     (current value XOR 1). The body shape is deliberately boring so
  *     the route handler is small and the wire format is obvious.
  *   - Response: 200 with `{ "enabled": boolean, "value": "0" | "1" }` —
- *     the new effective state. 404 if the env-gate is off (the toggle
- *     has no effect when the feature is killed for the deployment).
+ *     the new effective state. Always 200 (no env-var gate to 404 on).
  *   - Side effect: sets or clears the `meals_debug_mode` cookie using
  *     `next/headers` `cookies()`. The cookie is signed, HttpOnly, and
  *     SameSite=Lax; Secure is set in production only.
@@ -25,7 +25,6 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { isDebugModeEnabled } from '@/lib/debug-mode';
 import {
   DEBUG_COOKIE_NAME,
   DEBUG_COOKIE_MAX_AGE_SECONDS,
@@ -57,16 +56,6 @@ function cookieOptions() {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // Spec 022 / FR-002: env dominates. If the env-gate is off, the
-  // toggle has no effect. Return 404 so the client treats the toggle
-  // as absent.
-  if (!isDebugModeEnabled()) {
-    return NextResponse.json(
-      { error: 'debug-mode-disabled-in-deployment' },
-      { status: 404 }
-    );
-  }
-
   // Read the current cookie so we can compute the flipped default.
   // Next.js 15 makes `cookies()` async; await it.
   const jar = await cookies();

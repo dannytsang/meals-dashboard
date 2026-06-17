@@ -1,16 +1,14 @@
 /**
  * app/api/debug/items-by-category/route.ts
  *
- * Spec 022 / FR-004, FR-008: server-gated JSON endpoint returning the
- * items-by-category diagnostic. The shape is consumed by
- * components/items-by-category-debug-panel.tsx on /debug and by
+ * Spec 022 / Rev 3 / FR-004, FR-008: server-gated JSON endpoint
+ * returning the items-by-category diagnostic. The shape is consumed
+ * by components/items-by-category-debug-panel.tsx on /debug and by
  * components/dashboard-debug-chips.tsx on the main dashboard.
  *
- * Gating (Rev 2): the route is gated on the EFFECTIVE debug mode
- * (env-var + per-user signed cookie). With MEALS_DEBUG_MODE off OR
- * the per-user cookie unset/malformed, the route returns 404 with no
- * body. The env var dominates: a signed "1" cookie alone cannot turn
- * debug on when the env is off.
+ * Gating (Rev 3): the route is gated on the per-user signed cookie
+ * alone. The env-var is gone — the cookie is the only gate. With
+ * the cookie unset/malformed, the route returns 404 with no body.
  *
  * The endpoint reuses the existing `getDashboardData` read path, so
  * the values surfaced are byte-identical to what the main dashboard
