@@ -5,7 +5,17 @@ import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SignOutButton } from '@/components/sign-out-button';
 import { OrderStatusBadge } from '@/components/order-status-badge';
+import dynamic from 'next/dynamic';
 import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/lib/meals-data';
+
+// Spec 022 / NFR-002: the debug chip component is dynamically imported
+// so its JS lives in a separate chunk that's only fetched when
+// `?debug=inject` is set AND MEALS_DEBUG_MODE=1. With debug off, the
+// chip is never rendered and its code never reaches the main bundle.
+const DashboardDebugChips = dynamic(
+  () => import('@/components/dashboard-debug-chips').then((m) => m.DashboardDebugChips),
+  { ssr: false }
+);
 import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
 import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
@@ -34,9 +44,13 @@ interface DashboardClientProps {
   today: string;
   defaultDateRange?: { start: string; end: string };
   data: DashboardData;
+  /** Spec 022 / FR-009, FR-010: server-gated. Only ever true when
+   *  `?debug=inject` is set AND MEALS_DEBUG_MODE=1 (the env-var check
+   *  happens in app/page.tsx; this prop is false in production). */
+  debugInject?: boolean;
 }
 
-export function DashboardClient({ today, data }: DashboardClientProps) {
+export function DashboardClient({ today, data, debugInject }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
@@ -451,7 +465,10 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ ...cardStyle, padding: '1rem' }}>
-              <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>🛒 ORDER ITEMS BY CATEGORY</h2>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0.75rem', position: 'relative' }}>
+                <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center' as const, margin: 0 }}>🛒 ORDER ITEMS BY CATEGORY</h2>
+                {debugInject && <DashboardDebugChips />}
+              </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(0, 1fr) auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>
                 <div>
