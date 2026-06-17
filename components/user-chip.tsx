@@ -53,11 +53,12 @@ const chipStyle = {
 } as const;
 
 export function UserChip({ userName }: UserChipProps) {
-  // Defensive: the page-level call guarantees a non-empty string, but
-  // an empty input here would render `Welcome, ` with a hanging comma.
-  // Render the module-level fallback to keep the layout stable.
+  // Long names (> 48 chars) get a CSS text-overflow ellipsis;
+  // FR-014 sets `title={userName}` always so the full value is
+  // available as a hover-tooltip regardless of whether the chip
+  // is truncated. The `data-user-chip-display` attribute always
+  // carries the full value too.
   const display = userName && userName.length > 0 ? userName : USER_NAME_FALLBACK;
-  const title = display.length > 48 ? display : undefined;
 
   return (
     <span
@@ -65,7 +66,7 @@ export function UserChip({ userName }: UserChipProps) {
       data-user-chip-display={display}
       className="session-user"
       aria-label={`Signed in as ${display}`}
-      title={title}
+      title={display}
       style={chipStyle}
     >
       <span aria-hidden="true">👤</span>

@@ -75,20 +75,17 @@ describe('UserChip', () => {
     expect(chip.style.maxWidth.length).toBeGreaterThan(0);
   });
 
-  it('exposes the full long name via the title attribute for hover-tooltip', () => {
+  it('always sets the title attribute to the full display value (FR-014)', () => {
+    // Spec FR-014 specifies `title={userName}` literally — always set,
+    // not only for long names. Long names get the tooltip as a
+    // complement to the CSS ellipsis; short names get it as a
+    // consistent accessibility affordance.
     const longName = 'A very very very very very very very long traveller name';
-    render(<UserChip userName={longName} />);
-    const chip = screen.getByTestId('user-chip');
-    expect(chip.getAttribute('title')).toBe(longName);
-  });
+    const { rerender } = render(<UserChip userName={longName} />);
+    expect(screen.getByTestId('user-chip').getAttribute('title')).toBe(longName);
 
-  it('does NOT set title="" when the name is short (no truncation tooltip noise)', () => {
-    render(<UserChip userName="Short" />);
-    const chip = screen.getByTestId('user-chip');
-    // Either null or the short name itself — both are acceptable; we
-    // just don't want the long-name-only title attribute set.
-    const title = chip.getAttribute('title');
-    expect(title === null || title === 'Short').toBe(true);
+    rerender(<UserChip userName="Short" />);
+    expect(screen.getByTestId('user-chip').getAttribute('title')).toBe('Short');
   });
 
   it('uses var(--text-secondary) for the foreground colour (FR-008)', () => {
