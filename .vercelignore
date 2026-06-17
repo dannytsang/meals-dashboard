@@ -1,0 +1,45 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# build outputs that Vercel doesn't need (Vercel runs `next build` itself)
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# generated dashboard data — private, in Vercel Blob, never in git
+lib/real-data.ts
+lib/sync-meta.ts
+
+# environment files — Vercel reads env from project settings, not from these
+.env
+.env.local
+.env.*.local
+
+# IDE / OS noise
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# python caches (sync script runs locally, not on Vercel)
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# python venvs / local data
+scripts/venv/
+scripts/.venv/
+scripts/data/*.json
+!scripts/data/.gitkeep
