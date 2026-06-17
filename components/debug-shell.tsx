@@ -36,10 +36,15 @@ interface DebugShellProps {
     raw: string;
     deploymentId: string | null;
   };
+  /** Spec 022 / FR-007: the current per-user cookie's signed-decoded
+   *  value. Either `'0'`, `'1'`, or `'unset'` if the cookie is missing
+   *  or malformed. Displayed in the footer so the operator can verify
+   *  the cookie is set the way they expect. */
+  cookieValue: '0' | '1' | 'unset';
   origin: string;
 }
 
-export function DebugShell({ status, origin }: DebugShellProps) {
+export function DebugShell({ status, cookieValue, origin }: DebugShellProps) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [panelsOpen, setPanelsOpen] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
@@ -158,7 +163,10 @@ export function DebugShell({ status, origin }: DebugShellProps) {
         }}
       >
         <div data-testid="debug-footer-env">
-          <strong>MEALS_DEBUG_MODE</strong>: {JSON.stringify(status.raw)} (effective: {status.enabled ? 'on' : 'off'})
+          <strong>MEALS_DEBUG_MODE</strong>: {JSON.stringify(status.raw)} (env-gate: {status.enabled ? 'on' : 'off'})
+        </div>
+        <div data-testid="debug-footer-cookie">
+          <strong>meals_debug_mode cookie</strong>: {cookieValue} (effective: {cookieValue === '1' && status.enabled ? 'on' : 'off'})
         </div>
         <div data-testid="debug-footer-deployment">
           <strong>VERCEL_DEPLOYMENT_ID</strong>: {status.deploymentId ?? 'unset'}

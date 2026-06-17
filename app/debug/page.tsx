@@ -1,29 +1,40 @@
 /**
  * app/debug/page.tsx
  *
- * Spec 022 / FR-002, FR-003, FR-008: the /debug server component. With
- * MEALS_DEBUG_MODE off, it calls notFound() to render Next.js's 404.
- * With debug on, it renders the DebugShell client component.
+ * Spec 022 / FR-002, FR-003, FR-008: the /debug server component.
+ *
+ * Rev 2: gated on the EFFECTIVE debug mode (env-var + per-user
+ * signed cookie). With MEALS_DEBUG_MODE off OR the per-user cookie
+ * unset, it calls notFound() to render Next.js's 404. The env var
+ * dominates: a signed "1" cookie alone cannot turn debug on when
+ * the env is off. The middleware OIDC gate still runs first
+ * (unauthenticated requests redirect to /auth/signin before this
+ * page renders).
  *
  * NFR-005: this route inherits the OIDC gate via the middleware
- * matcher (see middleware.ts). With debug off, the route is
- * functionally non-existent.
+ * matcher (see middleware.ts). With effective debug mode off, the
+ * route is functionally non-existent.
  */
 import { notFound } from 'next/navigation';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 
-import { isDebugModeEnabled, debugModeStatus } from '@/lib/debug-mode';
+import { effectiveDebugMode, debugModeStatus } from '@/lib/debug-mode';
+import { DEBUG_COOKIE_NAME, verifyDebugCookie } from '@/lib/debug-cookie';
 import { DebugShell } from '@/components/debug-shell';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 export default async function DebugPage() {
-  if (!isDebugModeEnabled()) {
+  // Next.js 15 makes both `cookies()` and `headers()` async.
+  const cookieRaw = (await cookies()).get(DEBUG_COOKIE_NAME)?.value;
+  if (!effectiveDebugMode(cookieRaw)) {
     notFound();
   }
 
   const status = debugModeStatus();
+  const verifiedCookie = verifyDebugCookie(cookieRaw);
+  const cookieStatus = verifiedCookie ? verifiedCookie.value : 'unset';
 
   // Derive origin for the footer's curl example. headers() is the
   // Next.js 15+ way to read request headers in server components.
@@ -38,5 +49,11 @@ export default async function DebugPage() {
     // build). Leave origin empty; the curl line degrades gracefully.
   }
 
-  return <DebugShell status={status} origin={origin} />;
+  return (
+    <DebugShell
+      status={status}
+      cookieValue={cookieStatus}
+      origin={origin}
+    />
+  );
 }

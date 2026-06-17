@@ -6,11 +6,23 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { SignOutButton } from '@/components/sign-out-button';
 import { OrderStatusBadge } from '@/components/order-status-badge';
 import dynamic from 'next/dynamic';
+// Spec 022 / Rev 2 / NFR-002: the in-header Debug toggle is
+// dynamically imported so its code (including the /api/debug/toggle
+// URL and the "meals_debug_mode" cookie name) does NOT appear in
+// the main page bundle. The toggle button itself is small and the
+// flash is acceptable. With MEALS_DEBUG_MODE off, the server still
+// doesn't render the toggle (it conditionally renders the component
+// based on envEnabled), so the dynamic chunk is only fetched when
+// the env is on.
+const DebugToggle = dynamic(
+  () => import('@/components/debug-toggle').then((m) => m.DebugToggle),
+  { ssr: false }
+);
 import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/lib/meals-data';
 
 // Spec 022 / NFR-002: the debug chip component is dynamically imported
-// so its JS lives in a separate chunk that's only fetched when
-// `?debug=inject` is set AND MEALS_DEBUG_MODE=1. With debug off, the
+// so its JS lives in a separate chunk that's only fetched when the
+// effective debug mode is on. With debug off (env or cookie), the
 // chip is never rendered and its code never reaches the main bundle.
 const DashboardDebugChips = dynamic(
   () => import('@/components/dashboard-debug-chips').then((m) => m.DashboardDebugChips),
@@ -44,13 +56,20 @@ interface DashboardClientProps {
   today: string;
   defaultDateRange?: { start: string; end: string };
   data: DashboardData;
-  /** Spec 022 / FR-009, FR-010: server-gated. Only ever true when
-   *  `?debug=inject` is set AND MEALS_DEBUG_MODE=1 (the env-var check
-   *  happens in app/page.tsx; this prop is false in production). */
-  debugInject?: boolean;
+  /** Spec 022 / Rev 2: server-gated effective debug mode. When true,
+   *  the inline debug chips (initially: items-by-category) are
+   *  rendered next to the Order Items by Category heading. The
+   *  env-gate check is also server-side; this prop is false in
+   *  production and false when the per-user cookie is unset. */
+  debugOn?: boolean;
+  /** Spec 022 / Rev 2: whether MEALS_DEBUG_MODE is on for this
+   *  deployment. Controls whether the in-header Debug toggle is
+   *  rendered as interactive (envEnabled=true) or visibly disabled
+   *  with a tooltip explaining the feature is killed (envEnabled=false). */
+  envEnabled?: boolean;
 }
 
-export function DashboardClient({ today, data, debugInject }: DashboardClientProps) {
+export function DashboardClient({ today, data, debugOn, envEnabled }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
@@ -267,6 +286,14 @@ export function DashboardClient({ today, data, debugInject }: DashboardClientPro
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>🍽️ Meals Dashboard</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/*
+              Spec 022 / Rev 2: in-header Debug toggle. The toggle is
+              rendered unconditionally (server-side gate in app/page.tsx
+              is on the chip and the toggle's `envEnabled` prop). When
+              `envEnabled=false`, the toggle is visibly disabled with a
+              tooltip explaining the feature is killed for the deployment.
+            */}
+            <DebugToggle initialEnabled={!!debugOn} envEnabled={!!envEnabled} />
             <ThemeToggle />
             <SignOutButton />
           </div>
@@ -467,7 +494,7 @@ export function DashboardClient({ today, data, debugInject }: DashboardClientPro
             <div style={{ ...cardStyle, padding: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0.75rem', position: 'relative' }}>
                 <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center' as const, margin: 0 }}>🛒 ORDER ITEMS BY CATEGORY</h2>
-                {debugInject && <DashboardDebugChips />}
+                {debugOn && <DashboardDebugChips />}
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(0, 1fr) auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>

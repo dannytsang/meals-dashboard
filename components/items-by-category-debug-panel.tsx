@@ -7,7 +7,8 @@
  * its type and value, and includes a "Copy as JSON" affordance.
  *
  * Imported by components/debug-shell.tsx (panel list) and
- * components/dashboard-debug-chips.tsx (the inline ?debug=inject chip).
+ * components/dashboard-debug-chips.tsx (the inline chip on the main
+ * dashboard when the per-user debug cookie is set).
  */
 'use client';
 

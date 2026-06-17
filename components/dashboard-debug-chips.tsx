@@ -1,10 +1,12 @@
 /**
  * components/dashboard-debug-chips.tsx
  *
- * Spec 022 / FR-009, FR-010: the inline debug chip rendered on the
- * main dashboard when ?debug=inject is set AND MEALS_DEBUG_MODE=1.
- * The server-side gate is enforced in app/page.tsx — this component
- * assumes the prop it receives is true only when both conditions hold.
+ * Spec 022 / Rev 2 / FR-009: the inline debug chip rendered on the
+ * main dashboard when the EFFECTIVE debug mode is on (env-var on
+ * AND per-user signed cookie set). The server-side gate is enforced
+ * in app/page.tsx — this component is only rendered when the gate
+ * is satisfied. The prior `?debug=inject` URL flag is removed in
+ * Rev 2; the per-user cookie is the only per-user switch.
  *
  * The chip shows `displayItems: <N>` and, when clicked, expands the
  * same items-by-category panel used on /debug. The full diagnostic

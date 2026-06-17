@@ -4,11 +4,13 @@
  * Spec 022 / FR-004, FR-008: server-gated JSON endpoint returning the
  * items-by-category diagnostic. The shape is consumed by
  * components/items-by-category-debug-panel.tsx on /debug and by
- * components/dashboard-debug-chips.tsx on /?debug=inject.
+ * components/dashboard-debug-chips.tsx on the main dashboard.
  *
- * Gating: with MEALS_DEBUG_MODE off, this route returns 404 with no
- * body. There is no body, no JSON, no `__NEXT_DATA__` leak — the
- * route simply does not exist for unauthenticated callers.
+ * Gating (Rev 2): the route is gated on the EFFECTIVE debug mode
+ * (env-var + per-user signed cookie). With MEALS_DEBUG_MODE off OR
+ * the per-user cookie unset/malformed, the route returns 404 with no
+ * body. The env var dominates: a signed "1" cookie alone cannot turn
+ * debug on when the env is off.
  *
  * The endpoint reuses the existing `getDashboardData` read path, so
  * the values surfaced are byte-identical to what the main dashboard
@@ -20,9 +22,11 @@
  * route via the middleware matcher (see middleware.ts).
  */
 import 'server-only';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { isDebugModeEnabled } from '@/lib/debug-mode';
+import { effectiveDebugMode } from '@/lib/debug-mode';
+import { DEBUG_COOKIE_NAME } from '@/lib/debug-cookie';
 import { getDashboardData, buildCoverageWindowDates } from '@/lib/dashboard-data';
 import { transformCachedOrderSafely } from '@/lib/dashboard-ui-utils';
 
@@ -32,7 +36,9 @@ export const runtime = 'nodejs';
 const NOT_FOUND = NextResponse.json({ error: 'not_found' }, { status: 404 });
 
 export async function GET(): Promise<NextResponse> {
-  if (!isDebugModeEnabled()) {
+  // Next.js 15 makes `cookies()` async; await it.
+  const cookieRaw = (await cookies()).get(DEBUG_COOKIE_NAME)?.value;
+  if (!effectiveDebugMode(cookieRaw)) {
     return NOT_FOUND;
   }
 

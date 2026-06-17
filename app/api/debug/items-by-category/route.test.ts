@@ -2,23 +2,42 @@
  * app/api/debug/items-by-category/route.test.ts
  *
  * Spec 022 / FR-015: integration test that verifies the API route
- * returns 404 when debug mode is off and 200 with the expected JSON
- * shape when debug mode is on. Uses the InMemoryBlobStorageClient to
- * seed a deterministic dataset so the assertion is reproducible.
+ * returns 404 when effective debug mode is off and 200 with the
+ * expected JSON shape when effective debug mode is on.
  *
- * The test mocks `isDebugModeEnabled` and `getDashboardData` so it
- * can run in isolation without touching Vercel Blob or the env vars.
+ * The test mocks `effectiveDebugMode` (Rev 2: the env+cookie check)
+ * and `getDashboardData` so it can run in isolation without touching
+ * Vercel Blob or the env vars. The cookie value passed to
+ * `effectiveDebugMode` is also captured so we can assert the route
+ * passes the cookie through.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Mocks must be declared before importing the route module.
 const mockIsDebugModeEnabled = vi.fn();
+const mockEffectiveDebugMode = vi.fn();
 const mockGetDashboardData = vi.fn();
 const mockTransformCachedOrderSafely = vi.fn();
+const mockCookiesGet = vi.fn();
+let lastCookieRawSeenByRoute: string | undefined | null = undefined;
 
 vi.mock('@/lib/debug-mode', () => ({
   isDebugModeEnabled: () => mockIsDebugModeEnabled(),
-  debugModeStatus: () => ({ enabled: mockIsDebugModeEnabled(), raw: '1', deploymentId: 'dpl_test' }),
+  effectiveDebugMode: (raw: string | undefined | null) => {
+    lastCookieRawSeenByRoute = raw;
+    return mockEffectiveDebugMode(raw);
+  },
+  debugModeStatus: () => ({
+    enabled: mockIsDebugModeEnabled(),
+    raw: '1',
+    deploymentId: 'dpl_test',
+  }),
+}));
+
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: (name: string) => mockCookiesGet(name),
+  }),
 }));
 
 vi.mock('@/lib/dashboard-data', () => ({
@@ -40,34 +59,71 @@ vi.mock('@/lib/dashboard-ui-utils', () => ({
 }));
 
 import { GET } from './route';
+import { DEBUG_COOKIE_NAME, signDebugCookie } from '@/lib/debug-cookie';
 
 const ORIGINAL_ENV = { ...process.env };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  lastCookieRawSeenByRoute = undefined;
   delete process.env.MEALS_DEBUG_MODE;
   delete process.env.VERCEL_DEPLOYMENT_ID;
+  // Default: the route reads `meals_debug_mode`. The mock returns
+  // undefined so the test must explicitly set it.
+  mockCookiesGet.mockImplementation(() => undefined);
 });
 
 afterEach(() => {
   process.env = { ...ORIGINAL_ENV };
 });
 
-describe('GET /api/debug/items-by-category — gating', () => {
-  it('returns 404 when debug mode is off', async () => {
-    mockIsDebugModeEnabled.mockReturnValue(false);
+describe('GET /api/debug/items-by-category — gating (Rev 2: env+cookie)', () => {
+  it('reads the meals_debug_mode cookie', async () => {
+    mockEffectiveDebugMode.mockReturnValue(false);
+    await GET();
+    expect(mockCookiesGet).toHaveBeenCalledWith(DEBUG_COOKIE_NAME);
+  });
+
+  it('passes the cookie value to effectiveDebugMode', async () => {
+    const signed = signDebugCookie('1');
+    mockCookiesGet.mockReturnValue({ value: signed });
+    mockEffectiveDebugMode.mockReturnValue(true);
+    mockGetDashboardData.mockResolvedValue({
+      coverage: [],
+      deliveryWindows: [],
+      latestOrder: null,
+      mealsCheckSummary: null,
+      dataGeneratedAt: '',
+      uiUpdatedAt: '',
+    });
+    mockTransformCachedOrderSafely.mockReturnValue({ items: [] });
+    await GET();
+    expect(lastCookieRawSeenByRoute).toBe(signed);
+  });
+
+  it('returns 404 when effective debug mode is off (env off, cookie set)', async () => {
+    mockCookiesGet.mockReturnValue({ value: signDebugCookie('1') });
+    mockEffectiveDebugMode.mockReturnValue(false);
     const res = await GET();
     expect(res.status).toBe(404);
   });
 
-  it('returns 404 even when the env var is set to a falsy value', async () => {
-    mockIsDebugModeEnabled.mockReturnValue(false);
+  it('returns 404 when effective debug mode is off (env on, cookie unset)', async () => {
+    mockCookiesGet.mockReturnValue(undefined);
+    mockEffectiveDebugMode.mockReturnValue(false);
     const res = await GET();
     expect(res.status).toBe(404);
   });
 
-  it('does not call getDashboardData when debug mode is off', async () => {
-    mockIsDebugModeEnabled.mockReturnValue(false);
+  it('returns 404 when effective debug mode is off (env on, cookie tampered)', async () => {
+    mockCookiesGet.mockReturnValue({ value: '1.bogus' });
+    mockEffectiveDebugMode.mockReturnValue(false);
+    const res = await GET();
+    expect(res.status).toBe(404);
+  });
+
+  it('does not call getDashboardData when effective debug mode is off', async () => {
+    mockEffectiveDebugMode.mockReturnValue(false);
     await GET();
     expect(mockGetDashboardData).not.toHaveBeenCalled();
   });
@@ -75,10 +131,11 @@ describe('GET /api/debug/items-by-category — gating', () => {
 
 describe('GET /api/debug/items-by-category — payload shape', () => {
   beforeEach(() => {
-    mockIsDebugModeEnabled.mockReturnValue(true);
+    mockEffectiveDebugMode.mockReturnValue(true);
+    mockCookiesGet.mockReturnValue({ value: signDebugCookie('1') });
   });
 
-  it('returns 200 with the FR-004 fields when debug mode is on', async () => {
+  it('returns 200 with the FR-004 fields when effective debug mode is on', async () => {
     mockGetDashboardData.mockResolvedValue({
       coverage: [],
       deliveryWindows: [],
