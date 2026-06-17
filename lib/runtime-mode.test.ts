@@ -131,35 +131,45 @@ describe('runtime-mode helper', () => {
   });
 
   describe('production-misconfiguration warning (NFR-005)', () => {
-    it('logs a warning when VERCEL_ENV=production and demo mode is active', async () => {
-      // Re-import the module to reset the once-per-process latch.
+    // The warning is emitted at module-init time (once per process).
+    // We test it by spying on console.warn while importing the module
+    // dynamically with `vi.resetModules()` so the init runs fresh
+    // for each scenario. TypeScript's module resolver cannot handle
+    // the query-string trick, so we use a runtime variable + the
+    // `import` expression with `@vite-ignore` to bypass type
+    // resolution; vitest still treats the dynamic import as a fresh
+    // module instance because of `vi.resetModules()`.
+    async function loadModuleFresh(): Promise<void> {
       vi.resetModules();
+      const modulePath = './runtime-mode' + '?nonce=' + Date.now();
+      // @ts-ignore -- vitest-specific dynamic import with query string
+      await import(/* @vite-ignore */ modulePath);
+    }
+
+    it('logs a warning when VERCEL_ENV=production and demo mode is active', async () => {
       process.env[BLOB_TOKEN_ENV] = '';
       process.env[BLOB_STORE_ID_ENV] = '';
       process.env.VERCEL_ENV = 'production';
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      // Dynamic import so the module init runs after env is set.
-      await import('./runtime-mode?prod=1');
+      await loadModuleFresh();
       expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('DEMO MODE active in production'));
     });
 
     it('does NOT log a warning when demo mode is active in non-production environment', async () => {
-      vi.resetModules();
       process.env[BLOB_TOKEN_ENV] = '';
       process.env[BLOB_STORE_ID_ENV] = '';
       process.env.VERCEL_ENV = 'preview';
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      await import('./runtime-mode?preview=1');
+      await loadModuleFresh();
       expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('DEMO MODE active in production'));
     });
 
     it('does NOT log a warning when both credentials are set (live mode)', async () => {
-      vi.resetModules();
       process.env[BLOB_TOKEN_ENV] = 'tok';
       process.env[BLOB_STORE_ID_ENV] = 'store';
       process.env.VERCEL_ENV = 'production';
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      await import('./runtime-mode?live=1');
+      await loadModuleFresh();
       expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('DEMO MODE active in production'));
     });
   });

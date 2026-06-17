@@ -51,7 +51,14 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(source).not.toContain("@/lib/real-data");
     expect(pageSource).toContain('getServerSession(authOptions)');
     expect(pageSource).toContain('buildCoverageWindowDates(today, endDate)');
-    expect(pageSource).toContain('getDashboardData({ coverageWindow })');
+    // Spec 024: the page now passes a reader to getDashboardData. The
+    // privacy contract is unchanged: the data fetch is server-side and
+    // the client component does NOT import or call getDashboardData
+    // directly. Match the import statement specifically to avoid
+    // false-positives from comments mentioning the function name.
+    expect(pageSource).toMatch(/import\s*\{[^}]*\bgetDashboardData\b[^}]*\}\s*from/);
+    expect(source).not.toMatch(/import\s*\{[^}]*\bgetDashboardData\b[^}]*\}\s*from/);
+    expect(source).not.toMatch(/getDashboardData\s*\(/);
   });
 
   it('does not perform slow client-side product search on modal open', () => {
