@@ -95,18 +95,25 @@ describe('InMemoryBlobStorageClient — writeManifest (content-addressable)', ()
 });
 
 describe('InMemoryBlobStorageClient — writePointer', () => {
-  it('writes a single-field pointer blob', async () => {
+  it('writes a pointer blob with manifest path', async () => {
     const client = new InMemoryBlobStorageClient();
     await client.writePointer('meta/manifest-abc.json');
     const read = await client.readPointer();
-    expect(read).toEqual({ manifestPath: 'meta/manifest-abc.json' });
+    expect(read).toEqual({ manifestPath: 'meta/manifest-abc.json', productsManifestPath: null });
+  });
+
+  it('writes a pointer blob with manifest path and products manifest', async () => {
+    const client = new InMemoryBlobStorageClient();
+    await client.writePointer('meta/manifest-abc.json', 'meta/products-manifest-xyz.json');
+    const read = await client.readPointer();
+    expect(read).toEqual({ manifestPath: 'meta/manifest-abc.json', productsManifestPath: 'meta/products-manifest-xyz.json' });
   });
 
   it('overwrites the previous pointer (delete+rewrite)', async () => {
     const client = new InMemoryBlobStorageClient();
     await client.writePointer('meta/manifest-first.json');
     await client.writePointer('meta/manifest-second.json');
-    expect(await client.readPointer()).toEqual({ manifestPath: 'meta/manifest-second.json' });
+    expect(await client.readPointer()).toEqual({ manifestPath: 'meta/manifest-second.json', productsManifestPath: null });
   });
 });
 

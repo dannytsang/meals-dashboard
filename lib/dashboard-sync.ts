@@ -70,6 +70,25 @@ export interface OrderBlob {
   refundAmount?: number;
 }
 
+export interface ProductBlob {
+  tpnc: string | null;
+  gtin: string | null;
+  tpnb: string | null;
+  title: string;
+  description: string;
+  storage: string;
+  preparation: string;
+  ingredients: string;
+  allergens: string;
+  nutrition: string;
+  brand: string;
+  category: string;
+  imageUrl: string;
+  productUrl: string;
+  source: string;
+  lastFetched: string;
+}
+
 export interface SplitLayoutPayload {
   orders: Array<OrderBlob & { orderBlobPath: string }>;
   coverage: Array<CoverageBlob & { coverageBlobPath: string }>;
@@ -81,6 +100,13 @@ export interface SplitLayoutPayload {
   dataGeneratedAt: string;
   /** When the dashboard UI was last deployed (git HEAD commit time at sync time). */
   uiUpdatedAt: string;
+  /**
+   * Spec 021 / FR-003 — individual product blobs written to Vercel Blob.
+   * Each entry carries the path (products/{tpnc}.json) and the blob content
+   * (the full ProductBlob shape). The Python pipeline assembles this array
+   * from the enriched order items and POSTs it alongside orders/coverage.
+   */
+  products?: Array<{ productBlobPath: string } & ProductBlob>;
 }
 
 export interface SyncResult {
@@ -94,9 +120,12 @@ export interface SyncResult {
   totalOps: number;
   /** True when no manifest existed before this call (first sync). */
   isInitialSync: boolean;
+  /** Spec 021 / FR-003 — path to the products manifest blob, if any products were written. */
+  productsManifestPath?: string | null;
 }
 
 const SUMMARY_PATH_FOR = (hash: string) => `meta/summary-${hash}.json`;
+const PRODUCTS_MANIFEST_PREFIX = 'meta/products-manifest-';
 
 /**
  * Execute the storage-layout portion of the sync algorithm (spec 016 §Sync Algorithm).
@@ -109,6 +138,10 @@ const SUMMARY_PATH_FOR = (hash: string) => `meta/summary-${hash}.json`;
  *  5. Build new manifest dict: start from current, update entries for all written/skipped
  *  6. Serialise new manifest → compute its SHA-256
  *  7. Write manifest to `meta/manifest-{hash}.json`; then write pointer
+ *
+ * Spec 021 / FR-003 — product blobs are written first (individual products/{tpnc}.json),
+ * then a products manifest maps tpnc → productBlobPath. The products manifest path
+ * is included in the pointer so the read path can locate it.
  *
  * If step 7 (manifest) fails, the previous manifest remains valid (FR-07).
  * If the pointer write fails, the next sync retries with the same valid manifest (FR-08).
@@ -162,6 +195,40 @@ export async function syncDashboardLayout(
   const skippedPaths: string[] = [];
   const newManifest: Manifest = {};
 
+  // Spec 021 / FR-003 — write product blobs and build the products manifest.
+  // The products manifest is keyed by tpnc (string) → productBlobPath.
+  let productsManifestPath: string | null | undefined = undefined;
+  if (normalisedPayload.products && normalisedPayload.products.length > 0) {
+    const productsManifest: Record<string, string> = {};
+    for (const product of normalisedPayload.products) {
+      // Validate path format: products/{tpnc}.json
+      if (!/^products\/\d+\.json$/.test(product.productBlobPath)) {
+        throw new Error(`Invalid productBlobPath: ${product.productBlobPath}`);
+      }
+      const content = JSON.stringify(product, null, 2);
+      if (!dryRun) {
+        const result = await client.writeBlobIfChanged(product.productBlobPath, content, currentManifest);
+        newManifest[product.productBlobPath] = result.hash;
+        if (result.written) writtenPaths.push(product.productBlobPath);
+        else skippedPaths.push(product.productBlobPath);
+      }
+      // Extract tpnc from path (e.g. "products/123456.json" → "123456")
+      const tpnc = product.productBlobPath.replace('products/', '').replace('.json', '');
+      productsManifest[tpnc] = product.productBlobPath;
+    }
+    // Write products manifest (content-addressable by its own hash).
+    const manifestContent = JSON.stringify(productsManifest, null, 2);
+    const manifestHash = client.computeHash(manifestContent);
+    const computedProductsManifestPath = `${PRODUCTS_MANIFEST_PREFIX}${manifestHash}.json`;
+    productsManifestPath = computedProductsManifestPath;
+    if (!dryRun) {
+      const result = await client.writeBlobIfChanged(computedProductsManifestPath, manifestContent, newManifest);
+      newManifest[computedProductsManifestPath] = result.hash;
+      if (result.written) writtenPaths.push(computedProductsManifestPath);
+      else skippedPaths.push(computedProductsManifestPath);
+    }
+  }
+
   if (!dryRun) {
     for (const { path, content } of dataBlobs) {
       const result = await client.writeBlobIfChanged(path, content, currentManifest);
@@ -172,7 +239,7 @@ export async function syncDashboardLayout(
 
     // Step 5–7: write manifest then pointer.
     const { manifestPath, manifestHash } = await client.writeManifest(newManifest);
-    await client.writePointer(manifestPath);
+    await client.writePointer(manifestPath, productsManifestPath);
 
     return {
       manifestPath,
@@ -181,6 +248,7 @@ export async function syncDashboardLayout(
       skippedPaths,
       totalOps: writtenPaths.length + 2, // +manifest +pointer
       isInitialSync,
+      productsManifestPath,
     };
   } else {
     // Dry run: compute hashes, report what would change, skip all writes.
@@ -192,6 +260,17 @@ export async function syncDashboardLayout(
       } else {
         writtenPaths.push(path);
       }
+    }
+    // Products manifest path is deterministic from content.
+    if (normalisedPayload.products && normalisedPayload.products.length > 0) {
+      const productsManifest: Record<string, string> = {};
+      for (const product of normalisedPayload.products) {
+        const tpnc = product.productBlobPath.replace('products/', '').replace('.json', '');
+        productsManifest[tpnc] = product.productBlobPath;
+      }
+      const manifestContent = JSON.stringify(productsManifest, null, 2);
+      const manifestHash = client.computeHash(manifestContent);
+      productsManifestPath = `${PRODUCTS_MANIFEST_PREFIX}${manifestHash}.json`;
     }
     // No blob writes in dry-run; totalOps reflects intent.
     return {
@@ -210,6 +289,7 @@ export async function syncDashboardLayout(
       skippedPaths,
       totalOps: writtenPaths.length + 2,
       isInitialSync,
+      productsManifestPath,
     };
   }
 }

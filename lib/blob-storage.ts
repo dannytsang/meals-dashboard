@@ -24,6 +24,8 @@ export type Manifest = Record<string, string>; // blob path → sha256 hex diges
 
 export interface PointerContents {
   manifestPath: string;
+  /** Spec 021 / FR-003 — path to the products manifest blob. */
+  productsManifestPath?: string | null;
 }
 
 export interface BlobStorageClient {
@@ -40,8 +42,8 @@ export interface BlobStorageClient {
   writeBlobIfChanged(path: string, content: string, currentManifest: Manifest): Promise<{ written: boolean; path: string; hash: string }>;
   /** Write the content-addressable manifest. Returns the path it was written to. */
   writeManifest(manifest: Manifest): Promise<{ manifestPath: string; manifestHash: string }>;
-  /** Write the mutable pointer blob. */
-  writePointer(manifestPath: string): Promise<void>;
+  /** Write the mutable pointer blob. Pass productsManifestPath to include it (spec 021). */
+  writePointer(manifestPath: string, productsManifestPath?: string | null): Promise<void>;
 }
 
 /**
@@ -139,8 +141,8 @@ export class VercelBlobStorageClient implements BlobStorageClient {
     return { manifestPath, manifestHash: hash };
   }
 
-  async writePointer(manifestPath: string): Promise<void> {
-    const content: PointerContents = { manifestPath };
+  async writePointer(manifestPath: string, productsManifestPath?: string | null): Promise<void> {
+    const content: PointerContents = { manifestPath, productsManifestPath: productsManifestPath ?? null };
     // Pointer is the only blob that is delete+rewritten every sync (FR-05, FR-11).
     try {
       await del(POINTER_PATH, { token: this.token });
@@ -219,8 +221,8 @@ export class InMemoryBlobStorageClient implements BlobStorageClient {
     return { manifestPath, manifestHash: hash };
   }
 
-  async writePointer(manifestPath: string): Promise<void> {
-    const content: PointerContents = { manifestPath };
+  async writePointer(manifestPath: string, productsManifestPath?: string | null): Promise<void> {
+    const content: PointerContents = { manifestPath, productsManifestPath: productsManifestPath ?? null };
     this.store.set(POINTER_PATH, { content: JSON.stringify(content), hash: this.computeHash(JSON.stringify(content)) });
   }
 
