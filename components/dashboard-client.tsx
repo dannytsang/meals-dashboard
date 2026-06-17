@@ -496,6 +496,14 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
 
             <div style={{ ...cardStyle, padding: '1rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', padding: '0.5rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '4px', marginBottom: '0.5rem', border: '1px solid var(--accent-amber)' }}>
+                  DEBUG: latestOrder={data.latestOrder ? `has ${data.latestOrder.items?.length ?? 0} items` : 'NULL'} | receipt.items={receipt?.items?.length ?? 0} | unmatchedItems={unmatchedItems.length} | displayItems={displayItems.length} | showCount={showCount} | filter={matchedFilter} | cats={categories.join(',') || 'NONE'} | dataGen={data.dataGeneratedAt || 'EMPTY'}
+                </div>
+                {displayItems.length === 0 && (
+                  <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '12px' }}>
+                    No items to display. unmatchedItems has {unmatchedItems.length} items.
+                  </div>
+                )}
                 {displayItems.slice(0, showCount).map((item, idx) => {
                   const qty = item.quantity || 1;
                   const unitPrice = item.price ? item.price / qty : 0;

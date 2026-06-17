@@ -28,7 +28,8 @@ export default async function MealsDashboardPage() {
   console.log('[page] data loaded:', {
     coverageCount: data.coverage.length,
     mealsCount: data.mealsCheckSummary ? 'has summary' : 'no summary',
-    latestOrder: data.latestOrder ? 'has order' : 'no order',
+    latestOrder: data.latestOrder ? `has order (${data.latestOrder.items?.length ?? 0} items, $${data.latestOrder.orderTotal ?? '?'})` : 'no order',
+    dataGeneratedAt: data.dataGeneratedAt,
   });
 
   return <DashboardClient today={today} defaultDateRange={{ start: today, end: endDate }} data={data} />;
