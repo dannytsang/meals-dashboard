@@ -7,5 +7,7 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: ['/', '/api/dashboard/:path*'],
+  // Spec 022 / NFR-005: the OIDC gate must cover the /debug page and
+  // /api/debug/* routes. Debug mode does not bypass auth.
+  matcher: ['/', '/debug', '/api/dashboard/:path*', '/api/debug/:path*'],
 };

@@ -5,7 +5,28 @@ import { useRouter } from 'next/navigation';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SignOutButton } from '@/components/sign-out-button';
 import { OrderStatusBadge } from '@/components/order-status-badge';
+import dynamic from 'next/dynamic';
+// Spec 022 / Rev 3 / NFR-002: the in-header Debug toggle is
+// dynamically imported so its code (including the /api/debug/toggle
+// URL and the "meals_debug_mode" cookie name) does NOT appear in
+// the main page bundle. The toggle button itself is small and the
+// flash is acceptable. With the debug cookie unset, the server
+// doesn't render the toggle at all, so the dynamic chunk is only
+// fetched after the user enables debug mode.
+const DebugToggle = dynamic(
+  () => import('@/components/debug-toggle').then((m) => m.DebugToggle),
+  { ssr: false }
+);
 import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/lib/meals-data';
+
+// Spec 022 / NFR-002: the debug chip component is dynamically imported
+// so its JS lives in a separate chunk that's only fetched when the
+// debug cookie is set. With the cookie unset, the chip is never
+// rendered and its code never reaches the main bundle.
+const DashboardDebugChips = dynamic(
+  () => import('@/components/dashboard-debug-chips').then((m) => m.DashboardDebugChips),
+  { ssr: false }
+);
 import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
 import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
@@ -34,9 +55,16 @@ interface DashboardClientProps {
   today: string;
   defaultDateRange?: { start: string; end: string };
   data: DashboardData;
+  /** Spec 022 / Rev 3: server-gated effective debug mode (cookie
+   *  only — no env-var). When true, the inline debug chips
+   *  (initially: items-by-category) are rendered next to the Order
+   *  Items by Category heading. The cookie check is also server-side;
+   *  this prop is false in production AND in preview when the
+   *  per-user cookie is unset. */
+  debugOn?: boolean;
 }
 
-export function DashboardClient({ today, data }: DashboardClientProps) {
+export function DashboardClient({ today, data, debugOn }: DashboardClientProps) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
@@ -253,6 +281,14 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>🍽️ Meals Dashboard</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {/*
+              Spec 022 / Rev 3: in-header Debug toggle. The server
+              (app/page.tsx) gates whether to render the toggle at
+              all based on the debug cookie — when the cookie is
+              unset, the chip is not rendered. When rendered, the
+              toggle is always interactive (no env-var kill switch).
+            */}
+            <DebugToggle initialEnabled={!!debugOn} />
             <ThemeToggle />
             <SignOutButton />
           </div>
@@ -451,7 +487,10 @@ export function DashboardClient({ today, data }: DashboardClientProps) {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ ...cardStyle, padding: '1rem' }}>
-              <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.75rem', textAlign: 'center' as const }}>🛒 ORDER ITEMS BY CATEGORY</h2>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0.75rem', position: 'relative' }}>
+                <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center' as const, margin: 0 }}>🛒 ORDER ITEMS BY CATEGORY</h2>
+                {debugOn && <DashboardDebugChips />}
+              </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(0, 1fr) auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>
                 <div>

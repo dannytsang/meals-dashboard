@@ -1,0 +1,108 @@
+# dashboard-fixture-seed.yaml
+#
+# Source-of-truth seed file for the demo-mode fixture. The build-time
+# generator at lib/fixtures/scripts/generate-fixture.mjs reads this file
+# and emits lib/fixtures/dashboard-fixture.json.
+#
+# The seed captures the *structure* of a real trip (meal slots, items per
+# meal, a delivery window, a coverage window). The generator fills in
+# realistic-but-synthetic names, dates, times, and locations from the
+# curated pools below using a seeded RNG (constant seed 42) so the
+# generated JSON is byte-identical across builds.
+#
+# This file is COMMITTED to the repo. The generated JSON is GITIGNORED
+# (see lib/fixtures/.gitignore).
+
+# Curated UK name pool. Used by the generator to fill in `booker` and
+# `delivered_to` fields. No "Demo" prefix. Realistic-sounding names.
+name_pool:
+  first_names: [Sam, Chen, Patel, Singh, Wei, Aisha, Marcus, Priya]
+  last_names: [Patel, Singh, Chen, Wei, Khan, Sharma]
+
+# Curated UK delivery location pool. Used by the generator to fill in
+# the `delivery_location` field on each order.
+location_pool:
+  - 14 Beechwood Avenue, London N22
+  - 8 Church Lane, Bristol BS8
+  - 27 High Street, Manchester M4
+  - 5 Park Road, Birmingham B5
+  - 12 Riverside Way, Leeds LS1
+  - 33 Oak Drive, Edinburgh EH9
+
+# Meal template: 7 meals across 8 days. Day index 0-7 (0 = first day in
+# the window). Each entry defines a meal slot with items. Day 3 is the
+# "gap day" with no meals — exercises the 0% coverage surface.
+meal_template:
+  - day_index: 0
+    meal_type: dinner
+    items: [chicken_breast_500g, garlic_bulb, pasta_500g, tomato_sauce_680g]
+  - day_index: 1
+    meal_type: lunch
+    items: [salad_mix_200g, feta_cheese_200g, olives_200g, bread_loaf]
+  - day_index: 2
+    meal_type: dinner
+    items: [salmon_fillets_300g, broccoli_500g, rice_1kg, lemon_x4]
+  # day_index 3 is the gap day (no meals)
+  - day_index: 4
+    meal_type: lunch
+    items: [wrap_tortillas_8pk, hummus_300g, cucumber_x1, peppers_x3]
+  - day_index: 5
+    meal_type: dinner
+    items: [beef_mince_500g, onion_x3, carrot_500g, stock_cubes_8pk]
+  - day_index: 6
+    meal_type: lunch
+    items: [eggs_x12, bacon_300g, bread_loaf, butter_250g]
+  - day_index: 7
+    meal_type: dinner
+    items: [cod_fillets_300g, peas_500g, potatoes_1kg, mint_sauce_200g]
+
+# Product template: maps each item key to a realistic product record.
+# The generator uses these directly; no name randomisation on items.
+products:
+  chicken_breast_500g: {name: "British Chicken Breast Fillets 500g", category: "meat", imageUrl: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-chicken"}
+  garlic_bulb: {name: "Tesco Garlic Bulb", category: "vegetables", imageUrl: "https://images.unsplash.com/photo-1615477550927-65bb02cc28e3?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-garlic"}
+  pasta_500g: {name: "Tesco Fusilli 500g", category: "pasta", imageUrl: "https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-pasta"}
+  tomato_sauce_680g: {name: "Tesco Passata 680g", category: "pantry", imageUrl: "https://images.unsplash.com/photo-1599142166571-f72cb70bb56b?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-passata"}
+  salad_mix_200g: {name: "Tesco Mixed Salad 200g", category: "salad", imageUrl: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-salad"}
+  feta_cheese_200g: {name: "Tesco Greek Feta 200g", category: "dairy", imageUrl: "https://images.unsplash.com/photo-1569562211093-4ed0d3f2bb87?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-feta"}
+  olives_200g: {name: "Tesco Pitted Olives 200g", category: "pantry", imageUrl: "https://images.unsplash.com/photo-1601493700518-4f72c52faec4?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-olives"}
+  bread_loaf: {name: "Tesco Sliced White Bread 800g", category: "bakery", imageUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-bread"}
+  salmon_fillets_300g: {name: "Tesco Salmon Fillets 300g", category: "fish", imageUrl: "https://images.unsplash.com/photo-1574781330855-d0db8cc6a79c?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-salmon"}
+  broccoli_500g: {name: "Tesco Broccoli 500g", category: "vegetables", imageUrl: "https://images.unsplash.com/photo-1584270354949-c26b0d5b4a0c?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-broccoli"}
+  rice_1kg: {name: "Tesco Basmati Rice 1kg", category: "pantry", imageUrl: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-rice"}
+  lemon_x4: {name: "Tesco Lemons x4", category: "fruit", imageUrl: "https://images.unsplash.com/photo-1590502593747-42a996133562?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-lemons"}
+  wrap_tortillas_8pk: {name: "Tesco Wraps 8pk", category: "bakery", imageUrl: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-wraps"}
+  hummus_300g: {name: "Tesco Hummus 300g", category: "dips", imageUrl: "https://images.unsplash.com/photo-1571197119282-7c4e2c1b3961?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-hummus"}
+  cucumber_x1: {name: "Tesco Cucumber", category: "vegetables", imageUrl: "https://images.unsplash.com/photo-1449300079323-02e209d9ac08?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-cucumber"}
+  peppers_x3: {name: "Tesco Mixed Peppers x3", category: "vegetables", imageUrl: "https://images.unsplash.com/photo-1525607551316-4a8e16d1f9ba?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-peppers"}
+  beef_mince_500g: {name: "Tesco Beef Mince 500g", category: "meat", imageUrl: "https://images.unsplash.com/photo-1603048297172-c92544798d2e?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-mince"}
+  onion_x3: {name: "Tesco Onions x3", category: "vegetables", imageUrl: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-onions"}
+  carrot_500g: {name: "Tesco Carrots 500g", category: "vegetables", imageUrl: "https://images.unsplash.com/photo-1582515073490-39981397c445?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-carrots"}
+  stock_cubes_8pk: {name: "Tesco Stock Cubes 8pk", category: "pantry", imageUrl: "https://images.unsplash.com/photo-1604908554027-fbe16e5b4f1c?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-stock"}
+  eggs_x12: {name: "Tesco British Eggs x12", category: "dairy", imageUrl: "https://images.unsplash.com/photo-1569288063648-5b8a6f1a9c0a?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-eggs"}
+  bacon_300g: {name: "Tesco Bacon 300g", category: "meat", imageUrl: "https://images.unsplash.com/photo-1606851094291-6efae152bb87?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-bacon"}
+  butter_250g: {name: "Tesco British Butter 250g", category: "dairy", imageUrl: "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-butter"}
+  cod_fillets_300g: {name: "Tesco Cod Fillets 300g", category: "fish", imageUrl: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-cod"}
+  peas_500g: {name: "Tesco Garden Peas 500g", category: "frozen", imageUrl: "https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-peas"}
+  potatoes_1kg: {name: "Tesco Potatoes 1kg", category: "vegetables", imageUrl: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-potatoes"}
+  mint_sauce_200g: {name: "Tesco Mint Sauce 200g", category: "condiments", imageUrl: "https://images.unsplash.com/photo-1556909114-44e3e9399a2e?w=400", productUrl: "https://www.tesco.com/groceries/en-GB/products/sample-mint-sauce"}
+
+# Delivery template: 1 delivery per trip. The generator picks a
+# delivery date that is 1 day before day_index 0 (so the order arrives
+# the day before the first meal).
+delivery_template:
+  order_number_prefix: "TF-DEMO-"  # TF = Tesco Fixture (recognisable prefix)
+  delivery_slots: ["8:00-10:00", "10:00-12:00", "12:00-14:00", "14:00-16:00"]
+
+# Coverage window: 8 days starting from a relative offset. The generator
+# resolves this to actual ISO dates using the build time.
+coverage_window:
+  start_offset_days_from_today: 0  # window starts today
+  duration_days: 8
+
+# Obvious-fake sentinels. These values are NOT randomised. They are
+# written verbatim into the generated JSON so anyone reading the
+# fixture immediately knows it is synthetic.
+sentinels:
+  data_generated_at: "2026-01-01T00:00:00Z"  # recognisably fake
+  order_total: 42.42                          # recognisably fake
