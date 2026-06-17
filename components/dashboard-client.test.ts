@@ -250,3 +250,71 @@ describe('Manual override server action (durable flow)', () => {
     expect(actionSrc).toContain('authOptions');
   });
 });
+
+/**
+ * Spec 023 / FR-001, FR-016: the user chip is wired into the
+ * DashboardClient action row, sits between <DemoModeChip /> and
+ * <DebugToggle />, and is NOT rendered by the unauthenticated
+ * sign-in page.
+ */
+describe('DashboardClient user chip (Spec 023)', () => {
+  const userChipComponentPath = join(process.cwd(), 'components/user-chip.tsx');
+  const signInComponentPath = join(process.cwd(), 'components/auth-signin-page.tsx');
+
+  it('imports <UserChip /> from the spec 023 module', () => {
+    expect(source).toContain("import { UserChip }");
+    expect(source).toContain("from '@/components/user-chip'");
+  });
+
+  it('declares userName: string in the DashboardClient props interface', () => {
+    expect(source).toMatch(/interface\s+DashboardClientProps[\s\S]*?\buserName:\s*string/);
+  });
+
+  it('destructures userName from the function args', () => {
+    expect(source).toMatch(
+      /export\s+function\s+DashboardClient\(\s*\{[^}]*\buserName\b[^}]*\}/
+    );
+  });
+
+  it('renders <UserChip userName={userName} /> in the action row', () => {
+    expect(source).toContain('<UserChip userName={userName} />');
+  });
+
+  it('places the chip between <DemoModeChip /> and <DebugToggle /> in the action row', () => {
+    const demoIdx = source.indexOf('<DemoModeChip ');
+    const userChipIdx = source.indexOf('<UserChip ');
+    const debugIdx = source.indexOf('<DebugToggle ');
+    expect(demoIdx).toBeGreaterThan(-1);
+    expect(userChipIdx).toBeGreaterThan(-1);
+    expect(debugIdx).toBeGreaterThan(-1);
+    expect(demoIdx).toBeLessThan(userChipIdx);
+    expect(userChipIdx).toBeLessThan(debugIdx);
+  });
+
+  it('does not change <ThemeToggle /> or <SignOutButton /> ordering relative to each other', () => {
+    const themeIdx = source.indexOf('<ThemeToggle />');
+    const signOutIdx = source.indexOf('<SignOutButton />');
+    expect(themeIdx).toBeGreaterThan(-1);
+    expect(signOutIdx).toBeGreaterThan(-1);
+    expect(themeIdx).toBeLessThan(signOutIdx);
+  });
+
+  it('app/page.tsx derives userName via resolveUserChipName', () => {
+    expect(pageSource).toContain("import { resolveUserChipName }");
+    expect(pageSource).toMatch(
+      /const\s+userName\s*=\s*resolveUserChipName\(\s*session\.user\s*\)/
+    );
+    expect(pageSource).toContain('userName={userName}');
+  });
+
+  it('the UserChip module is a server component (no "use client" directive)', () => {
+    const userChipSource = readFileSync(userChipComponentPath, 'utf8');
+    expect(userChipSource).not.toMatch(/^\s*['"]use client['"]/);
+  });
+
+  it('the unauthenticated sign-in component does NOT render the user chip', () => {
+    const signInSource = readFileSync(signInComponentPath, 'utf8');
+    expect(signInSource).not.toContain('UserChip');
+    expect(signInSource).not.toContain('user-chip');
+  });
+});
