@@ -96,13 +96,34 @@ def _write_product_metadata_cache(cache: Dict[str, Dict[str, Any]], cache_path: 
     os.replace(tmp, cache_path)
 
 
+def _extract_og_image(text: str) -> Optional[str]:
+    """Extract og:image URL from Tesco product page HTML."""
+    # Pattern 1: <meta property="og:image" content="URL">
+    m = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)["\']', text, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    # Pattern 2: <meta content="URL" property="og:image">
+    m = re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:image["\']', text, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    # Pattern 3: "og:image":"URL" in inline script
+    m = re.search(r'"og:image"\s*:\s*"([^"]+)"', text)
+    if m:
+        return m.group(1)
+    return None
+
+
 def _fetch_tesco_apollo_cache(tpnc: str, timeout: float = PRODUCT_ENRICHMENT_TIMEOUT_SECONDS) -> Optional[Dict[str, Any]]:
     """Fetch and extract the Apollo cache ProductType entry for a Tesco product.
 
     Returns the parsed Apollo cache dict or None on any failure.
     Uses the string-aware brace-counter walker from the spike notes.
+
+    Also extracts og:image from the page HTML and attaches it as _og_image
+    on the returned dict (since Apollo cross-refs prevent standalone JSON parsing).
     """
-    url = f'https://www.tesco.com/shop/en-GB/products/{tpnc}'
+    # Use /groceries/ URL (mobile-friendly, same content)
+    url = f'https://www.tesco.com/groceries/en-GB/products/{tpnc}'
     request = urllib.request.Request(url, headers={
         'User-Agent': 'Mozilla/5.0 meals-dashboard product enrichment',
         'Accept-Language': 'en-GB,en;q=0.9',
@@ -114,14 +135,22 @@ def _fetch_tesco_apollo_cache(tpnc: str, timeout: float = PRODUCT_ENRICHMENT_TIM
         print(f"  ⚠ Apollo cache fetch failed for {tpnc}: {e}")
         return None
 
+    # Extract og:image from HTML (more reliable than Apollo JSON which has cross-refs)
+    og_image = _extract_og_image(text)
+
     key = f'"ProductType:{tpnc}":'
     i = text.find(key)
     if i == -1:
+        # Even without Apollo, return just og_image
+        if og_image:
+            return {'_og_image': og_image, 'tpnc': tpnc}
         print(f"  ⚠ Apollo cache: no ProductType:{tpnc} entity in {url}")
         return None
 
     val_start = text.find('{', i + len(key))
     if val_start == -1:
+        if og_image:
+            return {'_og_image': og_image, 'tpnc': tpnc}
         print(f"  ⚠ Apollo cache: no '{{' after ProductType:{tpnc} key in {url}")
         return None
 
@@ -149,14 +178,22 @@ def _fetch_tesco_apollo_cache(tpnc: str, timeout: float = PRODUCT_ENRICHMENT_TIM
                 val_end = k
                 break
     else:
+        if og_image:
+            return {'_og_image': og_image, 'tpnc': tpnc}
         print(f"  ⚠ Apollo cache: unclosed object for ProductType:{tpnc} in {url}")
         return None
 
     try:
         product = json.loads(text[val_start:val_end + 1])
     except json.JSONDecodeError as e:
-        print(f"  ⚠ Apollo cache JSON parse error for ProductType:{tpnc}: {e}")
-        return None
+        # Apollo JSON has __ref cross-references — JSON is invalid standalone.
+        # Try to extract key fields via regex instead.
+        print(f"  ⚠ Apollo JSON parse error for {tpnc}: {e} — falling back to HTML regex")
+        product = {'tpnc': tpnc}
+
+    # Attach og:image regardless
+    if og_image:
+        product['_og_image'] = og_image
 
     return product
 
@@ -270,11 +307,17 @@ def apollo_cache_to_product_info(product: Dict[str, Any], original_name: str = '
     nutrition_md = _render_nutrition_table(details.get('nutrition'))
 
     image_url = ''
-    media = product.get('media') or {}
-    images = media.get('images')
-    if isinstance(images, list) and len(images) > 0:
-        raw_url = images[0].get('url', '') or ''
-        image_url = _decode_json_urls(raw_url)
+    # _og_image from og:image meta tag — most reliable source
+    if product.get('_og_image'):
+        image_url = _decode_json_urls(product.get('_og_image', ''))
+    # Fall back to Apollo media images
+    if not image_url:
+        media = product.get('media') or {}
+        images = media.get('images')
+        if isinstance(images, list) and len(images) > 0:
+            raw_url = images[0].get('url', '') or ''
+            image_url = _decode_json_urls(raw_url)
+    # Last resort: defaultImageUrl
     if not image_url:
         raw_default = product.get('defaultImageUrl', '') or ''
         image_url = _decode_json_urls(raw_default)
@@ -1813,6 +1856,39 @@ def main():
     if 'written' in response or 'skipped' in response:
         print(f"  Written: {len(response.get('written', []))} | Skipped: {len(response.get('skipped', []))} | Total ops: {response.get('totalOps', 'n/a')}")
     print()
+
+    # Also write the legacy `dashboard-data.json` blob so the GET /api/dashboard-data
+    # endpoint and the legacy read fallback both stay in sync with the latest payload.
+    # The /api/dashboard-data endpoint only reads this single blob, and the page
+    # falls back to it if the split-layout pointer is missing. Writing both keeps
+    # every read path consistent.
+    if not args.dry_run and secret:
+        legacy_url = api_url.rsplit('/', 1)[0] + '/dashboard-data' if api_url else ''
+        if legacy_url:
+            # Build the legacy DashboardBlobData shape from the cache.
+            legacy_payload = {
+                'coverage': payload.get('coverage', []),
+                'deliveryWindows': payload.get('deliveryWindows', []),
+                'latestOrder': (payload.get('orders', [{}])[0] if payload.get('orders') else None),
+                'mealsCheckSummary': payload.get('summary', {}),
+                'dataGeneratedAt': payload.get('dataGeneratedAt', ''),
+                'uiUpdatedAt': payload.get('uiUpdatedAt', ''),
+            }
+            try:
+                body_bytes = json.dumps(legacy_payload).encode('utf-8')
+                req = urllib.request.Request(
+                    legacy_url,
+                    data=body_bytes,
+                    headers={'Content-Type': 'application/json', 'x-dashboard-secret': secret},
+                    method='POST',
+                )
+                with urllib.request.urlopen(req, timeout=30) as r:
+                    if r.status in (200, 201):
+                        print(f"  ✓ Legacy dashboard-data.json blob updated")
+                    else:
+                        print(f"  ⚠ Legacy blob write returned status {r.status}")
+            except Exception as e:
+                print(f"  ⚠ Legacy blob write failed: {e}")
 
     if args.dry_run:
         print("[dry-run] Split-layout API exercised successfully.")

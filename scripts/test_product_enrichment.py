@@ -14,6 +14,7 @@ spec.loader.exec_module(sync_dashboard_data)
 
 class ProductEnrichmentTests(unittest.TestCase):
     def test_enrich_order_items_adds_confident_metadata_and_uses_cache(self):
+        """FR-003 (spec 021): enrichment sets productBlobPath on items, not productMetadata."""
         calls = []
 
         def fetcher(item_name):
@@ -24,6 +25,7 @@ class ProductEnrichmentTests(unittest.TestCase):
                 'productUrl': 'https://www.tesco.com/groceries/en-GB/products/123',
                 'description': 'Sweet blueberries.',
                 'source': 'tesco',
+                'tpnc': '254916451',
             }
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -33,9 +35,12 @@ class ProductEnrichmentTests(unittest.TestCase):
             enriched = sync_dashboard_data.enrich_order_items_with_product_metadata(items, cache_path=cache_path, fetcher=fetcher)
             enriched_again = sync_dashboard_data.enrich_order_items_with_product_metadata(items, cache_path=cache_path, fetcher=fetcher)
 
-            self.assertEqual(enriched[0]['productMetadata']['title'], 'Tesco Blueberries 500G')
-            self.assertEqual(enriched_again[0]['productMetadata']['title'], 'Tesco Blueberries 500G')
+            # spec 021: items get productBlobPath (not embedded productMetadata)
+            self.assertEqual(enriched[0]['productBlobPath'], 'products/254916451.json')
+            self.assertEqual(enriched[0].get('productMetadata'), None)
+            # Cache hit on second call — fetcher not called again
             self.assertEqual(calls, ['Tesco Blueberries 500G'])
+            # Name-keyed cache entry written
             self.assertIn('tesco blueberries 500g', json.loads(cache_path.read_text()))
 
     def test_enrich_order_items_preserves_truthful_fallback_when_fetch_fails(self):
