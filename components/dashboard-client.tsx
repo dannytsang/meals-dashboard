@@ -36,6 +36,10 @@ import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucid
 import type { DashboardData } from '@/lib/dashboard-data';
 import { submitManualOverrideAction } from '@/app/actions/manual-override-action';
 import {
+  fetchFirecrawlDescriptionFromRoute,
+  isPlaceholderDescription,
+} from '@/components/firecrawl-description-fetcher';
+import {
   buildHeadlineMetrics,
   classifyOrderItemMatch,
   deriveCollapsedCoverageColor,
@@ -87,6 +91,12 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   const [overridePendingItem, setOverridePendingItem] = useState<string | null>(null);
   const [overrideError, setOverrideError] = useState<string | null>(null);
   const [overrideSuccess, setOverrideSuccess] = useState<string | null>(null);
+  // Spec 027 / Rev 1: when the resolver falls through to a placeholder
+  // description (Apollo empty AND curated-static empty), we kick off a
+  // Firecrawl search via /api/firecrawl-description and progressively
+  // enhance the modal description with the returned snippet. `null` when
+  // no enhancement is in flight or no useful snippet was returned.
+  const [enhancedDescription, setEnhancedDescription] = useState<string | null>(null);
 
   useEffect(() => {
     const checkWidth = () => setIsDesktop(window.innerWidth >= 1024);
@@ -285,6 +295,30 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   };
 
   const selectedProductInfo = selectedItem ? resolveProductInfoForItem(selectedItem) : null;
+
+  // Spec 027 / Rev 1: Firecrawl fallback fires when the modal opens for
+  // an item whose resolved description is a placeholder. Apollo partial
+  // success (description populated) and curated-static matches do NOT
+  // trigger the fallback. Per-render budget is enforced inside the
+  // Route Handler module (lib/firecrawl-description-fallback.ts); this
+  // effect is fire-and-forget and never throws.
+  useEffect(() => {
+    if (!selectedItem || !selectedProductInfo) {
+      setEnhancedDescription(null);
+      return;
+    }
+    if (!isPlaceholderDescription(selectedProductInfo.description)) {
+      setEnhancedDescription(null);
+      return;
+    }
+    const cleanName = cleanItemName(selectedItem.name);
+    let cancelled = false;
+    fetchFirecrawlDescriptionFromRoute(cleanName).then(snippet => {
+      if (cancelled) return;
+      setEnhancedDescription(snippet);
+    });
+    return () => { cancelled = true; };
+  }, [selectedItem, selectedProductInfo]);
 
   return (
     <div
@@ -820,7 +854,14 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
 
               <div style={{ marginBottom: '1rem' }}>
                 <h4 style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Description</h4>
-                <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }}>{selectedProductInfo.description}</p>
+                {/* Spec 027 / Rev 1: progressive enhancement. When the
+                    resolver returned a placeholder description AND the
+                    Firecrawl fallback returned a snippet, render the
+                    snippet. Otherwise render the resolver's value
+                    verbatim (Apollo, curated-static, or placeholder). */}
+                <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: '1.5' }} data-source={enhancedDescription ? 'firecrawl-search' : selectedProductInfo.source}>
+                  {enhancedDescription ?? selectedProductInfo.description}
+                </p>
               </div>
 
               {selectedProductInfo.expiresAt && (

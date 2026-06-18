@@ -37,7 +37,56 @@ This document captures the one-time Vercel UI steps to wire the
    - Optional: `MEALS_DEBUG_MODE=1` — useful on preview, so the debug
      surface (spec 022) is available for QA without redeploying
      production.
+   - Optional: `MEALS_FIRECRAWL_FALLBACK=1` — spec 027 Firecrawl search
+     fallback for missing product descriptions. **Disabled by default.**
+     When set, the dashboard's Product Detail modal will call
+     `/api/firecrawl-description` for items whose Apollo cache blob
+     (spec 021) and curated static dictionary (lib/product-database.ts)
+     both have empty `description`, and progressively enhance the
+     description with a ~200-char Google snippet. See
+     "Firecrawl fallback (spec 027)" below for credit costs and
+     observability.
+   - Optional: `MEALS_FIRECRAWL_FALLBACK_BUDGET_PER_RENDER=3` (default 3)
+     — spec 027 per-server-runtime budget. Caps the number of Firecrawl
+     `/v1/search` requests a single server-runtime instance can make
+     before falling through to the placeholder. Production should keep
+     this at the default; raise cautiously if real-world snippet quality
+     is good and you've reviewed Firecrawl credit spend.
+   - Required if `MEALS_FIRECRAWL_FALLBACK=1`: `FIRECRAWL_API_KEY` —
+     the same Firecrawl API key used by the chef-profile MCP server
+     (stored in `~/.hermes/.env` locally; set as a Vercel env var for
+     preview/production).
 7. Save.
+
+## Firecrawl fallback (spec 027)
+
+The Firecrawl description fallback is opt-in. Default behaviour is
+unchanged from before this spec: items with empty description show the
+existing placeholder string. No code runs unless
+`MEALS_FIRECRAWL_FALLBACK=1` is set.
+
+**Cost**: ~1 Firecrawl credit per `/v1/search` call. With the default
+budget of 3 per render, a single Order Items page load burns at most 3
+credits when every item triggers the fallback. The 2026-06-18 3-product
+test (`references/tesco-firecrawl-fallback-investigation-2026-06-18.md`)
+recorded ~1 credit per successful query and 0 credits on failures or
+budget exhaustion. Check your Firecrawl billing dashboard at
+https://firecrawl.dev to monitor spend.
+
+**Reversibility**: setting `MEALS_FIRECRAWL_FALLBACK=0` (or removing the
+env var) restores the pre-spec behaviour with zero code changes (spec
+027 NFR-005). The fallback is read-time only — no writes to Vercel Blob,
+no schema changes to `products/{tpnc}.json`.
+
+**Observability**:
+- Server-side warnings are logged via `console.warn` for every fallback
+  path that returns null (missing key, HTTP error, network error, zero
+  hits, budget exhausted). Watch Vercel function logs for the
+  `[firecrawl-description-fallback]` prefix.
+- The modal description `<p>` carries a `data-source` attribute:
+  `firecrawl-search` when the snippet rendered, otherwise the
+  resolver's `source` value (`generated`, `local`, or `fallback`).
+  Inspect from DevTools to confirm the fallback fired.
 
 ## Data isolation
 
