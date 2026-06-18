@@ -1,5 +1,5 @@
 import 'server-only';
-import { put, list, del } from '@vercel/blob';
+import { put, list, del, head } from '@vercel/blob';
 import { createHash } from 'node:crypto';
 
 /**
@@ -60,13 +60,37 @@ export class VercelBlobStorageClient implements BlobStorageClient {
   }
 
   async readPointer(): Promise<PointerContents | null> {
-    const res = await this.readJsonBlob<PointerContents>(POINTER_PATH);
+    // Spec 028: use head() instead of list({prefix: POINTER_PATH}) to downgrade
+    // this read from a Vercel Blob Advanced Operation to a Simple Operation.
+    // head() returns null on 404 (verified in @vercel/blob@2.4.0 source).
+    const meta = await head(POINTER_PATH, { token: this.token });
+    if (!meta) return null;
+    const response = await fetch(meta.url, {
+      headers: this.token ? { Authorization: `Bearer ${this.token}` } : undefined,
+    });
+    if (!response.ok) {
+      throw new Error(`Blob fetch failed for ${POINTER_PATH}: ${response.status} ${response.statusText}`);
+    }
+    const text = await response.text();
+    const res = JSON.parse(text) as PointerContents;
     if (!res || typeof res.manifestPath !== 'string') return null;
     return res;
   }
 
   async readManifest(manifestPath: string): Promise<Manifest> {
-    const res = await this.readJsonBlob<Manifest>(manifestPath);
+    // Spec 028: use head() instead of list({prefix: manifestPath}) for the same
+    // cost reason as readPointer above. The caller passes the exact manifest path
+    // (typically read from PointerContents.manifestPath), so no list scan is needed.
+    const meta = await head(manifestPath, { token: this.token });
+    if (!meta) return {};
+    const response = await fetch(meta.url, {
+      headers: this.token ? { Authorization: `Bearer ${this.token}` } : undefined,
+    });
+    if (!response.ok) {
+      throw new Error(`Blob fetch failed for ${manifestPath}: ${response.status} ${response.statusText}`);
+    }
+    const text = await response.text();
+    const res = JSON.parse(text) as Manifest;
     if (!res || typeof res !== 'object') return {};
     // Validate shape: every value must be a string.
     const valid: Manifest = {};

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import {
   InMemoryBlobStorageClient,
   type Manifest,
@@ -121,5 +121,160 @@ describe('InMemoryBlobStorageClient — readJsonBlob fallback', () => {
   it('returns null when the path is missing', async () => {
     const client = new InMemoryBlobStorageClient();
     expect(await client.readJsonBlob('does/not/exist.json')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spec 028: VercelBlobStorageClient — head() swap for readPointer/readManifest.
+// These tests mock @vercel/blob's head() and list() and assert that:
+//   - readPointer calls head() once and list() zero times
+//   - readManifest calls head() once and list() zero times
+//   - readJsonBlob still calls list() (FR-006 regression guard)
+//   - null on 404 from head() returns null/{} without calling list()
+// ---------------------------------------------------------------------------
+vi.mock('@vercel/blob', () => ({
+  head: vi.fn(),
+  list: vi.fn(),
+  put: vi.fn(),
+  del: vi.fn(),
+}));
+
+// Import AFTER vi.mock so the module-under-test sees the mocked @vercel/blob.
+import { head as mockedHead, list as mockedList } from '@vercel/blob';
+import { VercelBlobStorageClient } from './blob-storage';
+
+const mockedHeadFn = mockedHead as unknown as Mock;
+const mockedListFn = mockedList as unknown as Mock;
+
+describe('VercelBlobStorageClient — head() swap (spec 028)', () => {
+  let fetchSpy: Mock;
+  const TEST_TOKEN = 'vercel_blob_rw_test_token_abc123';
+
+  beforeEach(() => {
+    mockedHeadFn.mockReset();
+    mockedListFn.mockReset();
+    // Default fetch mock — returns a 200 OK with a JSON body.
+    fetchSpy = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      text: async () => '',
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+  });
+
+  it('readPointer calls head() once with the pointer path and list() zero times', async () => {
+    mockedHeadFn.mockResolvedValue({
+      url: 'https://example.blob.vercel-storage.com/pointers-latest',
+      pathname: 'pointers/latest.json',
+      size: 50,
+      uploadedAt: new Date('2026-06-18T00:00:00Z'),
+      contentType: 'application/json',
+      contentDisposition: '',
+      downloadUrl: 'https://example.blob.vercel-storage.com/pointers-latest?download=1',
+      cacheControl: '',
+      etag: 'abc',
+    });
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      text: async () => JSON.stringify({ manifestPath: 'meta/manifest-abc.json', productsManifestPath: null }),
+    });
+
+    const client = new VercelBlobStorageClient(TEST_TOKEN);
+    const result = await client.readPointer();
+
+    expect(result).toEqual({ manifestPath: 'meta/manifest-abc.json', productsManifestPath: null });
+    expect(mockedHeadFn).toHaveBeenCalledTimes(1);
+    expect(mockedHeadFn).toHaveBeenCalledWith('pointers/latest.json', { token: TEST_TOKEN });
+    expect(mockedListFn).toHaveBeenCalledTimes(0);
+  });
+
+  it('readManifest calls head() once with the given path and list() zero times', async () => {
+    const manifestPath = 'meta/manifest-8acaeb57b3f2cec64f7d010e51666d6dab1d63408b5d155f8b6f0a9b0fe00a60.json';
+    mockedHeadFn.mockResolvedValue({
+      url: `https://example.blob.vercel-storage.com/${manifestPath}`,
+      pathname: manifestPath,
+      size: 100,
+      uploadedAt: new Date('2026-06-18T00:00:00Z'),
+      contentType: 'application/json',
+      contentDisposition: '',
+      downloadUrl: `https://example.blob.vercel-storage.com/${manifestPath}?download=1`,
+      cacheControl: '',
+      etag: 'def',
+    });
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      text: async () => JSON.stringify({
+        'orders/2026-06-16/5421-8594-00.json': 'aaa',
+        'coverage/2026-06-15.json': 'bbb',
+      }),
+    });
+
+    const client = new VercelBlobStorageClient(TEST_TOKEN);
+    const result = await client.readManifest(manifestPath);
+
+    expect(result).toEqual({
+      'orders/2026-06-16/5421-8594-00.json': 'aaa',
+      'coverage/2026-06-15.json': 'bbb',
+    });
+    expect(mockedHeadFn).toHaveBeenCalledTimes(1);
+    expect(mockedHeadFn).toHaveBeenCalledWith(manifestPath, { token: TEST_TOKEN });
+    expect(mockedListFn).toHaveBeenCalledTimes(0);
+  });
+
+  it('readPointer returns null when head() returns null (404); list() is NOT called as a fallback', async () => {
+    mockedHeadFn.mockResolvedValue(null);
+
+    const client = new VercelBlobStorageClient(TEST_TOKEN);
+    const result = await client.readPointer();
+
+    expect(result).toBeNull();
+    expect(mockedHeadFn).toHaveBeenCalledTimes(1);
+    expect(mockedListFn).toHaveBeenCalledTimes(0);
+  });
+
+  it('readManifest returns {} when head() returns null (404); list() is NOT called as a fallback', async () => {
+    mockedHeadFn.mockResolvedValue(null);
+
+    const client = new VercelBlobStorageClient(TEST_TOKEN);
+    const result = await client.readManifest('meta/manifest-anything.json');
+
+    expect(result).toEqual({});
+    expect(mockedHeadFn).toHaveBeenCalledTimes(1);
+    expect(mockedListFn).toHaveBeenCalledTimes(0);
+  });
+
+  it('readJsonBlob still calls list() (FR-006 regression guard: head() swap does NOT touch this path)', async () => {
+    // Mock list() to return a single matching blob (the prefix-scanned result).
+    mockedListFn.mockResolvedValue({
+      blobs: [{
+        url: 'https://example.blob.vercel-storage.com/coverage-2026-06-18',
+        pathname: 'coverage/2026-06-18.json',
+        size: 200,
+        uploadedAt: new Date('2026-06-18T00:00:00Z'),
+        contentType: 'application/json',
+        contentDisposition: '',
+        downloadUrl: 'https://example.blob.vercel-storage.com/coverage-2026-06-18?download=1',
+        cacheControl: '',
+        etag: 'ghi',
+      }],
+    });
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      text: async () => JSON.stringify({ date: '2026-06-18', meals: [] }),
+    });
+
+    const client = new VercelBlobStorageClient(TEST_TOKEN);
+    const result = await client.readJsonBlob<{ date: string }>('coverage/2026-06-18.json');
+
+    expect(result?.date).toBe('2026-06-18');
+    expect(mockedListFn).toHaveBeenCalledTimes(1);
+    expect(mockedHeadFn).toHaveBeenCalledTimes(0); // head() must NOT be called from readJsonBlob
   });
 });
