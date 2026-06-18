@@ -1,8 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-type Theme = 'dark' | 'light';
+import { toggleTheme as pureToggleTheme, type Theme } from '@/lib/user-menu';
 
 interface ThemeContextType {
   theme: Theme;
@@ -13,7 +12,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark');
-  
+
   useEffect(() => {
     // Load from localStorage if available
     const stored = localStorage.getItem('meals-dashboard-theme');
@@ -24,14 +23,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       document.documentElement.setAttribute('data-theme', 'dark');
     }
   }, []);
-  
+
+  // Spec 026 / FR-016: delegate the localStorage + data-theme write to
+  // the pure helper so the inline <ThemeToggle /> and the <UserMenu />'s
+  // Theme row write through the same code path. The pure helper returns
+  // the new theme; we just setState to mirror it in context.
   const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem('meals-dashboard-theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+    const next = pureToggleTheme(theme);
+    setTheme(next);
   };
-  
+
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}

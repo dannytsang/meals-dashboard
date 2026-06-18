@@ -2,10 +2,8 @@
 
 import { useState, useEffect, Fragment, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { SignOutButton } from '@/components/sign-out-button';
+import { UserMenu } from '@/components/user-menu';
 import { DemoModeChip } from '@/components/demo-mode-chip';
-import { UserChip } from '@/components/user-chip';
 import { OrderStatusBadge } from '@/components/order-status-badge';
 import dynamic from 'next/dynamic';
 // Spec 022 / Rev 3 / NFR-002: the in-header Debug toggle is
@@ -304,23 +302,18 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
             */}
             <DemoModeChip demoMode={!!demoMode} />
             {/*
-              Spec 023 / FR-001: read-only user chip. Server-rendered
-              (`<span>`, no client hooks). Sits between DemoModeChip
-              and DebugToggle. Content is only the 👤 emoji +
-              "Welcome, " + resolved display name. No other session
-              claims are exposed.
+              Spec 026 / FR-022: replace the standalone UserChip and
+              the three inline controls (DebugToggle, ThemeToggle,
+              SignOutButton) with a single UserMenu that owns the
+              dropdown containing Debug, Theme, and Sign out rows.
+              The Debug row is conditionally rendered based on the
+              server-rendered `debugOn` prop (spec 022 Rev 3
+              server-side gating; FR-005). The DemoModeChip stays a
+              separate sibling of the menu (FR-014) — demo mode is a
+              data-mode signal that must stay visible regardless of
+              menu state.
             */}
-            <UserChip userName={userName} />
-            {/*
-              Spec 022 / Rev 3: in-header Debug toggle. The server
-              (app/page.tsx) gates whether to render the toggle at
-              all based on the debug cookie — when the cookie is
-              unset, the chip is not rendered. When rendered, the
-              toggle is always interactive (no env-var kill switch).
-            */}
-            <DebugToggle initialEnabled={!!debugOn} />
-            <ThemeToggle />
-            <SignOutButton />
+            <UserMenu userName={userName} debugOn={!!debugOn} />
           </div>
         </div>
       </header>

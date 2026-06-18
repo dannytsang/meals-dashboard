@@ -252,18 +252,47 @@ describe('Manual override server action (durable flow)', () => {
 });
 
 /**
- * Spec 023 / FR-001, FR-016: the user chip is wired into the
- * DashboardClient action row, sits between <DemoModeChip /> and
- * <DebugToggle />, and is NOT rendered by the unauthenticated
- * sign-in page.
+ * Spec 023 / FR-001, FR-016 — historical (pre-spec 026): the user
+ * chip was a standalone read-only `<span>` wired directly into the
+ * DashboardClient action row, sitting between `<DemoModeChip />` and
+ * the inline `<DebugToggle />`. Spec 026 / FR-022 collapsed the four
+ * inline controls (UserChip + DebugToggle + ThemeToggle + SignOutButton)
+ * into a single `<UserMenu />` that owns the dropdown. The chip
+ * text and demo-mode placement are preserved; the standalone chip and
+ * the three inline controls are gone from the header.
+ *
+ * Spec 026 / FR-022 / FR-023: the inline components still exist in
+ * the codebase (they are reusable row-level units) but are no longer
+ * rendered in the main dashboard's top-right header — they are
+ * invoked through `<UserMenu />` only.
  */
-describe('DashboardClient user chip (Spec 023)', () => {
+describe('DashboardClient user menu (Spec 026)', () => {
+  const userMenuComponentPath = join(process.cwd(), 'components/user-menu.tsx');
   const userChipComponentPath = join(process.cwd(), 'components/user-chip.tsx');
   const signInComponentPath = join(process.cwd(), 'components/auth-signin-page.tsx');
 
-  it('imports <UserChip /> from the spec 023 module', () => {
-    expect(source).toContain("import { UserChip }");
-    expect(source).toContain("from '@/components/user-chip'");
+  it('imports <UserMenu /> from the spec 026 module', () => {
+    expect(source).toContain("import { UserMenu }");
+    expect(source).toContain("from '@/components/user-menu'");
+  });
+
+  it('renders <UserMenu userName={userName} debugOn={!!debugOn} /> in the action row', () => {
+    expect(source).toMatch(/<UserMenu\s+userName=\{userName\}\s+debugOn=\{!!debugOn\}\s*\/>/);
+  });
+
+  it('does NOT render the standalone <UserChip />, <DebugToggle />, <ThemeToggle />, or <SignOutButton /> in the header (FR-022)', () => {
+    expect(source).not.toMatch(/<UserChip\s/);
+    expect(source).not.toMatch(/<DebugToggle\s/);
+    expect(source).not.toMatch(/<ThemeToggle\s/);
+    expect(source).not.toMatch(/<SignOutButton\s/);
+  });
+
+  it('keeps <DemoModeChip /> as a separate sibling of <UserMenu /> (FR-014)', () => {
+    const demoIdx = source.indexOf('<DemoModeChip ');
+    const userMenuIdx = source.indexOf('<UserMenu ');
+    expect(demoIdx).toBeGreaterThan(-1);
+    expect(userMenuIdx).toBeGreaterThan(-1);
+    expect(demoIdx).toBeLessThan(userMenuIdx);
   });
 
   it('declares userName: string in the DashboardClient props interface', () => {
@@ -276,29 +305,6 @@ describe('DashboardClient user chip (Spec 023)', () => {
     );
   });
 
-  it('renders <UserChip userName={userName} /> in the action row', () => {
-    expect(source).toContain('<UserChip userName={userName} />');
-  });
-
-  it('places the chip between <DemoModeChip /> and <DebugToggle /> in the action row', () => {
-    const demoIdx = source.indexOf('<DemoModeChip ');
-    const userChipIdx = source.indexOf('<UserChip ');
-    const debugIdx = source.indexOf('<DebugToggle ');
-    expect(demoIdx).toBeGreaterThan(-1);
-    expect(userChipIdx).toBeGreaterThan(-1);
-    expect(debugIdx).toBeGreaterThan(-1);
-    expect(demoIdx).toBeLessThan(userChipIdx);
-    expect(userChipIdx).toBeLessThan(debugIdx);
-  });
-
-  it('does not change <ThemeToggle /> or <SignOutButton /> ordering relative to each other', () => {
-    const themeIdx = source.indexOf('<ThemeToggle />');
-    const signOutIdx = source.indexOf('<SignOutButton />');
-    expect(themeIdx).toBeGreaterThan(-1);
-    expect(signOutIdx).toBeGreaterThan(-1);
-    expect(themeIdx).toBeLessThan(signOutIdx);
-  });
-
   it('app/page.tsx derives userName via resolveUserChipName', () => {
     expect(pageSource).toContain("import { resolveUserChipName }");
     expect(pageSource).toMatch(
@@ -309,11 +315,24 @@ describe('DashboardClient user chip (Spec 023)', () => {
 
   it('the UserChip module is a server component (no "use client" directive)', () => {
     const userChipSource = readFileSync(userChipComponentPath, 'utf8');
-    expect(userChipSource).not.toMatch(/^\s*['"]use client['"]/);
+    // Match the literal 'use client' directive on its own line, not the
+    // surrounding string in comments. The docstring of user-chip.tsx
+    // contains the literal text `'use client'` while explaining that
+    // the module is server-rendered, so a naive substring match would
+    // false-positive.
+    expect(userChipSource).not.toMatch(/^['"]use client['"];?\s*$/m);
   });
 
-  it('the unauthenticated sign-in component does NOT render the user chip', () => {
+  it('the UserMenu module is a client component ("use client" directive present)', () => {
+    const userMenuSource = readFileSync(userMenuComponentPath, 'utf8');
+    // Same strictness as the UserChip test — match the literal
+    // directive on its own line.
+    expect(userMenuSource).toMatch(/^['"]use client['"];?\s*$/m);
+  });
+
+  it('the unauthenticated sign-in component does NOT render the user menu or chip', () => {
     const signInSource = readFileSync(signInComponentPath, 'utf8');
+    expect(signInSource).not.toContain('UserMenu');
     expect(signInSource).not.toContain('UserChip');
     expect(signInSource).not.toContain('user-chip');
   });
