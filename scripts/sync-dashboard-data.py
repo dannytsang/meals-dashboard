@@ -22,6 +22,7 @@ import os
 import time
 import urllib.parse
 import urllib.request
+import urllib.error
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Callable, Dict, Any, List, Optional, Tuple, MutableMapping
@@ -196,6 +197,169 @@ def _fetch_tesco_apollo_cache(tpnc: str, timeout: float = PRODUCT_ENRICHMENT_TIM
         product['_og_image'] = og_image
 
     return product
+
+
+# Spec 027 Rev 2: sync-time Firecrawl search tier. Mirrors the shape of
+# _fetch_tesco_apollo_cache above (urllib, stdlib, never raises, warns
+# on non-2xx) but targets Firecrawl's /v1/search endpoint instead of
+# Tesco's product page. Used by enrich_order_items_with_product_metadata
+# when the Apollo tier returns an empty description for an item.
+MEALS_FIRECRAWL_FALLBACK_ENV = 'MEALS_FIRECRAWL_FALLBACK'
+FIRECRAWL_API_KEY_ENV = 'FIRECRAWL_API_KEY'
+FIRECRAWL_SEARCH_URL = 'https://api.firecrawl.dev/v1/search'
+FIRECRAWL_USER_AGENT = 'meals-check-sync/1.0 (danny@houseofthomas)'
+
+_missing_firecrawl_key_warned = False
+
+
+def _firecrawl_search_enabled() -> bool:
+    """Spec 027 Rev 2 / FR-005: disabled by default. Only active when
+    MEALS_FIRECRAWL_FALLBACK=1 is set in the sync process environment.
+    """
+    return os.environ.get(MEALS_FIRECRAWL_FALLBACK_ENV, '') == '1'
+
+
+def _firecrawl_api_key() -> Optional[str]:
+    """Spec 027 Rev 2 / FR-007: read FIRECRAWL_API_KEY from process env.
+    Missing key → log a one-time warning and behave as if disabled.
+    """
+    global _missing_firecrawl_key_warned
+    raw = os.environ.get(FIRECRAWL_API_KEY_ENV, '')
+    if not raw or raw.strip() == '':
+        if not _missing_firecrawl_key_warned:
+            print(
+                f"  ⚠ FIRECRAWL_API_KEY is not set; Firecrawl description "
+                f"fallback is disabled. Set {MEALS_FIRECRAWL_FALLBACK_ENV}=1 "
+                f"with a valid {FIRECRAWL_API_KEY_ENV} to enable."
+            )
+            _missing_firecrawl_key_warned = True
+        return None
+    return raw.strip()
+
+
+def _clean_item_name_for_firecrawl(name: str) -> str:
+    """Mirror the substitution-stripping the Apollo fetcher applies
+    (`fetch_tesco_product_metadata` strips 'Subs: On'). Kept local so
+    the orchestrator can pass the cleaned name without depending on the
+    Apollo fetcher's internal naming.
+    """
+    return re.sub(r'\bSubstitutions:\s*On\b', '', name, flags=re.IGNORECASE).strip()
+
+
+# Possible return values from `_fetch_firecrawl_search_snippet`:
+#   {'outcome': 'ok',         'snippet': str, 'lastFetched': iso}
+#   {'outcome': 'not_found',  'snippet': None, 'lastFetched': iso}
+#   {'outcome': 'disabled',   ...}  (MEALS_FIRECRAWL_FALLBACK off)
+#   {'outcome': 'no_key',     ...}  (FIRECRAWL_API_KEY missing)
+#   {'outcome': 'http_error', 'status': int, 'lastFetched': iso}
+#   {'outcome': 'error',      'lastFetched': iso}
+#   {'outcome': 'malformed',  ...}
+# The orchestrator consults `outcome` to decide whether to write
+# `firecrawl.snippet` (ok), `firecrawl.status='not_found'` (not_found),
+# or nothing at all (every other outcome — preserve absence so the
+# next sync retries).
+FirecrawlSearchOutcome = str  # 'ok' | 'not_found' | 'disabled' | 'no_key' | 'http_error' | 'error' | 'malformed'
+
+
+def _fetch_firecrawl_search_snippet(
+    item_name: str,
+    timeout: float = PRODUCT_ENRICHMENT_TIMEOUT_SECONDS,
+) -> Dict[str, Any]:
+    """Spec 027 Rev 2 / FR-010: fetch the first ~200-char Google snippet
+    from Firecrawl's /v1/search endpoint for `<cleanName> site:tesco.com`.
+
+    Returns a dict with `outcome` and the relevant payload fields.
+    Never raises. Does NOT call /v1/scrape (FR-002). Uses only stdlib
+    (FR-011).
+
+    Outcomes:
+      - 'ok'         — snippet populated; orchestrator writes
+                       `firecrawl.snippet` + `firecrawl.lastFetched`.
+      - 'not_found'  — 200 with empty data; orchestrator writes
+                       `firecrawl.status='not_found'` so the next sync
+                       skips the API call (Open Question 5).
+      - 'disabled'   — MEALS_FIRECRAWL_FALLBACK not set; orchestrator
+                       writes nothing.
+      - 'no_key'     — FIRECRAWL_API_KEY missing; orchestrator writes
+                       nothing (warning already logged at module level).
+      - 'http_error' — non-2xx response; orchestrator writes nothing
+                       (FR-009: log + continue).
+      - 'error'      — network error / timeout; orchestrator writes
+                       nothing.
+      - 'malformed'  — JSON parse error; orchestrator writes nothing.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    if not _firecrawl_search_enabled():
+        return {'outcome': 'disabled'}
+    api_key = _firecrawl_api_key()
+    if not api_key:
+        return {'outcome': 'no_key'}
+
+    cleaned = _clean_item_name_for_firecrawl(item_name)
+    if not cleaned:
+        return {'outcome': 'error'}
+
+    query = f'{cleaned} site:tesco.com'
+    body = json.dumps({'query': query, 'limit': 1}).encode('utf-8')
+    request = urllib.request.Request(
+        FIRECRAWL_SEARCH_URL,
+        data=body,
+        headers={
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+            'User-Agent': FIRECRAWL_USER_AGENT,
+        },
+        method='POST',
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            raw = response.read().decode('utf-8', errors='ignore')
+    except urllib.error.HTTPError as e:
+        print(
+            f"  ⚠ Firecrawl HTTP {e.code} for '{cleaned}'; falling through to placeholder."
+        )
+        return {'outcome': 'http_error', 'status': e.code, 'lastFetched': now}
+    except Exception as e:
+        print(f"  ⚠ Firecrawl fetch error for '{cleaned}': {e}")
+        return {'outcome': 'error', 'lastFetched': now}
+
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        print(f"  ⚠ Firecrawl: malformed JSON response for '{cleaned}'.")
+        return {'outcome': 'malformed', 'lastFetched': now}
+
+    if not isinstance(payload, dict) or not payload.get('success'):
+        return {'outcome': 'not_found', 'lastFetched': now}
+    data = payload.get('data')
+    if not isinstance(data, list) or len(data) == 0:
+        return {'outcome': 'not_found', 'lastFetched': now}
+    first = data[0]
+    if not isinstance(first, dict):
+        return {'outcome': 'not_found', 'lastFetched': now}
+    snippet = first.get('description')
+    if not isinstance(snippet, str):
+        return {'outcome': 'not_found', 'lastFetched': now}
+    snippet = snippet.strip()
+    if not snippet:
+        return {'outcome': 'not_found', 'lastFetched': now}
+
+    return {
+        'outcome': 'ok',
+        'snippet': snippet,
+        'lastFetched': now,
+    }
+
+
+def _apollo_description_populated(metadata: Dict[str, Any]) -> bool:
+    """Spec 027 Rev 2 / FR-001: Apollo partial success check. Returns
+    True when the metadata dict has a non-empty `description` field
+    (Apollo populated it). The Firecrawl tier is skipped when this
+    returns True.
+    """
+    desc = metadata.get('description')
+    return isinstance(desc, str) and desc.strip() != ''
 
 
 def _join_field(value: Any) -> str:
@@ -696,9 +860,53 @@ def enrich_order_items_with_product_metadata(
             try:
                 metadata = fetcher(item_name)
             except Exception as e:
-                print(f"  \u26a0 Tesco product enrichment fallback for {item_name}: {e}")
+                print(f"  ⚠ Tesco product enrichment fallback for {item_name}: {e}")
                 metadata = None
             if metadata:
+                # Spec 027 Rev 2 / FR-014: if Apollo returned an empty
+                # `description`, consult Firecrawl's search tier for a
+                # Google snippet. Honour the 21-day TTL on the existing
+                # `firecrawl.lastFetched` (FR-006) — skip the API when
+                # a fresh snippet is already cached. Apply the same
+                # per-item delay as Apollo (FR-013).
+                if not _apollo_description_populated(metadata):
+                    existing_fc = metadata.get('firecrawl') or {}
+                    fc_fetched_at = existing_fc.get('lastFetched')
+                    fc_is_fresh = False
+                    if isinstance(fc_fetched_at, str) and fc_fetched_at:
+                        try:
+                            fc_dt = datetime.fromisoformat(
+                                fc_fetched_at.replace('Z', '+00:00')
+                            )
+                            fc_age_days = (
+                                datetime.now(timezone.utc)
+                                - fc_dt.replace(tzinfo=timezone.utc)
+                            ).total_seconds() / 86400
+                            fc_is_fresh = fc_age_days <= PRODUCT_ENRICHMENT_MAX_AGE_DAYS
+                        except (ValueError, TypeError):
+                            fc_is_fresh = False
+                    if not fc_is_fresh:
+                        fc_result = _fetch_firecrawl_search_snippet(item_name)
+                        outcome = fc_result.get('outcome')
+                        if outcome == 'ok':
+                            metadata['firecrawl'] = {
+                                'snippet': fc_result['snippet'],
+                                'lastFetched': fc_result['lastFetched'],
+                                'status': 'ok',
+                            }
+                        elif outcome == 'not_found':
+                            # Open Question 5: persist the not_found
+                            # status so the next sync skips the API.
+                            metadata['firecrawl'] = {
+                                'snippet': None,
+                                'lastFetched': fc_result['lastFetched'],
+                                'status': 'not_found',
+                            }
+                        # All other outcomes (disabled, no_key, http_error,
+                        # error, malformed): write nothing — the next sync
+                        # retries the API.
+                        if delay_seconds > 0:
+                            time.sleep(delay_seconds)
                 # Store under both tpnc key (if known) and name key
                 cache[name_key] = metadata
                 if metadata.get('tpnc'):

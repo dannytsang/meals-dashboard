@@ -59,6 +59,16 @@ export interface GeneratedProductMetadata {
   lastFetched?: string;
   /** ISO 8601 timestamp — computed client-side as lastFetched + TTL. Not stored in blob. */
   expiresAt?: string;
+  /** Spec 027 Rev 2: sync-time Firecrawl search snippet (third tier
+   * of the description fallback chain). Populated by the Python
+   * sync pipeline at `scripts/sync-dashboard-data.py:
+   * _fetch_firecrawl_search_snippet` and cached in `products/{tpnc}.json`
+   * with a 21-day TTL matching Apollo. Mirrors `ProductBlob.firecrawl`. */
+  firecrawl?: {
+    snippet: string | null;
+    lastFetched: string;
+    status?: 'ok' | 'not_found';
+  };
 }
 
 export interface TescoReceipt {

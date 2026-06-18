@@ -87,6 +87,18 @@ export interface ProductBlob {
   productUrl: string;
   source: string;
   lastFetched: string;
+  // Spec 027 Rev 2: sync-time Firecrawl search snippet. Optional —
+  // existing product blobs written before this spec continue to work
+  // unchanged. When populated, the dashboard's `resolveProductInfoForItem`
+  // consults `snippet` as the third tier of the `description` fallback
+  // chain (after Apollo and curated-static, before the placeholder).
+  // `status: 'not_found'` means Firecrawl had no data for this product
+  // — the next sync will skip the API call (Open Question 5).
+  firecrawl?: {
+    snippet: string | null;
+    lastFetched: string;
+    status?: 'ok' | 'not_found';
+  };
 }
 
 export interface SplitLayoutPayload {
