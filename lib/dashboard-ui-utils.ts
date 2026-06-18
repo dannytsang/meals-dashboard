@@ -283,9 +283,22 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
   const generated = item.productMetadata;
   if (generated) {
     const expiresAt = _computeExpiresAt(generated.lastFetched);
+    // Spec 027 Rev 2 / FR-014: Apollo partial success wins. If Apollo
+    // returned an empty description, fall through to the Firecrawl
+    // snippet (third tier of the chain). The Firecrawl snippet is
+    // populated by the Python sync pipeline at
+    // `scripts/sync-dashboard-data.py:_fetch_firecrawl_search_snippet`
+    // and cached in `products/{tpnc}.json` under the `firecrawl` key
+    // with a 21-day TTL matching Apollo.
+    const firecrawlSnippet = generated.firecrawl?.snippet;
+    const hasFirecrawlSnippet = typeof firecrawlSnippet === 'string' && firecrawlSnippet.trim() !== '';
+    const description =
+      generated.description
+      || (hasFirecrawlSnippet ? firecrawlSnippet : '')
+      || 'Generated Tesco product details are incomplete for this item.';
     return {
       title: generated.title || cleanItemName(item.name),
-      description: generated.description || 'Generated Tesco product details are incomplete for this item.',
+      description,
       storage: generated.storage || 'Check packaging for storage instructions.',
       preparation: generated.preparation || '',
       ingredients: generated.ingredients || '',

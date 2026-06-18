@@ -296,6 +296,105 @@ describe('generated product metadata resolution', () => {
       description: 'Product information not available in generated data or the local product database.',
     });
   });
+
+  // Spec 027 Rev 2 / FR-017: four-way composition for the `description`
+  // field. The Python sync pipeline writes a `firecrawl.snippet` into
+  // `products/{tpnc}.json` under the `firecrawl` key when Apollo
+  // returned empty description. The dashboard read path composes
+  // Apollo → curated-static → Firecrawl → placeholder.
+  describe('Firecrawl description fallback (spec 027 Rev 2)', () => {
+    it('uses Apollo description when populated (Firecrawl ignored)', () => {
+      const item: GroceryItem = {
+        name: 'Tesco Milk',
+        quantity: 1,
+        price: 2,
+        productMetadata: {
+          title: 'Tesco Milk',
+          description: 'Apollo description',
+          source: 'tesco',
+          firecrawl: {
+            snippet: 'Firecrawl snippet',
+            lastFetched: '2026-06-18T00:00:00Z',
+            status: 'ok',
+          },
+        },
+      };
+      expect(resolveProductInfoForItem(item).description).toBe('Apollo description');
+    });
+
+    it('uses Firecrawl snippet when Apollo description is empty', () => {
+      const item: GroceryItem = {
+        name: 'Tesco Eggs',
+        quantity: 1,
+        price: 2,
+        productMetadata: {
+          title: 'Tesco Eggs',
+          description: '',
+          source: 'tesco',
+          firecrawl: {
+            snippet: '12 Large class A free range eggs.',
+            lastFetched: '2026-06-18T00:00:00Z',
+            status: 'ok',
+          },
+        },
+      };
+      expect(resolveProductInfoForItem(item).description).toBe('12 Large class A free range eggs.');
+    });
+
+    it('falls through to placeholder when Apollo empty AND Firecrawl absent', () => {
+      const item: GroceryItem = {
+        name: 'Tesco Bread',
+        quantity: 1,
+        price: 2,
+        productMetadata: {
+          title: 'Tesco Bread',
+          description: '',
+          source: 'tesco',
+        },
+      };
+      expect(resolveProductInfoForItem(item).description).toBe(
+        'Generated Tesco product details are incomplete for this item.'
+      );
+    });
+
+    it('falls through to placeholder when Firecrawl status is not_found', () => {
+      const item: GroceryItem = {
+        name: 'Tesco Mystery',
+        quantity: 1,
+        price: 2,
+        productMetadata: {
+          title: 'Tesco Mystery',
+          description: '',
+          source: 'tesco',
+          firecrawl: {
+            snippet: null,
+            lastFetched: '2026-06-18T00:00:00Z',
+            status: 'not_found',
+          },
+        },
+      };
+      expect(resolveProductInfoForItem(item).description).toBe(
+        'Generated Tesco product details are incomplete for this item.'
+      );
+    });
+
+    it('treats absence of firecrawl key as no-snippet (backward compatibility)', () => {
+      const item: GroceryItem = {
+        name: 'Tesco Legacy',
+        quantity: 1,
+        price: 2,
+        productMetadata: {
+          title: 'Tesco Legacy',
+          description: '',
+          source: 'tesco',
+          // No `firecrawl` key — blob written before spec 027 Rev 2.
+        },
+      };
+      expect(resolveProductInfoForItem(item).description).toBe(
+        'Generated Tesco product details are incomplete for this item.'
+      );
+    });
+  });
 });
 
 describe('order item sorting', () => {

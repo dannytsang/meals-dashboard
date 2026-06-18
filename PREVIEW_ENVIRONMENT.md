@@ -39,6 +39,55 @@ This document captures the one-time Vercel UI steps to wire the
      production.
 7. Save.
 
+## Firecrawl fallback (spec 027 Rev 2 — sync-time)
+
+The Firecrawl description fallback runs in the Python sync pipeline
+(`scripts/sync-dashboard-data.py`), NOT in the dashboard. The sync
+calls Firecrawl's `/v1/search` endpoint for items where the Apollo
+extraction returned an empty `description` field, and writes the
+returned snippet to `products/{tpnc}.json` under a `firecrawl`
+sub-object. The dashboard read path composes the snippet as the
+third tier of the Apollo → curated-static → placeholder chain in
+`resolveProductInfoForItem`.
+
+**Disabled by default.** No code runs unless `MEALS_FIRECRAWL_FALLBACK=1`
+is set in the sync process environment.
+
+**Env vars**:
+- `MEALS_FIRECRAWL_FALLBACK` (default off) — set to `1` to enable.
+- `FIRECRAWL_API_KEY` — the Firecrawl API key. Same key used by the
+  chef-profile MCP server (in `~/.hermes/.env` locally). For preview
+  AND production cron jobs, this key must be available to the sync
+  process — verify the cron shell sources `~/.hermes/.env` before
+  invoking the sync (see `~/.hermes/profiles/chef/cron/jobs.json`).
+- `MEALS_PRODUCT_ENRICHMENT_MAX_AGE_DAYS` (default 21) — **existing
+  Apollo TTL** is reused for Firecrawl. No new env var. Items with
+  a `firecrawl.lastFetched` within the TTL are NOT re-fetched.
+- `MEALS_PRODUCT_ENRICHMENT_TIMEOUT_SECONDS` (default 5) and
+  `MEALS_PRODUCT_ENRICHMENT_DELAY_SECONDS` (default 0.2) — **existing
+  Apollo knobs** are reused for Firecrawl.
+
+**Cost**: ~1 Firecrawl credit per `/v1/search` call. The 21-day TTL
+bounds total spend: an item with an empty Apollo description burns
+~1 credit per 21-day window, regardless of how often the dashboard is
+viewed. The 2026-06-18 3-product test
+(`references/tesco-firecrawl-fallback-investigation-2026-06-18.md`)
+recorded 0 credits on failures, 0 credits on zero-hits (the
+`status: "not_found"` short-circuit), and 1 credit per successful
+snippet. Monitor at https://firecrawl.dev.
+
+**Reversibility**: setting `MEALS_FIRECRAWL_FALLBACK=0` (or removing the
+env var) restores the pre-spec sync behaviour. Existing product blobs
+without the `firecrawl` key continue to render correctly (the key is
+simply absent).
+
+**Observability**:
+- Sync-time warnings are logged via `print()` for every Firecrawl
+  call path (missing key, HTTP error, network error, malformed JSON).
+  Prefix: `⚠ Firecrawl`. Watch Vercel function / cron logs.
+- The product blob's `firecrawl` sub-object carries `lastFetched`
+  (ISO 8601 timestamp). Inspect the blob to confirm freshness.
+
 ## Data isolation
 
 By default, preview and production share the same Vercel Blob
