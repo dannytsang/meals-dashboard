@@ -8,20 +8,26 @@
  * whether to render this component at all (cookie unset → 404 on
  * /debug, toggle chip hidden in the header).
  *
+ * Spec 026 / FR-016: the fetch + optimistic-update logic now lives
+ * in `lib/user-menu.ts` as the `toggleDebug()` pure helper. The
+ * inline <DebugToggle /> and the <UserMenu />'s Debug row both call
+ * the same function so behaviour parity is automatic.
+ *
  * The component is a thin client wrapper: it does not read the
  * cookie itself (the server has already decided what to send).
- * On click, it POSTs `{ value: <flipped> }` to /api/debug/toggle;
- * the server sets the signed cookie, returns 200 with the new
- * effective state, and a `router.refresh()` is used to pick up
- * the new server-rendered state (including the inline debug chips
- * on the main dashboard, which the server only renders when the
- * cookie is set).
+ * On click, it POSTs `{ value: <flipped> }` to /api/debug/toggle via
+ * the `toggleDebug()` helper; the server sets the signed cookie,
+ * returns 200 with the new effective state, and a `router.refresh()`
+ * is used to pick up the new server-rendered state (including the
+ * inline debug chips on the main dashboard, which the server only
+ * renders when the cookie is set).
  */
 'use client';
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bug } from 'lucide-react';
+import { toggleDebug } from '@/lib/user-menu';
 
 interface DebugToggleProps {
   /** Server-rendered initial state from the cookie. */
@@ -36,28 +42,18 @@ export function DebugToggle({ initialEnabled }: DebugToggleProps) {
 
   const handleClick = () => {
     setError(null);
-    const next = !enabled;
+    const previous = enabled;
     // Optimistic update; revert on error.
-    setEnabled(next);
+    setEnabled(!previous);
     startTransition(async () => {
-      try {
-        const res = await fetch('/api/debug/toggle', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ value: next ? '1' : '0' }),
-        });
-        if (!res.ok) {
-          // Revert on failure.
-          setEnabled(!next);
-          setError(`Toggle failed (HTTP ${res.status})`);
-          return;
-        }
-        // Pick up the new server-rendered state (toggle + chips).
-        router.refresh();
-      } catch (e) {
-        setEnabled(!next);
-        setError(e instanceof Error ? e.message : 'Network error');
+      const result = await toggleDebug(previous);
+      if (!result.ok) {
+        setEnabled(previous);
+        setError(result.error ?? `Toggle failed`);
+        return;
       }
+      // Pick up the new server-rendered state (toggle + chips).
+      router.refresh();
     });
   };
 

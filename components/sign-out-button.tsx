@@ -1,14 +1,24 @@
+/**
+ * components/sign-out-button.tsx
+ *
+ * Spec 015 / spec 026 FR-007: ends the NextAuth session. Per spec
+ * 026 / FR-016, the actual sign-out navigation now goes through the
+ * `signOut()` pure helper in `lib/user-menu.ts` so this inline
+ * <SignOutButton /> and the <UserMenu />'s Sign out row call the
+ * same function.
+ */
 'use client';
 
-import { signOut } from 'next-auth/react';
+import { signOut as nextAuthSignOut } from 'next-auth/react';
 import { LogOut } from 'lucide-react';
+import { signOut as signOutHelper } from '@/lib/user-menu';
 
 export function SignOutButton() {
   return (
     <button
       type="button"
       data-testid="sign-out-button"
-      onClick={() => signOut({ callbackUrl: '/auth/signin?callbackUrl=/' })}
+      onClick={() => signOutHelper(nextAuthSignOut)}
       aria-label="Sign out of the meals dashboard"
       style={{
         display: 'inline-flex',
