@@ -88,6 +88,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       skipped: result.skippedPaths,
       totalOps: result.totalOps,
       isInitialSync: result.isInitialSync,
+      suppressedNoopWrites: result.suppressedNoopWrites,
       productsManifestPath: result.productsManifestPath ?? null,
       dryRun,
     });

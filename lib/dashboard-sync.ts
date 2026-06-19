@@ -6,6 +6,7 @@ import type {
   MatchedItem,
 } from './meals-data';
 import type { BlobStorageClient, Manifest } from './blob-storage';
+import { createHash } from 'node:crypto';
 
 export interface DashboardSummary {
   coverage_percentage: number;
@@ -132,12 +133,25 @@ export interface SyncResult {
   totalOps: number;
   /** True when no manifest existed before this call (first sync). */
   isInitialSync: boolean;
+  /** True when manifest/pointer publication was deliberately suppressed for a true no-op sync. */
+  suppressedNoopWrites: boolean;
   /** Spec 021 / FR-003 — path to the products manifest blob, if any products were written. */
   productsManifestPath?: string | null;
 }
 
 const SUMMARY_PATH_FOR = (hash: string) => `meta/summary-${hash}.json`;
 const PRODUCTS_MANIFEST_PREFIX = 'meta/products-manifest-';
+
+function serialiseManifest(manifest: Manifest): { manifestContent: string; manifestHash: string; manifestPath: string } {
+  const sorted = Object.keys(manifest).sort().reduce<Manifest>((acc, k) => {
+    acc[k] = manifest[k]!;
+    return acc;
+  }, {});
+  const manifestContent = JSON.stringify(sorted, null, 2);
+  const manifestHash = createHash('sha256').update(manifestContent, 'utf8').digest('hex');
+  const manifestPath = `meta/manifest-${manifestHash}.json`;
+  return { manifestContent, manifestHash, manifestPath };
+}
 
 /**
  * Execute the storage-layout portion of the sync algorithm (spec 016 §Sync Algorithm).
@@ -223,6 +237,14 @@ export async function syncDashboardLayout(
         newManifest[product.productBlobPath] = result.hash;
         if (result.written) writtenPaths.push(product.productBlobPath);
         else skippedPaths.push(product.productBlobPath);
+      } else {
+        const hash = client.computeHash(content);
+        newManifest[product.productBlobPath] = hash;
+        if (currentManifest[product.productBlobPath] === hash) {
+          skippedPaths.push(product.productBlobPath);
+        } else {
+          writtenPaths.push(product.productBlobPath);
+        }
       }
       // Extract tpnc from path (e.g. "products/123456.json" → "123456")
       const tpnc = product.productBlobPath.replace('products/', '').replace('.json', '');
@@ -241,30 +263,13 @@ export async function syncDashboardLayout(
     }
   }
 
-  if (!dryRun) {
-    for (const { path, content } of dataBlobs) {
+  for (const { path, content } of dataBlobs) {
+    if (!dryRun) {
       const result = await client.writeBlobIfChanged(path, content, currentManifest);
       newManifest[path] = result.hash;
       if (result.written) writtenPaths.push(path);
       else skippedPaths.push(path);
-    }
-
-    // Step 5–7: write manifest then pointer.
-    const { manifestPath, manifestHash } = await client.writeManifest(newManifest);
-    await client.writePointer(manifestPath, productsManifestPath);
-
-    return {
-      manifestPath,
-      manifestHash,
-      writtenPaths,
-      skippedPaths,
-      totalOps: writtenPaths.length + 2, // +manifest +pointer
-      isInitialSync,
-      productsManifestPath,
-    };
-  } else {
-    // Dry run: compute hashes, report what would change, skip all writes.
-    for (const { path, content } of dataBlobs) {
+    } else {
       const hash = client.computeHash(content);
       newManifest[path] = hash;
       if (currentManifest[path] === hash) {
@@ -273,37 +278,64 @@ export async function syncDashboardLayout(
         writtenPaths.push(path);
       }
     }
-    // Products manifest path is deterministic from content.
-    if (normalisedPayload.products && normalisedPayload.products.length > 0) {
-      const productsManifest: Record<string, string> = {};
-      for (const product of normalisedPayload.products) {
-        const tpnc = product.productBlobPath.replace('products/', '').replace('.json', '');
-        productsManifest[tpnc] = product.productBlobPath;
-      }
-      const manifestContent = JSON.stringify(productsManifest, null, 2);
-      const manifestHash = client.computeHash(manifestContent);
-      productsManifestPath = `${PRODUCTS_MANIFEST_PREFIX}${manifestHash}.json`;
-    }
-    // No blob writes in dry-run; totalOps reflects intent.
+  }
+
+  const { manifestPath, manifestHash } = serialiseManifest(newManifest);
+  const currentProductsManifestPath = pointer?.productsManifestPath ?? null;
+  const computedProductsManifestPath = productsManifestPath ?? null;
+  const trueNoOp =
+    !dryRun &&
+    !isInitialSync &&
+    writtenPaths.length === 0 &&
+    pointer !== null &&
+    pointer.manifestPath === manifestPath &&
+    currentProductsManifestPath === computedProductsManifestPath;
+
+  if (trueNoOp) {
     return {
-      manifestPath: `meta/manifest-${client.computeHash(
-        JSON.stringify(
-          Object.keys(newManifest).sort().reduce<Manifest>((acc, k) => {
-            acc[k] = newManifest[k]!;
-            return acc;
-          }, {}),
-          null,
-          2
-        )
-      )}.json`,
-      manifestHash: 'dry-run',
+      manifestPath,
+      manifestHash,
       writtenPaths,
       skippedPaths,
-      totalOps: writtenPaths.length + 2,
+      totalOps: 0,
       isInitialSync,
-      productsManifestPath,
+      suppressedNoopWrites: true,
+      productsManifestPath: computedProductsManifestPath,
     };
   }
+
+  if (!dryRun) {
+    // Step 5–7: write manifest then pointer.
+    await client.writeManifest(newManifest);
+    await client.writePointer(manifestPath, computedProductsManifestPath);
+    return {
+      manifestPath,
+      manifestHash,
+      writtenPaths,
+      skippedPaths,
+      totalOps: writtenPaths.length + 2, // +manifest +pointer
+      isInitialSync,
+      suppressedNoopWrites: false,
+      productsManifestPath: computedProductsManifestPath,
+    };
+  }
+
+  // Dry run: report what would change, skip all writes.
+  return {
+    manifestPath,
+    manifestHash: 'dry-run',
+    writtenPaths,
+    skippedPaths,
+    totalOps: writtenPaths.length + 2,
+    isInitialSync,
+    suppressedNoopWrites:
+      !isInitialSync &&
+      writtenPaths.length === 0 &&
+      pointer !== null &&
+      pointer.manifestPath === manifestPath &&
+      currentProductsManifestPath === computedProductsManifestPath,
+    productsManifestPath: computedProductsManifestPath,
+  };
 }
 
 /**
@@ -433,6 +465,8 @@ export async function invalidateCoverageForOrder(
       // beyond the matching coverage rewrites.
       totalOps: writtenPaths.length + 2,
       isInitialSync: false,
+      suppressedNoopWrites: false,
+      productsManifestPath: null,
     };
   } else {
     // Dry run: report what would be written without making any changes.
@@ -447,6 +481,8 @@ export async function invalidateCoverageForOrder(
       skippedPaths: [],
       totalOps: writtenPaths.length + 2,
       isInitialSync: false,
+      suppressedNoopWrites: false,
+      productsManifestPath: null,
     };
   }
 }

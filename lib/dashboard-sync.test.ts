@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   syncDashboardLayout,
   buildOrderBlobPath,
   buildCoverageBlobPath,
   invalidateCoverageForOrder,
   type SplitLayoutPayload,
+  type ProductBlob,
 } from './dashboard-sync';
 import { InMemoryBlobStorageClient } from './blob-storage';
 import type { Meal, MatchedItem } from './meals-data';
@@ -15,6 +16,28 @@ function makeMeal(id: string, date: string, content: string): Meal {
 
 function makeMatched(name: string): MatchedItem {
   return { ingredient: name, name, quantity: 1, price: 1.0 };
+}
+
+function makeProduct(tpnc: string, title: string): ProductBlob & { productBlobPath: string } {
+  return {
+    productBlobPath: `products/${tpnc}.json`,
+    tpnc,
+    gtin: `${tpnc}-gtin`,
+    tpnb: `${tpnc}-tpnb`,
+    title,
+    description: `${title} description`,
+    storage: 'Keep refrigerated',
+    preparation: 'Ready to use',
+    ingredients: `${title} ingredients`,
+    allergens: 'None',
+    nutrition: 'N/A',
+    brand: 'Tesco',
+    category: 'Fresh',
+    imageUrl: `https://example.com/${tpnc}.jpg`,
+    productUrl: `https://example.com/${tpnc}`,
+    source: 'test-fixture',
+    lastFetched: '2026-06-15T12:00:00Z',
+  };
 }
 
 const sampleSummary = {
@@ -128,18 +151,25 @@ describe('syncDashboardLayout — first sync (no manifest exists)', () => {
 });
 
 describe('syncDashboardLayout — unchanged sync (SC-03)', () => {
-  it('writes only manifest + pointer; all data blobs skipped', async () => {
+  it('suppresses manifest + pointer writes when the sync is a true no-op', async () => {
     const client = new InMemoryBlobStorageClient();
     const payload = makePayload();
 
     const first = await syncDashboardLayout(payload, client);
     expect(first.writtenPaths).toHaveLength(3);
 
+    const writeManifestSpy = vi.spyOn(client, 'writeManifest');
+    const writePointerSpy = vi.spyOn(client, 'writePointer');
+
     const second = await syncDashboardLayout(payload, client);
+    expect(second.suppressedNoopWrites).toBe(true);
     expect(second.writtenPaths).toHaveLength(0);
     expect(second.skippedPaths).toHaveLength(3);
-    expect(second.totalOps).toBe(2);
+    expect(second.totalOps).toBe(0);
     expect(second.isInitialSync).toBe(false);
+    expect(writeManifestSpy).not.toHaveBeenCalled();
+    expect(writePointerSpy).not.toHaveBeenCalled();
+    expect(second.manifestPath).toBe(first.manifestPath);
   });
 });
 
@@ -158,6 +188,24 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
     expect(client.store.has(first.manifestPath)).toBe(true);
     const pointer = await client.readPointer();
     expect(pointer?.manifestPath).toBe(result.manifestPath);
+  });
+
+  it('writes pointer when the products manifest path changes', async () => {
+    const client = new InMemoryBlobStorageClient();
+    const firstPayload = makePayload();
+    firstPayload.products = [makeProduct('111111', 'Apples')];
+    const first = await syncDashboardLayout(firstPayload, client);
+
+    const writePointerSpy = vi.spyOn(client, 'writePointer');
+    const secondPayload = makePayload();
+    secondPayload.products = [makeProduct('111111', 'Apples'), makeProduct('222222', 'Pears')];
+
+    const second = await syncDashboardLayout(secondPayload, client);
+    expect(writePointerSpy).toHaveBeenCalledTimes(1);
+    expect(second.suppressedNoopWrites).toBe(false);
+    expect(second.productsManifestPath).not.toBe(first.productsManifestPath);
+    expect(second.writtenPaths).toContain('products/222222.json');
+    expect(second.writtenPaths.some((path) => path.startsWith('meta/products-manifest-'))).toBe(true);
   });
 
   // ── Spec 019: Phase 2 schema extensions + Phase 3 invalidation trigger ──────────
@@ -323,13 +371,15 @@ describe('syncDashboardLayout — manifest write failure leaves previous valid (
   it('when writeManifest throws, the previous manifest + pointer remain valid', async () => {
     const client = new InMemoryBlobStorageClient();
     const first = await syncDashboardLayout(makePayload(), client);
+    const payload = makePayload();
+    payload.summary = { ...payload.summary, coverage_percentage: 81 };
 
     const orig = client.writeManifest.bind(client);
     client.writeManifest = async () => {
       throw new Error('simulated manifest write failure');
     };
 
-    await expect(syncDashboardLayout(makePayload(), client)).rejects.toThrow(/simulated/);
+    await expect(syncDashboardLayout(payload, client)).rejects.toThrow(/simulated/);
     client.writeManifest = orig;
 
     expect(client.store.has(first.manifestPath)).toBe(true);
@@ -342,13 +392,15 @@ describe('syncDashboardLayout — pointer write failure leaves manifest valid (F
   it('when writePointer throws after manifest, the manifest is still current', async () => {
     const client = new InMemoryBlobStorageClient();
     const first = await syncDashboardLayout(makePayload(), client);
+    const payload = makePayload();
+    payload.summary = { ...payload.summary, coverage_percentage: 81 };
 
     const orig = client.writePointer.bind(client);
     client.writePointer = async () => {
       throw new Error('simulated pointer write failure');
     };
 
-    await expect(syncDashboardLayout(makePayload(), client)).rejects.toThrow(/simulated/);
+    await expect(syncDashboardLayout(payload, client)).rejects.toThrow(/simulated/);
     client.writePointer = orig;
 
     const blobs = await client.listPaths('meta/manifest-');
@@ -356,6 +408,23 @@ describe('syncDashboardLayout — pointer write failure leaves manifest valid (F
     expect(client.store.has(first.manifestPath)).toBe(true);
     const pointer = await client.readPointer();
     expect(pointer?.manifestPath).toBe(first.manifestPath);
+  });
+
+  it('rebuilds the manifest when the pointer references a missing manifest blob', async () => {
+    const client = new InMemoryBlobStorageClient();
+    client.seed(
+      'pointers/latest.json',
+      JSON.stringify({ manifestPath: 'meta/manifest-missing.json', productsManifestPath: null })
+    );
+
+    const result = await syncDashboardLayout(makePayload(), client);
+    expect(result.suppressedNoopWrites).toBe(false);
+    expect(result.writtenPaths).toHaveLength(3);
+    expect(result.totalOps).toBe(5);
+    expect(await client.readPointer()).toEqual({
+      manifestPath: result.manifestPath,
+      productsManifestPath: null,
+    });
   });
 });
 
