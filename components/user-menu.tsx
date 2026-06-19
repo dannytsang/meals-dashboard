@@ -255,12 +255,11 @@ export function UserMenu({ userName, debugOn, initialTheme = 'dark' }: UserMenuP
     nextAuthSignOut({ callbackUrl: '/auth/signin?callbackUrl=/' });
   };
 
-  // Spec 026 / FR-003: panel order. The first interactive row in DOM
-  // order is whichever of (Debug, Theme) is first — Debug is only
-  // rendered when the cookie is set (FR-005), so the first-row ref
-  // claims the Debug row first if present, else the Theme row.
-  const firstRow =
-    debugOn ? firstRowRef : firstRowRef; // same ref for either; Debug claimed first when present
+  // Spec 026 / FR-003 / FR-005 Rev 2: the Debug menu row is always
+  // rendered first in DOM order (regardless of the `debugOn` prop), so
+  // it is the first-row focus target when the menu opens. The Theme
+  // row's `firstRowRef` claim is no longer needed.
+  // (FR-011 focus-on-open behaviour is unchanged.)
 
   return (
     <div style={wrapperStyle} data-testid="user-menu">
@@ -295,59 +294,61 @@ export function UserMenu({ userName, debugOn, initialTheme = 'dark' }: UserMenuP
             <div style={identityValueStyle}>{userName}</div>
           </div>
 
-          {/* Spec 026 / FR-005: Debug row only when the signed cookie is
-              set (server-rendered `debugOn` prop). Conditional render
-              matches the inline <DebugToggle />'s server-side gating
-              (spec 022 Rev 3). */}
-          {debugOn && (
-            <button
-              ref={debugOn ? firstRow : undefined}
-              type="button"
-              role="menuitemcheckbox"
-              aria-checked={debugEnabled ? 'true' : 'false'}
-              data-testid="user-menu-debug-row"
-              data-debug-state={debugEnabled ? 'on' : 'off'}
-              onClick={handleDebugClick}
-              disabled={debugPending}
+          {/* Spec 026 / FR-005 Rev 2: Debug row is ALWAYS rendered (no
+              `debugOn &&` guard). The row's `aria-checked` reflects the
+              server-rendered `debugOn` prop, and clicking POSTs to
+              /api/debug/toggle with the flipped value
+              (`{ value: '1' }` when off, `{ value: '0' }` when on).
+              This restores the first-time-enablement path the
+              pre-spec-026 inline <DebugToggle initialEnabled={!!debugOn} />
+              provided. Server-side cookie verification on each POST
+              (spec 022 Rev 3) is preserved unchanged. */}
+          <button
+            ref={firstRowRef}
+            type="button"
+            role="menuitemcheckbox"
+            aria-checked={debugEnabled ? 'true' : 'false'}
+            data-testid="user-menu-debug-row"
+            data-debug-state={debugEnabled ? 'on' : 'off'}
+            onClick={handleDebugClick}
+            disabled={debugPending}
+            style={{
+              ...menuRowBaseStyle,
+              ...(debugPending ? menuRowDisabledStyle : {}),
+            }}
+          >
+            <Bug
               style={{
-                ...menuRowBaseStyle,
-                ...(debugPending ? menuRowDisabledStyle : {}),
+                width: '14px',
+                height: '14px',
+                color: debugEnabled ? 'var(--accent-amber, #f59e0b)' : 'var(--text-secondary)',
               }}
-            >
-              <Bug
+              aria-hidden="true"
+            />
+            <span style={{ flex: 1 }}>Debug mode</span>
+            <span style={stateBadgeStyle(debugEnabled ? 'on' : 'off')}>
+              {debugPending ? '…' : debugEnabled ? 'on' : 'off'}
+            </span>
+            {debugError && (
+              <span
+                role="alert"
+                data-testid="user-menu-debug-error"
                 style={{
-                  width: '14px',
-                  height: '14px',
-                  color: debugEnabled ? 'var(--accent-amber, #f59e0b)' : 'var(--text-secondary)',
+                  marginLeft: '0.5rem',
+                  fontSize: '0.7rem',
+                  color: 'var(--accent-rose, #f43f5e)',
                 }}
-                aria-hidden="true"
-              />
-              <span style={{ flex: 1 }}>Debug mode</span>
-              <span style={stateBadgeStyle(debugEnabled ? 'on' : 'off')}>
-                {debugPending ? '…' : debugEnabled ? 'on' : 'off'}
+              >
+                {debugError}
               </span>
-              {debugError && (
-                <span
-                  role="alert"
-                  data-testid="user-menu-debug-error"
-                  style={{
-                    marginLeft: '0.5rem',
-                    fontSize: '0.7rem',
-                    color: 'var(--accent-rose, #f43f5e)',
-                  }}
-                >
-                  {debugError}
-                </span>
-              )}
-            </button>
-          )}
+            )}
+          </button>
 
           {/* Spec 026 / FR-006: Theme row always present. Icon switches
               between Sun and Moon reflecting the NEXT state (the
               current `theme` is the active state; clicking will flip
               to the icon's state). */}
           <button
-            ref={!debugOn ? firstRow : undefined}
             type="button"
             role="menuitem"
             data-testid="user-menu-theme-row"
