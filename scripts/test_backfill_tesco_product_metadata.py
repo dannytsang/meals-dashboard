@@ -15,6 +15,7 @@ _sync_mod = _importlib.import_module('sync-dashboard-data')
 # Expose for tests
 _resolve_tpnc = _backfill_mod._resolve_tpnc
 _read_cache = _backfill_mod._read_cache
+_build_backfill_payload = _backfill_mod._build_backfill_payload
 backfill_entry = _backfill_mod.backfill_entry
 
 
@@ -121,6 +122,75 @@ class TestCacheReadWrite(unittest.TestCase):
                 _read_cache(path)
             self.assertEqual(ctx.exception.code, 1)
 
+
+class TestBackfillPayloadConstruction(unittest.TestCase):
+    """Tests for preserving dashboard data during product backfill."""
+
+    def test_merges_products_into_current_dashboard_payload(self):
+        """Backfill payload should reuse current orders/coverage, not send empties."""
+        base_payload = {
+            'orders': [{
+                'orderNumber': '5421-8594-00',
+                'deliveryDate': '2026-06-15',
+                'deliverySlot': '20:00-21:00',
+                'orderTotal': 4.5,
+                'items': [{'name': 'Beef mince 500g', 'quantity': 1, 'price': 4.5}],
+                'substitutions': [],
+                'unavailable': [],
+                'shortLifeItems': [],
+                'status': 'active',
+                'orderBlobPath': 'orders/2026-06-15/5421-8594-00.json',
+            }],
+            'coverage': [{
+                'date': '2026-06-15',
+                'sourceOrderBlobPath': 'orders/2026-06-15/5421-8594-00.json',
+                'meals': [],
+                'coverageBlobPath': 'coverage/2026-06-15.json',
+            }],
+            'summary': {'coverage_percentage': 100},
+            'deliveryWindows': [],
+            'coverageWindow': ['2026-06-15'],
+            'dataGeneratedAt': '2026-06-15T12:00:00Z',
+            'uiUpdatedAt': '2026-06-15T12:00:00Z',
+            'products': [],
+        }
+        products = {
+            '123456789': {
+                'productBlobPath': 'products/123456789.json',
+                'tpnc': '123456789',
+                'title': 'Tesco Beef Mince 500g',
+                'description': 'Beef mince',
+                'source': 'test-fixture',
+                'lastFetched': '2026-06-15T12:00:00Z',
+            }
+        }
+
+        with patch.object(_sync_mod, 'build_dashboard_payload', return_value=base_payload) as mock_build:
+            payload = _build_backfill_payload(products, {'any': 'cache'}, 'https://example.com/api', 'secret')
+
+        mock_build.assert_called_once()
+        self.assertIsNotNone(payload)
+        self.assertEqual(len(payload['orders']), 1)
+        self.assertEqual(len(payload['coverage']), 1)
+        self.assertEqual(payload['orders'][0]['orderNumber'], '5421-8594-00')
+        self.assertEqual(payload['products'][0]['productBlobPath'], 'products/123456789.json')
+        self.assertGreaterEqual(len(payload['products']), 1)
+
+    def test_returns_none_when_dashboard_cache_missing(self):
+        """Without a current dashboard cache, the backfill must not post empties."""
+        products = {
+            '123456789': {
+                'productBlobPath': 'products/123456789.json',
+                'tpnc': '123456789',
+                'title': 'Tesco Beef Mince 500g',
+                'description': 'Beef mince',
+                'source': 'test-fixture',
+                'lastFetched': '2026-06-15T12:00:00Z',
+            }
+        }
+
+        payload = _build_backfill_payload(products, None, 'https://example.com/api', 'secret')
+        self.assertIsNone(payload)
 
 if __name__ == '__main__':
     unittest.main()

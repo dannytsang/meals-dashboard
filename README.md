@@ -91,23 +91,31 @@ The `meal_coverage` module (`skills/meals/scripts/meal_coverage/`) is the **sing
 **Key principle:** The sync script (`sync-dashboard-data.py`) does **not** re-run matching. It formats the already-computed `meal_coverage` output. This ensures the dashboard shows identical coverage to `/meals check`.
 
 ## Dashboard Sync Pipeline
+## Pipeline Overview
+
+The meals flow is intentionally split into three independently runnable stages:
+
+| Stage | Script | What it does |
+|---|---|---|
+| Full meals check | `scripts/tesco_meal_check.py` | Email check → Todoist/planned meals → calendar matching → dashboard cache write → dashboard sync |
+| Planned meals only | `scripts/tesco_meal_check.py --no-dashboard-sync` | Runs the matching/reporting pipeline without pushing the dashboard |
+| Product metadata only | `scripts/backfill_tesco_product_metadata.py` | Upgrades Tesco product metadata and writes product blobs/manifest without re-running meal matching |
+| Dashboard publish only | `scripts/sync-dashboard-data.py --skip-fetch` | Replays the dashboard publish step from the latest cache |
+
+### Full dashboard sync
 
 The sync script is located at `scripts/sync-dashboard-data.py`.
 
-
 **Usage:**
 ```bash
-# Full sync (fetch + analyze + build + deploy)
-python3 scripts/sync-dashboard-data.py
-
-# Use cached data only (skip fetch)
+# Publish the latest cache to the dashboard and Vercel Blob
 python3 scripts/sync-dashboard-data.py --skip-fetch
 
 # Skip build step
-python3 scripts/sync-dashboard-data.py --no-build
+python3 scripts/sync-dashboard-data.py --skip-fetch --no-build
 
 # Dry run (no changes made)
-python3 scripts/sync-dashboard-data.py --dry-run
+python3 scripts/sync-dashboard-data.py --skip-fetch --dry-run
 ```
 
 **Pipeline steps:**
