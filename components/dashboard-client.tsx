@@ -510,7 +510,7 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
             <div style={{ ...cardStyle, padding: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0.75rem', position: 'relative' }}>
                 <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center' as const, margin: 0 }}>🛒 ORDER ITEMS BY CATEGORY</h2>
-                {debugOn && <DashboardDebugChips />}
+                {debugOn && !demoMode && <DashboardDebugChips />}
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(220px, 1.2fr) minmax(0, 1fr) auto auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>

@@ -12,6 +12,7 @@ vi.mock('next/navigation', () => ({
 
 const source = readFileSync(join(process.cwd(), 'components/dashboard-client.tsx'), 'utf8');
 const pageSource = readFileSync(join(process.cwd(), 'app/page.tsx'), 'utf8');
+const layoutSource = readFileSync(join(process.cwd(), 'app/layout.tsx'), 'utf8');
 
 describe('DashboardClient meal card/detail contract', () => {
   it('keeps targeted missing explanations out of compact Week Meals cards and in the detail overlay', () => {
@@ -310,6 +311,11 @@ describe('DashboardClient user menu (Spec 026)', () => {
     expect(demoIdx).toBeLessThan(userMenuIdx);
   });
 
+  it('hides the debug chips when demo mode is active so demo mode wins', () => {
+    expect(source).toContain('debugOn && !demoMode && <DashboardDebugChips />');
+    expect(source).not.toContain('debugOn && <DashboardDebugChips />');
+  });
+
   it('declares userName: string in the DashboardClient props interface', () => {
     expect(source).toMatch(/interface\s+DashboardClientProps[\s\S]*?\buserName:\s*string/);
   });
@@ -350,6 +356,13 @@ describe('DashboardClient user menu (Spec 026)', () => {
     expect(signInSource).not.toContain('UserMenu');
     expect(signInSource).not.toContain('UserChip');
     expect(signInSource).not.toContain('user-chip');
+  });
+});
+
+describe('DashboardClient demo-mode contract (Spec 024)', () => {
+  it('tags the body element with data-demo-mode instead of the html element', () => {
+    expect(layoutSource).toContain('<body className="antialiased" data-demo-mode={demoMode ? \'true\' : \'false\'}');
+    expect(layoutSource).not.toContain('<html lang="en" data-theme="dark" data-demo-mode={demoMode ? \'true\' : \'false\'}>');
   });
 });
 
