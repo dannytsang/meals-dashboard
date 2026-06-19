@@ -8,8 +8,8 @@
  *
  *   1. Identity header row (decorative — chip text already carries the
  *      identity; this is a "Signed in as" label inside the panel).
- *   2. Debug menu row (conditional — only when the `meals_debug_mode`
- *      signed cookie is set, per spec 022 Rev 3 server-side gating).
+ *   2. Debug menu row (always visible — reflects the current
+ *      `meals_debug_mode` signed-cookie state and toggles it on click).
  *   3. Theme menu row (always present).
  *   4. Sign out menu row (always present).
  *
@@ -36,7 +36,7 @@ export interface UserMenuProps {
   /** Server-rendered display name from spec 023. */
   userName: string;
   /** Server-rendered effective debug state from spec 022 Rev 3.
-   *  When falsy, the Debug menu row is NOT rendered. */
+   *  When falsy, the Debug menu row still renders in the off state. */
   debugOn?: boolean;
   /** Server-rendered initial theme; used as the menu's first-paint
    *  state for the Theme row's icon. Defaults to 'dark' to match the
@@ -170,7 +170,12 @@ export function UserMenu({ userName, debugOn, initialTheme = 'dark' }: UserMenuP
   // row can claim focus when the menu opens.
   const firstRowRef = useRef<HTMLButtonElement | null>(null);
 
-  const close = useCallback(() => setOpen(false), []);
+  const close = useCallback((options?: { returnFocus?: boolean }) => {
+    setOpen(false);
+    if (options?.returnFocus) {
+      triggerRef.current?.focus();
+    }
+  }, []);
 
   // Spec 026 / FR-008: click-outside closes the menu. Listener is
   // mounted only while the menu is open and removed on close / unmount.
@@ -189,7 +194,7 @@ export function UserMenu({ userName, debugOn, initialTheme = 'dark' }: UserMenuP
       ) {
         return;
       }
-      close();
+      close({ returnFocus: true });
     };
     document.addEventListener('mousedown', handlePointerDown);
     return () => document.removeEventListener('mousedown', handlePointerDown);
@@ -202,8 +207,7 @@ export function UserMenu({ userName, debugOn, initialTheme = 'dark' }: UserMenuP
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        close();
-        triggerRef.current?.focus();
+        close({ returnFocus: true });
       }
     };
     document.addEventListener('keydown', handleKey);
@@ -223,7 +227,11 @@ export function UserMenu({ userName, debugOn, initialTheme = 'dark' }: UserMenuP
   }, [open]);
 
   const handleTrigger = () => {
-    setOpen((prev) => !prev);
+    if (open) {
+      close({ returnFocus: true });
+      return;
+    }
+    setOpen(true);
   };
 
   const handleDebugClick = async () => {
@@ -240,18 +248,18 @@ export function UserMenu({ userName, debugOn, initialTheme = 'dark' }: UserMenuP
       return;
     }
     setDebugPending(false);
-    close();
+    close({ returnFocus: true });
     router.refresh();
   };
 
   const handleThemeClick = () => {
     const next = toggleTheme(theme);
     setTheme(next);
-    close();
+    close({ returnFocus: true });
   };
 
   const handleSignOutClick = () => {
-    close();
+    close({ returnFocus: true });
     nextAuthSignOut({ callbackUrl: '/auth/signin?callbackUrl=/' });
   };
 

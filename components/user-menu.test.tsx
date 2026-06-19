@@ -102,7 +102,7 @@ describe('UserMenu — open/close', () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it('closes on click outside (mousedown) the trigger and the panel', () => {
+  it('closes on click outside (mousedown) the trigger and the panel, then returns focus to the trigger', () => {
     render(
       <div>
         <button data-testid="outside">outside</button>
@@ -113,6 +113,7 @@ describe('UserMenu — open/close', () => {
     expect(screen.queryByTestId('user-menu-panel')).toBeTruthy();
     fireEvent.mouseDown(screen.getByTestId('outside'));
     expect(screen.queryByTestId('user-menu-panel')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByTestId('user-menu-trigger'));
   });
 
   it('does NOT close when clicking inside the panel', () => {
@@ -179,13 +180,14 @@ describe('UserMenu — Debug row gating (FR-005 Rev 2: always-visible)', () => {
 });
 
 describe('UserMenu — Theme row', () => {
-  it('clicking the Theme row flips data-theme on <html> and closes the menu', () => {
+  it('clicking the Theme row flips data-theme on <html>, closes the menu, and returns focus to the trigger', () => {
     document.documentElement.setAttribute('data-theme', 'dark');
     render(<UserMenu userName="Liam" />);
     fireEvent.click(screen.getByTestId('user-menu-trigger'));
     fireEvent.click(screen.getByTestId('user-menu-theme-row'));
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
     expect(screen.queryByTestId('user-menu-panel')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByTestId('user-menu-trigger'));
   });
 });
 

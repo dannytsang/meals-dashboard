@@ -47,15 +47,21 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(detailOverlaySource).not.toContain('Coverage status');
   });
 
-  it('does not import generated private data into the client component', () => {
+  it('renders the live-load warning panel beneath the header when the loader reports an error', () => {
+    expect(source).toContain('DashboardDataErrorPanel');
+    expect(source).toContain('data.loadError && <DashboardDataErrorPanel error={data.loadError} />');
+    const headerEnd = source.indexOf('</header>');
+    const panelIdx = source.indexOf('data.loadError && <DashboardDataErrorPanel error={data.loadError} />');
+    const mainIdx = source.indexOf('<main style={{ maxWidth: \'1400px\'');
+    expect(headerEnd).toBeGreaterThan(-1);
+    expect(panelIdx).toBeGreaterThan(headerEnd);
+    expect(panelIdx).toBeLessThan(mainIdx);
+  });
+
+  it('keeps the data loader on the server and out of the client bundle', () => {
     expect(source).not.toContain("@/lib/real-data");
     expect(pageSource).toContain('getServerSession(authOptions)');
     expect(pageSource).toContain('buildCoverageWindowDates(today, endDate)');
-    // Spec 024: the page now passes a reader to getDashboardData. The
-    // privacy contract is unchanged: the data fetch is server-side and
-    // the client component does NOT import or call getDashboardData
-    // directly. Match the import statement specifically to avoid
-    // false-positives from comments mentioning the function name.
     expect(pageSource).toMatch(/import\s*\{[^}]*\bgetDashboardData\b[^}]*\}\s*from/);
     expect(source).not.toMatch(/import\s*\{[^}]*\bgetDashboardData\b[^}]*\}\s*from/);
     expect(source).not.toMatch(/getDashboardData\s*\(/);
@@ -97,7 +103,8 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(source).toContain("border: 'none'");
     expect(source).toContain("width: '100%'");
     expect(source).toContain("boxSizing: 'border-box'");
-    expect(source).not.toContain('{missingExplanation.join(\', \')}');  });
+    expect(source).not.toContain('{missingExplanation.join(\', \')}');
+  });
 
   // Spec 019 / FR-05 — "Use today" section for perishable items
   it('renders a "Use today" section at the top of the meal detail overlay for perishable items', () => {

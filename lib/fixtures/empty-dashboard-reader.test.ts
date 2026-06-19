@@ -76,6 +76,7 @@ describe('EmptyDashboardReader', () => {
         mealsCheckSummary: null,
         dataGeneratedAt: '',
         uiUpdatedAt: '',
+        loadError: null,
       });
     });
   });

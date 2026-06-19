@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Fragment, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { DashboardDataErrorPanel } from '@/components/dashboard-data-error-panel';
 import { UserMenu } from '@/components/user-menu';
 import { DemoModeChip } from '@/components/demo-mode-chip';
 import { OrderStatusBadge } from '@/components/order-status-badge';
@@ -312,6 +313,8 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
           </div>
         </div>
       </header>
+
+      {data.loadError && <DashboardDataErrorPanel error={data.loadError} />}
 
       <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem 1rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(5, 1fr)' : 'repeat(2, 1fr)', gap: '0.5rem', marginBottom: '1.5rem' }}>
