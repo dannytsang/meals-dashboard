@@ -126,11 +126,31 @@ describe('UserMenu — open/close', () => {
   });
 });
 
-describe('UserMenu — Debug row gating', () => {
-  it('does NOT render the Debug row when debugOn=false', () => {
+describe('UserMenu — Debug row gating (FR-005 Rev 2: always-visible)', () => {
+  it('renders the Debug row when debugOn=false with aria-checked="false" (first-time-enablement affordance)', () => {
     render(<UserMenu userName="Ivy" debugOn={false} />);
     fireEvent.click(screen.getByTestId('user-menu-trigger'));
-    expect(screen.queryByTestId('user-menu-debug-row')).toBeNull();
+    const debugRow = screen.getByTestId('user-menu-debug-row');
+    expect(debugRow).toBeTruthy();
+    expect(debugRow.getAttribute('role')).toBe('menuitemcheckbox');
+    expect(debugRow.getAttribute('aria-checked')).toBe('false');
+    expect(debugRow.getAttribute('data-debug-state')).toBe('off');
+  });
+
+  it('clicking the Debug row when debugOn=false POSTs { value: "1" } to enable (first-time-enablement click)', async () => {
+    render(<UserMenu userName="Ivy-clean-slate" debugOn={false} />);
+    fireEvent.click(screen.getByTestId('user-menu-trigger'));
+    const debugRow = screen.getByTestId('user-menu-debug-row');
+    await act(async () => {
+      fireEvent.click(debugRow);
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/debug/toggle',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ value: '1' }),
+      })
+    );
   });
 
   it('renders the Debug row when debugOn=true and reflects aria-checked', () => {
@@ -141,7 +161,7 @@ describe('UserMenu — Debug row gating', () => {
     expect(debugRow.getAttribute('aria-checked')).toBe('true');
   });
 
-  it('clicking the Debug row POSTs { value: "0" } when currently on', async () => {
+  it('clicking the Debug row when debugOn=true POSTs { value: "0" } to disable', async () => {
     render(<UserMenu userName="Kim" debugOn={true} />);
     fireEvent.click(screen.getByTestId('user-menu-trigger'));
     const debugRow = screen.getByTestId('user-menu-debug-row');

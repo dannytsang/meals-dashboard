@@ -6,23 +6,16 @@ import { UserMenu } from '@/components/user-menu';
 import { DemoModeChip } from '@/components/demo-mode-chip';
 import { OrderStatusBadge } from '@/components/order-status-badge';
 import dynamic from 'next/dynamic';
-// Spec 022 / Rev 3 / NFR-002: the in-header Debug toggle is
-// dynamically imported so its code (including the /api/debug/toggle
-// URL and the "meals_debug_mode" cookie name) does NOT appear in
-// the main page bundle. The toggle button itself is small and the
-// flash is acceptable. With the debug cookie unset, the server
-// doesn't render the toggle at all, so the dynamic chunk is only
-// fetched after the user enables debug mode.
-const DebugToggle = dynamic(
-  () => import('@/components/debug-toggle').then((m) => m.DebugToggle),
-  { ssr: false }
-);
 import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/lib/meals-data';
-
 // Spec 022 / NFR-002: the debug chip component is dynamically imported
 // so its JS lives in a separate chunk that's only fetched when the
 // debug cookie is set. With the cookie unset, the chip is never
-// rendered and its code never reaches the main bundle.
+// rendered and its code never reaches the main bundle. The inline
+// Debug toggle that used to live here was collapsed into the
+// UserMenu component's always-visible Debug row by spec 026 Rev 2
+// (FR-005). The UserMenu module is NOT dynamic-imported because the
+// chip text (and the chip click → menu open) is the at-a-glance
+// identity affordance the user always sees.
 const DashboardDebugChips = dynamic(
   () => import('@/components/dashboard-debug-chips').then((m) => m.DashboardDebugChips),
   { ssr: false }
@@ -306,9 +299,11 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
               the three inline controls (DebugToggle, ThemeToggle,
               SignOutButton) with a single UserMenu that owns the
               dropdown containing Debug, Theme, and Sign out rows.
-              The Debug row is conditionally rendered based on the
-              server-rendered `debugOn` prop (spec 022 Rev 3
-              server-side gating; FR-005). The DemoModeChip stays a
+              The Debug row is always-visible regardless of the
+              server-rendered `debugOn` prop (spec 026 Rev 2 / FR-005;
+              the row's `aria-checked` reflects the current
+              meals_debug_mode signed-cookie state, and click flips
+              it). The DemoModeChip stays a
               separate sibling of the menu (FR-014) — demo mode is a
               data-mode signal that must stay visible regardless of
               menu state.
