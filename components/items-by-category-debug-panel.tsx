@@ -70,6 +70,7 @@ export function ItemsByCategoryDebugPanel({ onLoaded }: ItemsByCategoryDebugPane
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   const fetchDiagnostic = useCallback(async () => {
     setLoading(true);
@@ -94,7 +95,7 @@ export function ItemsByCategoryDebugPanel({ onLoaded }: ItemsByCategoryDebugPane
 
   useEffect(() => {
     fetchDiagnostic();
-  }, [fetchDiagnostic]);
+  }, [fetchDiagnostic, refreshNonce]);
 
   const copyJson = useCallback(async () => {
     if (!data) return;
@@ -159,6 +160,21 @@ export function ItemsByCategoryDebugPanel({ onLoaded }: ItemsByCategoryDebugPane
           </span>
           <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>fetched {new Date(data.fetchedAt).toLocaleTimeString()}</span>
         </div>
+        <button
+          type="button"
+          onClick={() => setRefreshNonce((n) => n + 1)}
+          data-testid="refresh-panel"
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--border-color)',
+            borderRadius: '6px',
+            padding: '0.25rem 0.5rem',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          Refresh
+        </button>
         <button
           type="button"
           onClick={copyJson}

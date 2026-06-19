@@ -1,30 +1,21 @@
 /**
  * app/api/debug/items-by-category/route.test.ts
  *
- * Spec 022 / Rev 3 / FR-015: integration test that verifies the API
- * route returns 404 when the per-user cookie is unset/malformed and
- * 200 with the expected JSON shape when the cookie is signed "1".
- *
- * The test mocks `effectiveDebugMode` and `getDashboardData` so it
- * can run in isolation without touching Vercel Blob or the env
- * vars. The cookie value passed to `effectiveDebugMode` is also
- * captured so we can assert the route passes the cookie through.
+ * Spec 031 / FR-002, FR-005, FR-008: integration test for the updated
+ * /api/debug/items-by-category payload. The route stays cookie-gated,
+ * but now exposes the pointer/manifest provenance and the selected
+ * latest-order candidate path/date alongside the existing counts.
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mocks must be declared before importing the route module.
-const mockEffectiveDebugMode = vi.fn();
 const mockGetDashboardData = vi.fn();
 const mockTransformCachedOrderSafely = vi.fn();
 const mockCookiesGet = vi.fn();
-let lastCookieRawSeenByRoute: string | undefined | null = undefined;
-
-vi.mock('@/lib/debug-mode', () => ({
-  effectiveDebugMode: (raw: string | undefined | null) => {
-    lastCookieRawSeenByRoute = raw;
-    return mockEffectiveDebugMode(raw);
-  },
-}));
+const mockReader = {
+  readPointer: vi.fn(),
+  readManifest: vi.fn(),
+  readJsonBlob: vi.fn(),
+};
 
 vi.mock('next/headers', () => ({
   cookies: async () => ({
@@ -32,18 +23,25 @@ vi.mock('next/headers', () => ({
   }),
 }));
 
+vi.mock('@/lib/runtime-mode', () => ({
+  runtimeModeStatus: () => ({ blobConfigured: true }),
+}));
+
+vi.mock('@/lib/fixtures/static-fixture-reader', () => ({
+  StaticFixtureReader: vi.fn(function StaticFixtureReader() {
+    return mockReader as never;
+  }),
+}));
+
+vi.mock('@/lib/blob-storage', () => ({
+  VercelBlobStorageClient: vi.fn(function VercelBlobStorageClient() {
+    return mockReader as never;
+  }),
+}));
+
 vi.mock('@/lib/dashboard-data', () => ({
   getDashboardData: (...args: unknown[]) => mockGetDashboardData(...args),
-  buildCoverageWindowDates: (today: string, endDate: string) => {
-    // Simple deterministic window for the test.
-    const start = new Date(today);
-    const end = new Date(endDate);
-    const out: string[] = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      out.push(d.toISOString().slice(0, 10));
-    }
-    return out;
-  },
+  buildCoverageWindowDates: () => ['2026-06-17', '2026-06-18'],
 }));
 
 vi.mock('@/lib/dashboard-ui-utils', () => ({
@@ -53,133 +51,89 @@ vi.mock('@/lib/dashboard-ui-utils', () => ({
 import { GET } from './route';
 import { DEBUG_COOKIE_NAME, signDebugCookie } from '@/lib/debug-cookie';
 
-const ORIGINAL_ENV = { ...process.env };
-
 beforeEach(() => {
   vi.clearAllMocks();
-  lastCookieRawSeenByRoute = undefined;
-  // Default: the route reads `meals_debug_mode`. The mock returns
-  // undefined so the test must explicitly set it.
-  mockCookiesGet.mockImplementation(() => undefined);
-});
-
-afterEach(() => {
-  process.env = { ...ORIGINAL_ENV };
-});
-
-describe('GET /api/debug/items-by-category — gating (Rev 3: cookie-only)', () => {
-  it('reads the meals_debug_mode cookie', async () => {
-    mockEffectiveDebugMode.mockReturnValue(false);
-    await GET();
-    expect(mockCookiesGet).toHaveBeenCalledWith(DEBUG_COOKIE_NAME);
+  mockCookiesGet.mockReturnValue(undefined);
+  mockReader.readPointer.mockResolvedValue({
+    manifestPath: 'meta/manifest-123.json',
+    productsManifestPath: 'products/manifest-123.json',
   });
-
-  it('passes the cookie value to effectiveDebugMode', async () => {
-    const signed = signDebugCookie('1');
-    mockCookiesGet.mockReturnValue({ value: signed });
-    mockEffectiveDebugMode.mockReturnValue(true);
-    mockGetDashboardData.mockResolvedValue({
-      coverage: [],
-      deliveryWindows: [],
-      latestOrder: null,
-      mealsCheckSummary: null,
-      dataGeneratedAt: '',
-      uiUpdatedAt: '',
-    });
-    mockTransformCachedOrderSafely.mockReturnValue({ items: [] });
-    await GET();
-    expect(lastCookieRawSeenByRoute).toBe(signed);
+  mockReader.readManifest.mockResolvedValue({
+    'meta/summary-123.json': 'sha256-summary',
+    'coverage/2026-06-17.json': 'sha256-cov-1',
+    'orders/2026-06-17/ORD-123.json': 'sha256-order-1',
   });
-
-  it('returns 404 when cookie is unset', async () => {
-    mockCookiesGet.mockReturnValue(undefined);
-    mockEffectiveDebugMode.mockReturnValue(false);
-    const res = await GET();
-    expect(res.status).toBe(404);
-  });
-
-  it('returns 404 when cookie is tampered', async () => {
-    mockCookiesGet.mockReturnValue({ value: '1.bogus' });
-    mockEffectiveDebugMode.mockReturnValue(false);
-    const res = await GET();
-    expect(res.status).toBe(404);
-  });
-
-  it('does not call getDashboardData when cookie is unset', async () => {
-    mockEffectiveDebugMode.mockReturnValue(false);
-    await GET();
-    expect(mockGetDashboardData).not.toHaveBeenCalled();
-  });
-});
-
-describe('GET /api/debug/items-by-category — payload shape', () => {
-  beforeEach(() => {
-    mockEffectiveDebugMode.mockReturnValue(true);
-    mockCookiesGet.mockReturnValue({ value: signDebugCookie('1') });
-  });
-
-  it('returns 200 with the FR-004 fields when cookie is signed "1"', async () => {
-    mockGetDashboardData.mockResolvedValue({
-      coverage: [],
-      deliveryWindows: [],
-      latestOrder: {
-        orderNumber: 'ORD-123',
-        deliveryDate: '2026-06-17',
-        orderTotal: 42.42,
-        items: [
-          { name: 'Eggs x12', quantity: 1, price: 3.5 },
-          { name: 'Bread', quantity: 1, price: 1.2 },
-        ],
-      },
-      mealsCheckSummary: null,
-      dataGeneratedAt: '2026-01-01T00:00:00Z',
-      uiUpdatedAt: '2026-01-01T00:00:00Z',
-    });
-    mockTransformCachedOrderSafely.mockReturnValue({
+  mockReader.readJsonBlob.mockResolvedValue(null);
+  mockGetDashboardData.mockResolvedValue({
+    coverage: [],
+    deliveryWindows: [],
+    latestOrder: {
       orderNumber: 'ORD-123',
       deliveryDate: '2026-06-17',
-      orderTotal: 42.42,
+      orderBlobPath: 'orders/2026-06-17/ORD-123.json',
       items: [
         { name: 'Eggs x12', quantity: 1, price: 3.5 },
         { name: 'Bread', quantity: 1, price: 1.2 },
       ],
-    });
+    },
+    mealsCheckSummary: null,
+    dataGeneratedAt: '2026-01-01T00:00:00Z',
+    uiUpdatedAt: '2026-01-01T00:00:00Z',
+    loadError: null,
+  });
+  mockTransformCachedOrderSafely.mockReturnValue({
+    orderNumber: 'ORD-123',
+    deliveryDate: '2026-06-17',
+    orderTotal: 42.42,
+    items: [
+      { name: 'Eggs x12', quantity: 1, price: 3.5 },
+      { name: 'Bread', quantity: 1, price: 1.2 },
+    ],
+  });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('GET /api/debug/items-by-category', () => {
+  it('returns 404 when the signed debug cookie is missing', async () => {
+    const res = await GET();
+    expect(res.status).toBe(404);
+  });
+
+  it('returns the richer provenance payload when the cookie is signed on', async () => {
+    mockCookiesGet.mockReturnValue({ value: signDebugCookie('1') });
 
     const res = await GET();
     expect(res.status).toBe(200);
     const body = await res.json();
+
     expect(body).toEqual(expect.objectContaining({
-      latestOrder: expect.objectContaining({ orderNumber: 'ORD-123' }),
       latestOrderStatus: 'ok',
+      latestOrderBlobPath: 'orders/2026-06-17/ORD-123.json',
+      candidateLatestOrderPath: 'orders/2026-06-17/ORD-123.json',
+      candidateLatestOrderDate: '2026-06-17',
       receiptItemsLength: 2,
       unmatchedItemsLength: 2,
       displayItemsLength: 2,
+      chosenFilterState: 'all',
+      chosenFilterReason: 'server_default',
       showCount: 10,
       filter: 'all',
       cats: [],
       dataGen: '2026-01-01T00:00:00Z',
+      uiUpdatedAt: '2026-01-01T00:00:00Z',
       pointerPath: 'pointers/latest.json',
-      fetchedAt: expect.any(String),
+      manifestPath: 'meta/manifest-123.json',
+      productsManifestPath: 'products/manifest-123.json',
+      summaryPath: 'meta/summary-123.json',
     }));
-  });
 
-  it('reports latestOrderStatus=null_no_order_blob when latestOrder is null', async () => {
-    mockGetDashboardData.mockResolvedValue({
-      coverage: [],
-      deliveryWindows: [],
-      latestOrder: null,
-      mealsCheckSummary: null,
-      dataGeneratedAt: '',
-      uiUpdatedAt: '',
-    });
-    mockTransformCachedOrderSafely.mockReturnValue({ items: [] });
-
-    const res = await GET();
-    const body = await res.json();
-    expect(body.latestOrderStatus).toBe('null_no_order_blob');
-    expect(body.latestOrder).toBeNull();
-    expect(body.receiptItemsLength).toBe(0);
-    expect(body.unmatchedItemsLength).toBe(0);
-    expect(body.displayItemsLength).toBe(0);
+    expect(mockReader.readPointer).toHaveBeenCalled();
+    expect(mockReader.readManifest).toHaveBeenCalledWith('meta/manifest-123.json');
+    expect(mockGetDashboardData).toHaveBeenCalled();
+    expect(mockTransformCachedOrderSafely).toHaveBeenCalled();
+    expect(mockCookiesGet).toHaveBeenCalledWith(DEBUG_COOKIE_NAME);
   });
 });

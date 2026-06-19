@@ -1,0 +1,112 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+export interface DebugDataRow {
+  label: string;
+  value: ReactNode;
+}
+
+export interface DebugDataPanelProps<T extends Record<string, unknown>> {
+  title: string;
+  description: string;
+  endpoint: string;
+  testId: string;
+  rows: (data: T) => DebugDataRow[];
+}
+
+export function DebugDataPanel<T extends Record<string, unknown>>({
+  title,
+  description,
+  endpoint,
+  testId,
+  rows,
+}: DebugDataPanelProps<T>) {
+  const [refreshNonce, setRefreshNonce] = useState(0);
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<string>('');
+
+  const load = useCallback(async () => {
+    setStatus('loading');
+    setError('');
+    try {
+      const res = await fetch(endpoint, { cache: 'no-store' });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const json = (await res.json()) as T;
+      setData(json);
+      setStatus('loaded');
+    } catch (err) {
+      setData(null);
+      setError(err instanceof Error ? err.message : String(err));
+      setStatus('error');
+    }
+  }, [endpoint]);
+
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [load, refreshNonce]);
+
+  const copyJson = useCallback(async () => {
+    if (!data) return;
+    await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+  }, [data]);
+
+  const rowsToRender = useMemo(() => (data ? rows(data) : []), [data, rows]);
+
+  return (
+    <div data-testid={testId} data-state={status} style={{ fontSize: '0.85rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+        <strong style={{ fontSize: '0.92rem' }}>{title}</strong>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            type="button"
+            onClick={() => setRefreshNonce((n) => n + 1)}
+            data-testid={`${testId}-refresh`}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--border-color)',
+              borderRadius: '6px',
+              padding: '0.25rem 0.5rem',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            Refresh
+          </button>
+          <button
+            type="button"
+            onClick={copyJson}
+            data-testid="copy-as-json"
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--border-color)',
+              borderRadius: '6px',
+              padding: '0.25rem 0.5rem',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            Copy as JSON
+          </button>
+        </div>
+      </div>
+      <p style={{ margin: '0 0 0.75rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{description}</p>
+      {status === 'loading' && <div style={{ color: 'var(--text-secondary)' }}>Loading…</div>}
+      {status === 'error' && <div style={{ color: 'var(--accent-red, #ef4444)' }}>Failed to load diagnostic: {error}</div>}
+      {status === 'loaded' && data && (
+        <div style={{ display: 'grid', gap: '0.4rem' }}>
+          {rowsToRender.map((row) => (
+            <div key={row.label} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', alignItems: 'baseline' }}>
+              <strong style={{ minWidth: '12rem' }}>{row.label}</strong>
+              <span>{row.value ?? '—'}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

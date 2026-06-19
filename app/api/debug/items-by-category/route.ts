@@ -1,94 +1,117 @@
-/**
- * app/api/debug/items-by-category/route.ts
- *
- * Spec 022 / Rev 3 / FR-004, FR-008: server-gated JSON endpoint
- * returning the items-by-category diagnostic. The shape is consumed
- * by components/items-by-category-debug-panel.tsx on /debug and by
- * components/dashboard-debug-chips.tsx on the main dashboard.
- *
- * Gating (Rev 3): the route is gated on the per-user signed cookie
- * alone. The env-var is gone — the cookie is the only gate. With
- * the cookie unset/malformed, the route returns 404 with no body.
- *
- * The endpoint reuses the existing `getDashboardData` read path, so
- * the values surfaced are byte-identical to what the main dashboard
- * sees (modulo client-side state like the user-toggled category
- * filter — those default to the initial state here).
- *
- * NFR-004: this endpoint is read-only; it never writes to Vercel Blob.
- * NFR-005: the same OIDC gate that protects `/` also protects this
- * route via the middleware matcher (see middleware.ts).
- */
 import 'server-only';
+
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-import { effectiveDebugMode } from '@/lib/debug-mode';
-import { DEBUG_COOKIE_NAME } from '@/lib/debug-cookie';
+import { DEBUG_COOKIE_NAME, verifyDebugCookie } from '@/lib/debug-cookie';
+import {
+  buildItemsByCategoryDebugPayload,
+  type ItemsByCategoryDebugPayload,
+} from '@/lib/debug-observability';
 import { getDashboardData, buildCoverageWindowDates } from '@/lib/dashboard-data';
+import { runtimeModeStatus } from '@/lib/runtime-mode';
+import { StaticFixtureReader } from '@/lib/fixtures/static-fixture-reader';
+import { VercelBlobStorageClient } from '@/lib/blob-storage';
 import { transformCachedOrderSafely } from '@/lib/dashboard-ui-utils';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const NOT_FOUND = NextResponse.json({ error: 'not_found' }, { status: 404 });
+const POINTER_PATH = 'pointers/latest.json';
+
+function toIsoDate(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+function isDebugCookieOn(raw: string | undefined | null): boolean {
+  return verifyDebugCookie(raw)?.value === '1';
+}
+
+function pickReader() {
+  const mode = runtimeModeStatus();
+  return mode.blobConfigured ? new VercelBlobStorageClient() : new StaticFixtureReader();
+}
 
 export async function GET(): Promise<NextResponse> {
-  // Next.js 15 makes `cookies()` async; await it.
   const cookieRaw = (await cookies()).get(DEBUG_COOKIE_NAME)?.value;
-  if (!effectiveDebugMode(cookieRaw)) {
+  if (!isDebugCookieOn(cookieRaw)) {
     return NOT_FOUND;
   }
 
-  // Build the same coverage window the main dashboard builds: today + 14 days.
   const now = new Date();
-  const today = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
+  const today = toIsoDate(now);
   const twoWeeksLater = new Date(now);
   twoWeeksLater.setUTCDate(twoWeeksLater.getUTCDate() + 14);
-  const endDate = `${twoWeeksLater.getUTCFullYear()}-${String(twoWeeksLater.getUTCMonth() + 1).padStart(2, '0')}-${String(twoWeeksLater.getUTCDate()).padStart(2, '0')}`;
+  const endDate = toIsoDate(twoWeeksLater);
   const coverageWindow = buildCoverageWindowDates(today, endDate);
+  const reader = pickReader();
 
-  const data = await getDashboardData({ coverageWindow });
+  const pointer = await reader.readPointer();
+  const manifestPath = pointer?.manifestPath ?? null;
+  const productsManifestPath = pointer?.productsManifestPath ?? null;
+  const manifest = manifestPath ? await reader.readManifest(manifestPath) : {};
+  const summaryPath = Object.keys(manifest).find((p) => p.startsWith('meta/summary-')) ?? null;
+  const allOrderPaths = Object.keys(manifest).filter((p) => p.startsWith('orders/'));
+  const inWindow = allOrderPaths.filter((p) => {
+    const m = /^orders\/(\d{4}-\d{2}-\d{2})\//.exec(p);
+    return m ? coverageWindow.includes(m[1]!) : false;
+  });
+  const pastOrders = allOrderPaths
+    .filter((p) => !inWindow.includes(p))
+    .filter((p) => /^orders\/(\d{4}-\d{2}-\d{2})\//.test(p))
+    .sort()
+    .reverse();
+  const orderPaths = [...inWindow, ...pastOrders.slice(0, 1)];
+  const coveragePaths = coverageWindow.map((d) => `coverage/${d}.json`).filter((p) => p in manifest);
+
+  const data = await getDashboardData({ reader, coverageWindow });
   const receipt = transformCachedOrderSafely(data.latestOrder);
   const receiptItems = receipt?.items ?? [];
-  // Spec 022 / FR-004 semantics: `unmatchedItems` is the full receipt
-  // item list (it represents what was *not* matched against the planned
-  // coverage — the `receipt.items` list IS the unmatched list in the
-  // current data model, see dashboard-client.tsx line 132).
   const unmatchedItemsLength = receiptItems.length;
-  // The dashboard applies no client-side filter at the API tier; this
-  // is the server-default view that /debug surfaces.
   const displayItemsLength = unmatchedItemsLength;
 
-  let latestOrderStatus: 'ok' | 'null_window_filtered' | 'null_no_order_blob' | 'null_pointer_missing';
-  if (data.latestOrder) {
-    latestOrderStatus = 'ok';
-  } else {
-    // The data was loaded but no order blob matched the window OR the
-    // pointer was missing. Without a pointer we cannot tell which; the
-    // API reports 'null_no_order_blob' as a conservative default that
-    // matches the diagnostic we did by hand on 2026-06-17.
-    latestOrderStatus = 'null_no_order_blob';
+  let latestOrderStatus: ItemsByCategoryDebugPayload['latestOrderStatus'] = 'null_pointer_missing';
+  if (pointer && manifestPath) {
+    latestOrderStatus = data.latestOrder ? 'ok' : 'null_no_order_blob';
   }
 
-  const payload = {
-    latestOrder: data.latestOrder ?? null,
-    latestOrderStatus,
-    latestOrderBlobPath: (data.latestOrder as unknown as { orderBlobPath?: string } | null)?.orderBlobPath ?? null,
+  const latestOrderWithPath = data.latestOrder ? Object.assign({}, data.latestOrder, { orderBlobPath: orderPaths[0] ?? null }) : null;
+  const candidateLatestOrderPath = orderPaths[0] ?? null;
+  const candidateLatestOrderDate = data.latestOrder?.deliveryDate ?? (candidateLatestOrderPath ? /^orders\/(\d{4}-\d{2}-\d{2})\//.exec(candidateLatestOrderPath)?.[1] ?? null : null);
+
+  const payload = buildItemsByCategoryDebugPayload({
+    now: now.toISOString(),
+    coverageWindow,
+    data: {
+      latestOrder: latestOrderWithPath,
+      dataGeneratedAt: data.dataGeneratedAt,
+      uiUpdatedAt: data.uiUpdatedAt,
+      loadError: data.loadError,
+    },
+    trace: {
+      pointerPath: POINTER_PATH,
+      manifestPath,
+      productsManifestPath,
+      candidateLatestOrderPath,
+      candidateLatestOrderDate,
+      latestOrderStatus,
+    },
     receiptItemsLength: receiptItems.length,
     unmatchedItemsLength,
     displayItemsLength,
-    // Server-default values; the panel surfaces these so the operator
-    // can verify the default state matches the documented initial state.
-    showCount: 10,
-    filter: 'all' as const,
-    cats: [] as string[],
-    dataGen: data.dataGeneratedAt ?? '',
-    coverageWindow,
-    pointerPath: 'pointers/latest.json',
-    manifestPath: '',
-    fetchedAt: new Date().toISOString(),
-  };
+  });
 
-  return NextResponse.json(payload);
+  // Add the read-path specific fields the current panel surfaces.
+  return NextResponse.json({
+    ...payload,
+    latestOrderStatus,
+    pointerPath: POINTER_PATH,
+    manifestPath,
+    productsManifestPath,
+    summaryPath,
+    coverageReads: coveragePaths.map((path) => ({ path, status: 'ok' as const })),
+    orderReads: orderPaths.map((path) => ({ path, status: 'ok' as const })),
+    fetchedAt: payload.fetchedAt,
+  });
 }
