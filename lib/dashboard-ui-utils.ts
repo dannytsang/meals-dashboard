@@ -232,6 +232,68 @@ export function getProductModalPrice(item: Pick<GroceryItem, 'price'> | null | u
 
 export type OrderItemSortMode = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
 
+function normalizeOrderItemSearchText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildOrderItemSearchHaystack(item: Pick<GroceryItem, 'name' | 'category' | 'substitutedWith' | 'productMetadata'>): string {
+  const metadata = item.productMetadata;
+  return [
+    item.name,
+    cleanItemName(item.name),
+    item.category,
+    item.substitutedWith,
+    metadata?.title,
+    metadata?.description,
+    metadata?.brand,
+    metadata?.category,
+    metadata?.ingredients,
+    metadata?.allergens,
+    metadata?.preparation,
+    metadata?.storage,
+  ]
+    .filter((value): value is string => typeof value === 'string' && value.trim() !== '')
+    .join(' ');
+}
+
+export function deriveVisibleOrderItems<
+  T extends Pick<GroceryItem, 'name' | 'price' | 'category' | 'substitutedWith' | 'productMetadata'>,
+>(
+  items: T[],
+  coverage: MealCoverage[],
+  options: {
+    selectedCategories?: ReadonlySet<string>;
+    matchedFilter?: 'all' | 'matched' | 'unmatched';
+    searchQuery?: string;
+    sortMode?: OrderItemSortMode;
+  } = {}
+): T[] {
+  const selectedCategories = options.selectedCategories ?? new Set<string>();
+  const matchedFilter = options.matchedFilter ?? 'all';
+  const searchQuery = normalizeOrderItemSearchText(options.searchQuery ?? '');
+
+  const filteredItems = items.filter((item) => {
+    const categoryMatch = selectedCategories.size === 0 || selectedCategories.has(item.category || 'Pantry');
+    const matchClassification = classifyOrderItemMatch(item, coverage);
+    const matchedMatch =
+      matchedFilter === 'all' ||
+      (matchedFilter === 'matched' && matchClassification === 'matched') ||
+      (matchedFilter === 'unmatched' && matchClassification === 'unmatched');
+    const searchMatch =
+      searchQuery === '' ||
+      normalizeOrderItemSearchText(buildOrderItemSearchHaystack(item)).includes(searchQuery);
+
+    return categoryMatch && matchedMatch && searchMatch;
+  });
+
+  return sortOrderItems(filteredItems, options.sortMode ?? 'name-asc');
+}
+
 export function sortOrderItems<T extends Pick<GroceryItem, 'name' | 'price'>>(items: T[], sortMode: OrderItemSortMode): T[] {
   const sorted = [...items];
   const compareNames = (a: T, b: T) => cleanItemName(a.name).localeCompare(cleanItemName(b.name));

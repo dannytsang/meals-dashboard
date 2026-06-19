@@ -31,6 +31,7 @@ import {
   buildHeadlineMetrics,
   classifyOrderItemMatch,
   deriveCollapsedCoverageColor,
+  deriveVisibleOrderItems,
   findReceiptItemForMatchedItem,
   formatUseByDate,
   getDisplayedProductName,
@@ -40,7 +41,6 @@ import {
   getProductModalPrice,
   isTodoistMealCompleted,
   resolveProductInfoForItem,
-  sortOrderItems,
   type OrderItemSortMode,
   transformCachedOrderSafely,
 } from '@/lib/dashboard-ui-utils';
@@ -72,6 +72,7 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
   const [itemSort, setItemSort] = useState<OrderItemSortMode>('name-asc');
+  const [itemSearchQuery, setItemSearchQuery] = useState('');
   const [selectedMealData, setSelectedMealData] = useState<MealCoverage | null>(null);
   const [selectedItem, setSelectedItem] = useState<GroceryItem | null>(null);
   const [showCount, setShowCount] = useState(10);
@@ -197,13 +198,12 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
     return '📦';
   };
 
-  const displayItems = sortOrderItems(unmatchedItems.filter(item => {
-    const catMatch = selectedCategories.size === 0 || selectedCategories.has(item.category || 'Pantry');
-    const isUnmatched = trulyUnmatchedItems.includes(item);
-    const isMatched = !isUnmatched;
-    const matchedMatch = matchedFilter === 'all' || (matchedFilter === 'matched' && isMatched) || (matchedFilter === 'unmatched' && isUnmatched);
-    return catMatch && matchedMatch;
-  }), itemSort);
+  const displayItems = deriveVisibleOrderItems(unmatchedItems, coverage, {
+    selectedCategories,
+    matchedFilter,
+    searchQuery: itemSearchQuery,
+    sortMode: itemSort,
+  });
 
   const coverageByDate: Record<string, typeof coverage> = {};
   coverage.forEach(c => {
@@ -513,7 +513,19 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
                 {debugOn && <DashboardDebugChips />}
               </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(0, 1fr) auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(220px, 1.2fr) minmax(0, 1fr) auto auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>
+                <div>
+                  <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Search</p>
+                  <input
+                    aria-label="Search order items"
+                    type="search"
+                    value={itemSearchQuery}
+                    onChange={(event) => setItemSearchQuery(event.target.value)}
+                    placeholder="Search items"
+                    style={{ width: '100%', padding: '0.45rem 0.7rem', borderRadius: '10px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '12px', boxSizing: 'border-box' }}
+                  />
+                </div>
+
                 <div>
                   <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Categories</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>

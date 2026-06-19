@@ -14,8 +14,10 @@ import {
   isTodoistMealCompleted,
   resolveProductInfoForItem,
   sortOrderItems,
+  deriveVisibleOrderItems,
   transformCachedOrderSafely,
 } from './dashboard-ui-utils';
+
 
 describe('transformCachedOrderSafely', () => {
   it('returns an empty receipt instead of crashing when generated order data is missing', () => {
@@ -442,5 +444,54 @@ describe('simple coverage labels', () => {
     expect(getCoverageStatusLabel('covered')).toBe('Complete');
     expect(getCoverageStatusLabel('partial')).toBe('Partial');
     expect(getCoverageStatusLabel('missing')).toBe('Missing');
+  });
+});
+
+describe('order item filtering pipeline', () => {
+  const items: GroceryItem[] = [
+    { name: 'Tesco Broccoli 375g', quantity: 1, price: 1.5, category: 'Fresh' },
+    { name: 'Tesco Broccoli Florets 900g', quantity: 1, price: 2.25, category: 'Fresh' },
+    { name: 'Tesco Milk 4 Pints', quantity: 1, price: 1.8, category: 'Dairy' },
+  ];
+
+  const coverage: MealCoverage[] = [
+    {
+      meal: { id: '1', content: 'Broccoli pasta', date: '2026-06-12', labels: [], section: 'Planned' },
+      status: 'covered',
+      coverageScore: 100,
+      matchedItems: [],
+      missingItems: [],
+    },
+  ];
+
+  it('applies category, matched-state, and search filters before sorting', () => {
+    const result = deriveVisibleOrderItems(items, coverage, {
+      selectedCategories: new Set(['Fresh']),
+      matchedFilter: 'matched',
+      searchQuery: 'broc',
+      sortMode: 'name-desc',
+    });
+
+    expect(result.map((item) => item.name)).toEqual([
+      'Tesco Broccoli Florets 900g',
+      'Tesco Broccoli 375g',
+    ]);
+  });
+
+  it('treats blank search as no search filter', () => {
+    const withBlankSearch = deriveVisibleOrderItems(items, coverage, {
+      selectedCategories: new Set(['Fresh']),
+      matchedFilter: 'all',
+      searchQuery: '   ',
+      sortMode: 'name-asc',
+    });
+
+    const withoutSearch = deriveVisibleOrderItems(items, coverage, {
+      selectedCategories: new Set(['Fresh']),
+      matchedFilter: 'all',
+      sortMode: 'name-asc',
+    });
+
+    expect(withBlankSearch).toEqual(withoutSearch);
   });
 });

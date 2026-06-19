@@ -1,6 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { createElement } from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { DashboardClient } from './dashboard-client';
+import type { DashboardData } from '@/lib/dashboard-data';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
 
 const source = readFileSync(join(process.cwd(), 'components/dashboard-client.tsx'), 'utf8');
 const pageSource = readFileSync(join(process.cwd(), 'app/page.tsx'), 'utf8');
@@ -342,5 +350,58 @@ describe('DashboardClient user menu (Spec 026)', () => {
     expect(signInSource).not.toContain('UserMenu');
     expect(signInSource).not.toContain('UserChip');
     expect(signInSource).not.toContain('user-chip');
+  });
+});
+
+describe('DashboardClient order-item search interaction', () => {
+  const data: DashboardData = {
+    coverage: [
+      {
+        meal: { id: '1', content: 'Broccoli pasta', date: '2026-06-12', labels: [], section: 'Planned' },
+        status: 'covered',
+        coverageScore: 100,
+        matchedItems: [],
+        missingItems: [],
+      },
+    ],
+    deliveryWindows: [],
+    latestOrder: {
+      orderNumber: '123',
+      deliveryDate: '2026-06-12',
+      deliverySlot: 'Evening',
+      orderTotal: 5.55,
+      items: [
+        { name: 'Tesco Broccoli 375g', quantity: 1, price: 1.5, category: 'Fresh' },
+        { name: 'Tesco Broccoli Florets 900g', quantity: 1, price: 2.25, category: 'Fresh' },
+        { name: 'Tesco Milk 4 Pints', quantity: 1, price: 1.8, category: 'Dairy' },
+      ],
+      substitutions: [],
+      unavailable: [],
+      shortLifeItems: [],
+    },
+    mealsCheckSummary: null,
+    dataGeneratedAt: '2026-06-12T00:00:00Z',
+    uiUpdatedAt: '2026-06-12T00:00:00Z',
+    loadError: null,
+  };
+
+  it('updates immediately on each keystroke and composes with category, match, and sort controls', () => {
+    render(createElement(DashboardClient, { today: '2026-06-12', data, userName: 'Danny' }));
+
+    const search = screen.getByRole('searchbox', { name: /search order items/i });
+    fireEvent.change(search, { target: { value: 'broc' } });
+
+    expect(screen.getByText('Tesco Broccoli 375g')).toBeTruthy();
+    expect(screen.getByText('Tesco Broccoli Florets 900g')).toBeTruthy();
+    expect(screen.queryByText('Tesco Milk 4 Pints')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fresh' }));
+    fireEvent.click(screen.getByRole('button', { name: 'matched' }));
+    fireEvent.click(screen.getByRole('button', { name: /Name Z/i }));
+
+    const floret = screen.getByText('Tesco Broccoli Florets 900g');
+    const broccoli = screen.getByText('Tesco Broccoli 375g');
+    expect(floret.compareDocumentPosition(broccoli) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+    expect(screen.queryByText('Tesco Milk 4 Pints')).toBeNull();
   });
 });
