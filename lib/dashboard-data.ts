@@ -42,6 +42,15 @@ import type { CoverageBlob, CoverageMealEntry, DashboardSummary, OrderBlob } fro
  * never imports `@vercel/blob` and the static-bundle scan enforces this.
  */
 
+export interface DashboardLoadError {
+  title: string;
+  message: string;
+  source: 'pointer' | 'manifest' | 'read';
+  resourcePath?: string;
+  statusCode?: number;
+  statusText?: string;
+}
+
 export interface DashboardBlobData {
   coverage: MealCoverage[];
   deliveryWindows: DeliveryWindow[];
@@ -51,6 +60,7 @@ export interface DashboardBlobData {
   dataGeneratedAt: string;
   /** When the dashboard UI was last deployed (ISO string, git HEAD commit time at sync time). */
   uiUpdatedAt: string;
+  loadError: DashboardLoadError | null;
 }
 
 export interface DashboardData extends DashboardBlobData {}
@@ -106,7 +116,7 @@ async function readFromSplitLayout(
     pointer = await reader.readPointer();
   } catch (err) {
     console.error('[dashboard-data] pointer read failed:', err);
-    return getEmptyState();
+    return getEmptyState(formatDashboardLoadError('pointer', err));
   }
 
   if (!pointer || !pointer.manifestPath) {
@@ -121,7 +131,7 @@ async function readFromSplitLayout(
     manifest = await reader.readManifest(pointer.manifestPath);
   } catch (err) {
     console.error('[dashboard-data] manifest read failed:', err);
-    return getEmptyState();
+    return getEmptyState(formatDashboardLoadError('manifest', err, pointer.manifestPath));
   }
 
   try {
@@ -232,13 +242,14 @@ async function readFromSplitLayout(
       mealsCheckSummary: summary ?? null,
       dataGeneratedAt: (summary as Record<string, unknown> | null)?.dataGeneratedAt as string ?? '',
       uiUpdatedAt: (summary as Record<string, unknown> | null)?.uiUpdatedAt as string ?? '',
+      loadError: null,
     };
   } catch (err) {
     // Spec 028 cleanup: the legacy `dashboard-data.json` fallback is
     // gone. On any unexpected failure mid-read, return the empty state
     // — the page renders an empty dashboard rather than crashing.
     console.error('[dashboard-data] split-layout read failed:', err);
-    return getEmptyState();
+    return getEmptyState(formatDashboardLoadError('read', err));
   }
 }
 
@@ -288,7 +299,7 @@ function orderBlobToTescoReceipt(o: OrderBlob): TescoReceipt {
   };
 }
 
-function getEmptyState(): DashboardBlobData {
+function getEmptyState(loadError: DashboardLoadError | null = null): DashboardBlobData {
   return {
     coverage: [],
     deliveryWindows: [],
@@ -296,5 +307,54 @@ function getEmptyState(): DashboardBlobData {
     mealsCheckSummary: null,
     dataGeneratedAt: '',
     uiUpdatedAt: '',
+    loadError,
   };
 }
+
+function formatDashboardLoadError(
+  source: 'pointer' | 'manifest' | 'read',
+  err: unknown,
+  resourcePath?: string
+): DashboardLoadError {
+  const details = extractDashboardErrorDetails(err);
+  const title = 'Meals dashboard unavailable.';
+  const context = source === 'pointer'
+    ? 'The dashboard could not read the live pointer blob.'
+    : source === 'manifest'
+      ? `The dashboard could not read the manifest blob${resourcePath ? ` (${resourcePath})` : ''}.`
+      : 'The dashboard could not finish loading the live dashboard data.';
+
+  const parts = [context, details.summary].filter(Boolean);
+  const message = redactDashboardErrorMessage(parts.join(' '));
+
+  return {
+    title,
+    message,
+    source,
+    resourcePath,
+    statusCode: details.statusCode,
+    statusText: details.statusText,
+  };
+}
+
+function extractDashboardErrorDetails(err: unknown): { summary: string; statusCode?: number; statusText?: string } {
+  if (err instanceof Error) {
+    const anyErr = err as Error & { statusCode?: number; statusText?: string };
+    return {
+      summary: `${err.name}: ${err.message}`,
+      statusCode: anyErr.statusCode,
+      statusText: anyErr.statusText,
+    };
+  }
+  return { summary: String(err) };
+}
+
+function redactDashboardErrorMessage(message: string): string {
+  return message
+    .replace(/Authorization:\s*Bearer\s+[^\s,;]+/gi, 'Authorization: [redacted]')
+    .replace(/Bearer\s+[^\s,;]+/gi, 'Bearer [redacted]')
+    .replace(/([?&](?:token|access_token|signature|X-Amz-Signature|X-Amz-Security-Token|X-Auth-Token)=)[^&\s]+/gi, '$1[redacted]')
+    .replace(/(Authorization|Cookie):\s*[^\n]+/gi, '$1: [redacted]');
+}
+
+

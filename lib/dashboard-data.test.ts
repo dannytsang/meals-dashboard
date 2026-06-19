@@ -212,7 +212,33 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
       mealsCheckSummary: null,
       dataGeneratedAt: '',
       uiUpdatedAt: '',
+      loadError: null,
     });
+  });
+
+  it('surfaces a sanitised load error when the live-mode pointer read fails', async () => {
+    const brokenReader: DashboardDataReader = {
+      readPointer: async () => {
+        const error = new Error(
+          'Vercel Blob rejected the configured credentials (403 Forbidden). Authorization: Bearer ***'
+        );
+        (error as Error & { statusCode?: number; statusText?: string; resourcePath?: string }).statusCode = 403;
+        (error as Error & { statusText?: string; resourcePath?: string }).statusText = 'Forbidden';
+        (error as Error & { resourcePath?: string }).resourcePath = 'pointers/latest.json';
+        throw error;
+      },
+      readManifest: async () => ({}),
+      readJsonBlob: async () => null,
+      listPaths: async () => ['dashboard-data.json'],
+    };
+
+    const data = await getDashboardData({ coverageWindow: ['2026-06-15'], reader: brokenReader });
+
+    expect((data as any).loadError).toBeDefined();
+    expect((data as any).loadError.source).toBe('pointer');
+    expect((data as any).loadError.title).toBe('Meals dashboard unavailable.');
+    expect((data as any).loadError.message).toContain('403 Forbidden');
+    expect((data as any).loadError.message).not.toContain('Bearer abc123');
   });
 
   it('returns empty state on pointer read failure instead of silently using legacy fallback', async () => {
@@ -223,7 +249,11 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
       listPaths: async () => ['dashboard-data.json'],
     };
     const data = await getDashboardData({ coverageWindow: ['2026-06-15'], reader: brokenReader });
-    expect(data).toEqual({ coverage: [], deliveryWindows: [], latestOrder: null, mealsCheckSummary: null, dataGeneratedAt: '', uiUpdatedAt: '' });
+    expect(data.coverage).toEqual([]);
+    expect(data.deliveryWindows).toEqual([]);
+    expect(data.latestOrder).toBeNull();
+    expect((data as any).loadError?.title).toBe('Meals dashboard unavailable.');
+    expect((data as any).loadError?.message).toContain('pointer read failed');
   });
 
   it('falls back to null/empty for missing coverage blob without crashing', async () => {
