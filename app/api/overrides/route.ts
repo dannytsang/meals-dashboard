@@ -33,7 +33,7 @@
 
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
-import { put, list } from '@vercel/blob';
+import { put, head } from '@vercel/blob';
 
 export const runtime = 'nodejs';
 
@@ -77,20 +77,22 @@ async function readOverridesBlob(): Promise<ManualOverrideEntry[]> {
     throw new Error('BLOB_READ_WRITE_TOKEN not configured');
   }
   try {
-    // The Vercel `list` API treats `prefix` as a server-side filter.
-    // Using the directory prefix (`overrides/`) returns all blobs
-    // under that prefix, including overrides/manual.json.
-    const res = await list({ prefix: 'overrides/', token: BLOB_TOKEN, limit: 1000 });
-    const match = res.blobs.find((b) => b.pathname === OVERRIDES_BLOB_PATH);
-    if (!match) {
-      return [];
-    }
-    // The `match.url` from list() is a private Vercel blob URL that
+    // Spec 028 / 2026-06-19 cleanup: use head() (a Simple Operation)
+    // instead of list({prefix}) (an Advanced Operation that hit the
+    // Vercel Blob Advanced Operations quota). The override blob lives
+    // at a single known path (`overrides/manual.json`); no prefix scan
+    // is needed.
+    //
+    // head() returns the blob metadata (including its signed `url`) on
+    // success and null on 404 (verified in @vercel/blob@2.4.0 source).
+    const meta = await head(OVERRIDES_BLOB_PATH, { token: BLOB_TOKEN });
+    if (!meta) return [];
+    // The `meta.url` from head() is a private Vercel blob URL that
     // requires an Authorization header to fetch. Without it the
     // server returns 403. This matches the pattern used by the
     // dashboard's VercelBlobStorageClient.readJsonBlob().
-    const resp = await fetch(match.url, {
-      headers: BLOB_TOKEN ? { Authorization: `Bearer ${BLOB_TOKEN}` } : undefined,
+    const resp = await fetch(meta.url, {
+      headers: { Authorization: `Bearer ${BLOB_TOKEN}` },
     });
     if (!resp.ok) {
       console.log('[overrides] fetch failed:', resp.status, resp.statusText);

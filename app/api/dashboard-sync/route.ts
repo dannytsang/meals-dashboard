@@ -21,10 +21,10 @@ const PRODUCT_BLOB_PATH_RE = /^products\/\d+\.json$/;
  * to Vercel Blob using the content-hash dedup + manifest + pointer layout
  * (spec `016-dashboard-blob-storage-layout`).
  *
- * Authenticated with `x-dashboard-secret` header (same contract as
- * `/api/dashboard-data`). The legacy single-blob endpoint remains available
- * as a fallback for the existing Python sync until the sync script is
- * updated to use this endpoint.
+ * Authenticated with `x-dashboard-secret` header (same contract as the
+ * legacy `/api/dashboard-data` POST). Spec 028 / 2026-06-19 cleanup: the
+ * legacy single-blob endpoint now only handles ad-hoc admin POSTs; the
+ * Python sync no longer writes `dashboard-data.json` there.
  *
  * Request body shape:
  *   {

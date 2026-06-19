@@ -256,53 +256,6 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
   });
 });
 
-describe('getDashboardData — legacy single-blob fallback', () => {
-  it('reads dashboard-data.json when no pointer is present (regression guard)', async () => {
-    const client = new InMemoryBlobStorageClient();
-    const legacyData = {
-      coverage: [
-        {
-          meal: makeMeal('legacy-1', '2026-06-15', 'Legacy Bolognese'),
-          status: 'covered' as const,
-          coverageScore: 100,
-          matchedItems: [],
-          missingItems: [],
-        },
-      ],
-      deliveryWindows: [
-        { date: '2026-06-15', slot: '20:00-21:00', orderTotal: 50, status: 'pending' as const },
-      ],
-      latestOrder: {
-        orderNumber: 'legacy-1',
-        deliveryDate: '2026-06-15',
-        deliverySlot: '20:00-21:00',
-        orderTotal: 50,
-        items: [],
-        substitutions: [],
-        unavailable: [],
-        shortLifeItems: [],
-      },
-      mealsCheckSummary: {
-        coverage_percentage: 100,
-        covered: 1,
-        missing: 0,
-        meals_total: 1,
-        meals_covered: 1,
-        order_total: 50,
-        delivery_date: '2026-06-15',
-      },
-    };
-    client.seed('dashboard-data.json', JSON.stringify(legacyData));
-
-    const data = await getDashboardData({
-      coverageWindow: ['2026-06-15'],
-      reader: readerOf(client),
-    });
-    expect(data.coverage[0]?.meal.content).toBe('Legacy Bolognese');
-    expect(data.latestOrder?.orderNumber).toBe('legacy-1');
-  });
-});
-
 
 /* -------------------------------------------------------------------------- */
 /* Regression coverage for spec 017 / FR-03 + 'past order in latestOrder'.   */

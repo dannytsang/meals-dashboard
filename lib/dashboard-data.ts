@@ -27,15 +27,20 @@ import type { CoverageBlob, CoverageMealEntry, DashboardSummary, OrderBlob } fro
  *   5. Compose into the existing `DashboardData` shape the dashboard client expects.
  *
  * Fallback behaviour (FR-03): any individual fetch that fails returns null/empty
- * for that portion; the page must not crash. If the pointer itself is unreadable
- * (e.g. brand-new install before the first sync) we fall back to the legacy single-blob
- * `dashboard-data.json` so the dashboard still renders something useful.
+ * for that portion; the page must not crash.
+ *
+ * Spec 028 / 2026-06-19 cleanup: the pre-spec-028 legacy single-blob
+ * `dashboard-data.json` fallback is REMOVED. The dashboard page reads
+ * exclusively via the spec 028 head()-based split-layout reader
+ * (`lib/blob-storage.ts:readPointer` / `readManifest` / `readJsonBlob`).
+ * On a fresh install before the first sync, the pointer blob simply
+ * doesn't exist yet; `readPointer()` returns null and the page renders
+ * the empty state. The `list({prefix})` Advanced Operation that the
+ * legacy fallback relied on is gone from the read path.
  *
  * Privacy (FR-07 / SC-04): all Blob fetches happen server-side; the client bundle
  * never imports `@vercel/blob` and the static-bundle scan enforces this.
  */
-
-const LEGACY_BLOB_FILE_NAME = 'dashboard-data.json';
 
 export interface DashboardBlobData {
   coverage: MealCoverage[];
@@ -62,12 +67,11 @@ export async function getDashboardData(
   const reader = options.reader ?? new VercelBlobStorageClient();
   const coverageWindow = options.coverageWindow ?? defaultCoverageWindow();
 
-  // 1. Try the new split layout. Null means "no pointer present, try legacy".
-  const split = await readFromSplitLayout(reader, coverageWindow);
-  if (split !== null) return split;
-
-  // 2. Fall back to legacy single-blob layout only when there is genuinely no pointer yet.
-  return readFromLegacyLayout(reader);
+  // Spec 028 read path: head() for pointer + manifest, GET for each
+  // referenced blob. All Simple Operations. Returns getEmptyState()
+  // on any failure (pointer missing, manifest missing, individual
+  // blob missing, network error) — never throws.
+  return readFromSplitLayout(reader, coverageWindow);
 }
 
 export function buildCoverageWindowDates(startIso: string, endIso: string): string[] {
@@ -96,7 +100,7 @@ function toIsoDate(d: Date): string {
 async function readFromSplitLayout(
   reader: DashboardDataReader,
   coverageWindow: string[]
-): Promise<DashboardBlobData | null> {
+): Promise<DashboardBlobData> {
   let pointer;
   try {
     pointer = await reader.readPointer();
@@ -106,7 +110,10 @@ async function readFromSplitLayout(
   }
 
   if (!pointer || !pointer.manifestPath) {
-    return null; // No pointer → fall back to legacy.
+    // No pointer yet (fresh install before first sync). Empty state is
+    // the right UX — the page renders an empty dashboard. The spec 028
+    // reader returns null when the pointer blob doesn't exist.
+    return getEmptyState();
   }
 
   let manifest;
@@ -227,8 +234,11 @@ async function readFromSplitLayout(
       uiUpdatedAt: (summary as Record<string, unknown> | null)?.uiUpdatedAt as string ?? '',
     };
   } catch (err) {
-    console.error('[dashboard-data] split-layout read failed, falling back:', err);
-    return null;
+    // Spec 028 cleanup: the legacy `dashboard-data.json` fallback is
+    // gone. On any unexpected failure mid-read, return the empty state
+    // — the page renders an empty dashboard rather than crashing.
+    console.error('[dashboard-data] split-layout read failed:', err);
+    return getEmptyState();
   }
 }
 
@@ -276,24 +286,6 @@ function orderBlobToTescoReceipt(o: OrderBlob): TescoReceipt {
     orderStatus: o.status,
     refundAmount: o.refundAmount,
   };
-}
-
-async function readFromLegacyLayout(
-  reader: DashboardDataReader
-): Promise<DashboardBlobData> {
-  // The legacy reader used the Vercel Blob SDK's `list` + `fetch` directly.
-  // The BlobStorageClient interface doesn't include `list({prefix})` (only `listPaths`),
-  // but we can reuse listPaths here with the prefix.
-  try {
-    const paths = await reader.listPaths(LEGACY_BLOB_FILE_NAME);
-    const match = paths.find((p) => p === LEGACY_BLOB_FILE_NAME);
-    if (!match) return getEmptyState();
-    const text = await reader.readJsonBlob<DashboardBlobData>(match);
-    return text ?? getEmptyState();
-  } catch (err) {
-    console.error('[dashboard-data] legacy-layout read failed:', err);
-    return getEmptyState();
-  }
 }
 
 function getEmptyState(): DashboardBlobData {

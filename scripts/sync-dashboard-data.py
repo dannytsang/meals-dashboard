@@ -2065,38 +2065,11 @@ def main():
         print(f"  Written: {len(response.get('written', []))} | Skipped: {len(response.get('skipped', []))} | Total ops: {response.get('totalOps', 'n/a')}")
     print()
 
-    # Also write the legacy `dashboard-data.json` blob so the GET /api/dashboard-data
-    # endpoint and the legacy read fallback both stay in sync with the latest payload.
-    # The /api/dashboard-data endpoint only reads this single blob, and the page
-    # falls back to it if the split-layout pointer is missing. Writing both keeps
-    # every read path consistent.
-    if not args.dry_run and secret:
-        legacy_url = api_url.rsplit('/', 1)[0] + '/dashboard-data' if api_url else ''
-        if legacy_url:
-            # Build the legacy DashboardBlobData shape from the cache.
-            legacy_payload = {
-                'coverage': payload.get('coverage', []),
-                'deliveryWindows': payload.get('deliveryWindows', []),
-                'latestOrder': (payload.get('orders', [{}])[0] if payload.get('orders') else None),
-                'mealsCheckSummary': payload.get('summary', {}),
-                'dataGeneratedAt': payload.get('dataGeneratedAt', ''),
-                'uiUpdatedAt': payload.get('uiUpdatedAt', ''),
-            }
-            try:
-                body_bytes = json.dumps(legacy_payload).encode('utf-8')
-                req = urllib.request.Request(
-                    legacy_url,
-                    data=body_bytes,
-                    headers={'Content-Type': 'application/json', 'x-dashboard-secret': secret},
-                    method='POST',
-                )
-                with urllib.request.urlopen(req, timeout=30) as r:
-                    if r.status in (200, 201):
-                        print(f"  ✓ Legacy dashboard-data.json blob updated")
-                    else:
-                        print(f"  ⚠ Legacy blob write returned status {r.status}")
-            except Exception as e:
-                print(f"  ⚠ Legacy blob write failed: {e}")
+    # Spec 028 / 2026-06-19 cleanup: the legacy `dashboard-data.json`
+    # single-blob POST is removed. The dashboard page reads exclusively
+    # via the spec 028 head()-based split-layout reader, so a parallel
+    # legacy write was redundant (and hit the Vercel Blob Advanced
+    # Operations quota on every sync).
 
     if args.dry_run:
         print("[dry-run] Split-layout API exercised successfully.")
