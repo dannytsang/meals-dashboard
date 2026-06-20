@@ -87,11 +87,19 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(source).toContain('Categories</p>');
     expect(source).toContain('Match</p>');
     expect(source).toContain('Sort</p>');
+    expect(source).toContain('Search order items');
+    expect(source).toContain('Search items');
     expect(source).toContain("setItemSort(sort)");
     expect(source).toContain('Name A–Z');
     expect(source).toContain('Name Z–A');
     expect(source).toContain('Price ↑');
     expect(source).toContain('Price ↓');
+  });
+
+  it('renders a clear search button beside the order item search field', () => {
+    expect(source).toContain('Clear');
+    expect(source).toContain("setItemSearchQuery('')");
+    expect(source).toContain('itemSearchQuery');
   });
 
   it('renders matched item rows as name, quantity, and price columns with a total row', () => {

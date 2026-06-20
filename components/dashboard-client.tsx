@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Fragment, useTransition } from 'react';
+import { useState, useEffect, Fragment, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { DashboardDataErrorPanel } from '@/components/dashboard-data-error-panel';
 import { UserMenu } from '@/components/user-menu';
@@ -73,6 +73,7 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   const [matchedFilter, setMatchedFilter] = useState<'all' | 'matched' | 'unmatched'>('all');
   const [itemSort, setItemSort] = useState<OrderItemSortMode>('name-asc');
   const [itemSearchQuery, setItemSearchQuery] = useState('');
+  const itemSearchInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedMealData, setSelectedMealData] = useState<MealCoverage | null>(null);
   const [selectedItem, setSelectedItem] = useState<GroceryItem | null>(null);
   const [showCount, setShowCount] = useState(10);
@@ -516,14 +517,39 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
               <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(220px, 1.2fr) minmax(0, 1fr) auto auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>
                 <div>
                   <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Search</p>
-                  <input
-                    aria-label="Search order items"
-                    type="search"
-                    value={itemSearchQuery}
-                    onChange={(event) => setItemSearchQuery(event.target.value)}
-                    placeholder="Search items"
-                    style={{ width: '100%', padding: '0.45rem 0.7rem', borderRadius: '10px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '12px', boxSizing: 'border-box' }}
-                  />
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <input
+                      ref={itemSearchInputRef}
+                      aria-label="Search order items"
+                      type="search"
+                      value={itemSearchQuery}
+                      onChange={(event) => setItemSearchQuery(event.target.value)}
+                      placeholder="Search items"
+                      style={{ width: '100%', padding: '0.45rem 0.7rem', borderRadius: '10px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '12px', boxSizing: 'border-box' }}
+                    />
+                    {itemSearchQuery ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setItemSearchQuery('');
+                          itemSearchInputRef.current?.focus();
+                        }}
+                        style={{
+                          border: '1px solid var(--border-color)',
+                          backgroundColor: 'var(--bg-tertiary)',
+                          color: 'var(--text-secondary)',
+                          borderRadius: '10px',
+                          padding: '0.45rem 0.8rem',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Clear
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div>
