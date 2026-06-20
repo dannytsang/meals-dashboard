@@ -1829,6 +1829,42 @@ def post_dashboard_data_to_api(payload: Dict[str, Any], api_url: str, secret: st
         return False, {"error": f"POST failed: {e}"}
 
 
+def dashboard_products_api_url(api_url: str) -> str:
+    if not api_url:
+        return ''
+    return api_url.rsplit('/', 1)[0] + '/dashboard-products-sync'
+
+
+def publish_split_dashboard_payload(
+    payload: Dict[str, Any],
+    api_url: str,
+    secret: str,
+    dry_run: bool = False,
+) -> Dict[str, Dict[str, Any]]:
+    """POST the main dashboard payload first, then the products payload."""
+    main_payload = {k: v for k, v in payload.items() if k != 'products'}
+    main_ok, main_response = post_dashboard_data_to_api(main_payload, api_url, secret, dry_run=dry_run)
+    products = list(payload.get('products') or [])
+    products_ok = True
+    products_response: Dict[str, Any] = {}
+
+    if main_ok and products:
+        products_url = dashboard_products_api_url(api_url)
+        products_ok, products_response = post_dashboard_data_to_api(
+            {'products': products},
+            products_url,
+            secret,
+            dry_run=dry_run,
+        )
+        if not products_ok:
+            print("  ⚠ Product publish failed after main dashboard publish")
+
+    return {
+        'main': {'ok': main_ok, 'response': main_response},
+        'products': {'ok': products_ok, 'response': products_response},
+    }
+
+
 def compute_delivery_windows(delivery_metadata: list) -> list:
     """Compute DeliveryWindow entries from raw delivery metadata (shape matches TS DeliveryWindow)."""
     windows = []
@@ -2120,16 +2156,23 @@ def main():
     print("[3] Posting data to dashboard Blob API...")
     if not api_url:
         api_url = "https://meals-dashboard.vercel.app/api/dashboard-sync"
-    success, response = post_dashboard_data_to_api(payload, api_url, secret, dry_run=args.dry_run)
-    if not success:
+    publish_result = publish_split_dashboard_payload(payload, api_url, secret, dry_run=args.dry_run)
+    if not publish_result['main']['ok']:
+        response = publish_result['main']['response']
         print(f"  ✗ Failed to post data: {response.get('error', 'unknown error')}")
         detail = response.get('detail') or response.get('body')
         if detail:
             print(f"    {str(detail)[:300]}")
         return 1
+    response = publish_result['main']['response']
     print(f"  Manifest path: {response.get('manifestPath', 'n/a')}")
     if 'written' in response or 'skipped' in response:
         print(f"  Written: {len(response.get('written', []))} | Skipped: {len(response.get('skipped', []))} | Total ops: {response.get('totalOps', 'n/a')}")
+    product_response = publish_result['products']['response']
+    if publish_result['products']['ok'] and product_response.get('productsManifestPath'):
+        print(f"  Products manifest path: {product_response.get('productsManifestPath')}")
+    elif not publish_result['products']['ok']:
+        print(f"  ⚠ Product publish failed: {product_response.get('error', 'unknown error')}")
     print()
 
     # Spec 028 / 2026-06-19 cleanup: the legacy `dashboard-data.json`

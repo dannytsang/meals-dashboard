@@ -4,7 +4,6 @@ import { VercelBlobStorageClient } from '@/lib/blob-storage';
 import {
   syncDashboardLayout,
   type SplitLayoutPayload,
-  type ProductBlob,
 } from '@/lib/dashboard-sync';
 
 export const runtime = 'nodejs';
@@ -12,7 +11,6 @@ export const runtime = 'nodejs';
 const DASHBOARD_DATA_SECRET = process.env.MEALS_DASHBOARD_DATA_SECRET;
 const ORDER_BLOB_PATH_RE = /^orders\/\d{4}-\d{2}-\d{2}\/[A-Za-z0-9._-]+\.json$/;
 const COVERAGE_BLOB_PATH_RE = /^coverage\/\d{4}-\d{2}-\d{2}\.json$/;
-const PRODUCT_BLOB_PATH_RE = /^products\/\d+\.json$/;
 
 /**
  * POST /api/dashboard-sync
@@ -143,26 +141,8 @@ function parseSplitLayoutPayload(
     }
   }
 
-  // Spec 021 / FR-003 — validate products array if present.
   if (b.products !== undefined) {
-    if (!Array.isArray(b.products)) {
-      return { ok: false, error: 'products must be an array' };
-    }
-    for (const p of b.products) {
-      if (!p || typeof p !== 'object') return { ok: false, error: 'each product must be an object' };
-      const pb = p as Record<string, unknown>;
-      if (typeof pb.productBlobPath !== 'string') {
-        return { ok: false, error: 'each product must have productBlobPath' };
-      }
-      if (!PRODUCT_BLOB_PATH_RE.test(pb.productBlobPath)) {
-        return { ok: false, error: `invalid productBlobPath: ${pb.productBlobPath}` };
-      }
-      // Validate required ProductBlob fields (non-strict: just ensure they exist as strings/nulls).
-      const productBlob = pb as unknown as ProductBlob;
-      if (typeof productBlob.tpnc !== 'string' && productBlob.tpnc !== null) {
-        return { ok: false, error: 'product tpnc must be string | null' };
-      }
-    }
+    return { ok: false, error: 'products must not be included in /api/dashboard-sync' };
   }
 
   return {
@@ -175,7 +155,6 @@ function parseSplitLayoutPayload(
       coverageWindow: b.coverageWindow as string[],
       dataGeneratedAt: (b as Record<string, unknown>).dataGeneratedAt as string ?? '',
       uiUpdatedAt: (b as Record<string, unknown>).uiUpdatedAt as string ?? '',
-      products: (b.products as SplitLayoutPayload['products']) ?? undefined,
     },
   };
 }

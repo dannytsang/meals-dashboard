@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   syncDashboardLayout,
+  syncDashboardProducts,
   buildOrderBlobPath,
   buildCoverageBlobPath,
   invalidateCoverageForOrder,
@@ -454,5 +455,54 @@ describe('syncDashboardLayout — audit-log-friendly written paths', () => {
 
     const r2 = await syncDashboardLayout(makePayload(), client);
     expect(r2.skippedPaths).toContain(summaryPath!);
+  });
+});
+
+
+describe('syncDashboardProducts — product-only publication', () => {
+  it('writes only product blobs and preserves the existing main manifest pointer', async () => {
+    const client = new InMemoryBlobStorageClient();
+    const mainPayload = makePayload();
+    const initial = await syncDashboardLayout(mainPayload, client);
+
+    const currentProductsManifestPath =
+      'meta/products-manifest-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.json';
+    const currentProductsManifest = JSON.stringify({ '111111': 'products/111111.json' }, null, 2);
+    client.store.set(currentProductsManifestPath, {
+      content: currentProductsManifest,
+      hash: client.computeHash(currentProductsManifest),
+    });
+    const currentProduct = JSON.stringify(makeProduct('111111', 'Apples'), null, 2);
+    client.store.set('products/111111.json', {
+      content: currentProduct,
+      hash: client.computeHash(currentProduct),
+    });
+    await client.writePointer(initial.manifestPath, currentProductsManifestPath);
+
+    const result = await syncDashboardProducts(
+      { products: [makeProduct('111111', 'Apples'), makeProduct('222222', 'Pears')] },
+      client
+    );
+
+    expect(result.writtenPaths).toContain('products/222222.json');
+    expect(result.writtenPaths.some((path) => path.startsWith('orders/'))).toBe(false);
+    expect(result.writtenPaths.some((path) => path.startsWith('coverage/'))).toBe(false);
+    expect(result.writtenPaths.some((path) => path.startsWith('meta/summary-'))).toBe(false);
+    expect(result.productsManifestPath).toMatch(/^meta\/products-manifest-[0-9a-f]{64}\.json$/);
+
+    const pointer = await client.readPointer();
+    expect(pointer?.manifestPath).toBe(initial.manifestPath);
+    expect(pointer?.productsManifestPath).toBe(result.productsManifestPath);
+    expect(client.store.has(initial.manifestPath)).toBe(true);
+    expect(client.store.has('orders/2026-06-15/5421-8594-00.json')).toBe(true);
+    expect(client.store.has('coverage/2026-06-15.json')).toBe(true);
+  });
+
+  it('fails when the existing pointer is missing', async () => {
+    const client = new InMemoryBlobStorageClient();
+
+    await expect(
+      syncDashboardProducts({ products: [makeProduct('111111', 'Apples')] }, client)
+    ).rejects.toThrow(/no manifest pointer/i);
   });
 });

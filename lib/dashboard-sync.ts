@@ -122,6 +122,10 @@ export interface SplitLayoutPayload {
   products?: Array<{ productBlobPath: string } & ProductBlob>;
 }
 
+export interface ProductSyncPayload {
+  products: Array<{ productBlobPath: string } & ProductBlob>;
+}
+
 export interface SyncResult {
   manifestPath: string;
   manifestHash: string;
@@ -335,6 +339,117 @@ export async function syncDashboardLayout(
       pointer.manifestPath === manifestPath &&
       currentProductsManifestPath === computedProductsManifestPath,
     productsManifestPath: computedProductsManifestPath,
+  };
+}
+
+/**
+ * Execute the product-only publication path (spec 032).
+ *
+ * The main dashboard manifest is preserved via the existing pointer; this
+ * helper only writes products/{tpnc}.json blobs, the products manifest, and
+ * the pointer's productsManifestPath.
+ */
+export async function syncDashboardProducts(
+  payload: ProductSyncPayload,
+  client: BlobStorageClient,
+  options: { dryRun?: boolean } = {}
+): Promise<SyncResult> {
+  const { dryRun = false } = options;
+  const pointer = await client.readPointer();
+  if (!pointer) {
+    throw new Error(
+      'syncDashboardProducts: no manifest pointer exists yet; cannot publish products before an initial dashboard sync.'
+    );
+  }
+
+  const currentMainManifest: Manifest = await client.readManifest(pointer.manifestPath);
+  const currentProductsManifest: Record<string, string> = pointer.productsManifestPath
+    ? (await client.readManifest(pointer.productsManifestPath))
+    : {};
+
+  const writtenPaths: string[] = [];
+  const skippedPaths: string[] = [];
+  const newProductsManifest: Record<string, string> = { ...currentProductsManifest };
+
+  for (const product of payload.products ?? []) {
+    if (!/^products\/\d+\.json$/.test(product.productBlobPath)) {
+      throw new Error(`Invalid productBlobPath: ${product.productBlobPath}`);
+    }
+    const content = JSON.stringify(product, null, 2);
+    if (!dryRun) {
+      const result = await client.writeBlobIfChanged(product.productBlobPath, content, currentMainManifest);
+      if (result.written) writtenPaths.push(product.productBlobPath);
+      else skippedPaths.push(product.productBlobPath);
+    } else {
+      const hash = client.computeHash(content);
+      if (currentMainManifest[product.productBlobPath] === hash) {
+        skippedPaths.push(product.productBlobPath);
+      } else {
+        writtenPaths.push(product.productBlobPath);
+      }
+    }
+    const tpnc =
+      typeof product.tpnc === 'string' && product.tpnc
+        ? product.tpnc
+        : product.productBlobPath.replace('products/', '').replace('.json', '');
+    newProductsManifest[tpnc] = product.productBlobPath;
+  }
+
+  const currentProductsManifestContent = JSON.stringify(currentProductsManifest, null, 2);
+  const currentProductsManifestHash = client.computeHash(currentProductsManifestContent);
+  const productsManifestContent = JSON.stringify(newProductsManifest, null, 2);
+  const productsManifestHash = client.computeHash(productsManifestContent);
+  const productsManifestPath = `${PRODUCTS_MANIFEST_PREFIX}${productsManifestHash}.json`;
+  const { manifestHash } = serialiseManifest(currentMainManifest);
+  const trueNoOp = !dryRun && writtenPaths.length === 0 && pointer.productsManifestPath === productsManifestPath;
+
+  if (trueNoOp) {
+    return {
+      manifestPath: pointer.manifestPath,
+      manifestHash,
+      writtenPaths,
+      skippedPaths,
+      totalOps: 0,
+      isInitialSync: false,
+      suppressedNoopWrites: true,
+      productsManifestPath,
+    };
+  }
+
+  if (!dryRun) {
+    const currentProductsManifestRef: Manifest =
+      pointer.productsManifestPath === productsManifestPath
+        ? { [productsManifestPath]: currentProductsManifestHash }
+        : {};
+    const result = await client.writeBlobIfChanged(
+      productsManifestPath,
+      productsManifestContent,
+      currentProductsManifestRef
+    );
+    if (result.written) writtenPaths.push(productsManifestPath);
+    else skippedPaths.push(productsManifestPath);
+    await client.writePointer(pointer.manifestPath, productsManifestPath);
+    return {
+      manifestPath: pointer.manifestPath,
+      manifestHash,
+      writtenPaths,
+      skippedPaths,
+      totalOps: writtenPaths.length + 1,
+      isInitialSync: false,
+      suppressedNoopWrites: false,
+      productsManifestPath,
+    };
+  }
+
+  return {
+    manifestPath: pointer.manifestPath,
+    manifestHash: 'dry-run',
+    writtenPaths,
+    skippedPaths,
+    totalOps: writtenPaths.length + 1,
+    isInitialSync: false,
+    suppressedNoopWrites: writtenPaths.length === 0 && pointer.productsManifestPath === productsManifestPath,
+    productsManifestPath,
   };
 }
 

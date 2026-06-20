@@ -145,36 +145,11 @@ def backfill_entry(
 
 def _build_backfill_payload(
     products: Dict[str, Dict[str, Any]],
-    dashboard_cache: Optional[Dict[str, Any]],
-    api_url: str,
-    secret: str,
 ) -> Optional[Dict[str, Any]]:
-    """Build a safe split-layout payload for the product backfill.
-
-    The backfill must *not* post an empty orders/coverage payload, because
-    `/api/dashboard-sync` treats the request body as the whole current state.
-    Instead, we rebuild the current dashboard payload from the latest cache and
-    merge the backfilled products into that payload before posting.
-    """
-    if not products or not dashboard_cache:
+    """Build a product-only payload for the product backfill."""
+    if not products:
         return None
-
-    payload = sync_dashboard_data.build_dashboard_payload(
-        dashboard_cache,
-        api_url=api_url,
-        api_secret=secret,
-    )
-    existing_products = {
-        p.get('productBlobPath'): p
-        for p in (payload.get('products', []) or [])
-        if isinstance(p, dict) and p.get('productBlobPath')
-    }
-    for product in products.values():
-        blob_path = product.get('productBlobPath')
-        if blob_path:
-            existing_products[blob_path] = product
-    payload['products'] = list(existing_products.values())
-    return payload
+    return {"products": list(products.values())}
 
 
 def _write_products_to_api(
@@ -182,9 +157,8 @@ def _write_products_to_api(
     api_url: str,
     secret: str,
 ) -> Optional[str]:
-    """Write a complete split-layout payload to Vercel Blob via the API.
+    """Write a product-only payload to the product endpoint.
 
-    The payload must already include the current orders/coverage/summary state.
     Returns the productsManifestPath on success, None on failure.
     """
     if not payload:
@@ -319,14 +293,14 @@ def main() -> int:
         _write_cache(cache, PRODUCT_METADATA_CACHE)
 
     # FR-015: write product blobs to Vercel Blob via API, then write products manifest.
-    dashboard_cache = sync_dashboard_data.read_dashboard_cache() if not args.dry_run else None
-    if not args.dry_run and product_blobs and api_url and secret:
-        payload = _build_backfill_payload(product_blobs, dashboard_cache, api_url, secret)
+    product_api_url = sync_dashboard_data.dashboard_products_api_url(api_url) if api_url else ''
+    if not args.dry_run and product_blobs and product_api_url and secret:
+        payload = _build_backfill_payload(product_blobs)
         if payload is None:
-            print("  ⚠ Skipping Vercel Blob write: no dashboard cache available to preserve current data")
+            print("  ⚠ Skipping Vercel Blob write: no product payload available")
             manifest_path = None
         else:
-            manifest_path = _write_products_to_api(payload, api_url, secret)
+            manifest_path = _write_products_to_api(payload, product_api_url, secret)
         if manifest_path:
             print(f"  ✓ Wrote {len(product_blobs)} product blobs; manifest: {manifest_path}")
         else:
