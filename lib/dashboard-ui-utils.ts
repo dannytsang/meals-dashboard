@@ -343,12 +343,30 @@ export interface ResolvedProductInfo {
 
 export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInfo {
   const generated = item.productMetadata;
+  const local = findProductInfo(item.name);
   if (generated) {
     const expiresAt = _computeExpiresAt(generated.lastFetched);
+    const localDescription = local?.description?.trim() ?? '';
+    if (localDescription && !generated.description?.trim()) {
+      return {
+        title: local?.name || cleanItemName(item.name),
+        description: localDescription,
+        storage: local?.storage || 'Check packaging for storage instructions.',
+        preparation: local?.preparation || '',
+        ingredients: '',
+        allergens: '',
+        nutrition: local?.nutrition || 'Nutrition information not available from generated Tesco metadata.',
+        image: local?.image || '',
+        productUrl: generated.productUrl,
+        lastFetched: generated.lastFetched,
+        expiresAt,
+        source: 'local',
+      };
+    }
     // Spec 027 Rev 2 / FR-014: Apollo partial success wins. If Apollo
-    // returned an empty description, fall through to the Firecrawl
-    // snippet (third tier of the chain). The Firecrawl snippet is
-    // populated by the Python sync pipeline at
+    // returned an empty description and curated-static did not cover the
+    // item, fall through to the Firecrawl snippet (third tier of the chain).
+    // The Firecrawl snippet is populated by the Python sync pipeline at
     // `scripts/sync-dashboard-data.py:_fetch_firecrawl_search_snippet`
     // and cached in `products/{tpnc}.json` under the `firecrawl` key
     // with a 21-day TTL matching Apollo.
@@ -374,7 +392,6 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
     };
   }
 
-  const local = findProductInfo(item.name);
   if (local) {
     return {
       title: cleanItemName(item.name),

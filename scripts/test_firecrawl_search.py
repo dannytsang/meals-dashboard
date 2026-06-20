@@ -216,6 +216,41 @@ class FirecrawlSearchSyncTests(unittest.TestCase):
             result = sdd._fetch_firecrawl_search_snippet('Tesco X')
         self.assertEqual(result['outcome'], 'not_found')
 
+    def test_curated_static_description_skips_firecrawl_lookup(self):
+        os.environ[sdd.MEALS_FIRECRAWL_FALLBACK_ENV] = '1'
+        os.environ[sdd.FIRECRAWL_API_KEY_ENV] = 'fc-test-key'
+        with mock.patch.object(sdd, 'find_curated_static_product_info', return_value={
+            'name': 'Tesco Blueberries 150G',
+            'description': 'Fresh British blueberries, perfect for breakfast cereals, yoghurts or as a healthy snack.',
+            'storage': 'Refrigerate and consume within 5 days. Wash before use.',
+            'preparation': 'Ready to eat. Wash thoroughly before consuming.',
+            'image': 'https://images.openfoodfacts.org/images/products/000/000/326/6038/front_en.5.400.jpg',
+            'nutrition': 'Per 100g: Energy 44kcal, Protein 0.7g, Carbohydrates 9g, Fat 0.3g',
+        }), mock.patch.object(sdd, '_fetch_firecrawl_search_snippet', side_effect=AssertionError('Firecrawl must not be called')) as mock_firecrawl:
+            with mock.patch.object(sdd, 'fetch_tesco_product_metadata', return_value={
+                'tpnc': '260298456',
+                'title': 'Tesco Blueberries 150G',
+                'description': '',
+                'storage': '',
+                'preparation': '',
+                'ingredients': '',
+                'allergens': '',
+                'nutrition': '',
+                'imageUrl': '',
+                'source': 'tesco',
+                'lastFetched': '2026-06-18T09:30:00.000Z',
+            }):
+                enriched = sdd.enrich_order_items_with_product_metadata([
+                    {'name': 'Tesco Blueberries 150G'}
+                ], delay_seconds=0)
+        self.assertEqual(enriched[0]['name'], 'Tesco Blueberries 150G')
+        self.assertFalse(mock_firecrawl.called)
+
+    def test_curated_static_product_lookup_reads_real_database(self):
+        info = sdd.find_curated_static_product_info('Tesco Blueberries 150G')
+        self.assertIsNotNone(info)
+        self.assertIn('Fresh British blueberries', info['description'])
+
     def test_empty_snippet_returns_not_found(self):
         os.environ[sdd.MEALS_FIRECRAWL_FALLBACK_ENV] = '1'
         os.environ[sdd.FIRECRAWL_API_KEY_ENV] = 'fc-test-key'

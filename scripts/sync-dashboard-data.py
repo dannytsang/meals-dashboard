@@ -20,12 +20,14 @@ import subprocess
 import re
 import os
 import time
+import ast
 import urllib.parse
 import urllib.request
 import urllib.error
 from pathlib import Path
 from datetime import datetime, timezone
 from typing import Callable, Dict, Any, List, Optional, Tuple, MutableMapping
+from functools import lru_cache
 
 # Base paths - use absolute paths for clarity. Defaults match Danny's Hermes chef profile
 # environment, but can be overridden for local/dev runs.
@@ -75,6 +77,69 @@ def load_dashboard_env(env: Optional[MutableMapping[str, str]] = None, env_path:
 
 def _product_cache_key(item_name: str) -> str:
     return re.sub(r'\s+', ' ', item_name).strip().lower()
+
+
+@lru_cache(maxsize=1)
+def _load_curated_static_database() -> str:
+    product_db_path = DASHBOARD_PATH / 'lib' / 'product-database.ts'
+    try:
+        return product_db_path.read_text()
+    except Exception:
+        return ''
+
+
+def find_curated_static_product_info(item_name: str) -> Optional[Dict[str, Any]]:
+    """Find curated-static product info by exact-substring match.
+
+    Mirrors lib/product-database.ts::findProductInfo so the sync pipeline
+    can decide whether a local catalogue hit already satisfies the description
+    tier before spending Firecrawl credits.
+    """
+    database = _load_curated_static_database()
+    if not database:
+        return None
+
+    normalized_item = _product_cache_key(item_name)
+    key_matches = [
+        match.group(1)
+        for match in re.finditer(r"^\s*['\"]([^'\"]+)['\"]:\s*\{\s*$", database, re.M)
+    ]
+    if not key_matches:
+        return None
+
+    key_matches.sort(key=len, reverse=True)
+    for key in key_matches:
+        if normalized_item == key or key in normalized_item:
+            block = re.search(
+                rf"^\s*['\"]{re.escape(key)}['\"]:\s*\{{(?P<body>.*?)^\s*\}}\s*,?\s*$",
+                database,
+                re.M | re.S,
+            )
+            if not block:
+                return None
+            body = block.group('body')
+            def _line_value(field: str) -> Optional[str]:
+                m = re.search(rf"^\s*{re.escape(field)}:\s*(.+?),\s*$", body, re.M)
+                if not m:
+                    return None
+                raw = m.group(1).strip()
+                try:
+                    return ast.literal_eval(raw)
+                except Exception:
+                    return None
+
+            description = _line_value('description')
+            if not isinstance(description, str) or not description.strip():
+                return None
+            return {
+                'name': _line_value('name') or key,
+                'description': description,
+                'storage': _line_value('storage') or '',
+                'preparation': _line_value('preparation') or '',
+                'image': _line_value('image') or '',
+                'nutrition': _line_value('nutrition') or '',
+            }
+    return None
 
 
 def _read_product_metadata_cache(cache_path: Path = PRODUCT_METADATA_CACHE) -> Dict[str, Dict[str, Any]]:
@@ -864,49 +929,51 @@ def enrich_order_items_with_product_metadata(
                 metadata = None
             if metadata:
                 # Spec 027 Rev 2 / FR-014: if Apollo returned an empty
-                # `description`, consult Firecrawl's search tier for a
-                # Google snippet. Honour the 21-day TTL on the existing
-                # `firecrawl.lastFetched` (FR-006) — skip the API when
-                # a fresh snippet is already cached. Apply the same
-                # per-item delay as Apollo (FR-013).
+                # `description`, consult the curated-static catalogue first,
+                # then Firecrawl's search tier for a Google snippet. Honour
+                # the 21-day TTL on the existing `firecrawl.lastFetched`
+                # (FR-006) — skip the API when a fresh snippet is already
+                # cached. Apply the same per-item delay as Apollo (FR-013).
                 if not _apollo_description_populated(metadata):
-                    existing_fc = metadata.get('firecrawl') or {}
-                    fc_fetched_at = existing_fc.get('lastFetched')
-                    fc_is_fresh = False
-                    if isinstance(fc_fetched_at, str) and fc_fetched_at:
-                        try:
-                            fc_dt = datetime.fromisoformat(
-                                fc_fetched_at.replace('Z', '+00:00')
-                            )
-                            fc_age_days = (
-                                datetime.now(timezone.utc)
-                                - fc_dt.replace(tzinfo=timezone.utc)
-                            ).total_seconds() / 86400
-                            fc_is_fresh = fc_age_days <= PRODUCT_ENRICHMENT_MAX_AGE_DAYS
-                        except (ValueError, TypeError):
-                            fc_is_fresh = False
-                    if not fc_is_fresh:
-                        fc_result = _fetch_firecrawl_search_snippet(item_name)
-                        outcome = fc_result.get('outcome')
-                        if outcome == 'ok':
-                            metadata['firecrawl'] = {
-                                'snippet': fc_result['snippet'],
-                                'lastFetched': fc_result['lastFetched'],
-                                'status': 'ok',
-                            }
-                        elif outcome == 'not_found':
-                            # Open Question 5: persist the not_found
-                            # status so the next sync skips the API.
-                            metadata['firecrawl'] = {
-                                'snippet': None,
-                                'lastFetched': fc_result['lastFetched'],
-                                'status': 'not_found',
-                            }
-                        # All other outcomes (disabled, no_key, http_error,
-                        # error, malformed): write nothing — the next sync
-                        # retries the API.
-                        if delay_seconds > 0:
-                            time.sleep(delay_seconds)
+                    curated_static = find_curated_static_product_info(item_name)
+                    if not curated_static:
+                        existing_fc = metadata.get('firecrawl') or {}
+                        fc_fetched_at = existing_fc.get('lastFetched')
+                        fc_is_fresh = False
+                        if isinstance(fc_fetched_at, str) and fc_fetched_at:
+                            try:
+                                fc_dt = datetime.fromisoformat(
+                                    fc_fetched_at.replace('Z', '+00:00')
+                                )
+                                fc_age_days = (
+                                    datetime.now(timezone.utc)
+                                    - fc_dt.replace(tzinfo=timezone.utc)
+                                ).total_seconds() / 86400
+                                fc_is_fresh = fc_age_days <= PRODUCT_ENRICHMENT_MAX_AGE_DAYS
+                            except (ValueError, TypeError):
+                                fc_is_fresh = False
+                        if not fc_is_fresh:
+                            fc_result = _fetch_firecrawl_search_snippet(item_name)
+                            outcome = fc_result.get('outcome')
+                            if outcome == 'ok':
+                                metadata['firecrawl'] = {
+                                    'snippet': fc_result['snippet'],
+                                    'lastFetched': fc_result['lastFetched'],
+                                    'status': 'ok',
+                                }
+                            elif outcome == 'not_found':
+                                # Open Question 5: persist the not_found
+                                # status so the next sync skips the API.
+                                metadata['firecrawl'] = {
+                                    'snippet': None,
+                                    'lastFetched': fc_result['lastFetched'],
+                                    'status': 'not_found',
+                                }
+                            # All other outcomes (disabled, no_key, http_error,
+                            # error, malformed): write nothing — the next sync
+                            # retries the API.
+                            if delay_seconds > 0:
+                                time.sleep(delay_seconds)
                 # Store under both tpnc key (if known) and name key
                 cache[name_key] = metadata
                 if metadata.get('tpnc'):

@@ -1,6 +1,7 @@
 import { USER_NAME_FALLBACK, type SessionUser, resolveUserChipName } from './user-chip';
 import { verifyDebugCookie, type VerifiedDebugCookie } from './debug-cookie';
 import { resolveProductInfoForItem, type ResolvedProductInfo } from './dashboard-ui-utils';
+import { findProductInfo } from './product-database';
 
 export type DebugCookieState = 'missing' | 'verified_on' | 'verified_off' | 'tampered';
 export type DebugUserSource = 'name' | 'email' | 'fallback';
@@ -147,11 +148,13 @@ function maybeAgeDays(iso: string | undefined | null, nowIso: string): number | 
   return seconds === null ? null : Math.floor(seconds / 86400);
 }
 
-function resolveProductSource(resolution: ResolvedProductInfo, item: { productMetadata?: { description?: string; firecrawl?: { snippet?: string | null; status?: 'ok' | 'not_found' } } | null }) : DebugProductSource {
+function resolveProductSource(resolution: ResolvedProductInfo, item: { name: string; productMetadata?: { description?: string; firecrawl?: { snippet?: string | null; status?: 'ok' | 'not_found' } } | null }) : DebugProductSource {
   if (resolution.source === 'fallback') return 'placeholder';
   if (resolution.source === 'local') return 'curated_static';
   const generated = item.productMetadata;
+  const local = findProductInfo(item.name);
   if (generated?.description && generated.description.trim().length > 0) return 'apollo';
+  if (local?.description?.trim() && resolution.description === local.description) return 'curated_static';
   const firecrawlSnippet = generated?.firecrawl?.snippet;
   if (isNonEmptyString(firecrawlSnippet)) return 'firecrawl';
   return 'apollo';
@@ -332,6 +335,7 @@ export function buildProductResolutionDebugPayload(args: {
 }
 
 export function describeProductResolutionSource(item: {
+  name: string;
   productMetadata?: {
     description?: string;
     firecrawl?: { snippet?: string | null; status?: 'ok' | 'not_found' };

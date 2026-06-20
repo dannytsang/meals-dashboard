@@ -324,6 +324,27 @@ describe('generated product metadata resolution', () => {
       expect(resolveProductInfoForItem(item).description).toBe('Apollo description');
     });
 
+    it('uses curated-static description before Firecrawl when Apollo description is empty', () => {
+      const item: GroceryItem = {
+        name: 'Tesco Blueberries 150G',
+        quantity: 1,
+        price: 2,
+        productMetadata: {
+          title: 'Tesco Blueberries 150G',
+          description: '',
+          source: 'tesco',
+          firecrawl: {
+            snippet: 'Firecrawl snippet',
+            lastFetched: '2026-06-18T00:00:00Z',
+            status: 'ok',
+          },
+        },
+      };
+      expect(resolveProductInfoForItem(item).description).toBe(
+        'Fresh British blueberries, perfect for breakfast cereals, yoghurts or as a healthy snack.'
+      );
+    });
+
     it('uses Firecrawl snippet when Apollo description is empty', () => {
       const item: GroceryItem = {
         name: 'Tesco Eggs',

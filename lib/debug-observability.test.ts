@@ -264,6 +264,42 @@ describe('buildProductResolutionDebugPayload', () => {
     expect(curatedPayload.descriptionSource).toBe('curated_static');
     expect(curatedPayload.productSource).toBe('curated_static');
 
+    const curatedViaGeneratedPayload = buildProductResolutionDebugPayload({
+      item: {
+        name: 'Tesco Blueberries 150G',
+        tpnc: '123456789',
+        productMetadata: {
+          title: 'Tesco Blueberries 150G',
+          description: '',
+          storage: 'Refrigerate and consume within 5 days. Wash before use.',
+          preparation: '',
+          ingredients: '',
+          allergens: '',
+          nutrition: 'Per 100g: Energy 44kcal, Protein 0.7g, Carbohydrates 9g, Fat 0.3g',
+          imageUrl: 'https://images.openfoodfacts.org/images/products/000/000/326/6038/front_en.5.400.jpg',
+          productUrl: 'https://example.test/blueberries',
+          source: 'tesco',
+          lastFetched: '2026-06-18T09:30:00.000Z',
+        },
+      },
+      resolution: {
+        title: 'Tesco Blueberries 150G',
+        description: 'Fresh British blueberries, perfect for breakfast cereals, yoghurts or as a healthy snack.',
+        storage: 'Refrigerate and consume within 5 days. Wash before use.',
+        preparation: '',
+        ingredients: '',
+        allergens: '',
+        nutrition: 'Per 100g: Energy 44kcal, Protein 0.7g, Carbohydrates 9g, Fat 0.3g',
+        image: 'https://images.openfoodfacts.org/images/products/000/000/326/6038/front_en.5.400.jpg',
+        productUrl: 'https://example.test/blueberries',
+        lastFetched: '2026-06-18T09:30:00.000Z',
+        expiresAt: '2026-07-09T09:30:00.000Z',
+        source: 'generated',
+      },
+    });
+    expect(curatedViaGeneratedPayload.descriptionSource).toBe('curated_static');
+    expect(curatedViaGeneratedPayload.productSource).toBe('curated_static');
+
     const firecrawlPayload = buildProductResolutionDebugPayload({
       item: {
         name: 'Mystery Yoghurts',
