@@ -87,7 +87,7 @@ export function AuthSignInPage() {
             boxShadow: 'var(--shadow-md)',
           }}
         >
-          Continue with Authentik
+          Login to continue
         </button>
 
         <p style={{ color: 'var(--text-tertiary)', fontSize: '0.82rem', lineHeight: 1.5, margin: '1rem 0 0' }}>

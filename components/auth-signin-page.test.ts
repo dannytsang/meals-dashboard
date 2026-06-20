@@ -25,6 +25,7 @@ describe('themed dashboard login page', () => {
     expect(source).toContain('var(--bg-secondary)');
     expect(source).toContain('var(--text-primary)');
     expect(source).toContain('var(--accent-emerald)');
+    expect(source).toContain('Login to continue');
     expect(themeSource).toContain('meals-dashboard-theme');
     expect(source).not.toContain('@/lib/real-data');
     expect(source).not.toContain('AUTHENTIK_CLIENT_SECRET');
