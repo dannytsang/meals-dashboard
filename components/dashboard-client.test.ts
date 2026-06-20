@@ -336,6 +336,11 @@ describe('DashboardClient user menu (Spec 026)', () => {
 
   it('app/page.tsx derives userName via resolveUserChipName', () => {
     expect(pageSource).toContain("import { resolveUserChipName }");
+    expect(pageSource).toContain("import { selectDashboardDataReader }");
+    expect(pageSource).not.toContain("StaticFixtureReader");
+    expect(pageSource).toMatch(
+      /const\s+reader\s*=\s*await\s+selectDashboardDataReader\(\s*\)/
+    );
     expect(pageSource).toMatch(
       /const\s+userName\s*=\s*resolveUserChipName\(\s*session\.user\s*\)/
     );

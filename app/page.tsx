@@ -1,38 +1,17 @@
 import { getServerSession } from 'next-auth';
 import { cookies } from 'next/headers';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { redirect } from 'next/navigation';
 import { DashboardClient } from '@/components/dashboard-client';
 import { assertAuthConfigured, authOptions } from '@/lib/auth';
 import { resolveUserChipName } from '@/lib/user-chip';
-import { getDashboardData, buildCoverageWindowDates, type DashboardDataReader } from '@/lib/dashboard-data';
+import { getDashboardData, buildCoverageWindowDates } from '@/lib/dashboard-data';
 import { effectiveDebugMode } from '@/lib/debug-mode';
 import { DEBUG_COOKIE_NAME } from '@/lib/debug-cookie';
-import { isBlobStorageConfigured, isDemoMode } from '@/lib/runtime-mode';
-import { VercelBlobStorageClient } from '@/lib/blob-storage';
-import { StaticFixtureReader } from '@/lib/fixtures/static-fixture-reader';
-import { EmptyDashboardReader } from '@/lib/fixtures/empty-dashboard-reader';
+import { isDemoMode } from '@/lib/runtime-mode';
+import { selectDashboardDataReader } from '@/lib/fixtures/select-dashboard-data-reader';
 
 // Force SSR on every request so `today` is always current and private data stays server-loaded.
 export const dynamic = 'force-dynamic';
-
-// Spec 024 / FR-005 / FR-003: at request time, pick the right reader.
-// Priority: blob > fixture > empty. The fixture file is build-time generated
-// (prebuild hook in package.json); if it's missing, fall back to the
-// empty reader so the dashboard renders an empty state rather than crashing.
-function selectReader(): DashboardDataReader {
-  if (isBlobStorageConfigured()) {
-    return new VercelBlobStorageClient();
-  }
-  // The bundled fixture is generated next to this file's compiled output.
-  // Use process.cwd() because Next.js runs from the project root.
-  const fixturePath = join(process.cwd(), 'lib', 'fixtures', 'dashboard-fixture.json');
-  if (existsSync(fixturePath)) {
-    return new StaticFixtureReader();
-  }
-  return new EmptyDashboardReader();
-}
 
 export default async function MealsDashboardPage() {
   assertAuthConfigured();
@@ -55,7 +34,7 @@ export default async function MealsDashboardPage() {
   // Spec 024 / FR-005 / FR-001: detect demo mode at request time.
   // The dashboard reader is selected before getDashboardData() is called.
   const demoMode = isDemoMode();
-  const reader = selectReader();
+  const reader = await selectDashboardDataReader();
 
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
