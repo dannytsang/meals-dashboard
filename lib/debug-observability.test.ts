@@ -52,6 +52,7 @@ describe('buildRuntimeContextDebugPayload', () => {
       cookieRaw: signDebugCookie('1'),
       blobConfigured: true,
       sessionUser: { name: 'Danny Park', email: 'danny@example.com' },
+      path: '/api/debug/runtime-context',
       origin: 'https://meals.example.test',
       deploymentId: 'dpl_12345',
       vercelEnv: 'production',
@@ -61,8 +62,11 @@ describe('buildRuntimeContextDebugPayload', () => {
     expect(payload).toEqual(expect.objectContaining({
       cookie: expect.objectContaining({ state: 'verified_on', value: '1', effectiveDebugMode: true }),
       runtime: expect.objectContaining({ mode: 'live', blobConfigured: true, activeReader: 'vercel_blob' }),
+      runtimeMode: 'live',
+      blobCredentialsState: 'complete',
       user: expect.objectContaining({ displayName: 'Danny Park', source: 'name' }),
       request: expect.objectContaining({
+        path: '/api/debug/runtime-context',
         origin: 'https://meals.example.test',
         deploymentId: 'dpl_12345',
         vercelEnv: 'production',
@@ -77,6 +81,7 @@ describe('buildRuntimeContextDebugPayload', () => {
       cookieRaw: undefined,
       blobConfigured: false,
       sessionUser: { name: null, email: 'danny@example.com' },
+      path: '/api/debug/runtime-context',
       origin: '',
       deploymentId: null,
       vercelEnv: 'preview',
@@ -145,6 +150,8 @@ describe('buildBlobReadFreshnessDebugPayload', () => {
   it('exposes the per-stage read trace and freshness timestamps', () => {
     const payload = buildBlobReadFreshnessDebugPayload({
       now: NOW,
+      runtimeMode: 'live',
+      blobCredentialsState: 'complete',
       data: {
         latestOrder: {
           orderNumber: 'ORD-123',
@@ -176,10 +183,16 @@ describe('buildBlobReadFreshnessDebugPayload', () => {
         productReads: [
           { path: 'products/123.json', status: 'ok', lastFetched: '2026-06-17T09:30:00.000Z' },
         ],
+        selectedOrderBlobPath: 'orders/2026-06-17-ord-123.json',
+        selectedCoverageBlobPaths: ['coverage/2026-06-17.json'],
+        selectedProductBlobPath: 'products/123.json',
+        loadError: null,
       },
     });
 
     expect(payload).toEqual(expect.objectContaining({
+      runtimeMode: 'live',
+      blobCredentialsState: 'complete',
       pointerPath: 'pointers/latest.json',
       manifestPath: 'manifests/latest.json',
       summaryPath: 'meta/summary-2026-06-18.json',
@@ -188,6 +201,10 @@ describe('buildBlobReadFreshnessDebugPayload', () => {
       manifestRead: 'ok',
       summaryRead: 'ok',
       productsManifestRead: 'ok',
+      selectedOrderBlobPath: 'orders/2026-06-17-ord-123.json',
+      selectedCoverageBlobPaths: ['coverage/2026-06-17.json'],
+      selectedProductBlobPath: 'products/123.json',
+      loadError: null,
       coverageReads: [
         { path: 'coverage/2026-06-17.json', status: 'ok' },
         { path: 'coverage/2026-06-18.json', status: 'missing' },
@@ -242,6 +259,12 @@ describe('buildProductResolutionDebugPayload', () => {
 
     expect(apolloPayload.descriptionSource).toBe('apollo');
     expect(apolloPayload.productSource).toBe('apollo');
+    expect(apolloPayload.fieldSources).toEqual({
+      description: 'apollo',
+      image: 'placeholder',
+      storage: 'apollo',
+      preparation: 'apollo',
+    });
     expect(apolloPayload.freshness.lastFetched).toBe('2026-06-18T09:30:00.000Z');
 
     const curatedPayload = buildProductResolutionDebugPayload({
@@ -263,6 +286,12 @@ describe('buildProductResolutionDebugPayload', () => {
     });
     expect(curatedPayload.descriptionSource).toBe('curated_static');
     expect(curatedPayload.productSource).toBe('curated_static');
+    expect(curatedPayload.fieldSources).toEqual({
+      description: 'curated_static',
+      image: 'curated_static',
+      storage: 'curated_static',
+      preparation: 'curated_static',
+    });
 
     const curatedViaGeneratedPayload = buildProductResolutionDebugPayload({
       item: {
@@ -342,6 +371,12 @@ describe('buildProductResolutionDebugPayload', () => {
 
     expect(firecrawlPayload.descriptionSource).toBe('firecrawl');
     expect(firecrawlPayload.productSource).toBe('firecrawl');
+    expect(firecrawlPayload.fieldSources).toEqual({
+      description: 'firecrawl',
+      image: 'placeholder',
+      storage: 'apollo',
+      preparation: 'placeholder',
+    });
     expect(firecrawlPayload.freshness.firecrawlLastFetched).toBe('2026-06-18T10:00:00.000Z');
 
     const placeholderPayload = buildProductResolutionDebugPayload({
@@ -360,5 +395,11 @@ describe('buildProductResolutionDebugPayload', () => {
     });
     expect(placeholderPayload.descriptionSource).toBe('placeholder');
     expect(placeholderPayload.productSource).toBe('placeholder');
+    expect(placeholderPayload.fieldSources).toEqual({
+      description: 'placeholder',
+      image: 'placeholder',
+      storage: 'placeholder',
+      preparation: 'placeholder',
+    });
   });
 });

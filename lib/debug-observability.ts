@@ -10,6 +10,8 @@ export type DebugReader = 'static_fixture_reader' | 'vercel_blob';
 export type DebugProductSource = 'apollo' | 'curated_static' | 'firecrawl' | 'placeholder';
 
 export interface RuntimeContextDebugPayload {
+  runtimeMode: DebugRuntimeMode;
+  blobCredentialsState: 'complete' | 'incomplete';
   cookie: {
     state: DebugCookieState;
     value: '0' | '1' | null;
@@ -25,6 +27,7 @@ export interface RuntimeContextDebugPayload {
     source: DebugUserSource;
   };
   request: {
+    path: string;
     origin: string;
     deploymentId: string | null;
     vercelEnv: string | null;
@@ -57,6 +60,8 @@ export interface ItemsByCategoryDebugPayload {
 }
 
 export interface BlobReadFreshnessDebugPayload {
+  runtimeMode: DebugRuntimeMode;
+  blobCredentialsState: 'complete' | 'incomplete';
   pointerPath: string;
   pointerRead: 'ok' | 'missing' | 'error' | 'bypassed';
   manifestPath: string | null;
@@ -65,6 +70,10 @@ export interface BlobReadFreshnessDebugPayload {
   summaryRead: 'ok' | 'missing' | 'error' | 'bypassed';
   productsManifestPath: string | null;
   productsManifestRead: 'ok' | 'missing' | 'error' | 'bypassed';
+  selectedOrderBlobPath: string | null;
+  selectedCoverageBlobPaths: string[];
+  selectedProductBlobPath: string | null;
+  loadError: unknown;
   coverageWindow: string[];
   coverageReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed' }>;
   orderReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed' }>;
@@ -99,6 +108,12 @@ export interface ProductResolutionDebugPayload {
   expiresAt?: string;
   productSource: DebugProductSource;
   descriptionSource: DebugProductSource;
+  fieldSources: {
+    description: DebugProductSource;
+    image: DebugProductSource;
+    storage: DebugProductSource;
+    preparation: DebugProductSource;
+  };
   freshness: {
     lastFetched?: string;
     firecrawlLastFetched?: string;
@@ -165,6 +180,7 @@ export function buildRuntimeContextDebugPayload(args: {
   cookieRaw: string | undefined | null;
   blobConfigured: boolean;
   sessionUser: SessionUser | null | undefined;
+  path: string;
   origin: string;
   deploymentId: string | null;
   vercelEnv: string | null;
@@ -174,6 +190,8 @@ export function buildRuntimeContextDebugPayload(args: {
   const cookieVerified = verifyDebugCookie(args.cookieRaw);
   const user = resolveAuthenticatedUserDisplay(args.sessionUser);
   return {
+    runtimeMode: args.blobConfigured ? 'live' : 'demo',
+    blobCredentialsState: args.blobConfigured ? 'complete' : 'incomplete',
     cookie: {
       state: cookieState,
       value: cookieVerified?.value ?? null,
@@ -186,6 +204,7 @@ export function buildRuntimeContextDebugPayload(args: {
     },
     user,
     request: {
+      path: args.path,
       origin: args.origin,
       deploymentId: args.deploymentId,
       vercelEnv: args.vercelEnv,
@@ -199,7 +218,7 @@ export function buildItemsByCategoryDebugPayload(args: {
   now: string;
   coverageWindow: string[];
   data: {
-    latestOrder: (unknown & { orderBlobPath?: string | null; deliveryDate?: string | null; items?: unknown[] }) | null;
+    latestOrder: (unknown & { orderNumber?: string | null; orderBlobPath?: string | null; deliveryDate?: string | null; items?: unknown[] }) | null;
     dataGeneratedAt: string;
     uiUpdatedAt: string;
     loadError: unknown;
@@ -242,8 +261,10 @@ export function buildItemsByCategoryDebugPayload(args: {
 
 export function buildBlobReadFreshnessDebugPayload(args: {
   now: string;
+  runtimeMode: DebugRuntimeMode;
+  blobCredentialsState: 'complete' | 'incomplete';
   data: {
-    latestOrder: (unknown & { deliveryDate?: string | null }) | null;
+    latestOrder: (unknown & { orderNumber?: string | null; orderBlobPath?: string | null; deliveryDate?: string | null; items?: unknown[] }) | null;
     dataGeneratedAt: string;
     uiUpdatedAt: string;
     loadError: unknown;
@@ -257,6 +278,10 @@ export function buildBlobReadFreshnessDebugPayload(args: {
     summaryRead: 'ok' | 'missing' | 'error' | 'bypassed';
     productsManifestPath: string | null;
     productsManifestRead: 'ok' | 'missing' | 'error' | 'bypassed';
+    selectedOrderBlobPath: string | null;
+    selectedCoverageBlobPaths: string[];
+    selectedProductBlobPath: string | null;
+    loadError: unknown;
     coverageWindow: string[];
     coverageReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed' }>;
     orderReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed' }>;
@@ -264,6 +289,8 @@ export function buildBlobReadFreshnessDebugPayload(args: {
   };
 }): BlobReadFreshnessDebugPayload {
   return {
+    runtimeMode: args.runtimeMode,
+    blobCredentialsState: args.blobCredentialsState,
     pointerPath: args.trace.pointerPath,
     pointerRead: args.trace.pointerRead,
     manifestPath: args.trace.manifestPath,
@@ -272,6 +299,10 @@ export function buildBlobReadFreshnessDebugPayload(args: {
     summaryRead: args.trace.summaryRead,
     productsManifestPath: args.trace.productsManifestPath,
     productsManifestRead: args.trace.productsManifestRead,
+    selectedOrderBlobPath: args.trace.selectedOrderBlobPath,
+    selectedCoverageBlobPaths: args.trace.selectedCoverageBlobPaths,
+    selectedProductBlobPath: args.trace.selectedProductBlobPath,
+    loadError: args.trace.loadError,
     coverageWindow: args.trace.coverageWindow,
     coverageReads: args.trace.coverageReads,
     orderReads: args.trace.orderReads,
@@ -295,15 +326,63 @@ export function buildProductResolutionDebugPayload(args: {
     name: string;
     tpnc?: string | null;
     productBlobPath?: string | null;
-    productMetadata?: {
+    productMetadata?: ({
+      title?: string;
       description?: string;
+      storage?: string;
+      preparation?: string;
+      ingredients?: string;
+      allergens?: string;
+      nutrition?: string;
+      brand?: string;
+      category?: string;
+      productUrl?: string;
+      source?: string;
+      lastFetched?: string;
+      imageUrl?: string;
       firecrawl?: { snippet?: string | null; lastFetched?: string; status?: 'ok' | 'not_found' };
-    } | null;
+    }) | null;
   };
   resolution: ResolvedProductInfo;
 }): ProductResolutionDebugPayload {
   const productSource = resolveProductSource(args.resolution, args.item);
   const descriptionSource = productSource;
+  const fieldSources: ProductResolutionDebugPayload['fieldSources'] = {
+    description:
+      productSource === 'placeholder'
+        ? 'placeholder'
+        : productSource === 'curated_static'
+          ? 'curated_static'
+          : productSource === 'firecrawl'
+            ? 'firecrawl'
+            : args.item.productMetadata?.description?.trim()
+              ? 'apollo'
+              : 'placeholder',
+    image:
+      productSource === 'placeholder'
+        ? 'placeholder'
+        : productSource === 'curated_static'
+          ? 'curated_static'
+          : args.resolution.image?.trim()
+            ? 'apollo'
+            : 'placeholder',
+    storage:
+      productSource === 'placeholder'
+        ? 'placeholder'
+        : productSource === 'curated_static'
+          ? 'curated_static'
+          : args.resolution.storage?.trim()
+            ? 'apollo'
+            : 'placeholder',
+    preparation:
+      productSource === 'placeholder'
+        ? 'placeholder'
+        : productSource === 'curated_static'
+          ? 'curated_static'
+          : args.resolution.preparation?.trim()
+            ? 'apollo'
+            : 'placeholder',
+  };
   return {
     itemName: args.item.name,
     itemTpnc: args.item.tpnc ?? null,
@@ -321,6 +400,7 @@ export function buildProductResolutionDebugPayload(args: {
     expiresAt: args.resolution.expiresAt,
     productSource,
     descriptionSource,
+    fieldSources,
     freshness: {
       lastFetched: args.resolution.lastFetched,
       firecrawlLastFetched: args.item.productMetadata?.firecrawl?.lastFetched,

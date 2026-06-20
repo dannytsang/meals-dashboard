@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { cookies, headers } from 'next/headers';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 
 import { authOptions } from '@/lib/auth';
@@ -14,7 +14,7 @@ export const runtime = 'nodejs';
 
 const NOT_FOUND = NextResponse.json({ error: 'not_found' }, { status: 404 });
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const cookieRaw = (await cookies()).get(DEBUG_COOKIE_NAME)?.value;
   const cookieVerification = verifyDebugCookie(cookieRaw);
   if (cookieVerification?.value !== '1') {
@@ -22,16 +22,13 @@ export async function GET(): Promise<NextResponse> {
   }
 
   const session = await getServerSession(authOptions);
+  const now = new Date();
 
-  let origin = '';
   let deploymentId: string | null = process.env.VERCEL_DEPLOYMENT_ID ?? null;
   let vercelEnv: string | null = process.env.VERCEL_ENV ?? null;
   let region: string | null = process.env.VERCEL_REGION ?? null;
   try {
     const h = await headers();
-    const proto = h.get('x-forwarded-proto') ?? 'https';
-    const host = h.get('host') ?? h.get('x-forwarded-host') ?? '';
-    origin = host ? `${proto}://${host}` : '';
     deploymentId = h.get('x-vercel-id') ?? deploymentId;
     vercelEnv = h.get('x-vercel-env') ?? vercelEnv;
     region = h.get('x-vercel-region') ?? region;
@@ -39,17 +36,19 @@ export async function GET(): Promise<NextResponse> {
     // Outside request scope during tests/builds: fall back to env vars.
   }
 
+  const requestUrl = new URL(request.url);
   const mode = runtimeModeStatus();
-  const payload = buildRuntimeContextDebugPayload({
-    now: new Date().toISOString(),
+  const runtimePayload = buildRuntimeContextDebugPayload({
+    now: now.toISOString(),
     cookieRaw,
     blobConfigured: mode.blobConfigured,
     sessionUser: session?.user ?? null,
-    origin,
+    path: requestUrl.pathname,
+    origin: requestUrl.origin,
     deploymentId,
     vercelEnv,
     region,
   });
 
-  return NextResponse.json(payload);
+  return NextResponse.json(runtimePayload);
 }

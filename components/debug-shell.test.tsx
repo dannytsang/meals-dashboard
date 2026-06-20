@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import { DebugShell } from './debug-shell';
+
+const source = readFileSync(join(process.cwd(), 'components/debug-shell.tsx'), 'utf8');
 
 const originalFetch = globalThis.fetch;
 
@@ -37,14 +41,18 @@ beforeEach(() => {
     }
     if (url.includes('/api/debug/runtime-context')) {
       return jsonResponse({
+        runtimeMode: 'live',
+        blobCredentialsState: 'complete',
         cookie: { state: 'verified_on', value: '1', effectiveDebugMode: true },
         runtime: { mode: 'live', blobConfigured: true, activeReader: 'vercel_blob' },
         user: { displayName: 'Danny Park', source: 'name' },
-        request: { origin: 'https://meals.example.test', deploymentId: 'dpl_123', vercelEnv: 'preview', region: 'cdg1', fetchedAt: '2026-06-19T12:00:00.000Z' },
+        request: { path: '/api/debug/runtime-context', origin: 'https://meals.example.test', deploymentId: 'dpl_123', vercelEnv: 'preview', region: 'cdg1', fetchedAt: '2026-06-19T12:00:00.000Z' },
       });
     }
     if (url.includes('/api/debug/blob-read-freshness')) {
       return jsonResponse({
+        runtimeMode: 'demo',
+        blobCredentialsState: 'incomplete',
         pointerPath: 'pointers/latest.json',
         pointerRead: 'ok',
         manifestPath: 'meta/manifest-123.json',
@@ -53,6 +61,10 @@ beforeEach(() => {
         summaryRead: 'ok',
         productsManifestPath: 'products/manifest-123.json',
         productsManifestRead: 'ok',
+        selectedOrderBlobPath: 'orders/2026-06-17-123.json',
+        selectedCoverageBlobPaths: ['coverage/2026-06-17.json'],
+        selectedProductBlobPath: 'products/123456789.json',
+        loadError: null,
         coverageWindow: ['2026-06-17', '2026-06-18'],
         coverageReads: [],
         orderReads: [],
@@ -80,6 +92,7 @@ beforeEach(() => {
         expiresAt: '2026-07-09T09:30:00.000Z',
         productSource: 'apollo',
         descriptionSource: 'apollo',
+        fieldSources: { description: 'apollo', image: 'placeholder', storage: 'apollo', preparation: 'apollo' },
         freshness: { lastFetched: '2026-06-18T09:30:00.000Z' },
         provenance: { generated: true, local: false, firecrawl: false, firecrawlStatus: null },
       });
@@ -99,10 +112,23 @@ describe('DebugShell', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /refresh all/i })).toBeTruthy();
-      expect(screen.getByRole('button', { name: /items by category/i })).toBeTruthy();
       expect(screen.getByRole('button', { name: /runtime context/i })).toBeTruthy();
       expect(screen.getByRole('button', { name: /blob read freshness/i })).toBeTruthy();
       expect(screen.getByRole('button', { name: /product resolution/i })).toBeTruthy();
+      expect(screen.getByRole('button', { name: /items by category/i })).toBeTruthy();
     });
+  });
+
+  it('keeps the debug panel order aligned with the spec contract', () => {
+    const panelSource = source.slice(source.indexOf('const PANELS'));
+    const runtimeIdx = panelSource.indexOf("kind: 'runtime-context'");
+    const blobIdx = panelSource.indexOf("kind: 'blob-read-freshness'");
+    const productIdx = panelSource.indexOf("kind: 'product-resolution'");
+    const itemsIdx = panelSource.indexOf("kind: 'items-by-category'");
+
+    expect(runtimeIdx).toBeGreaterThan(-1);
+    expect(blobIdx).toBeGreaterThan(runtimeIdx);
+    expect(productIdx).toBeGreaterThan(blobIdx);
+    expect(itemsIdx).toBeGreaterThan(productIdx);
   });
 });

@@ -18,9 +18,13 @@ interface ItemsByCategoryDiagnostic {
   latestOrder: unknown;
   latestOrderStatus: 'ok' | 'null_window_filtered' | 'null_no_order_blob' | 'null_pointer_missing';
   latestOrderBlobPath: string | null;
+  candidateLatestOrderPath: string | null;
+  candidateLatestOrderDate: string | null;
   receiptItemsLength: number;
   unmatchedItemsLength: number;
   displayItemsLength: number;
+  chosenFilterState: 'all' | 'matched' | 'unmatched';
+  chosenFilterReason: 'server_default';
   showCount: number;
   filter: 'all' | 'matched' | 'unmatched';
   cats: string[];
@@ -128,9 +132,13 @@ export function ItemsByCategoryDebugPanel({ onLoaded }: ItemsByCategoryDebugPane
     { label: 'latestOrder', value: data.latestOrder },
     { label: 'latestOrderStatus', value: data.latestOrderStatus },
     { label: 'latestOrderBlobPath', value: data.latestOrderBlobPath },
+    { label: 'candidateLatestOrderPath', value: data.candidateLatestOrderPath ?? 'unset' },
+    { label: 'candidateLatestOrderDate', value: data.candidateLatestOrderDate ?? 'unset' },
     { label: 'receiptItemsLength', value: data.receiptItemsLength },
     { label: 'unmatchedItemsLength', value: data.unmatchedItemsLength },
     { label: 'displayItemsLength', value: data.displayItemsLength },
+    { label: 'chosenFilterState', value: data.chosenFilterState },
+    { label: 'chosenFilterReason', value: data.chosenFilterReason },
     { label: 'showCount', value: data.showCount },
     { label: 'filter', value: data.filter },
     { label: 'cats', value: data.cats.length === 0 ? 'NONE' : data.cats },

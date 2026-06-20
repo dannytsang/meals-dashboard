@@ -3,6 +3,8 @@
 import { DebugDataPanel } from './debug-data-panel';
 
 type BlobReadFreshnessPayload = {
+  runtimeMode: string;
+  blobCredentialsState: string;
   pointerPath: string;
   pointerRead: string;
   manifestPath: string | null;
@@ -11,6 +13,10 @@ type BlobReadFreshnessPayload = {
   summaryRead: string;
   productsManifestPath: string | null;
   productsManifestRead: string;
+  selectedOrderBlobPath: string | null;
+  selectedCoverageBlobPaths: string[];
+  selectedProductBlobPath: string | null;
+  loadError: unknown;
   coverageWindow: string[];
   coverageReads: Array<{ path: string; status: string }>;
   orderReads: Array<{ path: string; status: string }>;
@@ -28,6 +34,8 @@ export function BlobReadFreshnessDebugPanel() {
       endpoint="/api/debug/blob-read-freshness"
       testId="blob-read-freshness-debug-panel"
       rows={(data) => [
+        { label: 'runtimeMode', value: data.runtimeMode },
+        { label: 'blobCredentialsState', value: data.blobCredentialsState },
         { label: 'pointerPath', value: data.pointerPath },
         { label: 'pointerRead', value: data.pointerRead },
         { label: 'manifestPath', value: data.manifestPath ?? 'unset' },
@@ -36,6 +44,10 @@ export function BlobReadFreshnessDebugPanel() {
         { label: 'summaryRead', value: data.summaryRead },
         { label: 'productsManifestPath', value: data.productsManifestPath ?? 'unset' },
         { label: 'productsManifestRead', value: data.productsManifestRead },
+        { label: 'selectedOrderBlobPath', value: data.selectedOrderBlobPath ?? 'unset' },
+        { label: 'selectedCoverageBlobPaths', value: data.selectedCoverageBlobPaths.join(', ') || 'empty' },
+        { label: 'selectedProductBlobPath', value: data.selectedProductBlobPath ?? 'unset' },
+        { label: 'loadError', value: data.loadError ? JSON.stringify(data.loadError) : 'null' },
         { label: 'coverageWindow', value: data.coverageWindow.join(', ') || 'empty' },
         { label: 'coverageReads', value: data.coverageReads.map((entry) => `${entry.path}:${entry.status}`).join(' | ') || 'empty' },
         { label: 'orderReads', value: data.orderReads.map((entry) => `${entry.path}:${entry.status}`).join(' | ') || 'empty' },

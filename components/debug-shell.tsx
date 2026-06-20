@@ -27,11 +27,6 @@ interface DebugPanelMeta {
 
 const PANELS: readonly DebugPanelMeta[] = [
   {
-    kind: 'items-by-category',
-    title: 'Items by Category',
-    description: 'Diagnostic for the Order Items by Category surface: latestOrder, receipt.items, unmatchedItems, displayItems, filter, cats, dataGen.',
-  },
-  {
     kind: 'runtime-context',
     title: 'Runtime Context',
     description: 'Diagnostic for the request/runtime surface: debug cookie state, active reader, authenticated-user display source, and request provenance.',
@@ -45,6 +40,11 @@ const PANELS: readonly DebugPanelMeta[] = [
     kind: 'product-resolution',
     title: 'Product Resolution',
     description: 'Diagnostic for the inspected grocery item: apollo / curated_static / firecrawl / placeholder provenance, freshness and rendered fields.',
+  },
+  {
+    kind: 'items-by-category',
+    title: 'Items by Category',
+    description: 'Diagnostic for the Order Items by Category surface: latestOrder, receipt.items, unmatchedItems, displayItems, filter, cats, dataGen.',
   },
 ];
 

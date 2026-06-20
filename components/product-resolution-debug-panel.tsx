@@ -19,6 +19,7 @@ type ProductResolutionPayload = {
   expiresAt?: string;
   productSource: string;
   descriptionSource: string;
+  fieldSources: { description: string; image: string; storage: string; preparation: string };
   freshness: { lastFetched?: string; firecrawlLastFetched?: string };
   provenance: { generated: boolean; local: boolean; firecrawl: boolean; firecrawlStatus: string | null };
 };
@@ -36,6 +37,10 @@ export function ProductResolutionDebugPanel() {
         { label: 'itemBlobPath', value: data.itemBlobPath ?? 'unset' },
         { label: 'productSource', value: data.productSource },
         { label: 'descriptionSource', value: data.descriptionSource },
+        { label: 'fieldSources.description', value: data.fieldSources.description },
+        { label: 'fieldSources.image', value: data.fieldSources.image },
+        { label: 'fieldSources.storage', value: data.fieldSources.storage },
+        { label: 'fieldSources.preparation', value: data.fieldSources.preparation },
         { label: 'title', value: data.title },
         { label: 'description', value: data.description },
         { label: 'storage', value: data.storage },

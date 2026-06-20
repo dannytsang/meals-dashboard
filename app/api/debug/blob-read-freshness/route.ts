@@ -27,11 +27,6 @@ function isDebugCookieOn(raw: string | undefined | null): boolean {
   return verifyDebugCookie(raw)?.value === '1';
 }
 
-function pickReader() {
-  const mode = runtimeModeStatus();
-  return mode.blobConfigured ? new VercelBlobStorageClient() : new StaticFixtureReader();
-}
-
 export async function GET(): Promise<NextResponse> {
   const cookieRaw = (await cookies()).get(DEBUG_COOKIE_NAME)?.value;
   if (!isDebugCookieOn(cookieRaw)) {
@@ -44,7 +39,8 @@ export async function GET(): Promise<NextResponse> {
   twoWeeksLater.setUTCDate(twoWeeksLater.getUTCDate() + 14);
   const endDate = toIsoDate(twoWeeksLater);
   const coverageWindow = buildCoverageWindowDates(today, endDate);
-  const reader = pickReader();
+  const mode = runtimeModeStatus();
+  const reader = mode.blobConfigured ? new VercelBlobStorageClient() : new StaticFixtureReader();
 
   let pointerRead: BlobReadFreshnessDebugPayload['pointerRead'] = 'bypassed';
   let manifestRead: BlobReadFreshnessDebugPayload['manifestRead'] = 'bypassed';
@@ -108,10 +104,13 @@ export async function GET(): Promise<NextResponse> {
   }
 
   const data = await getDashboardData({ reader, coverageWindow });
+  const latestOrderWithPath = data.latestOrder as { orderBlobPath?: string | null } | null;
   const payload = buildBlobReadFreshnessDebugPayload({
     now: now.toISOString(),
+    runtimeMode: mode.blobConfigured ? 'live' : 'demo',
+    blobCredentialsState: mode.blobConfigured ? 'complete' : 'incomplete',
     data: {
-      latestOrder: data.latestOrder,
+      latestOrder: data.latestOrder as (typeof data.latestOrder & { orderBlobPath?: string | null }) | null,
       dataGeneratedAt: data.dataGeneratedAt,
       uiUpdatedAt: data.uiUpdatedAt,
       loadError: data.loadError,
@@ -125,6 +124,10 @@ export async function GET(): Promise<NextResponse> {
       summaryRead: summaryPath ? 'ok' : manifestRead === 'missing' ? 'missing' : manifestRead === 'error' ? 'error' : 'bypassed',
       productsManifestPath,
       productsManifestRead: productsManifestPath ? 'ok' : 'bypassed',
+      selectedOrderBlobPath: latestOrderWithPath?.orderBlobPath ?? null,
+      selectedCoverageBlobPaths: coverageReads.map(({ path }) => path),
+      selectedProductBlobPath: productReads[0]?.path ?? null,
+      loadError: data.loadError,
       coverageWindow,
       coverageReads,
       orderReads,

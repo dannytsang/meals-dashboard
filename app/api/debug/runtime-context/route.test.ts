@@ -16,7 +16,7 @@ vi.mock('next-auth', () => ({
 import { GET } from './route';
 import { DEBUG_COOKIE_NAME, signDebugCookie } from '@/lib/debug-cookie';
 
-const ORIGINAL_ENV = { ...process.env };
+const makeRequest = () => new Request('https://meals.example.test/api/debug/runtime-context');
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -36,12 +36,16 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  process.env = { ...ORIGINAL_ENV };
+  delete process.env.BLOB_READ_WRITE_TOKEN;
+  delete process.env.BLOB_STORE_ID;
+  delete process.env.VERCEL_DEPLOYMENT_ID;
+  delete process.env.VERCEL_ENV;
+  delete process.env.VERCEL_REGION;
 });
 
 describe('GET /api/debug/runtime-context', () => {
   it('returns 404 when the signed debug cookie is missing', async () => {
-    const res = await GET();
+    const res = await (GET as unknown as (req: any) => Promise<Response>)(makeRequest());
     expect(res.status).toBe(404);
   });
 
@@ -49,16 +53,19 @@ describe('GET /api/debug/runtime-context', () => {
     mockCookiesGet.mockReturnValue({ value: signDebugCookie('1') });
     process.env.BLOB_READ_WRITE_TOKEN = 'token';
     process.env.BLOB_STORE_ID = 'store';
-    const res = await GET();
+    const res = await (GET as unknown as (req: any) => Promise<Response>)(makeRequest());
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.cookie.state).toBe('verified_on');
     expect(body.cookie.value).toBe('1');
     expect(body.cookie.effectiveDebugMode).toBe(true);
+    expect(body.runtimeMode).toBe('live');
+    expect(body.blobCredentialsState).toBe('complete');
     expect(body.runtime).toEqual(expect.objectContaining({ mode: 'live', blobConfigured: true, activeReader: 'vercel_blob' }));
     expect(body.user).toEqual({ displayName: 'Danny Park', source: 'name' });
     expect(body.request).toEqual(expect.objectContaining({
+      path: '/api/debug/runtime-context',
       origin: 'https://meals.example.test',
       deploymentId: 'dpl_12345',
       vercelEnv: 'preview',
