@@ -105,6 +105,12 @@ export async function GET(): Promise<NextResponse> {
 
   const data = await getDashboardData({ reader, coverageWindow });
   const latestOrderWithPath = data.latestOrder as { orderBlobPath?: string | null } | null;
+  const deliveryWindows = data.deliveryWindows.map((w) => ({
+    date: w.date,
+    slot: w.slot,
+    status: w.status,
+    orderTotal: w.orderTotal,
+  }));
   const payload = buildBlobReadFreshnessDebugPayload({
     now: now.toISOString(),
     runtimeMode: mode.blobConfigured ? 'live' : 'demo',
@@ -114,6 +120,7 @@ export async function GET(): Promise<NextResponse> {
       dataGeneratedAt: data.dataGeneratedAt,
       uiUpdatedAt: data.uiUpdatedAt,
       loadError: data.loadError,
+      deliveryWindows,
     },
     trace: {
       pointerPath: POINTER_PATH,

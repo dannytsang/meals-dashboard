@@ -88,6 +88,12 @@ export interface BlobReadFreshnessDebugPayload {
     deliveryDate: string | null;
     ageDays: number | null;
   };
+  deliveryWindows: Array<{
+    date: string;
+    slot: string;
+    status: string;
+    orderTotal: number | null;
+  }>;
   fetchedAt: string;
 }
 
@@ -268,6 +274,12 @@ export function buildBlobReadFreshnessDebugPayload(args: {
     dataGeneratedAt: string;
     uiUpdatedAt: string;
     loadError: unknown;
+    deliveryWindows?: Array<{
+      date: string;
+      slot: string;
+      status: string;
+      orderTotal: number | null;
+    }>;
   };
   trace: {
     pointerPath: string;
@@ -317,6 +329,7 @@ export function buildBlobReadFreshnessDebugPayload(args: {
       deliveryDate: args.data.latestOrder?.deliveryDate ?? null,
       ageDays: maybeAgeDays(args.data.latestOrder?.deliveryDate ?? null, args.now),
     },
+    deliveryWindows: args.data.deliveryWindows ?? [],
     fetchedAt: args.now,
   };
 }
