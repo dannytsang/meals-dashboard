@@ -1877,7 +1877,7 @@ def compute_delivery_windows(delivery_metadata: list) -> list:
             "date": actual,
             "slot": event.get("slot", ""),
             "orderTotal": event.get("order_total", 0),
-            "status": event.get("status", "pending"),
+            "status": event.get("status", "scheduled"),
             "usableDate": usable,
             "summary": event.get("summary", f"Delivery {actual}"),
         })
