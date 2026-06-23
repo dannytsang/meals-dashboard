@@ -49,6 +49,8 @@ export interface MealsCheckSummaryLike {
   coverage_percentage?: number;
   covered?: number;
   delivery_date?: string | null;
+  /** The upcoming delivery date, preferred over delivery_date for the headline card. */
+  next_delivery?: string | null;
   meals_covered?: number;
   meals_total?: number;
   missing?: number;
@@ -167,7 +169,7 @@ export function buildHeadlineMetrics(
   const computed = calculateCoverageSummary(coverage);
   return {
     orderTotal: summary?.order_total ?? receipt?.orderTotal ?? null,
-    deliveryDate: summary?.delivery_date ?? deliveries[0]?.date ?? receipt?.deliveryDate ?? null,
+    deliveryDate: summary?.next_delivery ?? summary?.delivery_date ?? deliveries[0]?.date ?? receipt?.deliveryDate ?? null,
     mealsCovered: summary?.meals_covered ?? computed.covered,
     mealsTotal: summary?.meals_total ?? coverage.length,
     unmatchedGroceries: summary?.unmatched_groceries ?? receipt?.items.length ?? 0,

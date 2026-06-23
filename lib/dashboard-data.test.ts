@@ -58,6 +58,7 @@ function samplePayload(overrides: Partial<SplitLayoutPayload> = {}): SplitLayout
       meals_covered: 1,
       order_total: 57.43,
       delivery_date: '2026-06-15',
+      next_delivery: '2026-06-15',
     },
     deliveryWindows: [
       { date: '2026-06-15', slot: '20:00-21:00', orderTotal: 57.43, status: 'pending' },

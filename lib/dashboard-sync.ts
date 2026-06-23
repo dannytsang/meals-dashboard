@@ -16,6 +16,8 @@ export interface DashboardSummary {
   meals_covered: number;
   order_total: number;
   delivery_date: string;
+  /** Spec 019 — the upcoming delivery date, used by the dashboard headline card. */
+  next_delivery: string;
   /** When the meals-check pipeline generated this data (ISO string). */
   dataGeneratedAt?: string;
   /** When the dashboard UI was last deployed (git HEAD commit time at sync time, ISO string). */

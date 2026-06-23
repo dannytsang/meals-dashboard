@@ -49,6 +49,7 @@ const sampleSummary = {
   meals_covered: 4,
   order_total: 57.43,
   delivery_date: '2026-06-15',
+  next_delivery: '2026-06-15',
 };
 
 function makePayload(): SplitLayoutPayload {
