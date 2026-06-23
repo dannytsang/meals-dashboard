@@ -430,6 +430,8 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
                               <span style={{ fontSize: '14px', fontWeight: 'bold', color: hasMeals ? 'var(--text-primary)' : 'var(--text-secondary)', display: 'block' }}>
                                 {formatDayMonthUpper(displayDate)}
                               </span>
+                              {/* DEBUG: remove after diagnosis */}
+                              <span style={{ fontSize: '8px', color: 'red' }}>[{dataKey} hasDel={String(hasGeneratedDeliveryOnDate(deliveries, dataKey))}]</span>
                               {hasGeneratedDeliveryOnDate(deliveries, dataKey) && (
                                 <span style={{ fontSize: '8px', fontWeight: '700', padding: '1px 4px', borderRadius: '3px', backgroundColor: 'var(--accent-blue)', color: 'white', textTransform: 'uppercase' }}>Delivery</span>
                               )}
