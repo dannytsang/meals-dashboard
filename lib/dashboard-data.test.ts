@@ -58,7 +58,11 @@ function samplePayload(overrides: Partial<SplitLayoutPayload> = {}): SplitLayout
       meals_covered: 1,
       order_total: 57.43,
       delivery_date: '2026-06-15',
-      next_delivery: '2026-06-15',
+      windows: {
+        last_delivery: '2026-06-15',
+        next_delivery: '2026-06-19',
+        next_window_end: '2026-06-23',
+      },
     },
     deliveryWindows: [
       { date: '2026-06-15', slot: '20:00-21:00', orderTotal: 57.43, status: 'pending' },
@@ -281,7 +285,12 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
       reader: readerOf(client),
     });
     expect(data.latestOrder).toBeNull();
-    expect(data.deliveryWindows).toEqual([]);
+    // With spec 019 / FR-02: next_delivery from the summary is added to
+    // deliveryWindows even when no order blobs exist, so the Week-view header
+    // shows a delivery marker for the upcoming delivery.
+    expect(data.deliveryWindows).toEqual([
+      { date: '2026-06-19', slot: 'Evening', orderTotal: 0, status: 'scheduled' },
+    ]);
     expect(data.coverage).toHaveLength(2);
     expect(data.mealsCheckSummary).not.toBeNull();
   });

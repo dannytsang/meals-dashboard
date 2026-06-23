@@ -226,14 +226,38 @@ async function readFromSplitLayout(
         )
       : null;
 
-    // deliveryWindows are composed from the order blobs; spec 016 explicitly dropped
-    // the 2026-06-14 "deliveryWindows on pointer" refinement, so we compose them here.
-    const deliveryWindows: DeliveryWindow[] = validOrders.map((o) => ({
-      date: o.deliveryDate,
-      slot: o.deliverySlot,
-      orderTotal: o.orderTotal,
-      status: o.status === 'active' || o.status === undefined ? 'pending' : 'pending',
-    }));
+    // deliveryWindows: merge delivery dates from order blobs with next_delivery from
+    // the meals-check summary (spec 019 / FR-02). Order blobs only cover deliveries
+    // that have a Tesco email confirmation. The next delivery may only have a
+    // calendar event — no order blob yet — so we add it here to ensure the
+    // Week-view header shows a delivery marker for Friday 26 June.
+    const orderDeliveryDates = new Set(validOrders.map((o) => o.deliveryDate));
+    const summaryWindows = (summary as Record<string, unknown> | null)?.windows as
+      | { last_delivery: string | null; next_delivery: string | null; next_window_end: string | null }
+      | null
+      | undefined;
+    const additionalDates = [
+      ...(summaryWindows?.next_delivery && !orderDeliveryDates.has(summaryWindows.next_delivery)
+        ? [summaryWindows.next_delivery]
+        : []),
+    ];
+    const deliveryWindows: DeliveryWindow[] = [
+      ...validOrders.map((o) => ({
+        date: o.deliveryDate,
+        slot: o.deliverySlot,
+        orderTotal: o.orderTotal,
+        status: (o.status === 'active' || o.status === undefined ? 'pending' : 'pending') as
+          | 'pending'
+          | 'delivered'
+          | 'scheduled',
+      })),
+      ...additionalDates.map((date) => ({
+        date,
+        slot: 'Evening',
+        orderTotal: 0,
+        status: 'scheduled' as const,
+      })),
+    ];
 
     return {
       coverage,

@@ -49,7 +49,11 @@ const sampleSummary = {
   meals_covered: 4,
   order_total: 57.43,
   delivery_date: '2026-06-15',
-  next_delivery: '2026-06-15',
+  windows: {
+    last_delivery: '2026-06-15',
+    next_delivery: '2026-06-19',
+    next_window_end: '2026-06-23',
+  },
 };
 
 function makePayload(): SplitLayoutPayload {

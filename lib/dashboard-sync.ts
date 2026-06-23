@@ -16,8 +16,19 @@ export interface DashboardSummary {
   meals_covered: number;
   order_total: number;
   delivery_date: string;
-  /** Spec 019 — the upcoming delivery date, used by the dashboard headline card. */
-  next_delivery: string;
+  /**
+   * Spec 019 — delivery windows from the meals-check pipeline.
+   * `last_delivery` = most recent completed delivery (used as fallback when no
+   *   order blob covers the headline delivery date).
+   * `next_delivery` = upcoming delivery that has a calendar event but no email
+   *   confirmation yet. Included in deliveryWindows so the Week-view header
+   *   shows a delivery marker for it.
+   */
+  windows: {
+    last_delivery: string | null;
+    next_delivery: string | null;
+    next_window_end: string | null;
+  };
   /** When the meals-check pipeline generated this data (ISO string). */
   dataGeneratedAt?: string;
   /** When the dashboard UI was last deployed (git HEAD commit time at sync time, ISO string). */
