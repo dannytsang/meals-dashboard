@@ -288,11 +288,100 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
     // With spec 019 / FR-02: next_delivery from the summary is added to
     // deliveryWindows even when no order blobs exist, so the Week-view header
     // shows a delivery marker for the upcoming delivery.
+    // The sample fixture also sets next_window_end='2026-06-23'; that boundary
+    // chip is also surfaced so the Week Meals grid shows both calendar slots.
     expect(data.deliveryWindows).toEqual([
       { date: '2026-06-19', slot: 'Evening', orderTotal: 0, status: 'scheduled' },
+      { date: '2026-06-23', slot: 'Evening', orderTotal: 0, status: 'scheduled' },
     ]);
     expect(data.coverage).toHaveLength(2);
     expect(data.mealsCheckSummary).not.toBeNull();
+  });
+
+  it('SC-next_window_end-01: surfaces next_window_end as a delivery chip when no order blob exists for it', async () => {
+    // Setup mirrors Danny's 24 June scenario:
+    //   - One order blob exists (26 June), so next_delivery is "covered" by an order blob and falls out of additionalDates.
+    //   - summary.windows.next_window_end (30 June) has no order blob backing it.
+    //   - The Week Meals grid must render a Delivery chip for 30 June.
+    const client = new InMemoryBlobStorageClient();
+    const payload = samplePayload();
+    payload.orders = [
+      {
+        ...payload.orders[0]!,
+        orderNumber: '7421-8166-90',
+        deliveryDate: '2026-06-26',
+        orderBlobPath: 'orders/2026-06-26/7421-8166-90.json',
+      },
+    ];
+    payload.summary = {
+      ...payload.summary,
+      delivery_date: '2026-06-26',
+      windows: {
+        last_delivery: '2026-06-19',
+        next_delivery: '2026-06-26',
+        next_window_end: '2026-06-30',
+      },
+    };
+    payload.coverageWindow = ['2026-06-26'];
+
+    await syncDashboardLayout(payload, client);
+    const data = await getDashboardData({
+      coverageWindow: ['2026-06-26'],
+      reader: readerOf(client),
+    });
+
+    const dates = data.deliveryWindows.map((w) => w.date).sort();
+    expect(dates).toEqual(['2026-06-26', '2026-06-30']);
+    const windowEnd = data.deliveryWindows.find((w) => w.date === '2026-06-30');
+    expect(windowEnd).toEqual({
+      date: '2026-06-30',
+      slot: 'Evening',
+      orderTotal: 0,
+      status: 'scheduled',
+    });
+  });
+
+  it('SC-next_window_end-02: deduplicates next_window_end against next_delivery and order-blob dates', async () => {
+    const client = new InMemoryBlobStorageClient();
+    const payload = samplePayload();
+    payload.orders = [];
+    // Both summary fields point at the same date (defensive: pipeline edge case).
+    payload.summary = {
+      ...payload.summary,
+      windows: {
+        last_delivery: '2026-06-15',
+        next_delivery: '2026-06-19',
+        next_window_end: '2026-06-19', // same as next_delivery
+      },
+    };
+    await syncDashboardLayout(payload, client);
+    const data = await getDashboardData({
+      coverageWindow: ['2026-06-15'],
+      reader: readerOf(client),
+    });
+    // Should not appear twice.
+    expect(data.deliveryWindows.filter((w) => w.date === '2026-06-19')).toHaveLength(1);
+  });
+
+  it('SC-next_window_end-03: skips next_window_end when null (pipeline reports no end-of-window date)', async () => {
+    const client = new InMemoryBlobStorageClient();
+    const payload = samplePayload();
+    payload.orders = [];
+    payload.summary = {
+      ...payload.summary,
+      windows: {
+        last_delivery: '2026-06-15',
+        next_delivery: '2026-06-19',
+        next_window_end: null,
+      },
+    };
+    await syncDashboardLayout(payload, client);
+    const data = await getDashboardData({
+      coverageWindow: ['2026-06-15'],
+      reader: readerOf(client),
+    });
+    // Only next_delivery surfaces, no extra undefined-date entry.
+    expect(data.deliveryWindows.map((w) => w.date)).toEqual(['2026-06-19']);
   });
 });
 

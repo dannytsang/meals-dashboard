@@ -226,21 +226,36 @@ async function readFromSplitLayout(
         )
       : null;
 
-    // deliveryWindows: merge delivery dates from order blobs with next_delivery from
-    // the meals-check summary (spec 019 / FR-02). Order blobs only cover deliveries
-    // that have a Tesco email confirmation. The next delivery may only have a
-    // calendar event — no order blob yet — so we add it here to ensure the
-    // Week-view header shows a delivery marker for Friday 26 June.
+    // deliveryWindows: merge delivery dates from order blobs with the upcoming
+    // delivery slots from the meals-check summary (spec 019 / FR-02).
+    //   - Order blobs only cover deliveries that have a Tesco email confirmation.
+    //   - next_delivery may only have a calendar event (no order blob yet),
+    //     so we surface it here to put a Delivery chip on the Week Meals grid
+    //     for the active next slot.
+    //   - next_window_end is the end-of-meal-window boundary: the second
+    //     upcoming calendar slot (often the next slot after next_delivery).
+    //     It also gets surfaced so the Week Meals grid shows a chip for every
+    //     calendar event in the visible week, matching what the user sees in
+    //     Google Calendar. Deduplicated against order-blob dates and against
+    //     next_delivery (both can point at the same date on the day of an
+    //     order being placed).
     const orderDeliveryDates = new Set(validOrders.map((o) => o.deliveryDate));
     const summaryWindows = (summary as Record<string, unknown> | null)?.windows as
       | { last_delivery: string | null; next_delivery: string | null; next_window_end: string | null }
       | null
       | undefined;
-    const additionalDates = [
-      ...(summaryWindows?.next_delivery && !orderDeliveryDates.has(summaryWindows.next_delivery)
-        ? [summaryWindows.next_delivery]
-        : []),
-    ];
+    const additionalDateSet = new Set<string>();
+    if (summaryWindows?.next_delivery && !orderDeliveryDates.has(summaryWindows.next_delivery)) {
+      additionalDateSet.add(summaryWindows.next_delivery);
+    }
+    if (
+      summaryWindows?.next_window_end &&
+      summaryWindows.next_window_end !== summaryWindows.next_delivery &&
+      !orderDeliveryDates.has(summaryWindows.next_window_end)
+    ) {
+      additionalDateSet.add(summaryWindows.next_window_end);
+    }
+    const additionalDates = [...additionalDateSet];
     const deliveryWindows: DeliveryWindow[] = [
       ...validOrders.map((o) => ({
         date: o.deliveryDate,
