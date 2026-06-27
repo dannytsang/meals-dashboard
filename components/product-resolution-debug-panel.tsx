@@ -22,19 +22,28 @@ type ProductResolutionPayload = {
   fieldSources: { description: string; image: string; storage: string; preparation: string };
   freshness: { lastFetched?: string; firecrawlLastFetched?: string };
   provenance: { generated: boolean; local: boolean; firecrawl: boolean; firecrawlStatus: string | null };
+  /**
+   * Spec 031 Rev 3 / FR-005 + spec 010 Rev 5.1 / FR-011.
+   * Surfaced on the panel so convention drift is visible
+   * inline on /debug.
+   */
+  expectedProductBlobPath: string | null;
+  productBlobPathMatch: boolean | null;
 };
 
 export function ProductResolutionDebugPanel() {
   return (
     <DebugDataPanel<ProductResolutionPayload>
       title="Product Resolution"
-      description="Shows how the currently inspected grocery item resolved its title, description, storage and freshness data across apollo, curated_static, firecrawl and placeholder fallbacks."
+      description="Shows how the currently inspected grocery item resolved its title, description, storage and freshness data across apollo, firecrawl and placeholder fallbacks. Spec 031 Rev 3 also surfaces expected vs actual productBlobPath so convention drift is visible inline."
       endpoint="/api/debug/product-resolution"
       testId="product-resolution-debug-panel"
       rows={(data) => [
         { label: 'itemName', value: data.itemName },
         { label: 'itemTpnc', value: data.itemTpnc ?? 'unset' },
         { label: 'itemBlobPath', value: data.itemBlobPath ?? 'unset' },
+        { label: 'expectedProductBlobPath', value: data.expectedProductBlobPath ?? 'unset' },
+        { label: 'productBlobPathMatch', value: data.productBlobPathMatch === null ? 'unset' : String(data.productBlobPathMatch) },
         { label: 'productSource', value: data.productSource },
         { label: 'descriptionSource', value: data.descriptionSource },
         { label: 'fieldSources.description', value: data.fieldSources.description },

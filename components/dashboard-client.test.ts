@@ -431,3 +431,66 @@ describe('DashboardClient order-item search interaction', () => {
     expect(screen.queryByText('Tesco Milk 4 Pints')).toBeNull();
   });
 });
+
+/**
+ * Spec 010 Rev 5 (FR-010) + Rev 5.1 (FR-011) — debug-mode
+ * product-resolution chip on the Product Info Modal. The chip is
+ * data-equivalent to the spec 031 product-resolution panel
+ * (FR-005 / FR-006) and is gated by the spec-022 signed-cookie
+ * `meals_debug_mode`. T083 a–e + T090 a–d.
+ */
+describe('DashboardClient debug-mode product-resolution chip (Spec 010 Rev 5 / Rev 5.1)', () => {
+  it('defines the DebugProductResolutionChip component inside dashboard-client.tsx', () => {
+    expect(source).toContain('function DebugProductResolutionChip(');
+    expect(source).toContain('product-resolution-chip');
+  });
+
+  it('renders the chip only when debugOn is true and the spec-031 payload is present', () => {
+    // The chip render is gated by `debugOn && productResolutionPayload`.
+    // When debugOn is false, the chip MUST NOT be in the DOM (T083d,
+    // T083e). The `productResolutionChip` JSX is a single short-circuit
+    // expression inside the modal.
+    expect(source).toMatch(/\{debugOn\s*&&\s*productResolutionPayload\s*&&\s*\(/);
+  });
+
+  it('reads chip payload from the spec-031 gated /api/debug/product-resolution endpoint', () => {
+    // The chip MUST be data-equivalent to the spec 031 panel and MUST
+    // NOT reimplement the resolution chain. T081 invariant.
+    expect(source).toContain('/api/debug/product-resolution');
+  });
+
+  it('surfaces descriptionSource from the spec-031 payload (apollo / firecrawl / placeholder)', () => {
+    expect(source).toMatch(/descriptionSource/);
+  });
+
+  it('surfaces upstream-source-absent flags (apolloMissing / firecrawlMissing) when the placeholder wins', () => {
+    expect(source).toContain('apolloMissing');
+    expect(source).toContain('firecrawlMissing');
+  });
+
+  // T090 / T093 — Rev 5.1 expected-vs-actual productBlobPath block.
+  it('renders the expected-vs-actual productBlobPath block sourced from the spec-031 matcher helper', () => {
+    // The chip MUST import the spec-031 matcher helper rather than
+    // hardcoding the `products/${tpnc}.json` convention. T093 invariant:
+    // the convention string lives only in lib/debug-observability.ts.
+    expect(source).not.toMatch(/['"`]products\/\$\{tpnc\}\.json['"`]/);
+    // The chip render uses `expectedProductBlobPath` and
+    // `productBlobPathMatch` from the spec-031 payload.
+    expect(source).toContain('expectedProductBlobPath');
+    expect(source).toContain('productBlobPathMatch');
+  });
+
+  it('renders `match` and `found <actual>` strings for true/false outcomes', () => {
+    // The chip shows unicode check / cross marks for the match state.
+    expect(source).toMatch(/\\u2713\s*match/);
+    expect(source).toMatch(/\\u2717\s*found/);
+  });
+
+  it('renders `(unknown — tpnc not resolved)` when tpnc is null', () => {
+    expect(source).toContain('(unknown — tpnc not resolved)');
+  });
+
+  it('renders `(no path)` when productBlobPath is absent even if tpnc is known', () => {
+    expect(source).toContain('(no path)');
+  });
+});

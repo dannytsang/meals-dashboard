@@ -39,7 +39,7 @@ const PANELS: readonly DebugPanelMeta[] = [
   {
     kind: 'product-resolution',
     title: 'Product Resolution',
-    description: 'Diagnostic for the inspected grocery item: apollo / curated_static / firecrawl / placeholder provenance, freshness and rendered fields.',
+    description: 'Diagnostic for the inspected grocery item: apollo / firecrawl / placeholder provenance, freshness, rendered fields, and expected-vs-actual productBlobPath (spec 031 Rev 3).',
   },
   {
     kind: 'items-by-category',

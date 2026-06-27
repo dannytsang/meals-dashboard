@@ -293,9 +293,11 @@ describe('generated product metadata resolution', () => {
   it('uses truthful fallback product text when generated metadata is absent', () => {
     const item: GroceryItem = { name: 'Definitely Unknown Item', quantity: 1, price: 2 };
 
+    // Spec 010 Rev 4: the resolver no longer returns 'local' — the
+    // generated/fallback contract is enforced.
     expect(resolveProductInfoForItem(item)).toMatchObject({
       source: 'fallback',
-      description: 'Product information not available in generated data or the local product database.',
+      description: 'Product information not available in generated data.',
     });
   });
 
@@ -324,28 +326,7 @@ describe('generated product metadata resolution', () => {
       expect(resolveProductInfoForItem(item).description).toBe('Apollo description');
     });
 
-    it('uses curated-static description before Firecrawl when Apollo description is empty', () => {
-      const item: GroceryItem = {
-        name: 'Tesco Blueberries 150G',
-        quantity: 1,
-        price: 2,
-        productMetadata: {
-          title: 'Tesco Blueberries 150G',
-          description: '',
-          source: 'tesco',
-          firecrawl: {
-            snippet: 'Firecrawl snippet',
-            lastFetched: '2026-06-18T00:00:00Z',
-            status: 'ok',
-          },
-        },
-      };
-      expect(resolveProductInfoForItem(item).description).toBe(
-        'Fresh British blueberries, perfect for breakfast cereals, yoghurts or as a healthy snack.'
-      );
-    });
-
-    it('uses Firecrawl snippet when Apollo description is empty', () => {
+    it('uses Firecrawl snippet when Apollo description is empty (curated-static tier is gone)', () => {
       const item: GroceryItem = {
         name: 'Tesco Eggs',
         quantity: 1,
@@ -376,7 +357,7 @@ describe('generated product metadata resolution', () => {
         },
       };
       expect(resolveProductInfoForItem(item).description).toBe(
-        'Generated Tesco product details are incomplete for this item.'
+        'Product information not available in generated data.'
       );
     });
 
@@ -397,7 +378,7 @@ describe('generated product metadata resolution', () => {
         },
       };
       expect(resolveProductInfoForItem(item).description).toBe(
-        'Generated Tesco product details are incomplete for this item.'
+        'Product information not available in generated data.'
       );
     });
 
@@ -414,7 +395,7 @@ describe('generated product metadata resolution', () => {
         },
       };
       expect(resolveProductInfoForItem(item).description).toBe(
-        'Generated Tesco product details are incomplete for this item.'
+        'Product information not available in generated data.'
       );
     });
   });
