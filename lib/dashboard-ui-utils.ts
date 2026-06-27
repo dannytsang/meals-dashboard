@@ -1,6 +1,5 @@
 import { calculateCoverageSummary, DeliveryWindow, GeneratedProductMetadata, GroceryItem, MatchedItem, MealCoverage, TescoReceipt } from './meals-data';
 import { cleanItemName } from './item-utils';
-import { findProductInfo } from './product-database';
 
 /** Product metadata TTL in days. Must match PRODUCT_ENRICHMENT_MAX_AGE_DAYS in sync-dashboard-data.py (default 21). */
 export const PRODUCT_METADATA_TTL_DAYS = 21;
@@ -338,44 +337,51 @@ export interface ResolvedProductInfo {
   productUrl?: string;
   lastFetched?: string;
   expiresAt?: string;
-  source: 'generated' | 'local' | 'fallback';
+  /**
+   * Spec 010 Rev 4: the resolution chain is now strictly
+   * `generated` (Apollo / Firecrawl from productMetadata) or
+   * `fallback` (no metadata at all). The prior `local` tier that
+   * read from the hand-curated `lib/product-database.ts` substring
+   * map was removed — the truthful contract is "if we have the
+   * data, show it; if not, say so" rather than silently invent
+   * details from a hand-coded map.
+   */
+  source: 'generated' | 'fallback';
 }
 
+/**
+ * Spec 010 Rev 4 (FR-003) — the modal's product-info source is
+ * strictly `item.productMetadata`. The hand-curated
+ * `lib/product-database.ts` substring-match fallback is removed.
+ */
 export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInfo {
   const generated = item.productMetadata;
-  const local = findProductInfo(item.name);
   if (generated) {
     const expiresAt = _computeExpiresAt(generated.lastFetched);
-    const localDescription = local?.description?.trim() ?? '';
-    if (localDescription && !generated.description?.trim()) {
-      return {
-        title: local?.name || cleanItemName(item.name),
-        description: localDescription,
-        storage: local?.storage || 'Check packaging for storage instructions.',
-        preparation: local?.preparation || '',
-        ingredients: '',
-        allergens: '',
-        nutrition: local?.nutrition || 'Nutrition information not available from generated Tesco metadata.',
-        image: local?.image || '',
-        productUrl: generated.productUrl,
-        lastFetched: generated.lastFetched,
-        expiresAt,
-        source: 'local',
-      };
-    }
     // Spec 027 Rev 2 / FR-014: Apollo partial success wins. If Apollo
-    // returned an empty description and curated-static did not cover the
-    // item, fall through to the Firecrawl snippet (third tier of the chain).
-    // The Firecrawl snippet is populated by the Python sync pipeline at
+    // returned an empty description, fall through to the Firecrawl
+    // snippet (third tier of the chain). The Firecrawl snippet is
+    // populated by the Python sync pipeline at
     // `scripts/sync-dashboard-data.py:_fetch_firecrawl_search_snippet`
     // and cached in `products/{tpnc}.json` under the `firecrawl` key
     // with a 21-day TTL matching Apollo.
     const firecrawlSnippet = generated.firecrawl?.snippet;
     const hasFirecrawlSnippet = typeof firecrawlSnippet === 'string' && firecrawlSnippet.trim() !== '';
+    // Spec 027 Rev 2 / FR-014: Apollo partial success wins. If Apollo
+    // returned an empty description, fall through to the Firecrawl
+    // snippet (third tier of the chain). The Firecrawl snippet is
+    // populated by the Python sync pipeline at
+    // `scripts/sync-dashboard-data.py:_fetch_firecrawl_search_snippet`
+    // and cached in `products/{tpnc}.json` under the `firecrawl` key
+    // with a 21-day TTL matching Apollo.
+    //
+    // Spec 010 Rev 4 / FR-003 (placeholder contract): the truthful
+    // placeholder is what the user sees when both Apollo and Firecrawl
+    // are empty. The placeholder is NEVER a fabricated product detail.
     const description =
       generated.description
       || (hasFirecrawlSnippet ? firecrawlSnippet : '')
-      || 'Generated Tesco product details are incomplete for this item.';
+      || 'Product information not available in generated data.';
     return {
       title: generated.title || cleanItemName(item.name),
       description,
@@ -392,25 +398,9 @@ export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInf
     };
   }
 
-  if (local) {
-    return {
-      title: cleanItemName(item.name),
-      description: local.description,
-      storage: local.storage,
-      preparation: '',
-      ingredients: '',
-      allergens: '',
-      nutrition: local.nutrition,
-      image: local.image || '',
-      lastFetched: undefined,
-      expiresAt: undefined,
-      source: 'local',
-    };
-  }
-
   return {
     title: cleanItemName(item.name),
-    description: 'Product information not available in generated data or the local product database.',
+    description: 'Product information not available in generated data.',
     storage: 'Check packaging for storage instructions.',
     preparation: '',
     ingredients: '',

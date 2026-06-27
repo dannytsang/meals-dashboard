@@ -1,13 +1,12 @@
 import { USER_NAME_FALLBACK, type SessionUser, resolveUserChipName } from './user-chip';
 import { verifyDebugCookie, type VerifiedDebugCookie } from './debug-cookie';
 import { resolveProductInfoForItem, type ResolvedProductInfo } from './dashboard-ui-utils';
-import { findProductInfo } from './product-database';
 
 export type DebugCookieState = 'missing' | 'verified_on' | 'verified_off' | 'tampered';
 export type DebugUserSource = 'name' | 'email' | 'fallback';
 export type DebugRuntimeMode = 'demo' | 'live';
 export type DebugReader = 'static_fixture_reader' | 'vercel_blob';
-export type DebugProductSource = 'apollo' | 'curated_static' | 'firecrawl' | 'placeholder';
+export type DebugProductSource = 'apollo' | 'firecrawl' | 'placeholder';
 
 export interface RuntimeContextDebugPayload {
   runtimeMode: DebugRuntimeMode;
@@ -170,12 +169,13 @@ function maybeAgeDays(iso: string | undefined | null, nowIso: string): number | 
 }
 
 function resolveProductSource(resolution: ResolvedProductInfo, item: { name: string; productMetadata?: { description?: string; firecrawl?: { snippet?: string | null; status?: 'ok' | 'not_found' } } | null }) : DebugProductSource {
+  // Spec 010 Rev 4: the `local` source tier was removed along with the
+  // static `lib/product-database.ts` substring-map. The resolver no
+  // longer returns `'local'`; the chip's source set is now strictly
+  // apollo / firecrawl / placeholder.
   if (resolution.source === 'fallback') return 'placeholder';
-  if (resolution.source === 'local') return 'curated_static';
   const generated = item.productMetadata;
-  const local = findProductInfo(item.name);
   if (generated?.description && generated.description.trim().length > 0) return 'apollo';
-  if (local?.description?.trim() && resolution.description === local.description) return 'curated_static';
   const firecrawlSnippet = generated?.firecrawl?.snippet;
   if (isNonEmptyString(firecrawlSnippet)) return 'firecrawl';
   return 'apollo';
@@ -361,40 +361,35 @@ export function buildProductResolutionDebugPayload(args: {
   const productSource = resolveProductSource(args.resolution, args.item);
   const descriptionSource = productSource;
   const fieldSources: ProductResolutionDebugPayload['fieldSources'] = {
+    // Spec 010 Rev 4: the `curated_static` tier was removed along
+    // with the static `lib/product-database.ts` substring-map. The
+    // field-source set is now strictly apollo / firecrawl / placeholder.
     description:
       productSource === 'placeholder'
         ? 'placeholder'
-        : productSource === 'curated_static'
-          ? 'curated_static'
-          : productSource === 'firecrawl'
-            ? 'firecrawl'
-            : args.item.productMetadata?.description?.trim()
-              ? 'apollo'
-              : 'placeholder',
+        : productSource === 'firecrawl'
+          ? 'firecrawl'
+          : args.item.productMetadata?.description?.trim()
+            ? 'apollo'
+            : 'placeholder',
     image:
       productSource === 'placeholder'
         ? 'placeholder'
-        : productSource === 'curated_static'
-          ? 'curated_static'
-          : args.resolution.image?.trim()
-            ? 'apollo'
-            : 'placeholder',
+        : args.resolution.image?.trim()
+          ? 'apollo'
+          : 'placeholder',
     storage:
       productSource === 'placeholder'
         ? 'placeholder'
-        : productSource === 'curated_static'
-          ? 'curated_static'
-          : args.resolution.storage?.trim()
-            ? 'apollo'
-            : 'placeholder',
+        : args.resolution.storage?.trim()
+          ? 'apollo'
+          : 'placeholder',
     preparation:
       productSource === 'placeholder'
         ? 'placeholder'
-        : productSource === 'curated_static'
-          ? 'curated_static'
-          : args.resolution.preparation?.trim()
-            ? 'apollo'
-            : 'placeholder',
+        : args.resolution.preparation?.trim()
+          ? 'apollo'
+          : 'placeholder',
   };
   return {
     itemName: args.item.name,
@@ -420,7 +415,11 @@ export function buildProductResolutionDebugPayload(args: {
     },
     provenance: {
       generated: args.resolution.source === 'generated',
-      local: args.resolution.source === 'local',
+      // Spec 010 Rev 4: the `local` provenance flag is removed
+      // (along with the static-DB substring-map tier). The flag is
+      // retained as a back-compat field on the wire shape but is
+      // always `false` now; consumers should ignore it.
+      local: false,
       firecrawl: Boolean(args.item.productMetadata?.firecrawl?.snippet && args.item.productMetadata.firecrawl.snippet.trim().length > 0),
       firecrawlStatus: args.item.productMetadata?.firecrawl?.status ?? null,
     },

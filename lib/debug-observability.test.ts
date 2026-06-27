@@ -220,7 +220,7 @@ describe('buildBlobReadFreshnessDebugPayload', () => {
 });
 
 describe('buildProductResolutionDebugPayload', () => {
-  it('labels generated metadata as apollo, local catalogue hits as curated_static, firecrawl snippets as firecrawl, and fallbacks as placeholder', () => {
+  it('labels generated metadata as apollo, firecrawl snippets as firecrawl, and fallbacks as placeholder (curated_static tier is gone per spec 010 Rev 4)', () => {
     const apolloPayload = buildProductResolutionDebugPayload({
       item: {
         name: 'Tesco Blueberries 150G',
@@ -266,68 +266,73 @@ describe('buildProductResolutionDebugPayload', () => {
       preparation: 'apollo',
     });
     expect(apolloPayload.freshness.lastFetched).toBe('2026-06-18T09:30:00.000Z');
+    expect(apolloPayload.provenance.generated).toBe(true);
+    expect(apolloPayload.provenance.local).toBe(false);
 
-    const curatedPayload = buildProductResolutionDebugPayload({
+    // Spec 010 Rev 4: the `curated_static` tier is gone. An item
+    // with no `productMetadata` falls through to the placeholder
+    // chain rather than the static-DB substring map.
+    const placeholderForNoMetadata = buildProductResolutionDebugPayload({
       item: {
         name: 'Tesco Blueberries 150G',
         tpnc: null,
       },
       resolution: {
         title: 'Tesco Blueberries 150G',
-        description: 'Fresh British blueberries, perfect for breakfast cereals, yoghurts or as a healthy snack.',
-        storage: 'Refrigerate and consume within 5 days. Wash before use.',
+        description: 'Product information not available in generated data.',
+        storage: 'Check packaging for storage instructions.',
         preparation: '',
         ingredients: '',
         allergens: '',
-        nutrition: 'Per 100g: Energy 44kcal, Protein 0.7g, Carbohydrates 9g, Fat 0.3g',
-        image: 'https://images.openfoodfacts.org/images/products/000/000/326/6038/front_en.5.400.jpg',
-        source: 'local',
+        nutrition: 'Nutrition information not available.',
+        image: '',
+        source: 'fallback',
       },
     });
-    expect(curatedPayload.descriptionSource).toBe('curated_static');
-    expect(curatedPayload.productSource).toBe('curated_static');
-    expect(curatedPayload.fieldSources).toEqual({
-      description: 'curated_static',
-      image: 'curated_static',
-      storage: 'curated_static',
-      preparation: 'curated_static',
+    expect(placeholderForNoMetadata.descriptionSource).toBe('placeholder');
+    expect(placeholderForNoMetadata.productSource).toBe('placeholder');
+    expect(placeholderForNoMetadata.fieldSources).toEqual({
+      description: 'placeholder',
+      image: 'placeholder',
+      storage: 'placeholder',
+      preparation: 'placeholder',
     });
 
-    const curatedViaGeneratedPayload = buildProductResolutionDebugPayload({
+    // Spec 010 Rev 4: an item with generated metadata but a blank
+    // Apollo description still has Apollo as the resolved source
+    // (per-field); curated_static is no longer a tier in the
+    // generated branch.
+    const apolloWithBlankDesc = buildProductResolutionDebugPayload({
       item: {
         name: 'Tesco Blueberries 150G',
         tpnc: '123456789',
         productMetadata: {
           title: 'Tesco Blueberries 150G',
           description: '',
-          storage: 'Refrigerate and consume within 5 days. Wash before use.',
-          preparation: '',
-          ingredients: '',
-          allergens: '',
-          nutrition: 'Per 100g: Energy 44kcal, Protein 0.7g, Carbohydrates 9g, Fat 0.3g',
-          imageUrl: 'https://images.openfoodfacts.org/images/products/000/000/326/6038/front_en.5.400.jpg',
-          productUrl: 'https://example.test/blueberries',
+          storage: 'Refrigerate',
+          preparation: 'Wash before use',
+          imageUrl: 'https://example.test/blueberries.jpg',
           source: 'tesco',
           lastFetched: '2026-06-18T09:30:00.000Z',
         },
       },
       resolution: {
         title: 'Tesco Blueberries 150G',
-        description: 'Fresh British blueberries, perfect for breakfast cereals, yoghurts or as a healthy snack.',
-        storage: 'Refrigerate and consume within 5 days. Wash before use.',
-        preparation: '',
+        description: 'Generated Tesco product details are incomplete for this item.',
+        storage: 'Refrigerate',
+        preparation: 'Wash before use',
         ingredients: '',
         allergens: '',
-        nutrition: 'Per 100g: Energy 44kcal, Protein 0.7g, Carbohydrates 9g, Fat 0.3g',
-        image: 'https://images.openfoodfacts.org/images/products/000/000/326/6038/front_en.5.400.jpg',
+        nutrition: 'Per 100g: energy 44kcal',
+        image: 'https://example.test/blueberries.jpg',
         productUrl: 'https://example.test/blueberries',
         lastFetched: '2026-06-18T09:30:00.000Z',
         expiresAt: '2026-07-09T09:30:00.000Z',
         source: 'generated',
       },
     });
-    expect(curatedViaGeneratedPayload.descriptionSource).toBe('curated_static');
-    expect(curatedViaGeneratedPayload.productSource).toBe('curated_static');
+    expect(apolloWithBlankDesc.descriptionSource).toBe('apollo');
+    expect(apolloWithBlankDesc.productSource).toBe('apollo');
 
     const firecrawlPayload = buildProductResolutionDebugPayload({
       item: {
@@ -383,7 +388,7 @@ describe('buildProductResolutionDebugPayload', () => {
       item: { name: 'Unknown Snack', tpnc: null },
       resolution: {
         title: 'Unknown Snack',
-        description: 'Product information not available in generated data or the local product database.',
+        description: 'Product information not available in generated data.',
         storage: 'Check packaging for storage instructions.',
         preparation: '',
         ingredients: '',
