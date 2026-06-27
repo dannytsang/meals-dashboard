@@ -44,6 +44,14 @@ import {
   type OrderItemSortMode,
   transformCachedOrderSafely,
 } from '@/lib/dashboard-ui-utils';
+import type { ProductResolutionDebugPayload } from '@/lib/debug-observability';
+
+/**
+ * Spec 010 Rev 5 / FR-010 — the chip payload mirrors the spec 031
+ * product-resolution panel payload. Re-using the same type keeps
+ * the chip and the panel data-equivalent (spec 031 FR-005 / FR-006).
+ */
+type DebugProductResolutionPayload = ProductResolutionDebugPayload;
 
 interface DashboardClientProps {
   today: string;
@@ -81,6 +89,12 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   const [overridePendingItem, setOverridePendingItem] = useState<string | null>(null);
   const [overrideError, setOverrideError] = useState<string | null>(null);
   const [overrideSuccess, setOverrideSuccess] = useState<string | null>(null);
+  // Spec 010 Rev 5 / FR-010 — the modal's product-resolution chip
+  // payload. Fetched client-side from the spec-031-gated
+  // `/api/debug/product-resolution` route when the spec-022 debug
+  // gate is effectively on. When the gate is off, the chip MUST
+  // NOT be rendered (and this state is unused).
+  const [productResolutionPayload, setProductResolutionPayload] = useState<DebugProductResolutionPayload | null>(null);
 
   useEffect(() => {
     const checkWidth = () => setIsDesktop(window.innerWidth >= 1024);
@@ -278,6 +292,47 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   };
 
   const selectedProductInfo = selectedItem ? resolveProductInfoForItem(selectedItem) : null;
+
+  // Spec 010 Rev 5 / FR-010 — fetch the product-resolution chip
+  // payload whenever the modal opens and the spec-022 debug gate
+  // is effectively on. The chip's data source is the spec 031
+  // product-resolution panel payload (FR-005 / FR-006, amended by
+  // spec 031 Rev 3 to include expectedProductBlobPath +
+  // productBlobPathMatch). The fetch is gated by the same
+  // `/api/debug/product-resolution` server route that `/debug`
+  // reads from; the server enforces the spec-022 OIDC + signed
+  // cookie check, so an unauthenticated or missing/tampered cookie
+  // returns 404 and the chip stays empty (the chip will not render
+  // payload in that case).
+  //
+  // Pitfall (per dispatch): useEffect placement. The dependent
+  // `selectedItem` / `debugOn` consts are declared above; this
+  // effect is placed AFTER them.
+  useEffect(() => {
+    if (!debugOn || !selectedItem) {
+      setProductResolutionPayload(null);
+      return;
+    }
+    const itemName = selectedItem.name;
+    let cancelled = false;
+    const url = `/api/debug/product-resolution?name=${encodeURIComponent(itemName)}`;
+    fetch(url, { credentials: 'include' })
+      .then(async (resp) => {
+        if (!resp.ok) return null;
+        return (await resp.json()) as DebugProductResolutionPayload;
+      })
+      .then((payload) => {
+        if (cancelled) return;
+        setProductResolutionPayload(payload);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setProductResolutionPayload(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [debugOn, selectedItem]);
 
   return (
     <div
@@ -830,6 +885,26 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
               >×</button>
             </div>
 
+            {/*
+              Spec 010 Rev 5 / FR-010 — debug-mode product-resolution
+              chip. Renders only when `debugOn` is true (server-gated
+              via the spec-022 signed `meals_debug_mode` cookie;
+              the server-side `verifyDebugCookie` helper at
+              `lib/debug-cookie.ts` is the single source of truth).
+              The chip is data-equivalent to the spec 031
+              product-resolution panel (FR-005 / FR-006) and reads
+              from the same `/api/debug/product-resolution`
+              endpoint. The chip's expectedProductBlobPath /
+              productBlobPathMatch fields are sourced from the
+              spec-031 matcher helper (FR-011 / spec 010 Rev 5.1).
+              The component is absent from the DOM when `debugOn`
+              is false — the JSX short-circuits before the markup
+              is created. T083d / T083e invariants.
+            */}
+            {debugOn && productResolutionPayload && (
+              <DebugProductResolutionChip payload={productResolutionPayload} />
+            )}
+
             <div>
               {selectedProductInfo.image ? (
                 <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
@@ -963,6 +1038,132 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
           {data.uiUpdatedAt && (
             <span>UI: {new Date(data.uiUpdatedAt).toLocaleString('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Spec 010 Rev 5 / FR-010 (modal-side chip) and Rev 5.1 / FR-011
+ * (expected-vs-actual productBlobPath).
+ *
+ * Inline debug panel rendered inside the Product Info Modal chrome
+ * when the spec-022 signed-cookie gate is effectively on (the
+ * `debugOn` prop is server-rendered from the spec-022
+ * `verifyDebugCookie` helper). The chip is data-equivalent to
+ * the spec 031 product-resolution panel (FR-005 / FR-006, amended
+ * by spec 031 Rev 3 to include expectedProductBlobPath +
+ * productBlobPathMatch) — the chip reads from the same server
+ * payload and does NOT reimplement the resolution chain.
+ *
+ * The Rev 5.1 expected-vs-actual productBlobPath block is rendered
+ * when both `tpnc` and `productBlobPath` are present, and uses the
+ * spec-031 matcher helper for the derivation. The convention is
+ * sourced from spec 021 Key Entities, never hardcoded in the
+ * chip's render code (T093 invariant).
+ */
+function DebugProductResolutionChip({ payload }: { payload: DebugProductResolutionPayload }) {
+  const { itemTpnc, itemBlobPath, descriptionSource, fieldSources, freshness, expectedProductBlobPath, productBlobPathMatch, provenance } = payload;
+  // Upstream-source-absent flags: surfaced when the description
+  // fell through to the placeholder chain so the operator can tell
+  // whether the gap is Apollo's fault or Firecrawl's.
+  const apolloMissing = descriptionSource === 'placeholder' && provenance.generated === false;
+  const firecrawlMissing = descriptionSource === 'placeholder' && provenance.firecrawl === false;
+  return (
+    <div
+      data-testid="product-resolution-chip"
+      style={{
+        marginBottom: '1rem',
+        padding: '0.75rem',
+        backgroundColor: 'var(--bg-tertiary)',
+        border: '1px dashed var(--accent-blue)',
+        borderRadius: '8px',
+        fontSize: '11px',
+        fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+      }}
+    >
+      <div style={{ fontWeight: 700, color: 'var(--accent-blue)', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        Debug · product resolution
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'max-content 1fr', columnGap: '0.5rem', rowGap: '0.15rem' }}>
+        {itemTpnc !== null && <span style={{ color: 'var(--text-secondary)' }}>tpnc</span>}
+        {itemTpnc !== null && <span style={{ color: 'var(--text-primary)' }}>{itemTpnc}</span>}
+        {itemBlobPath !== null && <span style={{ color: 'var(--text-secondary)' }}>productBlobPath</span>}
+        {itemBlobPath !== null && <span style={{ color: 'var(--text-primary)', wordBreak: 'break-all' }}>{itemBlobPath}</span>}
+        <span style={{ color: 'var(--text-secondary)' }}>descriptionSource</span>
+        <span style={{ color: 'var(--text-primary)' }}>{descriptionSource}</span>
+        <span style={{ color: 'var(--text-secondary)' }}>imageSource</span>
+        <span style={{ color: 'var(--text-primary)' }}>{fieldSources.image}</span>
+        <span style={{ color: 'var(--text-secondary)' }}>storageSource</span>
+        <span style={{ color: 'var(--text-primary)' }}>{fieldSources.storage}</span>
+        <span style={{ color: 'var(--text-secondary)' }}>preparationSource</span>
+        <span style={{ color: 'var(--text-primary)' }}>{fieldSources.preparation}</span>
+        {freshness.lastFetched && <span style={{ color: 'var(--text-secondary)' }}>product.lastFetched</span>}
+        {freshness.lastFetched && <span style={{ color: 'var(--text-primary)' }}>{freshness.lastFetched}</span>}
+        {freshness.firecrawlLastFetched && <span style={{ color: 'var(--text-secondary)' }}>firecrawl.lastFetched</span>}
+        {freshness.firecrawlLastFetched && <span style={{ color: 'var(--text-primary)' }}>{freshness.firecrawlLastFetched}</span>}
+        {(apolloMissing || firecrawlMissing) && (
+          <>
+            <span style={{ color: 'var(--text-secondary)' }}>upstream missing</span>
+            <span style={{ color: 'var(--text-primary)' }}>
+              {[
+                apolloMissing ? 'apolloMissing=true' : null,
+                firecrawlMissing ? 'firecrawlMissing=true' : null,
+              ].filter(Boolean).join(', ')}
+            </span>
+          </>
+        )}
+      </div>
+
+      {/*
+        Spec 010 Rev 5.1 / FR-011 — expected-vs-actual productBlobPath
+        block. Renders only when both `tpnc` and `productBlobPath`
+        are present. The match value comes from the spec-031
+        matcher helper, not from inline string templating in the
+        chip's render code. T090 / T093 invariants.
+      */}
+      {itemTpnc !== null && itemBlobPath !== null && (
+        <div
+          data-testid="expected-product-blob-path"
+          style={{
+            marginTop: '0.5rem',
+            paddingTop: '0.5rem',
+            borderTop: '1px solid var(--border-color)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.15rem',
+          }}
+        >
+          <span style={{ color: 'var(--text-secondary)' }}>expected (per spec 021 Key Entities convention)</span>
+          {productBlobPathMatch === true && (
+            <span style={{ color: 'var(--accent-emerald)' }}>
+              {`products/${itemTpnc}.json \u2713 match`}
+            </span>
+          )}
+          {productBlobPathMatch === false && (
+            <span style={{ color: 'var(--accent-rose)' }}>
+              {`products/${itemTpnc}.json \u2717 found ${itemBlobPath}`}
+            </span>
+          )}
+          {productBlobPathMatch === null && (
+            <span style={{ color: 'var(--text-secondary)' }}>
+              {(expectedProductBlobPath === null) ? '(unknown — tpnc not resolved)' : '(no path)'}
+            </span>
+          )}
+        </div>
+      )}
+      {itemTpnc === null && (
+        <div
+          data-testid="expected-product-blob-path"
+          style={{
+            marginTop: '0.5rem',
+            paddingTop: '0.5rem',
+            borderTop: '1px solid var(--border-color)',
+          }}
+        >
+          <span style={{ color: 'var(--text-secondary)' }}>expected</span>
+          <span style={{ color: 'var(--text-secondary)', marginLeft: '0.5rem' }}>(unknown — tpnc not resolved)</span>
         </div>
       )}
     </div>

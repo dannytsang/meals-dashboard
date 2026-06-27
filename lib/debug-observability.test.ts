@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { signDebugCookie } from './debug-cookie';
 import {
   buildBlobReadFreshnessDebugPayload,
+  buildExpectedProductBlobPath,
   buildItemsByCategoryDebugPayload,
   buildProductResolutionDebugPayload,
   buildRuntimeContextDebugPayload,
   classifyDebugCookieState,
+  matchProductBlobPath,
   resolveAuthenticatedUserDisplay,
 } from './debug-observability';
 
@@ -405,6 +407,146 @@ describe('buildProductResolutionDebugPayload', () => {
       image: 'placeholder',
       storage: 'placeholder',
       preparation: 'placeholder',
+    });
+  });
+});
+
+/**
+ * Spec 031 Rev 3 / FR-005 + spec 010 Rev 5.1 / FR-011.
+ *
+ * The matcher helper is the single source of truth for the
+ * `products/{tpnc}.json` convention. Spec 010's modal-side chip
+ * imports it from this module rather than re-deriving the
+ * convention client-side.
+ */
+describe('productBlobPath matcher (spec 031 Rev 3 / spec 010 Rev 5.1)', () => {
+  describe('buildExpectedProductBlobPath', () => {
+    it('derives the spec 021 Key Entities convention products/<tpnc>.json', () => {
+      expect(buildExpectedProductBlobPath('123456789')).toBe('products/123456789.json');
+    });
+
+    it('returns null when tpnc is null or undefined (a missing tpnc is a different problem from a wrong path)', () => {
+      expect(buildExpectedProductBlobPath(null)).toBeNull();
+      expect(buildExpectedProductBlobPath(undefined)).toBeNull();
+      expect(buildExpectedProductBlobPath('')).toBeNull();
+      expect(buildExpectedProductBlobPath('   ')).toBeNull();
+    });
+  });
+
+  describe('matchProductBlobPath', () => {
+    it('returns true when the actual path matches products/<tpnc>.json', () => {
+      expect(matchProductBlobPath('12345', 'products/12345.json')).toBe(true);
+    });
+
+    it('returns false when the actual path is drifted (e.g. products/legacy/12345.json)', () => {
+      expect(matchProductBlobPath('12345', 'products/legacy/12345.json')).toBe(false);
+    });
+
+    it('returns null when tpnc is unknown (MUST NOT show a misleading false)', () => {
+      expect(matchProductBlobPath(null, 'products/legacy/12345.json')).toBeNull();
+      expect(matchProductBlobPath(undefined, 'products/legacy/12345.json')).toBeNull();
+      expect(matchProductBlobPath('', 'products/legacy/12345.json')).toBeNull();
+    });
+
+    it('returns null when productBlobPath is absent even if tpnc is known (MUST NOT show a misleading false)', () => {
+      expect(matchProductBlobPath('12345', null)).toBeNull();
+      expect(matchProductBlobPath('12345', undefined)).toBeNull();
+      expect(matchProductBlobPath('12345', '')).toBeNull();
+    });
+
+    it('returns null when both sides are absent', () => {
+      expect(matchProductBlobPath(null, null)).toBeNull();
+      expect(matchProductBlobPath(undefined, undefined)).toBeNull();
+    });
+  });
+
+  describe('buildProductResolutionDebugPayload surfaces expectedProductBlobPath + productBlobPathMatch', () => {
+    it('reports expected=products/<tpnc>.json and match=true when paths agree', () => {
+      const payload = buildProductResolutionDebugPayload({
+        item: {
+          name: 'Tesco Blueberries',
+          tpnc: '12345',
+          productBlobPath: 'products/12345.json',
+        },
+        resolution: {
+          title: 'Tesco Blueberries',
+          description: 'desc',
+          storage: '',
+          preparation: '',
+          ingredients: '',
+          allergens: '',
+          nutrition: '',
+          image: '',
+          source: 'generated',
+        },
+      });
+      expect(payload.expectedProductBlobPath).toBe('products/12345.json');
+      expect(payload.productBlobPathMatch).toBe(true);
+    });
+
+    it('reports expected=products/<tpnc>.json and match=false when the actual path drifted', () => {
+      const payload = buildProductResolutionDebugPayload({
+        item: {
+          name: 'Tesco Blueberries',
+          tpnc: '12345',
+          productBlobPath: 'products/legacy/12345.json',
+        },
+        resolution: {
+          title: 'Tesco Blueberries',
+          description: 'desc',
+          storage: '',
+          preparation: '',
+          ingredients: '',
+          allergens: '',
+          nutrition: '',
+          image: '',
+          source: 'generated',
+        },
+      });
+      expect(payload.expectedProductBlobPath).toBe('products/12345.json');
+      expect(payload.productBlobPathMatch).toBe(false);
+    });
+
+    it('reports expected=null and match=null when tpnc is absent', () => {
+      const payload = buildProductResolutionDebugPayload({
+        item: { name: 'Unknown', tpnc: null, productBlobPath: null },
+        resolution: {
+          title: 'Unknown',
+          description: 'Product information not available in generated data.',
+          storage: '',
+          preparation: '',
+          ingredients: '',
+          allergens: '',
+          nutrition: '',
+          image: '',
+          source: 'fallback',
+        },
+      });
+      expect(payload.expectedProductBlobPath).toBeNull();
+      expect(payload.productBlobPathMatch).toBeNull();
+    });
+
+    it('falls back to productMetadata.tpnc when item.tpnc is not present at the top level', () => {
+      const payload = buildProductResolutionDebugPayload({
+        item: {
+          name: 'Tesco Blueberries',
+          productBlobPath: 'products/12345.json',
+          productMetadata: { tpnc: '12345', description: 'desc' } as never,
+        },
+        resolution: {
+          title: 'Tesco Blueberries',
+          description: 'desc',
+          storage: '',
+          preparation: '',
+          ingredients: '',
+          allergens: '',
+          nutrition: '',
+          image: '',
+          source: 'generated',
+        },
+      });
+      expect(payload.expectedProductBlobPath).toBe('products/12345.json');
+      expect(payload.productBlobPathMatch).toBe(true);
     });
   });
 });

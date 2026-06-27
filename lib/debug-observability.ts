@@ -129,6 +129,22 @@ export interface ProductResolutionDebugPayload {
     firecrawl: boolean;
     firecrawlStatus: 'ok' | 'not_found' | null;
   };
+  /**
+   * Spec 031 Rev 3 / FR-005 + spec 010 Rev 5.1 / FR-011. The
+   * expected productBlobPath derived from the spec 021 Key
+   * Entities convention `products/{tpnc}.json`. `null` when the
+   * tpnc is unknown — a missing tpnc is a different problem from
+   * a wrong path.
+   */
+  expectedProductBlobPath: string | null;
+  /**
+   * Spec 031 Rev 3 / FR-005 + spec 010 Rev 5.1 / FR-011. Boolean
+   * comparing `expectedProductBlobPath` to `productBlobPath`. `null`
+   * when either side is absent (a missing tpnc OR a missing
+   * productBlobPath), not `false` — the chip MUST NOT show a
+   * misleading `false` for an absent tpnc.
+   */
+  productBlobPathMatch: boolean | null;
 }
 
 export function classifyDebugCookieState(raw: string | undefined | null): DebugCookieState {
@@ -166,6 +182,44 @@ function maybeAgeSeconds(iso: string | undefined | null, nowIso: string): number
 function maybeAgeDays(iso: string | undefined | null, nowIso: string): number | null {
   const seconds = maybeAgeSeconds(iso, nowIso);
   return seconds === null ? null : Math.floor(seconds / 86400);
+}
+
+/**
+ * Spec 021 Key Entities convention for the product blob path:
+ * `products/{tpnc}.json`. The string template is the SINGLE source
+ * of truth on the dashboard side; spec 010's modal-side chip
+ * (Rev 5.1) and spec 031's product-resolution panel (Rev 3) both
+ * consume the matcher below rather than re-deriving the convention.
+ */
+export function buildExpectedProductBlobPath(tpnc: string | null | undefined): string | null {
+  if (typeof tpnc !== 'string' || tpnc.trim() === '') return null;
+  return `products/${tpnc}.json`;
+}
+
+/**
+ * Spec 031 Rev 3 / FR-005 matcher + spec 010 Rev 5.1 / FR-011.
+ *
+ * Compares the actual `productBlobPath` (the path that was
+ * chosen / observed for the item) against the expected path
+ * derived from the spec 021 Key Entities convention
+ * `products/{tpnc}.json`. Returns `null` (not `false`) when
+ * either side is absent — a missing tpnc is a different problem
+ * from a wrong path.
+ *
+ * Golden inputs:
+ *  - tpnc='12345', path='products/12345.json'   → true
+ *  - tpnc='12345', path='products/legacy/12345.json' → false
+ *  - tpnc=null,     path='products/legacy/12345.json' → null
+ *  - tpnc='12345', path=null                    → null
+ *  - tpnc=null,     path=null                    → null
+ */
+export function matchProductBlobPath(
+  tpnc: string | null | undefined,
+  productBlobPath: string | null | undefined,
+): boolean | null {
+  if (typeof tpnc !== 'string' || tpnc.trim() === '') return null;
+  if (typeof productBlobPath !== 'string' || productBlobPath === '') return null;
+  return productBlobPath === buildExpectedProductBlobPath(tpnc);
 }
 
 function resolveProductSource(resolution: ResolvedProductInfo, item: { name: string; productMetadata?: { description?: string; firecrawl?: { snippet?: string | null; status?: 'ok' | 'not_found' } } | null }) : DebugProductSource {
@@ -340,6 +394,11 @@ export function buildProductResolutionDebugPayload(args: {
     tpnc?: string | null;
     productBlobPath?: string | null;
     productMetadata?: ({
+      /** Tesco product numeric ID. Sourced from spec 021 / FR-001.
+       * Used by the spec 031 Rev 3 matcher to derive the expected
+       * productBlobPath (`products/{tpnc}.json`). */
+      tpnc?: string | null;
+      gtin?: string | null;
       title?: string;
       description?: string;
       storage?: string;
@@ -391,6 +450,10 @@ export function buildProductResolutionDebugPayload(args: {
           ? 'apollo'
           : 'placeholder',
   };
+  const tpncForMatcher = args.item.tpnc ?? args.item.productMetadata?.tpnc ?? null;
+  const productBlobPathForMatcher = args.item.productBlobPath ?? null;
+  const expectedProductBlobPath = buildExpectedProductBlobPath(tpncForMatcher);
+  const productBlobPathMatch = matchProductBlobPath(tpncForMatcher, productBlobPathForMatcher);
   return {
     itemName: args.item.name,
     itemTpnc: args.item.tpnc ?? null,
@@ -423,6 +486,8 @@ export function buildProductResolutionDebugPayload(args: {
       firecrawl: Boolean(args.item.productMetadata?.firecrawl?.snippet && args.item.productMetadata.firecrawl.snippet.trim().length > 0),
       firecrawlStatus: args.item.productMetadata?.firecrawl?.status ?? null,
     },
+    expectedProductBlobPath,
+    productBlobPathMatch,
   };
 }
 
