@@ -1,5 +1,6 @@
 import { calculateCoverageSummary, DeliveryWindow, GeneratedProductMetadata, GroceryItem, MatchedItem, MealCoverage, TescoReceipt } from './meals-data';
 import { cleanItemName } from './item-utils';
+import type { ProductBlob } from './dashboard-sync';
 
 /** Product metadata TTL in days. Must match PRODUCT_ENRICHMENT_MAX_AGE_DAYS in sync-dashboard-data.py (default 21). */
 export const PRODUCT_METADATA_TTL_DAYS = 21;
@@ -353,31 +354,69 @@ export interface ResolvedProductInfo {
  * Spec 010 Rev 4 (FR-003) — the modal's product-info source is
  * strictly `item.productMetadata`. The hand-curated
  * `lib/product-database.ts` substring-match fallback is removed.
+ *
+ * Spec 021 / FR-003 (revised): when `products` map is provided, the function
+ * first looks up the product by `item.tpnc` from the map (decoupled read path).
+ * Falls back to `item.productMetadata` for backwards compatibility with embedded data.
  */
-export function resolveProductInfoForItem(item: GroceryItem): ResolvedProductInfo {
+export function resolveProductInfoForItem(
+  item: GroceryItem,
+  products?: Record<string, ProductBlob | null> | null
+): ResolvedProductInfo {
+  // Spec 021 / FR-003 (revised): check products map first via tpnc.
+  const tpnc = item.tpnc;
+  const productFromMap = (products && tpnc) ? (products[tpnc] ?? null) : null;
+
+  if (productFromMap) {
+    const blob = productFromMap;
+    const generated: GeneratedProductMetadata = {
+      tpnc: blob.tpnc,
+      gtin: blob.gtin,
+      tpnb: blob.tpnb,
+      title: blob.title,
+      imageUrl: blob.imageUrl,
+      productUrl: blob.productUrl,
+      description: blob.description,
+      storage: blob.storage,
+      preparation: blob.preparation,
+      ingredients: blob.ingredients,
+      allergens: blob.allergens,
+      nutrition: blob.nutrition,
+      brand: blob.brand,
+      category: blob.category,
+      source: blob.source,
+      lastFetched: blob.lastFetched,
+      firecrawl: blob.firecrawl,
+    };
+    const expiresAt = _computeExpiresAt(generated.lastFetched);
+    const firecrawlSnippet = generated.firecrawl?.snippet;
+    const hasFirecrawlSnippet = typeof firecrawlSnippet === 'string' && firecrawlSnippet.trim() !== '';
+    const description =
+      generated.description
+      || (hasFirecrawlSnippet ? firecrawlSnippet : '')
+      || 'Product information not available in generated data.';
+    return {
+      title: generated.title || cleanItemName(item.name),
+      description,
+      storage: generated.storage || 'Check packaging for storage instructions.',
+      preparation: generated.preparation || '',
+      ingredients: generated.ingredients || '',
+      allergens: generated.allergens || '',
+      nutrition: generated.nutrition || 'Nutrition information not available from generated Tesco metadata.',
+      image: generated.imageUrl || '',
+      productUrl: generated.productUrl,
+      lastFetched: generated.lastFetched,
+      expiresAt,
+      source: 'generated',
+    };
+  }
+
+  // Backwards compatibility: fall back to embedded item.productMetadata.
   const generated = item.productMetadata;
   if (generated) {
     const expiresAt = _computeExpiresAt(generated.lastFetched);
-    // Spec 027 Rev 2 / FR-014: Apollo partial success wins. If Apollo
-    // returned an empty description, fall through to the Firecrawl
-    // snippet (third tier of the chain). The Firecrawl snippet is
-    // populated by the Python sync pipeline at
-    // `scripts/sync-dashboard-data.py:_fetch_firecrawl_search_snippet`
-    // and cached in `products/{tpnc}.json` under the `firecrawl` key
-    // with a 21-day TTL matching Apollo.
     const firecrawlSnippet = generated.firecrawl?.snippet;
     const hasFirecrawlSnippet = typeof firecrawlSnippet === 'string' && firecrawlSnippet.trim() !== '';
-    // Spec 027 Rev 2 / FR-014: Apollo partial success wins. If Apollo
-    // returned an empty description, fall through to the Firecrawl
-    // snippet (third tier of the chain). The Firecrawl snippet is
-    // populated by the Python sync pipeline at
-    // `scripts/sync-dashboard-data.py:_fetch_firecrawl_search_snippet`
-    // and cached in `products/{tpnc}.json` under the `firecrawl` key
-    // with a 21-day TTL matching Apollo.
-    //
-    // Spec 010 Rev 4 / FR-003 (placeholder contract): the truthful
-    // placeholder is what the user sees when both Apollo and Firecrawl
-    // are empty. The placeholder is NEVER a fabricated product detail.
     const description =
       generated.description
       || (hasFirecrawlSnippet ? firecrawlSnippet : '')

@@ -55,6 +55,7 @@ function makeBaseData(overrides?: Partial<DashboardData>): DashboardData {
     dataGeneratedAt: '2026-06-12T00:00:00Z',
     uiUpdatedAt: '2026-06-12T00:00:00Z',
     loadError: null,
+    products: {},
     ...overrides,
   };
 }

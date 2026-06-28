@@ -62,7 +62,11 @@ export async function GET(request: Request): Promise<NextResponse> {
     ?? items[0]
     ?? { name: 'Unknown item', tpnc: null, productBlobPath: null, productMetadata: null };
 
-  const resolution = resolveProductInfoForItem(selectedItem as Parameters<typeof resolveProductInfoForItem>[0]);
+  // Spec 021 / FR-003 (revised): resolve product info via the products map (tpnc key).
+  const resolution = resolveProductInfoForItem(
+    selectedItem as Parameters<typeof resolveProductInfoForItem>[0],
+    data.products
+  );
   const payload = buildProductResolutionDebugPayload({
     item: selectedItem,
     resolution,

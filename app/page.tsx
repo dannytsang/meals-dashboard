@@ -48,11 +48,16 @@ export default async function MealsDashboardPage() {
   const data = await getDashboardData({ coverageWindow, reader });
   console.log('[page] data loaded:', {
     coverageCount: data.coverage.length,
+    coverageDates: [...new Set(data.coverage.map(c => c.meal.date))].sort(),
     mealsCount: data.mealsCheckSummary ? 'has summary' : 'no summary',
     latestOrder: data.latestOrder ? `has order (${data.latestOrder.items?.length ?? 0} items, $${data.latestOrder.orderTotal ?? '?'})` : 'no order',
     dataGeneratedAt: data.dataGeneratedAt,
     demoMode,
+    coverageWindowStart: today,
+    coverageWindowEnd: endDate,
   });
+  console.log('[page] coverage window:', coverageWindow);
+  console.log('[page] first 3 coverage entries:', data.coverage.slice(0, 3).map(c => ({ date: c.meal.date, title: c.meal.content, status: c.status })));
 
   return (
     <DashboardClient

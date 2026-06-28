@@ -77,6 +77,15 @@ export interface BlobReadFreshnessDebugPayload {
   coverageReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed' }>;
   orderReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed' }>;
   productReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed'; lastFetched?: string }>;
+  /** Spec 031 Rev 4 / FR-014: top-level dataGeneratedAt so it is visible
+   *  without drilling into summaryFreshness. */
+  dataGeneratedAt: string;
+  /** Spec 031 Rev 4 / FR-014: the subset of coverageWindow dates found in
+   *  the manifest (i.e. dates that have a coverage blob). */
+  manifestDateCoverage: string[];
+  /** Spec 031 Rev 4 / FR-014: the subset of coverageWindow dates absent
+   *  from the manifest. */
+  manifestDateCoverageMiss: string[];
   summaryFreshness: {
     dataGeneratedAt: string;
     dataGeneratedAgeSeconds: number | null;
@@ -334,6 +343,8 @@ export function buildBlobReadFreshnessDebugPayload(args: {
       status: string;
       orderTotal: number | null;
     }>;
+    /** Dates present in the manifest (sourced from manifest.coverageDates). */
+    manifestCoverageDates?: string[];
   };
   trace: {
     pointerPath: string;
@@ -354,6 +365,11 @@ export function buildBlobReadFreshnessDebugPayload(args: {
     productReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed'; lastFetched?: string }>;
   };
 }): BlobReadFreshnessDebugPayload {
+  const coverageWindow = args.trace.coverageWindow;
+  const manifestDates = args.data.manifestCoverageDates ?? [];
+  const manifestDateCoverage = coverageWindow.filter(d => manifestDates.includes(d));
+  const manifestDateCoverageMiss = coverageWindow.filter(d => !manifestDates.includes(d));
+
   return {
     runtimeMode: args.runtimeMode,
     blobCredentialsState: args.blobCredentialsState,
@@ -373,6 +389,9 @@ export function buildBlobReadFreshnessDebugPayload(args: {
     coverageReads: args.trace.coverageReads,
     orderReads: args.trace.orderReads,
     productReads: args.trace.productReads,
+    dataGeneratedAt: args.data.dataGeneratedAt ?? '',
+    manifestDateCoverage,
+    manifestDateCoverageMiss,
     summaryFreshness: {
       dataGeneratedAt: args.data.dataGeneratedAt ?? '',
       dataGeneratedAgeSeconds: maybeAgeSeconds(args.data.dataGeneratedAt, args.now),

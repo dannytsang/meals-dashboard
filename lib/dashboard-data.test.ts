@@ -218,6 +218,7 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
       dataGeneratedAt: '',
       uiUpdatedAt: '',
       loadError: null,
+      products: {},
     });
   });
 

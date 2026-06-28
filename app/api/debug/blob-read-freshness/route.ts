@@ -82,9 +82,12 @@ export async function GET(): Promise<NextResponse> {
         orderReads = orderResults;
 
         const latestOrder = await getDashboardData({ reader, coverageWindow }).then((data) => data.latestOrder);
-        const productPaths = latestOrder
-          ? [...new Set((latestOrder.items as Array<{ productBlobPath?: string | null }>).map((item) => item.productBlobPath).filter((p): p is string => Boolean(p)))]
+        // Spec 021 / FR-003 (revised): derive product blob paths from tpnc using
+        // the convention products/{tpnc}.json. No longer use item.productBlobPath.
+        const allTpncs = latestOrder
+          ? [...new Set((latestOrder.items as Array<{ tpnc?: string | null }>).map((item) => item.tpnc).filter((t): t is string => typeof t === 'string' && t.trim() !== ''))]
           : [];
+        const productPaths = allTpncs.map((tpnc) => `products/${tpnc}.json`);
         productReads = await Promise.all(
           productPaths.map(async (path) => {
             const blob = await reader.readJsonBlob<{ lastFetched?: string }>(path);
