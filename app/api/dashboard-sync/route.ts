@@ -67,6 +67,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
+  const b = body as Record<string, unknown>;
+  console.log('[dashboard-sync] POST received — dataGeneratedAt:', b.dataGeneratedAt, '| coverage count:', Array.isArray(b.coverage) ? b.coverage.length : 'N/A', '| orders count:', Array.isArray(b.orders) ? b.orders.length : 'N/A');
+  console.log('[dashboard-sync] summary dataGeneratedAt:', (b.summary as Record<string, unknown> | null)?.dataGeneratedAt);
+
   const parsed = parseSplitLayoutPayload(body);
   if (!parsed.ok) {
     return NextResponse.json({ error: 'Invalid payload', detail: parsed.error }, { status: 400 });
