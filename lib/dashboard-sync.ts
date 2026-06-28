@@ -297,20 +297,33 @@ export async function syncDashboardLayout(
     }
   }
 
-  const { manifestPath, manifestHash } = serialiseManifest(newManifest);
+  const { manifestPath: computedManifestPath, manifestHash } = serialiseManifest(newManifest);
   const currentProductsManifestPath = pointer?.productsManifestPath ?? null;
   const computedProductsManifestPath = productsManifestPath ?? null;
+
+  console.log('[syncDashboardLayout] BRANCH DIAGNOSIS:', {
+    isInitialSync,
+    hasPointer: pointer !== null,
+    pointerManifest: pointer?.manifestPath,
+    computedManifestPath,
+    writtenPathsCount: writtenPaths.length,
+    currentProductsManifestPath,
+    computedProductsManifestPath,
+    productsMatch: (pointer?.productsManifestPath ?? null) === computedProductsManifestPath,
+  });
+
   const trueNoOp =
     !dryRun &&
     !isInitialSync &&
     writtenPaths.length === 0 &&
     pointer !== null &&
-    pointer.manifestPath === manifestPath &&
+    pointer.manifestPath === computedManifestPath &&
     currentProductsManifestPath === computedProductsManifestPath;
 
   if (trueNoOp) {
+    console.log('[syncDashboardLayout] → returning trueNoOp (totalOps: 0) — no writes needed');
     return {
-      manifestPath,
+      manifestPath: computedManifestPath,
       manifestHash,
       writtenPaths,
       skippedPaths,
@@ -324,14 +337,12 @@ export async function syncDashboardLayout(
   // Idempotency guard: if the pointer already references exactly this manifest
   // and products manifest, skip all writes.  This ensures a second sync hit on a
   // different deployment instance still converges on the same state as the first.
-  if (
-    !dryRun &&
-    pointer !== null &&
-    pointer.manifestPath === manifestPath &&
-    (pointer.productsManifestPath ?? null) === computedProductsManifestPath
-  ) {
+  const pointerMatches = pointer !== null && pointer.manifestPath === computedManifestPath;
+  const productsMatch = (pointer?.productsManifestPath ?? null) === computedProductsManifestPath;
+  if (!dryRun && pointer !== null && pointerMatches && productsMatch) {
+    console.log('[syncDashboardLayout] → returning idempotent noop (totalOps: 0) — pointer already matches computed manifest');
     return {
-      manifestPath,
+      manifestPath: computedManifestPath,
       manifestHash,
       writtenPaths,
       skippedPaths,
@@ -344,10 +355,11 @@ export async function syncDashboardLayout(
 
   if (!dryRun) {
     // Step 5–7: write manifest then pointer.
+    console.log('[syncDashboardLayout] → WRITING manifest and pointer', { computedManifestPath, totalOps: writtenPaths.length + 2 });
     await client.writeManifest(newManifest);
-    await client.writePointer(manifestPath, computedProductsManifestPath);
+    await client.writePointer(computedManifestPath, computedProductsManifestPath);
     return {
-      manifestPath,
+      manifestPath: computedManifestPath,
       manifestHash,
       writtenPaths,
       skippedPaths,
@@ -360,7 +372,7 @@ export async function syncDashboardLayout(
 
   // Dry run: report what would change, skip all writes.
   return {
-    manifestPath,
+    manifestPath: computedManifestPath,
     manifestHash: 'dry-run',
     writtenPaths,
     skippedPaths,
@@ -370,7 +382,7 @@ export async function syncDashboardLayout(
       !isInitialSync &&
       writtenPaths.length === 0 &&
       pointer !== null &&
-      pointer.manifestPath === manifestPath &&
+      pointer.manifestPath === computedManifestPath &&
       currentProductsManifestPath === computedProductsManifestPath,
     productsManifestPath: computedProductsManifestPath,
   };
