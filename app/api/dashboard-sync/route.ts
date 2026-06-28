@@ -82,6 +82,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const client = new VercelBlobStorageClient();
     const result = await syncDashboardLayout(parsed.value, client, { dryRun });
+    console.log('[dashboard-sync] Response:', JSON.stringify({
+      ok: true,
+      manifestPath: result.manifestPath,
+      written: result.writtenPaths,
+      skipped: result.skippedPaths,
+      totalOps: result.totalOps,
+      isInitialSync: result.isInitialSync,
+    }));
     return NextResponse.json({
       ok: true,
       manifestPath: result.manifestPath,
