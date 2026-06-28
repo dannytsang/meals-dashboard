@@ -7,12 +7,16 @@
  * is enforced in app/page.tsx — this component is only rendered
  * when the gate is satisfied.
  *
- * Two chips are shown:
- *  1. "Items" — shows displayItems count + latestOrder status chip.
- *     Clicking expands the items-by-category diagnostic panel.
- *  2. "Freshness" — shows dataGeneratedAt age (green=fresh, red=stale)
- *     + a coverage badge (green=none missing, amber=partial, red=missing).
+ * Three chips are shown:
+ *  1. "fresh" — dataGeneratedAt age (green=fresh, red=stale).
  *     Clicking expands the blob-read-freshness diagnostic panel.
+ *  2. "cov" — coverage completeness ratio.
+ *     Clicking expands the coverage diagnostic panel.
+ *  3. "items" — displayItems count + latestOrder status badge.
+ *     Clicking expands the items-by-category diagnostic panel.
+ *
+ * Only ONE panel can be open at a time — clicking a chip closes
+ * any other open panel to prevent overlap.
  */
 'use client';
 
@@ -62,7 +66,7 @@ function isDataStale(isoString: string): boolean {
   return !isNaN(ms) && ms > 25 * 60 * 60 * 1000;
 }
 
-/** Badge for the items chip. */
+/** Status badge shown next to the items chip. */
 function ItemsStatusBadge({ status }: { status: string }) {
   const color = ORDER_STATUS_COLOR[status] ?? 'var(--text-secondary)';
   return (
@@ -133,9 +137,10 @@ function DebugPanelWrapper({
       aria-label={title}
       style={{
         position: 'absolute',
+        top: '100%',
+        left: 0,
         zIndex: 60,
-        marginTop: '0.5rem',
-        marginLeft: '-0.5rem',
+        marginTop: '0.4rem',
         background: 'var(--bg-primary)',
         border: '1px solid var(--border-color)',
         borderRadius: '8px',
@@ -175,7 +180,7 @@ function DebugPanelWrapper({
 }
 
 export function DashboardDebugChips() {
-  // ── Items diagnostic state ────────────────────────────────────────
+  // ── Items diagnostic ────────────────────────────────────────────────
   const [itemsDiag, setItemsDiag] = useState<ItemsByCategoryDiagnostic | null>(null);
   const [itemsOpen, setItemsOpen] = useState(false);
 
@@ -195,9 +200,12 @@ export function DashboardDebugChips() {
 
   useEffect(() => { void fetchItemsDiag(); }, [fetchItemsDiag]);
 
-  // ── Freshness diagnostic state ────────────────────────────────────
+  // ── Freshness diagnostic ────────────────────────────────────────────
   const [freshnessDiag, setFreshnessDiag] = useState<FreshnessDiagnostic | null>(null);
   const [freshnessOpen, setFreshnessOpen] = useState(false);
+
+  // ── Coverage diagnostic (reuses freshnessDiag data) ─────────────────
+  const [coverageOpen, setCoverageOpen] = useState(false);
 
   const fetchFreshnessDiag = useCallback(async () => {
     try {
@@ -217,16 +225,13 @@ export function DashboardDebugChips() {
 
   useEffect(() => { void fetchFreshnessDiag(); }, [fetchFreshnessDiag]);
 
-  // ── Derived chip labels ────────────────────────────────────────────
+  // ── Derived chip labels ──────────────────────────────────────────────
   const stale = freshnessDiag ? isDataStale(freshnessDiag.dataGeneratedAt) : false;
   const coverageOk = freshnessDiag ? freshnessDiag.manifestDateCoverage.length : 0;
   const coverageMiss = freshnessDiag ? freshnessDiag.manifestDateCoverageMiss.length : 0;
   const coverageTotal = freshnessDiag ? freshnessDiag.coverageWindow.length : 0;
-  const coverageAllCovered = coverageMiss === 0 && coverageOk > 0;
 
-  const freshnessLabel = freshnessDiag
-    ? `${ageLabel(freshnessDiag.dataGeneratedAt)}`
-    : '…';
+  const freshnessLabel = freshnessDiag ? `${ageLabel(freshnessDiag.dataGeneratedAt)}` : '…';
 
   const coverageLabel = freshnessDiag
     ? coverageMiss > 0
@@ -244,9 +249,15 @@ export function DashboardDebugChips() {
     ? undefined
     : coverageMiss > 0
     ? 'var(--accent-amber, #f59e0b)'
-    : coverageAllCovered
+    : coverageOk > 0
     ? 'var(--accent-emerald, #10b981)'
     : undefined;
+
+  // Close all panels — used to ensure only one is open at a time.
+  const closeAll = () => {
+    setItemsOpen(false);
+    setFreshnessOpen(false);
+  };
 
   return (
     <span
@@ -265,8 +276,8 @@ export function DashboardDebugChips() {
           label={`fresh: ${freshnessLabel}`}
           testId="debug-chip-freshness"
           onClick={() => {
-            setFreshnessOpen((o) => !o);
-            setItemsOpen(false);
+            if (freshnessOpen) { setFreshnessOpen(false); }
+            else { closeAll(); setFreshnessOpen(true); }
           }}
           accentColor={freshnessChipBg}
         />
@@ -280,41 +291,41 @@ export function DashboardDebugChips() {
         )}
       </div>
 
-      {/* ── Coverage chip ───────────────────────────────────────────── */}
+      {/* ── Coverage chip ──────────────────────────────────────────── */}
       <div style={{ position: 'relative' }}>
         <ChipButton
           label={`cov: ${coverageLabel}`}
           testId="debug-chip-coverage"
           onClick={() => {
-            setFreshnessOpen(false);
-            setItemsOpen((o) => !o);
+            if (coverageOpen) { setCoverageOpen(false); }
+            else { closeAll(); setCoverageOpen(true); }
           }}
           accentColor={coverageChipBg}
         />
-        {freshnessOpen && (
+        {coverageOpen && (
           <DebugPanelWrapper
-            title="Blob Read Freshness"
-            onClose={() => setFreshnessOpen(false)}
+            title="Coverage Diagnostic"
+            onClose={() => setCoverageOpen(false)}
           >
             <BlobReadFreshnessDebugPanel />
           </DebugPanelWrapper>
         )}
       </div>
 
-      {/* ── Items-by-category chip ──────────────────────────────────── */}
+      {/* ── Items-by-category chip ───────────────────────────────────── */}
       <div style={{ position: 'relative' }}>
         <ChipButton
           label={`items: ${itemsDiag ? itemsDiag.displayItemsLength : '…'}`}
           testId="debug-chip-displayItems"
           onClick={() => {
-            setItemsOpen((o) => !o);
-            setFreshnessOpen(false);
+            if (itemsOpen) { setItemsOpen(false); }
+            else { closeAll(); setItemsOpen(true); }
           }}
         />
         <ItemsStatusBadge status={itemsDiag?.latestOrderStatus ?? 'loading…'} />
         {itemsOpen && (
           <DebugPanelWrapper
-            title="Items by category diagnostic"
+            title="Items by Category Diagnostic"
             onClose={() => setItemsOpen(false)}
           >
             <ItemsByCategoryDebugPanel />

@@ -315,6 +315,7 @@ async function readFromSplitLayout(
       })),
     ];
 
+    console.log('[dashboard-data] dataGeneratedAt from summary:', (summary as Record<string, unknown> | null)?.dataGeneratedAt);
     return {
       coverage,
       deliveryWindows,
