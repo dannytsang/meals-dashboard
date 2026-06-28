@@ -167,18 +167,22 @@ export class VercelBlobStorageClient implements BlobStorageClient {
 
   async writePointer(manifestPath: string, productsManifestPath?: string | null): Promise<void> {
     const content: PointerContents = { manifestPath, productsManifestPath: productsManifestPath ?? null };
+    const contentStr = JSON.stringify(content, null, 2);
+    console.log('[blob-storage] writePointer: manifestPath=', manifestPath, 'productsManifestPath=', productsManifestPath ?? null);
     // Pointer is the only blob that is delete+rewritten every sync (FR-05, FR-11).
     try {
       await del(POINTER_PATH, { token: this.token });
-    } catch {
-      // Pointer may not exist yet (first sync) — that's fine.
+      console.log('[blob-storage] writePointer: del ok');
+    } catch (err) {
+      console.log('[blob-storage] writePointer: del failed (swallowed):', err instanceof Error ? err.message : String(err));
     }
-    await put(POINTER_PATH, JSON.stringify(content, null, 2), {
+    await put(POINTER_PATH, contentStr, {
       access: 'private',
       addRandomSuffix: false,
       allowOverwrite: true,
       token: this.token,
     });
+    console.log('[blob-storage] writePointer: put ok');
   }
 }
 
