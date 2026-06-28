@@ -13,6 +13,8 @@ export interface DebugDataPanelProps<T extends Record<string, unknown>> {
   endpoint: string;
   testId: string;
   rows: (data: T) => DebugDataRow[];
+  /** Content rendered above the table rows — ideal for prominent diagnosis banners (FR-015). */
+  preTable?: ReactNode | ((data: T) => ReactNode);
 }
 
 export function DebugDataPanel<T extends Record<string, unknown>>({
@@ -21,6 +23,7 @@ export function DebugDataPanel<T extends Record<string, unknown>>({
   endpoint,
   testId,
   rows,
+  preTable,
 }: DebugDataPanelProps<T>) {
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
@@ -98,14 +101,21 @@ export function DebugDataPanel<T extends Record<string, unknown>>({
       {status === 'loading' && <div style={{ color: 'var(--text-secondary)' }}>Loading…</div>}
       {status === 'error' && <div style={{ color: 'var(--accent-red, #ef4444)' }}>Failed to load diagnostic: {error}</div>}
       {status === 'loaded' && data && (
-        <div style={{ display: 'grid', gap: '0.4rem' }}>
-          {rowsToRender.map((row) => (
-            <div key={row.label} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', alignItems: 'baseline' }}>
-              <strong style={{ minWidth: '12rem' }}>{row.label}</strong>
-              <span>{row.value ?? '—'}</span>
+        <>
+          {preTable ? (
+            <div style={{ marginBottom: '0.75rem' }}>
+              {typeof preTable === 'function' ? preTable(data) : preTable}
             </div>
-          ))}
-        </div>
+          ) : null}
+          <div style={{ display: 'grid', gap: '0.4rem' }}>
+            {rowsToRender.map((row) => (
+              <div key={row.label} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', alignItems: 'baseline' }}>
+                <strong style={{ minWidth: '12rem' }}>{row.label}</strong>
+                <span>{row.value ?? '—'}</span>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
