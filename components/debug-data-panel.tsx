@@ -17,6 +17,16 @@ export interface DebugDataPanelProps<T extends Record<string, unknown>> {
   preTable?: ReactNode | ((data: T) => ReactNode);
 }
 
+type CopyState = 'idle' | 'copied' | 'failed';
+
+const COPY_LABELS: Record<CopyState, string> = {
+  idle: 'Copy as JSON',
+  copied: 'Copied!',
+  failed: 'Copy failed',
+};
+
+const COPY_RESET_MS = 1500;
+
 export function DebugDataPanel<T extends Record<string, unknown>>({
   title,
   description,
@@ -29,6 +39,7 @@ export function DebugDataPanel<T extends Record<string, unknown>>({
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string>('');
+  const [copyState, setCopyState] = useState<CopyState>('idle');
 
   const load = useCallback(async () => {
     setStatus('loading');
@@ -53,9 +64,21 @@ export function DebugDataPanel<T extends Record<string, unknown>>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [load, refreshNonce]);
 
+  // FR-016: reset copy confirmation label after timeout.
+  useEffect(() => {
+    if (copyState === 'idle') return;
+    const timer = setTimeout(() => setCopyState('idle'), COPY_RESET_MS);
+    return () => clearTimeout(timer);
+  }, [copyState]);
+
   const copyJson = useCallback(async () => {
     if (!data) return;
-    await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      setCopyState('copied');
+    } catch {
+      setCopyState('failed');
+    }
   }, [data]);
 
   const rowsToRender = useMemo(() => (data ? rows(data) : []), [data, rows]);
@@ -84,16 +107,22 @@ export function DebugDataPanel<T extends Record<string, unknown>>({
             type="button"
             onClick={copyJson}
             data-testid="copy-as-json"
+            disabled={copyState !== 'idle'}
             style={{
               background: 'transparent',
               border: '1px solid var(--border-color)',
               borderRadius: '6px',
               padding: '0.25rem 0.5rem',
-              cursor: 'pointer',
-              color: 'var(--text-secondary)',
+              cursor: copyState === 'idle' ? 'pointer' : 'default',
+              color: copyState === 'copied'
+                ? '#22c55e'
+                : copyState === 'failed'
+                ? '#ef4444'
+                : 'var(--text-secondary)',
+              fontWeight: copyState !== 'idle' ? 600 : 400,
             }}
           >
-            Copy as JSON
+            {COPY_LABELS[copyState]}
           </button>
         </div>
       </div>
