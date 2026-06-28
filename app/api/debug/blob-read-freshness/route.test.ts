@@ -117,6 +117,10 @@ describe('GET /api/debug/blob-read-freshness', () => {
     expect(body.coverageReads).toEqual([{ path: 'coverage/2026-06-17.json', status: 'ok' }]);
     expect(body.orderReads).toEqual([{ path: 'orders/2026-06-17/ORD-123.json', status: 'ok' }]);
     expect(body.productReads).toEqual([{ path: 'products/123456789.json', status: 'ok', lastFetched: '2026-06-18T10:00:00.000Z' }]);
+    // Spec 031 Rev 4 / FR-014
+    expect(body.dataGeneratedAt).toBe('2026-06-18T10:00:00.000Z');
+    expect(body.manifestDateCoverage).toEqual(['2026-06-17']);
+    expect(body.manifestDateCoverageMiss).toEqual(['2026-06-18']);
     expect(mockReader.readPointer).toHaveBeenCalled();
     expect(mockReader.readManifest).toHaveBeenCalledWith('meta/manifest-123.json');
     expect(mockGetDashboardData).toHaveBeenCalled();

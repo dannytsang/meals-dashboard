@@ -50,6 +50,7 @@ export async function GET(): Promise<NextResponse> {
   let coverageReads: BlobReadFreshnessDebugPayload['coverageReads'] = [];
   let orderReads: BlobReadFreshnessDebugPayload['orderReads'] = [];
   let productReads: BlobReadFreshnessDebugPayload['productReads'] = [];
+  let manifestCoverageDates: string[] = [];
 
   try {
     const pointer = await reader.readPointer();
@@ -72,7 +73,12 @@ export async function GET(): Promise<NextResponse> {
           .sort()
           .reverse();
         const orderPaths = [...inWindow, ...pastOrders.slice(0, 1)];
-        const coveragePaths = coverageWindow.map((d) => `coverage/${d}.json`).filter((p) => p in manifest);
+        // Extract coverage dates present in the manifest (e.g. 'coverage/2026-06-28.json' → '2026-06-28')
+        // Assigns to the outer scope 'let' declared above the try block.
+        const manifestKeys = manifest && Object.keys(manifest).length > 0 ? Object.keys(manifest) : [];
+        manifestCoverageDates = manifestKeys.filter((k) => k.startsWith('coverage/')).map((k) => k.replace('coverage/', '').replace('.json', ''));
+
+        const coveragePaths = coverageWindow.map((d) => `coverage/${d}.json`).filter((p) => p in (manifest ?? {}));
 
         const [coverageResults, orderResults] = await Promise.all([
           Promise.all(coveragePaths.map(async (path) => ({ path, status: (await reader.readJsonBlob(path)) ? 'ok' : 'missing' } as const))),
@@ -124,6 +130,7 @@ export async function GET(): Promise<NextResponse> {
       uiUpdatedAt: data.uiUpdatedAt,
       loadError: data.loadError,
       deliveryWindows,
+      manifestCoverageDates,
     },
     trace: {
       pointerPath: POINTER_PATH,
