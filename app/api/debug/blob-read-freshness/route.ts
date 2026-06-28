@@ -78,7 +78,16 @@ export async function GET(): Promise<NextResponse> {
         const manifestKeys = manifest && Object.keys(manifest).length > 0 ? Object.keys(manifest) : [];
         manifestCoverageDates = manifestKeys.filter((k) => k.startsWith('coverage/')).map((k) => k.replace('coverage/', '').replace('.json', ''));
 
-        const coveragePaths = coverageWindow.map((d) => `coverage/${d}.json`).filter((p) => p in (manifest ?? {}));
+        // Use ALL manifest coverage dates (not just window dates) for the same reason
+        // dashboard-data.ts extends coveragePaths: the Python sync writes sparse blobs
+        // only for meal-plan dates, so manifest dates outside the window are valid.
+        const allManifestCoverageDates = manifestKeys.filter((k) => k.startsWith('coverage/')).map((k) => k.replace('coverage/', '').replace('.json', ''));
+        const coveragePaths = [
+          ...new Set([
+            ...coverageWindow.filter((d) => `coverage/${d}.json` in (manifest ?? {})),
+            ...allManifestCoverageDates,
+          ]),
+        ].map((d) => `coverage/${d}.json`).filter((p) => p in (manifest ?? {}));
 
         const [coverageResults, orderResults] = await Promise.all([
           Promise.all(coveragePaths.map(async (path) => ({ path, status: (await reader.readJsonBlob(path)) ? 'ok' : 'missing' } as const))),
@@ -130,7 +139,6 @@ export async function GET(): Promise<NextResponse> {
       uiUpdatedAt: data.uiUpdatedAt,
       loadError: data.loadError,
       deliveryWindows,
-      manifestCoverageDates,
     },
     trace: {
       pointerPath: POINTER_PATH,
@@ -146,6 +154,7 @@ export async function GET(): Promise<NextResponse> {
       selectedProductBlobPath: productReads[0]?.path ?? null,
       loadError: data.loadError,
       coverageWindow,
+      manifestCoverageDates,
       coverageReads,
       orderReads,
       productReads,

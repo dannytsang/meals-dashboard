@@ -145,9 +145,25 @@ async function readFromSplitLayout(
   try {
     // 2. Resolve the summary path from the manifest (content-addressable).
     const summaryPath = Object.keys(manifest).find((p) => p.startsWith('meta/summary-'));
-    const coveragePaths = coverageWindow
-      .map((d) => `coverage/${d}.json`)
-      .filter((p) => p in manifest);
+
+    // Collect ALL coverage blob dates from the manifest first.
+    // The manifest is the authoritative record of which coverage blobs exist;
+    // the Python sync only writes blobs for dates that have planned meals (sparse),
+    // not for every date in a contiguous window.
+    const allManifestCoverageDates = Object.keys(manifest)
+      .filter((p) => p.startsWith('coverage/'))
+      .map((p) => p.replace('coverage/', '').replace('.json', ''));
+
+    // Prefer manifest dates within the caller-supplied window; also include
+    // any other manifest coverage dates. This ensures the dashboard calendar
+    // shows all planned meals from the published manifest instead of silently
+    // dropping valid sparse meal-date blobs outside the dense window.
+    const coveragePaths = [
+      ...new Set([
+        ...coverageWindow.filter((d) => `coverage/${d}.json` in manifest),
+        ...allManifestCoverageDates,
+      ]),
+    ].map((d) => `coverage/${d}.json`).filter((p) => p in manifest);
 
     // Find order blobs in the coverage window OR the most recent past order.
     // The window filter alone misses the latest order once its delivery date

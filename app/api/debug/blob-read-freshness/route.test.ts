@@ -120,10 +120,35 @@ describe('GET /api/debug/blob-read-freshness', () => {
     // Spec 031 Rev 4 / FR-014
     expect(body.dataGeneratedAt).toBe('2026-06-18T10:00:00.000Z');
     expect(body.manifestDateCoverage).toEqual(['2026-06-17']);
-    expect(body.manifestDateCoverageMiss).toEqual(['2026-06-18']);
+    expect(body.manifestDateCoverageMiss).toEqual([]);
     expect(mockReader.readPointer).toHaveBeenCalled();
     expect(mockReader.readManifest).toHaveBeenCalledWith('meta/manifest-123.json');
     expect(mockGetDashboardData).toHaveBeenCalled();
+  });
+
+  it('selects every manifest coverage blob, not just dates in the dense coverage window', async () => {
+    mockReader.readManifest.mockResolvedValue({
+      'meta/summary-123.json': 'sha256-summary',
+      'coverage/2026-06-17.json': 'sha256-cov-1',
+      'coverage/2026-07-01.json': 'sha256-cov-2',
+      'coverage/2026-07-02.json': 'sha256-cov-3',
+      'coverage/2026-07-03.json': 'sha256-cov-4',
+      'orders/2026-06-17/ORD-123.json': 'sha256-order-1',
+    });
+
+    const res = await GET_BLOB();
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    expect(body.selectedCoverageBlobPaths).toEqual([
+      'coverage/2026-06-17.json',
+      'coverage/2026-07-01.json',
+      'coverage/2026-07-02.json',
+      'coverage/2026-07-03.json',
+    ]);
+    expect(body.coverageReads.map((read: { path: string }) => read.path)).toEqual(body.selectedCoverageBlobPaths);
+    expect(body.manifestDateCoverage).toEqual(['2026-06-17', '2026-07-01', '2026-07-02', '2026-07-03']);
+    expect(body.manifestDateCoverageMiss).toEqual([]);
   });
 });
 

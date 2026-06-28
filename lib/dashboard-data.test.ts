@@ -472,3 +472,74 @@ describe('getDashboardData — past order inclusion (window-edge regression)', (
     expect(data.latestOrder?.items.length).toBe(1);
   });
 });
+
+describe('getDashboardData — sparse coverage blob regression (manifest-authoritative)', () => {
+  /**
+   * Regression test: the Python sync writes coverage blobs only for dates
+   * that have planned meals (sparse layout), not for every day in a
+   * contiguous window. The read path must fetch all manifest coverage blobs
+   * even when they fall outside the 15-day contiguous coverage window.
+   *
+   * Scenario: manifest has coverage/2026-06-28.json, coverage/2026-07-01.json,
+   * coverage/2026-07-02.json, coverage/2026-07-03.json but the caller's
+   * visible coverage window only includes 2026-06-28. All four blobs are still
+   * valid planned-meal blobs and must appear in data.coverage.
+   */
+  it('loads all manifest coverage blobs, including future meal dates outside the contiguous window', async () => {
+    const client = new InMemoryBlobStorageClient();
+
+    // Simulate a manifest with sparse coverage blobs:
+    // only 2026-06-28 (Sunday/today) is in the "normal" window,
+    // the other three are future meal dates written by the Python sync.
+    const manifestData: Record<string, string> = {};
+    const seed = (path: string, content: object) => {
+      const json = JSON.stringify(content);
+      manifestData[path] = client.computeHash(json);
+      client.seed(path, json);
+    };
+
+    seed('coverage/2026-06-28.json', {
+      date: '2026-06-28',
+      sourceOrderBlobPath: 'orders/2026-06-28/T1.json',
+      meals: [{ meal: makeMeal('m1', '2026-06-28', 'Bolognese'), status: 'covered', coverageScore: 100, matchedItems: [], missingItems: [] }],
+    });
+    seed('coverage/2026-07-01.json', {
+      date: '2026-07-01',
+      sourceOrderBlobPath: null,
+      meals: [{ meal: makeMeal('m2', '2026-07-01', 'Curry Wed'), status: 'covered', coverageScore: 100, matchedItems: [], missingItems: [] }],
+    });
+    seed('coverage/2026-07-02.json', {
+      date: '2026-07-02',
+      sourceOrderBlobPath: null,
+      meals: [{ meal: makeMeal('m3', '2026-07-02', 'Pizza Thu'), status: 'covered', coverageScore: 100, matchedItems: [], missingItems: [] }],
+    });
+    seed('coverage/2026-07-03.json', {
+      date: '2026-07-03',
+      sourceOrderBlobPath: null,
+      meals: [{ meal: makeMeal('m4', '2026-07-03', 'Pasta Fri'), status: 'covered', coverageScore: 100, matchedItems: [], missingItems: [] }],
+    });
+    seed('meta/summary-abc.json', {
+      dataGeneratedAt: '2026-06-28T12:00:00Z',
+      uiUpdatedAt: '2026-06-28T12:00:00Z',
+      coverage_percentage: 100, covered: 4, missing: 0,
+      meals_total: 4, meals_covered: 4, order_total: 0,
+      delivery_date: '2026-06-28',
+      windows: { last_delivery: '2026-06-28', next_delivery: null, next_window_end: null },
+    });
+
+    const { manifestPath } = await client.writeManifest(manifestData);
+    await client.writePointer(manifestPath);
+
+    // Narrow window used to reproduce the historical Sunday-only failure mode.
+    const window = buildCoverageWindowDates('2026-06-28', '2026-06-28');
+    expect(window).not.toContain('2026-07-01'); // outside the contiguous window
+
+    const data = await getDashboardData({ coverageWindow: window, reader: readerOf(client) });
+
+    // All four coverage blobs must be loaded — the future meal dates are not
+    // filtered out just because they fall outside the contiguous date range.
+    const loadedDates = [...new Set(data.coverage.map((c) => c.meal.date))].sort();
+    expect(loadedDates).toEqual(['2026-06-28', '2026-07-01', '2026-07-02', '2026-07-03']);
+    expect(data.coverage).toHaveLength(4);
+  });
+});

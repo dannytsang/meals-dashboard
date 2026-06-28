@@ -80,11 +80,12 @@ export interface BlobReadFreshnessDebugPayload {
   /** Spec 031 Rev 4 / FR-014: top-level dataGeneratedAt so it is visible
    *  without drilling into summaryFreshness. */
   dataGeneratedAt: string;
-  /** Spec 031 Rev 4 / FR-014: the subset of coverageWindow dates found in
-   *  the manifest (i.e. dates that have a coverage blob). */
+  /** Spec 031 Rev 4 / FR-014: coverage dates selected from the manifest for
+   *  reading. Coverage blobs are sparse planned-meal dates, not a dense daily
+   *  calendar, so non-meal dates are not treated as missing. */
   manifestDateCoverage: string[];
-  /** Spec 031 Rev 4 / FR-014: the subset of coverageWindow dates absent
-   *  from the manifest. */
+  /** Spec 031 Rev 4 / FR-014: selected manifest coverage dates whose blob read
+   *  failed or returned missing/error. */
   manifestDateCoverageMiss: string[];
   summaryFreshness: {
     dataGeneratedAt: string;
@@ -360,15 +361,24 @@ export function buildBlobReadFreshnessDebugPayload(args: {
     selectedProductBlobPath: string | null;
     loadError: unknown;
     coverageWindow: string[];
+    /** All coverage blob dates found in the manifest (authoritative list). */
+    manifestCoverageDates: string[];
     coverageReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed' }>;
     orderReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed' }>;
     productReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed'; lastFetched?: string }>;
   };
 }): BlobReadFreshnessDebugPayload {
-  const coverageWindow = args.trace.coverageWindow;
-  const manifestDates = args.data.manifestCoverageDates ?? [];
-  const manifestDateCoverage = coverageWindow.filter(d => manifestDates.includes(d));
-  const manifestDateCoverageMiss = coverageWindow.filter(d => !manifestDates.includes(d));
+  const toCoverageDate = (path: string): string | null => {
+    const match = /^coverage\/(\d{4}-\d{2}-\d{2})\.json$/.exec(path);
+    return match?.[1] ?? null;
+  };
+  const manifestDateCoverage = args.trace.selectedCoverageBlobPaths
+    .map(toCoverageDate)
+    .filter((date): date is string => Boolean(date));
+  const manifestDateCoverageMiss = args.trace.coverageReads
+    .filter((read) => read.status === 'missing' || read.status === 'error')
+    .map((read) => toCoverageDate(read.path))
+    .filter((date): date is string => Boolean(date));
 
   return {
     runtimeMode: args.runtimeMode,
