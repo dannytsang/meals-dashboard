@@ -321,6 +321,27 @@ export async function syncDashboardLayout(
     };
   }
 
+  // Idempotency guard: if the pointer already references exactly this manifest
+  // and products manifest, skip all writes.  This ensures a second sync hit on a
+  // different deployment instance still converges on the same state as the first.
+  if (
+    !dryRun &&
+    pointer !== null &&
+    pointer.manifestPath === manifestPath &&
+    (pointer.productsManifestPath ?? null) === computedProductsManifestPath
+  ) {
+    return {
+      manifestPath,
+      manifestHash,
+      writtenPaths,
+      skippedPaths,
+      totalOps: 0,
+      isInitialSync,
+      suppressedNoopWrites: true,
+      productsManifestPath: computedProductsManifestPath,
+    };
+  }
+
   if (!dryRun) {
     // Step 5–7: write manifest then pointer.
     await client.writeManifest(newManifest);
