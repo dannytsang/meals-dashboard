@@ -46,6 +46,35 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     })
   );
 
+  const orderKeys = Object.keys(manifest).filter((key) => key.startsWith('orders/')).sort();
+  const orderBlobSummaries = await Promise.all(
+    orderKeys.map(async (path) => {
+      const blob = await reader.readJsonBlob<{
+        orderNumber?: string;
+        deliveryDate?: string;
+        deliverySlot?: string;
+        status?: string;
+        items?: Array<{ name?: string; tpnc?: string | null; quantity?: number; price?: number; category?: string | null }>;
+      }>(path);
+      return {
+        path,
+        orderNumber: blob?.orderNumber ?? null,
+        deliveryDate: blob?.deliveryDate ?? null,
+        deliverySlot: blob?.deliverySlot ?? null,
+        status: blob?.status ?? null,
+        itemCount: blob?.items?.length ?? 0,
+        itemNames: (blob?.items ?? []).map((item) => item.name ?? ''),
+        items: (blob?.items ?? []).map((item) => ({
+          name: item.name ?? '',
+          tpnc: item.tpnc ?? null,
+          quantity: item.quantity ?? null,
+          price: item.price ?? null,
+          category: item.category ?? null,
+        })),
+      };
+    })
+  );
+
   const productsManifest = pointer?.productsManifestPath ? await reader.readManifest(pointer.productsManifestPath) : {};
   const productKeys = Object.keys(productsManifest).sort();
   const productBlobSummaries = await Promise.all(
@@ -99,11 +128,29 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     manifestKeyCount: Object.keys(manifest).length,
     coverageKeys,
     coverageBlobSummaries,
+    orderKeys,
+    orderBlobSummaries,
     productManifestKeyCount: productKeys.length,
     productBlobSummaries,
     dataCoverageCount: data.coverage.length,
     dataCoverageDates,
     dataCoverageTitles: data.coverage.map((entry) => ({ date: entry.meal.date, title: entry.meal.content, type: entry.meal.meal_type ?? null })),
+    deliveryWindows: data.deliveryWindows,
+    latestOrder: data.latestOrder ? {
+      orderNumber: data.latestOrder.orderNumber,
+      deliveryDate: data.latestOrder.deliveryDate,
+      deliverySlot: data.latestOrder.deliverySlot,
+      orderStatus: data.latestOrder.orderStatus,
+      itemCount: data.latestOrder.items.length,
+      itemNames: data.latestOrder.items.map((item) => item.name),
+      items: data.latestOrder.items.map((item) => ({
+        name: item.name,
+        tpnc: item.tpnc ?? null,
+        quantity: item.quantity,
+        price: item.price,
+        category: item.category ?? null,
+      })),
+    } : null,
     loadError: data.loadError,
   });
 }
