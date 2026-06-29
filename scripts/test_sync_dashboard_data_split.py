@@ -36,6 +36,8 @@ class PublishSplitDashboardPayloadTests(unittest.TestCase):
 
         def fake_post(body, api_url, secret, dry_run=False):
             calls.append((body, api_url, secret, dry_run))
+            if "products" not in body:
+                return True, {"ok": True, "manifestPath": "meta/manifest-fresh.json"}
             return True, {"ok": True}
 
         with patch.object(module, "post_dashboard_data_to_api", side_effect=fake_post):
@@ -49,7 +51,13 @@ class PublishSplitDashboardPayloadTests(unittest.TestCase):
         self.assertEqual(calls[0][1], "https://example.test/api/dashboard-sync")
         self.assertNotIn("products", calls[0][0])
         self.assertEqual(calls[1][1], "https://example.test/api/dashboard-products-sync")
-        self.assertEqual(calls[1][0], {"products": payload["products"]})
+        self.assertEqual(
+            calls[1][0],
+            {
+                "products": payload["products"],
+                "mainManifestPath": "meta/manifest-fresh.json",
+            },
+        )
         self.assertTrue(result["main"]["ok"])
         self.assertTrue(result["products"]["ok"])
 
