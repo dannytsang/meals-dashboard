@@ -46,6 +46,49 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     })
   );
 
+  const productsManifest = pointer?.productsManifestPath ? await reader.readManifest(pointer.productsManifestPath) : {};
+  const productKeys = Object.keys(productsManifest).sort();
+  const productBlobSummaries = await Promise.all(
+    productKeys.map(async (tpnc) => {
+      const path = productsManifest[tpnc];
+      const blob = path ? await reader.readJsonBlob<{
+        title?: string;
+        description?: string;
+        brand?: string;
+        category?: string;
+        imageUrl?: string;
+        productUrl?: string;
+        storage?: string;
+        preparation?: string;
+        ingredients?: string;
+        allergens?: string;
+        nutrition?: string;
+        source?: string;
+        lastFetched?: string;
+        firecrawl?: { snippet?: string | null; status?: string | null; lastFetched?: string | null };
+      }>(path) : null;
+      return {
+        tpnc,
+        path,
+        title: blob?.title ?? null,
+        description: blob?.description ?? null,
+        brand: blob?.brand ?? null,
+        category: blob?.category ?? null,
+        imageUrl: blob?.imageUrl ?? null,
+        productUrl: blob?.productUrl ?? null,
+        hasStorage: Boolean(blob?.storage),
+        hasPreparation: Boolean(blob?.preparation),
+        hasIngredients: Boolean(blob?.ingredients),
+        hasAllergens: Boolean(blob?.allergens),
+        hasNutrition: Boolean(blob?.nutrition),
+        source: blob?.source ?? null,
+        lastFetched: blob?.lastFetched ?? null,
+        firecrawlStatus: blob?.firecrawl?.status ?? null,
+        firecrawlSnippet: blob?.firecrawl?.snippet ?? null,
+      };
+    })
+  );
+
   const data = await getDashboardData({ reader, coverageWindow });
   const dataCoverageDates = [...new Set(data.coverage.map((entry) => entry.meal.date))].sort();
 
@@ -56,6 +99,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     manifestKeyCount: Object.keys(manifest).length,
     coverageKeys,
     coverageBlobSummaries,
+    productManifestKeyCount: productKeys.length,
+    productBlobSummaries,
     dataCoverageCount: data.coverage.length,
     dataCoverageDates,
     dataCoverageTitles: data.coverage.map((entry) => ({ date: entry.meal.date, title: entry.meal.content, type: entry.meal.meal_type ?? null })),
