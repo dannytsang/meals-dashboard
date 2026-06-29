@@ -86,6 +86,10 @@ function parseProductPayload(
     return { ok: false, error: 'products must be an array' };
   }
 
+  if (b.mainManifestPath !== undefined && typeof b.mainManifestPath !== 'string') {
+    return { ok: false, error: 'mainManifestPath must be a string when provided' };
+  }
+
   for (const p of b.products) {
     if (!p || typeof p !== 'object') return { ok: false, error: 'each product must be an object' };
     const pb = p as Record<string, unknown>;
@@ -101,6 +105,7 @@ function parseProductPayload(
     ok: true,
     value: {
       products: b.products as ProductSyncPayload['products'],
+      mainManifestPath: (b.mainManifestPath as string | undefined) ?? null,
     },
   };
 }

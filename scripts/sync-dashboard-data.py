@@ -1853,8 +1853,12 @@ def publish_split_dashboard_payload(
 
     if main_ok and products:
         products_url = dashboard_products_api_url(api_url)
+        products_payload = {
+            'products': products,
+            'mainManifestPath': main_response.get('manifestPath'),
+        }
         products_ok, products_response = post_dashboard_data_to_api(
-            {'products': products},
+            products_payload,
             products_url,
             secret,
             dry_run=dry_run,

@@ -137,6 +137,13 @@ export interface SplitLayoutPayload {
 
 export interface ProductSyncPayload {
   products: Array<{ productBlobPath: string } & ProductBlob>;
+  /**
+   * Full-sync publication passes the freshly-written main manifest here so the
+   * subsequent product-only call cannot accidentally preserve an older pointer
+   * value if Blob pointer reads are stale or two deployments overlap.
+   * Standalone product backfills omit this and preserve the current pointer.
+   */
+  mainManifestPath?: string | null;
 }
 
 export interface SyncResult {
@@ -408,7 +415,8 @@ export async function syncDashboardProducts(
     );
   }
 
-  const currentMainManifest: Manifest = await client.readManifest(pointer.manifestPath);
+  const targetMainManifestPath = payload.mainManifestPath || pointer.manifestPath;
+  const currentMainManifest: Manifest = await client.readManifest(targetMainManifestPath);
   const currentProductsManifest: Record<string, string> = pointer.productsManifestPath
     ? (await client.readManifest(pointer.productsManifestPath))
     : {};
@@ -447,11 +455,15 @@ export async function syncDashboardProducts(
   const productsManifestHash = client.computeHash(productsManifestContent);
   const productsManifestPath = `${PRODUCTS_MANIFEST_PREFIX}${productsManifestHash}.json`;
   const { manifestHash } = serialiseManifest(currentMainManifest);
-  const trueNoOp = !dryRun && writtenPaths.length === 0 && pointer.productsManifestPath === productsManifestPath;
+  const trueNoOp =
+    !dryRun &&
+    writtenPaths.length === 0 &&
+    pointer.manifestPath === targetMainManifestPath &&
+    pointer.productsManifestPath === productsManifestPath;
 
   if (trueNoOp) {
     return {
-      manifestPath: pointer.manifestPath,
+      manifestPath: targetMainManifestPath,
       manifestHash,
       writtenPaths,
       skippedPaths,
@@ -474,9 +486,9 @@ export async function syncDashboardProducts(
     );
     if (result.written) writtenPaths.push(productsManifestPath);
     else skippedPaths.push(productsManifestPath);
-    await client.writePointer(pointer.manifestPath, productsManifestPath);
+    await client.writePointer(targetMainManifestPath, productsManifestPath);
     return {
-      manifestPath: pointer.manifestPath,
+      manifestPath: targetMainManifestPath,
       manifestHash,
       writtenPaths,
       skippedPaths,
@@ -488,13 +500,13 @@ export async function syncDashboardProducts(
   }
 
   return {
-    manifestPath: pointer.manifestPath,
+    manifestPath: targetMainManifestPath,
     manifestHash: 'dry-run',
     writtenPaths,
     skippedPaths,
     totalOps: writtenPaths.length + 1,
     isInitialSync: false,
-    suppressedNoopWrites: writtenPaths.length === 0 && pointer.productsManifestPath === productsManifestPath,
+    suppressedNoopWrites: writtenPaths.length === 0 && pointer.manifestPath === targetMainManifestPath && pointer.productsManifestPath === productsManifestPath,
     productsManifestPath,
   };
 }
