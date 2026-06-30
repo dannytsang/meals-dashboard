@@ -22,13 +22,46 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import { DashboardClient } from './dashboard-client';
 import type { DashboardData } from '@/lib/dashboard-data';
 import type { ProductResolutionDebugPayload } from '@/lib/debug-observability';
+import type { OrderBlob } from '@/lib/dashboard-sync';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
+  // Spec 034 / FR-009 — dashboard-client now calls useSearchParams
+  // to read the optional ?delivery_date_offset=N param. The jsdom
+  // scenarios in this file do not exercise the time-machine path,
+  // so the mock just returns an empty URLSearchParams — same shape
+  // Next.js returns when no query params are present.
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 function makeBaseData(overrides?: Partial<DashboardData>): DashboardData {
-  return {
+  // Spec 034 / FR-008 — the Order Items by Category section now
+  // classifies items via `validOrders` (via `classifyOrderItemsByDelivery`)
+  // rather than reading `latestOrder.items` directly. The spec 010
+  // scenarios below put the test order in `latestOrder` (which the modal
+  // path still uses via `transformCachedOrderSafely`), so we mirror the
+  // same shape into `validOrders` here. When a test overrides
+  // `latestOrder` only, the mirror is recomputed inside `makeBaseData`
+  // before the `...overrides` spread — but the simpler shape below just
+  // emits an empty `validOrders` for the default case; tests that need
+  // items in the row renderer override `validOrders` directly (scenarios
+  // 1a/1b/2-5 all rely on the same default `Tesco Blueberries 150G`
+  // item being classified as 'next' so it appears in the Order Items
+  // list under the default Next filter).
+  const today = '2026-06-12';
+  const defaultOrder: OrderBlob = {
+    orderNumber: '123',
+    deliveryDate: today,
+    deliverySlot: 'Evening',
+    orderTotal: 5.55,
+    items: [
+      { name: 'Tesco Blueberries 150G', quantity: 1, price: 2, category: 'Fresh' },
+    ],
+    substitutions: [],
+    unavailable: [],
+    shortLifeItems: [],
+  };
+  const base: DashboardData = {
     coverage: [
       {
         meal: { id: '1', content: 'Broccoli pasta', date: '2026-06-12', labels: [], section: 'Planned' },
@@ -39,25 +72,25 @@ function makeBaseData(overrides?: Partial<DashboardData>): DashboardData {
       },
     ],
     deliveryWindows: [],
-    latestOrder: {
-      orderNumber: '123',
-      deliveryDate: '2026-06-12',
-      deliverySlot: 'Evening',
-      orderTotal: 5.55,
-      items: [
-        { name: 'Tesco Blueberries 150G', quantity: 1, price: 2, category: 'Fresh' },
-      ],
-      substitutions: [],
-      unavailable: [],
-      shortLifeItems: [],
-    },
+    latestOrder: defaultOrder as unknown as DashboardData['latestOrder'],
     mealsCheckSummary: null,
     dataGeneratedAt: '2026-06-12T00:00:00Z',
     uiUpdatedAt: '2026-06-12T00:00:00Z',
     loadError: null,
     products: {},
+    validOrders: [defaultOrder],
+  };
+  // If the caller overrides `latestOrder` but not `validOrders`, mirror
+  // the new latestOrder into validOrders so the row renderer can find
+  // the items via the spec 034 classification pipeline.
+  const merged: DashboardData = {
+    ...base,
     ...overrides,
   };
+  if (overrides && overrides.latestOrder && !overrides.validOrders) {
+    merged.validOrders = [overrides.latestOrder as unknown as OrderBlob];
+  }
+  return merged;
 }
 
 const basePayload: ProductResolutionDebugPayload = {

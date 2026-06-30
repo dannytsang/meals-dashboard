@@ -175,6 +175,7 @@ function makeTwoOrderData(today: string): DashboardData {
     dataGeneratedAt: '2026-06-15T00:00:00Z',
     uiUpdatedAt: '2026-06-15T00:00:00Z',
     loadError: null,
+    products: {},
     validOrders: [previousOrder, nextOrder],
   };
 }
@@ -314,6 +315,7 @@ describe('DashboardClient Order Items by Category (Spec 034 / FR-012)', () => {
       dataGeneratedAt: '2026-06-15T00:00:00Z',
       uiUpdatedAt: '2026-06-15T00:00:00Z',
       loadError: null,
+      products: {},
       validOrders: [pastOrder],
     };
 
@@ -378,6 +380,7 @@ describe('DashboardClient Order Items by Category (Spec 034 / FR-012)', () => {
       dataGeneratedAt: '2026-06-15T00:00:00Z',
       uiUpdatedAt: '2026-06-15T00:00:00Z',
       loadError: null,
+      products: {},
       validOrders: [previousOrder, nextOrder],
     };
 
