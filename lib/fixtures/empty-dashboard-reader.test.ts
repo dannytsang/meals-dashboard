@@ -73,6 +73,7 @@ describe('EmptyDashboardReader', () => {
         coverage: [],
         deliveryWindows: [],
         latestOrder: null,
+        validOrders: [],
         mealsCheckSummary: null,
         dataGeneratedAt: '',
         uiUpdatedAt: '',
