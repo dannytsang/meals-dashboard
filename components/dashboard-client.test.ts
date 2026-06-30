@@ -409,6 +409,26 @@ describe('DashboardClient order-item search interaction', () => {
     dataGeneratedAt: '2026-06-12T00:00:00Z',
     uiUpdatedAt: '2026-06-12T00:00:00Z',
     loadError: null,
+    // Spec 034 / Phase 3 — the loader exposes `validOrders` even when
+    // it contains only the latest order. This test fixture has a
+    // single delivery today; the Order Items section will classify it
+    // as `next` and the badge will appear on each row.
+    validOrders: [
+      {
+        orderNumber: '123',
+        deliveryDate: '2026-06-12',
+        deliverySlot: 'Evening',
+        orderTotal: 5.55,
+        items: [
+          { name: 'Tesco Broccoli 375g', quantity: 1, price: 1.5, category: 'Fresh' },
+          { name: 'Tesco Broccoli Florets 900g', quantity: 1, price: 2.25, category: 'Fresh' },
+          { name: 'Tesco Milk 4 Pints', quantity: 1, price: 1.8, category: 'Dairy' },
+        ],
+        substitutions: [],
+        unavailable: [],
+        shortLifeItems: [],
+      },
+    ],
   };
 
   it('updates immediately on each keystroke and composes with category, match, and sort controls', () => {

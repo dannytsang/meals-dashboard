@@ -210,6 +210,8 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
       coverageWindow: ['2026-06-15'],
       reader: readerOf(client),
     });
+    // Spec 034 / Phase 3 — `validOrders` is part of the shape and is
+    // `[]` on the empty state.
     expect(data).toEqual({
       coverage: [],
       deliveryWindows: [],
@@ -218,6 +220,7 @@ describe('getDashboardData — missing-blob fallback (FR-003, SC-03)', () => {
       dataGeneratedAt: '',
       uiUpdatedAt: '',
       loadError: null,
+      validOrders: [],
     });
   });
 
