@@ -1986,6 +1986,8 @@ def build_dashboard_payload(
     max_history: int = MAX_HISTORICAL_ORDERS,
     no_history: bool = False,
     sidecar_path: Optional[Path] = None,
+    extra_order_blob: Optional[Dict[str, Any]] = None,   # Spec 036 / FR-001
+    extra_order_key: Optional[str] = None,               # Spec 036 / FR-001
 ) -> Dict[str, Any]:
     """Build the split-layout dashboard payload for POSTing to /api/dashboard-sync.
 
@@ -2205,6 +2207,45 @@ def build_dashboard_payload(
     delivery_windows = compute_delivery_windows(delivery_metadata)
     coverage_window = sorted(grouped_by_date.keys())
 
+    # Spec 036 / FR-001 + FR-004 + FR-005 + FR-008: extend the orders[]
+    # with the optional "extra" OrderBlob published alongside the active
+    # receipt on delivery day. canonical-path safety (FR-004): the extra
+    # must carry orderBlobPath == "orders/<deliveryDate>/<orderId>.json".
+    # Idempotency (FR-007) is handled by Vercel Blob's existing no-op
+    # suppression at publish time — re-runs with the same content are
+    # skipped server-side and surfaced as `extra-order up-to-date` by
+    # the split payload publisher (no separate ETag tracking needed).
+    if isinstance(extra_order_blob, dict):
+        extra_id = (
+            extra_order_blob.get("orderId")
+            or extra_order_blob.get("order_number")
+            or extra_order_blob.get("orderNumber")
+        )
+        extra_date = extra_order_blob.get("deliveryDate") or extra_order_blob.get("delivery_date") or ""
+        expected_path = (
+            extra_order_blob.get("orderBlobPath")
+            or (f"orders/{extra_date}/{extra_id}.json" if extra_id and extra_date else "")
+        )
+        canonical = f"orders/{extra_date}/{extra_id}.json" if extra_id and extra_date else ""
+        if not extra_id:
+            print("  ⚠ extra-order: missing orderId/orderNumber; skipping extra-order write (FR-004)")
+        elif expected_path and canonical and expected_path != canonical:
+            print(f"  ⚠ extra-order: orderBlobPath '{expected_path}' does not match canonical '{canonical}' (FR-004); skipping extra-order write")
+        else:
+            # Stamp canonical orderBlobPath if missing/mismatched above so the
+            # dashboard loader always sees the expected Vercel Blob path.
+            if not extra_order_blob.get("orderBlobPath"):
+                extra_order_blob["orderBlobPath"] = canonical
+            # De-duplicate against the active receipt: if the extra shares
+            # the same orderId, the most-recent delivery wins (spec 035 parity).
+            existing_ids = {o.get("orderId") for o in orders}
+            if extra_id in existing_ids:
+                # Replace the existing entry with the extra (FR-006 + AS-005).
+                orders = [o for o in orders if o.get("orderId") != extra_id]
+            orders.append(extra_order_blob)
+            orders.sort(key=lambda o: (o.get("deliveryDate", ""), o.get("orderId", "")))
+            print(f"  ℹ extra-order published: {extra_id} ({extra_date})")
+
     # Timestamps for the dashboard footer:
     #   dataGeneratedAt — when the meals-check pipeline generated this data (from cache)
     #   uiUpdatedAt     — when the dashboard UI was last deployed (git HEAD commit time)
@@ -2259,6 +2300,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
     # Spec 035 / FR-008 — disable history retention for this sync (debug / rollback).
     parser.add_argument("--no-history", action="store_true",
                         help="Skip history retention; publish only the active receipt.")
+    # Spec 036 / FR-001 / FR-009 — extra OrderBlob path (round-1 hand-off). The
+    # matcher writes `pending_last_order.json` on delivery-day runs and passes
+    # the absolute path here so today's just-arrived OrderBlob publishes in the
+    # same sync cycle. Repeatable for multi-file fan-out (rare). Malformed JSON
+    # or a missing path is logged and skipped, not fatal.
+    parser.add_argument("--extra-order", action="append", default=None,
+                        help="Path to a JSON OrderBlob-shaped dict to publish alongside "
+                             "the chosen receipt (spec 036, delivery-day hand-off). "
+                             "Repeatable. Malformed JSON logs a warning and is skipped.")
+    parser.add_argument("--extra-order-key", type=str, default=None,
+                        help="Optional stable key for the extra-order Blob "
+                             "(default: 'deliveryDate:<ISO>:<orderId>').")
     return parser
 
 
@@ -2309,15 +2362,52 @@ def main():
     if overrides:
         print(f"  Manual overrides from blob: {len(overrides)}")
 
+    # Spec 036 / FR-001 / FR-009 — read the round-1 hand-off file(s). Malformed
+    # JSON or a missing path is logged and skipped; the main write still
+    # proceeds (FR-009). Repeatable; last wins on collision so callers can
+    # override a default by appending.
+    extra_blob = None
+    selected_key = args.extra_order_key
+    if args.extra_order:
+        for extra_path in args.extra_order:
+            try:
+                raw = Path(extra_path).read_text(encoding="utf-8")
+                parsed = json.loads(raw)
+            except FileNotFoundError:
+                print(f"  ⚠ --extra-order: file not found ({extra_path}); skipping extra-order write")
+                continue
+            except (json.JSONDecodeError, OSError) as exc:
+                print(f"  ⚠ --extra-order: failed to read {extra_path} "
+                      f"({exc.__class__.__name__}: {exc}); skipping extra-order write")
+                continue
+            if not isinstance(parsed, dict) or not (
+                parsed.get("orderId") or parsed.get("order_number") or parsed.get("orderNumber")
+            ):
+                print(f"  ⚠ --extra-order: {extra_path} missing orderId or not a dict; skipping extra-order write")
+                continue
+            extra_blob = parsed  # last-wins on repeatable collision
+        if extra_blob is not None and not selected_key:
+            eid = (
+                extra_blob.get("orderId")
+                or extra_blob.get("order_number")
+                or extra_blob.get("orderNumber")
+            )
+            edate = extra_blob.get("deliveryDate") or extra_blob.get("delivery_date") or ""
+            selected_key = f"deliveryDate:{edate}:{eid}" if (eid and edate) else None
+
     # Spec 021 / FR-003: pass api_url and secret so product blobs are written to Vercel Blob.
     # Spec 035 / FR-003, FR-008: pass --max-history and --no-history through to the
     # builder so the assembled orders list includes the historical sidecar (or not).
+    # Spec 036 / FR-001 / FR-005: pass --extra-order Blob through to the builder so
+    # the canonical path is published in the same sync (delivery-day hand-off).
     payload = build_dashboard_payload(
         dashboard_cache, overrides,
         api_url=api_url, api_secret=secret,
         max_history=args.max_history,
         no_history=args.no_history,
         sidecar_path=None,  # use the module-level default
+        extra_order_blob=extra_blob,
+        extra_order_key=selected_key,
     )
     print(f"  Order blobs: {len(payload['orders'])}")
     print(f"  Coverage blobs: {len(payload['coverage'])}")
