@@ -27,6 +27,7 @@ import { getMealType } from '@/lib/meal-type';
 import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
 import type { DashboardData } from '@/lib/dashboard-data';
+import type { DeliveryFilterDebugState } from '@/components/dashboard-debug-chips';
 import { submitManualOverrideAction } from '@/app/actions/manual-override-action';
 import {
   buildHeadlineMetrics,
@@ -150,6 +151,16 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
    */
   type DeliveryFilter = 'previous' | 'next' | 'all';
   const [deliveryFilter, setDeliveryFilter] = useState<DeliveryFilter>('next');
+  /*
+   * Spec 034 / FR-010 — the section-level filter's hydration
+   * source ('sessionStorage' | 'default'). The first hydrate effect
+   * flips this from 'default' to 'sessionStorage' if a stored value
+   * was found, BEFORE the second effect starts persisting (the persist
+   * effect no-ops on the very first run because the storage write
+   * happens on the same key the hydrate effect read). The value
+   * surfaces in the FR-010 read-only debug chip.
+   */
+  const [deliveryFilterSource, setDeliveryFilterSource] = useState<'default' | 'sessionStorage'>('default');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -157,6 +168,7 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
       const stored = window.sessionStorage.getItem('meals-dashboard:order-items-delivery-filter');
       if (stored === 'previous' || stored === 'next' || stored === 'all') {
         setDeliveryFilter(stored);
+        setDeliveryFilterSource('sessionStorage');
       }
     } catch {
       // sessionStorage may throw in privacy-locked contexts; ignore
@@ -342,6 +354,29 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
     classifiedOrders.pendingNext.length > 0
       ? classifiedOrders.pendingNext[0]!
       : null;
+
+  /*
+   * Spec 034 / FR-010 — the read-only `deliveryFilterState` payload
+   * surfaced in the dashboard's debug-mode chip. Derived here from
+   * the existing `deliveryFilter`, `deliveryFilterSource`, `today`,
+   * and `classifiedOrders` useMemo so the chip is always
+   * data-equivalent to the section's runtime state. The next /
+   * previous delivery dates are the canonical first-item-derived
+   * dates from the classified buckets (`previous[last]` is the most
+   * recent previous order; `next[0]` is the earliest next order —
+   * both deterministic since both buckets are sorted ascending by
+   * deliveryDate in `classifyOrderItemsByDelivery`).
+   */
+  const deliveryFilterState: DeliveryFilterDebugState = {
+    active: deliveryFilter,
+    source: deliveryFilterSource,
+    today,
+    nextDeliveryDate: classifiedOrders.next[0]?.deliveryDate ?? null,
+    previousDeliveryDate:
+      classifiedOrders.previous.length > 0
+        ? classifiedOrders.previous[classifiedOrders.previous.length - 1]!.deliveryDate
+        : null,
+  };
 
 
   const getCategoryIcon = (itemName: string): string => {
@@ -727,7 +762,7 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
             <div style={{ ...cardStyle, padding: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0.75rem', position: 'relative' }}>
                 <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center' as const, margin: 0 }}>🛒 ORDER ITEMS BY CATEGORY</h2>
-                {debugOn && !demoMode && <DashboardDebugChips />}
+                {debugOn && !demoMode && <DashboardDebugChips deliveryFilterState={deliveryFilterState} />}
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(220px, 1.2fr) minmax(0, 1fr) auto auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>

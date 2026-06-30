@@ -320,8 +320,16 @@ describe('DashboardClient user menu (Spec 026)', () => {
   });
 
   it('hides the debug chips when demo mode is active so demo mode wins', () => {
-    expect(source).toContain('debugOn && !demoMode && <DashboardDebugChips />');
+    // Spec 034 / FR-010 — the chip prop signature now takes
+    // `deliveryFilterState` so the FR-010 read-only chip has its
+    // data when debug mode is on. Assert against the prop-bearing
+    // JSX so the test survives future prop additions; the
+    // "NOT without the prop" assertion is the important guard
+    // (the chip must be gated on demo mode).
+    expect(source).toContain('<DashboardDebugChips deliveryFilterState={deliveryFilterState} />');
+    expect(source).toContain('debugOn && !demoMode && <DashboardDebugChips ');
     expect(source).not.toContain('debugOn && <DashboardDebugChips />');
+    expect(source).not.toMatch(/<DashboardDebugChips\s+\/>/);
   });
 
   it('declares userName: string in the DashboardClient props interface', () => {
