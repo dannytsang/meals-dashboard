@@ -28,3 +28,22 @@ export function toISODateLocal(date: Date): string {
   const day = `${date.getDate()}`.padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+/**
+ * Spec 034 / FR-009 — time-machine offset helper.
+ *
+ * Shift an ISO date string by `days` whole days (negative values shift
+ * backwards). Operates on the local-time ISO date components produced
+ * by `parseISODateLocal` / `toISODateLocal` so DST transitions are
+ * side-stepped (we round-trip via year/month/day, never via Date
+ * arithmetic that crosses DST gaps in a non-UTC locale).
+ *
+ * Used by the debug-only `?delivery_date_offset=N` query param to
+ * shift the `today` anchor used by `classifyOrderItemsByDelivery`
+ * without waiting for real midnight.
+ */
+export function addDays(isoDate: string, days: number): string {
+  const d = parseISODateLocal(isoDate);
+  d.setDate(d.getDate() + days);
+  return toISODateLocal(d);
+}

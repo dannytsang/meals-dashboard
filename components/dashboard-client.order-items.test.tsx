@@ -47,8 +47,22 @@ import type { DashboardData } from '@/lib/dashboard-data';
 import type { GroceryItem } from '@/lib/meals-data';
 import type { OrderBlob } from '@/lib/dashboard-sync';
 
+/*
+ * Spec 034 / FR-009 — the time-machine query param tests need
+ * `useSearchParams` to be controllable per-test. The holder pattern
+ * below lets each test mutate the URL params it wants to fake
+ * without re-importing the module or re-mocking `next/navigation`.
+ *
+ * The default value is an empty params object, which is what every
+ * pre-Phase-5 test expects (no `?delivery_date_offset` in the URL).
+ */
+const mockSearchParams: { current: Record<string, string> } = {
+  current: {},
+};
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(mockSearchParams.current),
 }));
 
 // Spec 034 / FR-010 renders DashboardDebugChips via
@@ -172,6 +186,10 @@ function makeTwoOrderData(today: string): DashboardData {
 describe('DashboardClient Order Items by Category (Spec 034 / FR-012)', () => {
   beforeEach(() => {
     cleanup();
+    // Reset the per-test search-params holder so each scenario starts
+    // from a clean URL (no stale `?delivery_date_offset=…` from the
+    // previous test).
+    mockSearchParams.current = {};
     // Wipe sessionStorage between tests so the delivery filter
     // always starts at the FR-002 default value of 'next'.
     try {
@@ -438,6 +456,99 @@ describe('DashboardClient Order Items by Category (Spec 034 / FR-012)', () => {
     expect(chip.getAttribute('data-today')).toBe(today);
     expect(chip.getAttribute('data-next-delivery-date')).toBe('2026-06-20');
     expect(chip.getAttribute('data-previous-delivery-date')).toBe('2026-06-08');
+  });
+
+  it('FR-009: ?delivery_date_offset=1 shifts today forward by one day and reclassifies the next order as previous', () => {
+    /*
+     * Time-machine param, FR-009. The fixture is the standard
+     * two-order set: previous order 2026-06-08, next order 2026-06-20.
+     * Without an offset, today=2026-06-15 classifies the next order
+     * as `next` (visible in the default Next view). With
+     * `?delivery_date_offset=6` (today shifts to 2026-06-21, one
+     * day past the next order's deliveryDate), the same order
+     * reclassifies as `previous` and is therefore hidden in the
+     * default Next view. Toggling to Previous reveals it.
+     *
+     * The test exercises the URL-param path explicitly (rather than
+     * rerendering with a bumped `today` prop like FR-012 #4 does)
+     * because FR-009's value-add is precisely the
+     * URL-as-time-machine model — the param must drive the
+     * classification, not the `today` prop.
+     */
+    const today = '2026-06-15';
+    const data = makeTwoOrderData(today);
+    // Shift today FORWARD by 6 days -> effective today = 2026-06-21,
+    // which is one day past the next order's deliveryDate (2026-06-20).
+    // Debug mode MUST be on for the param to take effect (FR-009
+    // hard constraint).
+    mockSearchParams.current = { delivery_date_offset: '6' };
+    render(
+      createElement(DashboardClient, { today, data, debugOn: true, userName: 'Danny' }),
+    );
+
+    // Default Next filter now hides garlic (it has been reclassified
+    // as previous by the time-machine shift).
+    expect(screen.queryByText('Tesco Garlic Bulb')).toBeNull();
+    // Sanity: the milk item from the original-previous order is
+    // still classified as previous (its date 2026-06-08 is in the
+    // past either way), and is hidden by the default Next filter.
+    expect(screen.queryByText('Tesco Milk 4 Pints')).toBeNull();
+
+    // Toggle to Previous to confirm garlic WAS reclassified as
+    // previous (i.e. the time-machine shift took effect, not just
+    // a default-view flip).
+    fireEvent.click(screen.getByRole('button', { name: 'Previous delivery' }));
+    expect(screen.getByText('Tesco Garlic Bulb')).toBeTruthy();
+    expect(screen.getByText('Tesco Milk 4 Pints')).toBeTruthy();
+  });
+
+  it('FR-009 (negative path): ?delivery_date_offset with debug mode OFF is a no-op', () => {
+    /*
+     * FR-009 hard constraint: "No-op when debug mode is off". Even
+     * with `?delivery_date_offset=1` in the URL, the dashboard MUST
+     * render identically to a no-param render when the debug
+     * cookie is unset (the `debugOn` prop is false).
+     */
+    const today = '2026-06-15';
+    const data = makeTwoOrderData(today);
+    mockSearchParams.current = { delivery_date_offset: '6' };
+    // NOTE: debugOn defaults to undefined/false here on purpose.
+    render(createElement(DashboardClient, { today, data, userName: 'Danny' }));
+
+    // Default Next filter shows garlic (the time-machine shift
+    // did NOT take effect).
+    expect(screen.getByText('Tesco Garlic Bulb')).toBeTruthy();
+    expect(screen.queryByText('Tesco Milk 4 Pints')).toBeNull();
+  });
+
+  it('FR-009 (debug chip): the chip surfaces the shifted today + fixture-override source when the offset is in effect', async () => {
+    /*
+     * FR-010 ↔ FR-009 invariant. With an offset in effect, the
+     * FR-010 chip must show:
+     *   - `data-today` = effectiveToday (today + offset)
+     *   - `data-source` = 'fixture-override' (one of the three
+     *     values declared on `DeliveryFilterDebugState.source`)
+     * This is the operator's only signal that the view is
+     * time-shifted (no console warning, no banner — the chip is
+     * read-only per spec 022).
+     */
+    const today = '2026-06-15';
+    const data = makeTwoOrderData(today);
+    mockSearchParams.current = { delivery_date_offset: '6' };
+    render(
+      createElement(DashboardClient, { today, data, debugOn: true, userName: 'Danny' }),
+    );
+
+    const chip = await screen.findByTestId('delivery-filter-state-chip');
+    expect(chip.getAttribute('data-today')).toBe('2026-06-21');
+    expect(chip.getAttribute('data-source')).toBe('fixture-override');
+    // The classified next / previous dates are still derived from
+    // the SAME orders; what changes is the classification bucket
+    // they fall into under the shifted anchor. With effective today
+    // 2026-06-21, the 2026-06-20 order is now previous and there
+    // is no next order, so nextDeliveryDate is null.
+    expect(chip.getAttribute('data-next-delivery-date')).toBe('');
+    expect(chip.getAttribute('data-previous-delivery-date')).toBe('2026-06-20');
   });
 });
 

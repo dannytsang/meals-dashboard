@@ -8,6 +8,12 @@ import type { DashboardData } from '@/lib/dashboard-data';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
+  // Spec 034 / FR-009 — dashboard-client now calls useSearchParams
+  // to read the optional ?delivery_date_offset=N param. The source-string
+  // tests in this file do not exercise the time-machine path, so the
+  // mock just returns an empty URLSearchParams — same shape Next.js
+  // would return on a URL with no query string.
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 const source = readFileSync(join(process.cwd(), 'components/dashboard-client.tsx'), 'utf8');

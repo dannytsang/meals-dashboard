@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Fragment, useTransition, useRef, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DashboardDataErrorPanel } from '@/components/dashboard-data-error-panel';
 import { UserMenu } from '@/components/user-menu';
 import { DemoModeChip } from '@/components/demo-mode-chip';
@@ -24,7 +24,7 @@ const DashboardDebugChips = dynamic(
 );
 import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal, classifyOrderItemsByDelivery, type DeliveryClassification, type DeliveryGroup } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
-import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
+import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal, addDays } from '@/lib/date-utils';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
 import type { DashboardData } from '@/lib/dashboard-data';
 import type { DeliveryFilterDebugState } from '@/components/dashboard-debug-chips';
@@ -209,6 +209,50 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   const router = useRouter();
   const [pendingTransition, startTransition] = useTransition();
 
+  /*
+   * Spec 034 / FR-009 — time-machine debug query param.
+   *
+   *   - Gated by `debugOn` (server-side effective debug mode). When
+   *     debug mode is OFF, this block is a no-op and the dashboard
+   *     renders identically to before — `effectiveToday` equals
+   *     the server-supplied `today`.
+   *   - Pure render-time read of the URL search params; no
+   *     `useEffect` timers and no client-side fetch. Next.js
+   *     re-renders the client component on URL change.
+   *   - The param is a signed integer string (positive shifts `today`
+   *     FORWARD into the future, negative shifts it BACKWARD).
+   *     Malformed / missing / non-integer values collapse to `0`
+   *     (the safe default — `addDays(_, 0)` returns its input).
+   *
+   * The shifted `effectiveToday` flows into:
+   *   1. `classifiedOrders` (the FR-008 pipeline's first stage), so
+   *      the auto-flip between previous / next can be exercised
+   *      without waiting for real midnight.
+   *   2. The FR-010 debug chip payload's `today` field, so an
+   *      operator can confirm the offset is in effect.
+   *   3. The `deliveryFilterState.source` field — when an offset
+   *      is applied, the source flips to `'fixture-override'` (one
+   *      of the values already declared in
+   *      `DeliveryFilterDebugState.source`). This keeps the chip
+   *      honest about WHERE its `today` came from.
+   *
+   * Why expose it via a separate `effectiveToday` rather than
+   * mutating `today` directly: every other consumer (rolling 7-day
+   * window, manual override default meal lookup, etc.) reads `today`
+   * as the server-anchored calendar day. Only the delivery
+   * classification cares about the shifted value.
+   */
+  const searchParams = useSearchParams();
+  const deliveryDateOffset: number = (() => {
+    if (!debugOn) return 0;
+    const raw = searchParams?.get('delivery_date_offset');
+    if (raw === null || raw === undefined || raw === '') return 0;
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) return 0;
+    return parsed;
+  })();
+  const effectiveToday = deliveryDateOffset !== 0 ? addDays(today, deliveryDateOffset) : today;
+
   async function applyManualOverrideForItem(item: GroceryItem) {
     setOverrideError(null);
     setOverrideSuccess(null);
@@ -277,12 +321,20 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
    * Spec 034 / T032 + FR-008 — per-render classification of every
    * order blob into previous / next / pending-next. Pure derivation:
    * returns the same content for the same inputs. Recomputes only
-   * when validOrders, deliveries, or today change (NFR-001 keeps the
-   * work ≤ 16 comparisons / render).
+   * when validOrders, deliveries, or `effectiveToday` change
+   * (NFR-001 keeps the work ≤ 16 comparisons / render).
+   *
+   * `effectiveToday` is the FR-009 time-machine-aware anchor: equal
+   * to `today` in production / when debug mode is off, equal to
+   * `today + deliveryDateOffset` when the URL carries
+   * `?delivery_date_offset=N`. The hook into the search params makes
+   * the URL the single source of truth for the time-machine shift,
+   * so refreshing the page in a different offset reproduces the same
+   * view.
    */
   const classifiedOrders = useMemo(
-    () => classifyOrderItemsByDelivery(validOrders, deliveries, today),
-    [validOrders, deliveries, today],
+    () => classifyOrderItemsByDelivery(validOrders, deliveries, effectiveToday),
+    [validOrders, deliveries, effectiveToday],
   );
   const unmatchedItems = receipt?.items || [];
 
@@ -358,19 +410,28 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   /*
    * Spec 034 / FR-010 — the read-only `deliveryFilterState` payload
    * surfaced in the dashboard's debug-mode chip. Derived here from
-   * the existing `deliveryFilter`, `deliveryFilterSource`, `today`,
-   * and `classifiedOrders` useMemo so the chip is always
-   * data-equivalent to the section's runtime state. The next /
+   * the existing `deliveryFilter`, `deliveryFilterSource`,
+   * `effectiveToday`, and `classifiedOrders` useMemo so the chip is
+   * always data-equivalent to the section's runtime state. The next /
    * previous delivery dates are the canonical first-item-derived
    * dates from the classified buckets (`previous[last]` is the most
    * recent previous order; `next[0]` is the earliest next order —
    * both deterministic since both buckets are sorted ascending by
    * deliveryDate in `classifyOrderItemsByDelivery`).
+   *
+   * `today` field carries `effectiveToday` so the operator sees the
+   * time-machine-shifted anchor in the chip (FR-009). The `source`
+   * field flips to `'fixture-override'` when the URL carries a
+   * `?delivery_date_offset=N` param — this is one of the three values
+   * already declared on `DeliveryFilterDebugState.source` and is the
+   * only way to tell from the chip that the view is time-shifted.
    */
+  const deliveryFilterSourceForChip: DeliveryFilterDebugState['source'] =
+    deliveryDateOffset !== 0 ? 'fixture-override' : deliveryFilterSource;
   const deliveryFilterState: DeliveryFilterDebugState = {
     active: deliveryFilter,
-    source: deliveryFilterSource,
-    today,
+    source: deliveryFilterSourceForChip,
+    today: effectiveToday,
     nextDeliveryDate: classifiedOrders.next[0]?.deliveryDate ?? null,
     previousDeliveryDate:
       classifiedOrders.previous.length > 0
