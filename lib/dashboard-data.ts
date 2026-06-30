@@ -71,7 +71,23 @@ export interface DashboardBlobData {
   products: Record<string, ProductBlob | null>;
 }
 
-export interface DashboardData extends DashboardBlobData {}
+export interface DashboardData extends DashboardBlobData {
+  /**
+   * Spec 034 / FR-008 + plan.md / Phase 3 — the full list of valid
+   * order blobs in the visible window plus the most-recent past order
+   * (per the loader's selection rule at `readFromSplitLayout`).
+   *
+   * `latestOrder` continues to be the latest-by-`deliveryDate` order
+   * and remains the canonical source for `headlineMetrics.orderTotal`,
+   * meal-coverage matching, and the product-info modal. `validOrders`
+   * is the wider list required by the Order Items by Category section
+   * to classify each order as previous / next / pending-next at
+   * render time (FR-001).
+   *
+   * Additive — existing consumers (only `latestOrder`) are unaffected.
+   */
+  validOrders: OrderBlob[];
+}
 
 /** Client-injectable for tests. */
 export type DashboardDataReader = Pick<BlobStorageClient, 'readPointer' | 'readManifest' | 'readJsonBlob' | 'listPaths'>;
@@ -81,7 +97,7 @@ export async function getDashboardData(
     coverageWindow?: string[];
     reader?: DashboardDataReader;
   } = {}
-): Promise<DashboardBlobData> {
+): Promise<DashboardData> {
   const reader = options.reader ?? new VercelBlobStorageClient();
   const coverageWindow = options.coverageWindow ?? defaultCoverageWindow();
 
@@ -118,7 +134,7 @@ function toIsoDate(d: Date): string {
 async function readFromSplitLayout(
   reader: DashboardDataReader,
   coverageWindow: string[]
-): Promise<DashboardBlobData> {
+): Promise<DashboardData> {
   let pointer;
   try {
     pointer = await reader.readPointer();
@@ -336,6 +352,12 @@ async function readFromSplitLayout(
       coverage,
       deliveryWindows,
       latestOrder,
+      // Spec 034 / Phase 3 — the full list (already sorted
+      // latest-first by the line above for `latestOrder`). The
+      // dashboard's Order Items section re-sorts inside its
+      // own `classifyOrderItemsByDelivery` so this ordering
+      // does not constrain the render.
+      validOrders: validOrders.slice().sort((a, b) => (a.deliveryDate < b.deliveryDate ? 1 : -1)),
       mealsCheckSummary: summary ?? null,
       dataGeneratedAt: (summary as Record<string, unknown> | null)?.dataGeneratedAt as string ?? '',
       uiUpdatedAt: (summary as Record<string, unknown> | null)?.uiUpdatedAt as string ?? '',
@@ -397,7 +419,7 @@ function orderBlobToTescoReceipt(o: OrderBlob): TescoReceipt {
   };
 }
 
-function getEmptyState(loadError: DashboardLoadError | null = null): DashboardBlobData {
+function getEmptyState(loadError: DashboardLoadError | null = null): DashboardData {
   return {
     coverage: [],
     deliveryWindows: [],
@@ -407,6 +429,7 @@ function getEmptyState(loadError: DashboardLoadError | null = null): DashboardBl
     uiUpdatedAt: '',
     loadError,
     products: {},
+    validOrders: [],
   };
 }
 
