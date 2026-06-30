@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, Fragment, useTransition, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Fragment, useTransition, useRef, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DashboardDataErrorPanel } from '@/components/dashboard-data-error-panel';
 import { UserMenu } from '@/components/user-menu';
 import { DemoModeChip } from '@/components/demo-mode-chip';
 import { OrderStatusBadge } from '@/components/order-status-badge';
+import { DeliveryBadge } from '@/components/delivery-badge';
 import dynamic from 'next/dynamic';
 import { GroceryItem, Meal, MealCoverage, hasGeneratedDeliveryOnDate } from '@/lib/meals-data';
 // Spec 022 / NFR-002: the debug chip component is dynamically imported
@@ -21,11 +22,12 @@ const DashboardDebugChips = dynamic(
   () => import('@/components/dashboard-debug-chips').then((m) => m.DashboardDebugChips),
   { ssr: false }
 );
-import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal } from '@/lib/item-utils';
+import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal, classifyOrderItemsByDelivery, type DeliveryClassification, type DeliveryGroup } from '@/lib/item-utils';
 import { getMealType } from '@/lib/meal-type';
-import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal } from '@/lib/date-utils';
+import { formatDayMonthUpper, formatShortDayMonth, formatWeekdayShort, parseISODateLocal, toISODateLocal, addDays } from '@/lib/date-utils';
 import { Check, X, Calendar, TrendingUp, ChevronDown, ChevronRight } from 'lucide-react';
 import type { DashboardData } from '@/lib/dashboard-data';
+import type { DeliveryFilterDebugState } from '@/components/dashboard-debug-chips';
 import { submitManualOverrideAction } from '@/app/actions/manual-override-action';
 import {
   buildHeadlineMetrics,
@@ -45,6 +47,41 @@ import {
   transformCachedOrderSafely,
 } from '@/lib/dashboard-ui-utils';
 import type { ProductResolutionDebugPayload } from '@/lib/debug-observability';
+
+/**
+ * Spec 034 / FR-005 — the per-delivery sub-heading rendered under the
+ * All filter when more than one group is visible. Locked by AS-014 /
+ * AS-015 to a plain `<div>` with `role="heading"` and `aria-level="4"`
+ * (NOT `<h4>`, NOT a button — NFR-004 + spec clarification #1). The
+ * text shape is canonical: `Delivery {DD MMM YYYY} · {slot}` with an
+ * optional status parenthetical `(cancelled)` / `(superseded)` /
+ * `(refunded)` when the underlying order's `status` is non-`active`
+ * (FR-005 + spec 018). Slot is omitted when empty.
+ */
+function renderDeliverySubHeading(group: DeliveryGroup) {
+  const slotText = group.deliverySlot ? ` · ${group.deliverySlot}` : '';
+  const statusText =
+    group.status && group.status !== 'active' ? ` (${group.status})` : '';
+  return (
+    <div
+      key={`sub-heading-${group.deliveryDate}`}
+      role="heading"
+      aria-level={4}
+      data-testid="delivery-subheading"
+      style={{
+        fontSize: '11px',
+        fontWeight: 700,
+        color: 'var(--text-secondary)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        marginTop: '0.5rem',
+        padding: '0.25rem 0',
+      }}
+    >
+      Delivery {formatDayMonthUpper(group.deliveryDate)}{slotText}{statusText}
+    </div>
+  );
+}
 
 /**
  * Spec 010 Rev 5 / FR-010 — the chip payload mirrors the spec 031
@@ -96,6 +133,66 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   // NOT be rendered (and this state is unused).
   const [productResolutionPayload, setProductResolutionPayload] = useState<DebugProductResolutionPayload | null>(null);
 
+  /*
+   * Spec 034 / T030 + T031 + T032 — section-level delivery filter,
+   * sessionStorage persistence, and per-render classification map.
+   *
+   *   - State default `next` per FR-002.
+   *   - SessionStorage key `meals-dashboard:order-items-delivery-filter`
+   *     per FR-003. Hydrate on first render; persist on every change.
+   *     No-op when `typeof window === 'undefined'` (SSR safety).
+   *   - The `classifiedOrders` useMemo runs `classifyOrderItemsByDelivery`
+   *     over the loader's `validOrders` + `deliveryWindows` + `today`,
+   *     producing the per-delivery groups the row renderer needs to
+   *     attach a `DeliveryBadge` and (under the All filter) a
+   *     per-delivery sub-heading. Per FR-008, this is the FIRST stage
+   *     of the Order Items by Category pipeline — it prepends the
+   *     existing category / match / search / sort stages.
+   */
+  type DeliveryFilter = 'previous' | 'next' | 'all';
+  const [deliveryFilter, setDeliveryFilter] = useState<DeliveryFilter>('next');
+  /*
+   * Spec 034 / FR-010 — the section-level filter's hydration
+   * source ('sessionStorage' | 'default'). The first hydrate effect
+   * flips this from 'default' to 'sessionStorage' if a stored value
+   * was found, BEFORE the second effect starts persisting (the persist
+   * effect no-ops on the very first run because the storage write
+   * happens on the same key the hydrate effect read). The value
+   * surfaces in the FR-010 read-only debug chip.
+   */
+  const [deliveryFilterSource, setDeliveryFilterSource] = useState<'default' | 'sessionStorage'>('default');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = window.sessionStorage.getItem('meals-dashboard:order-items-delivery-filter');
+      if (stored === 'previous' || stored === 'next' || stored === 'all') {
+        setDeliveryFilter(stored);
+        setDeliveryFilterSource('sessionStorage');
+      }
+    } catch {
+      // sessionStorage may throw in privacy-locked contexts; ignore
+      // and keep the default per FR-003 fallback (next).
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.sessionStorage.setItem('meals-dashboard:order-items-delivery-filter', deliveryFilter);
+    } catch {
+      // Same SSR / privacy-locked context fallback as above.
+    }
+  }, [deliveryFilter]);
+
+  // Spec 034 / T030 + T040 — `validOrders` is the loader's full
+  // list (already exposed on DashboardData per Phase 3). The
+  // previous/next classification itself lives below in the
+  // `classifiedOrders` useMemo, which is declared after the
+  // loader-derived `deliveries` constant so both inputs are in
+  // scope.
+  const validOrders = data.validOrders ?? [];
+
   useEffect(() => {
     const checkWidth = () => setIsDesktop(window.innerWidth >= 1024);
     checkWidth();
@@ -111,6 +208,50 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   // source flows through the dashboard on the next render.
   const router = useRouter();
   const [pendingTransition, startTransition] = useTransition();
+
+  /*
+   * Spec 034 / FR-009 — time-machine debug query param.
+   *
+   *   - Gated by `debugOn` (server-side effective debug mode). When
+   *     debug mode is OFF, this block is a no-op and the dashboard
+   *     renders identically to before — `effectiveToday` equals
+   *     the server-supplied `today`.
+   *   - Pure render-time read of the URL search params; no
+   *     `useEffect` timers and no client-side fetch. Next.js
+   *     re-renders the client component on URL change.
+   *   - The param is a signed integer string (positive shifts `today`
+   *     FORWARD into the future, negative shifts it BACKWARD).
+   *     Malformed / missing / non-integer values collapse to `0`
+   *     (the safe default — `addDays(_, 0)` returns its input).
+   *
+   * The shifted `effectiveToday` flows into:
+   *   1. `classifiedOrders` (the FR-008 pipeline's first stage), so
+   *      the auto-flip between previous / next can be exercised
+   *      without waiting for real midnight.
+   *   2. The FR-010 debug chip payload's `today` field, so an
+   *      operator can confirm the offset is in effect.
+   *   3. The `deliveryFilterState.source` field — when an offset
+   *      is applied, the source flips to `'fixture-override'` (one
+   *      of the values already declared in
+   *      `DeliveryFilterDebugState.source`). This keeps the chip
+   *      honest about WHERE its `today` came from.
+   *
+   * Why expose it via a separate `effectiveToday` rather than
+   * mutating `today` directly: every other consumer (rolling 7-day
+   * window, manual override default meal lookup, etc.) reads `today`
+   * as the server-anchored calendar day. Only the delivery
+   * classification cares about the shifted value.
+   */
+  const searchParams = useSearchParams();
+  const deliveryDateOffset: number = (() => {
+    if (!debugOn) return 0;
+    const raw = searchParams?.get('delivery_date_offset');
+    if (raw === null || raw === undefined || raw === '') return 0;
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed)) return 0;
+    return parsed;
+  })();
+  const effectiveToday = deliveryDateOffset !== 0 ? addDays(today, deliveryDateOffset) : today;
 
   async function applyManualOverrideForItem(item: GroceryItem) {
     setOverrideError(null);
@@ -175,7 +316,26 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   const deliveries = data.deliveryWindows;
   const coverage = data.coverage ?? [];
   const headlineMetrics = buildHeadlineMetrics(data.mealsCheckSummary, receipt, coverage, deliveries);
-  
+
+  /*
+   * Spec 034 / T032 + FR-008 — per-render classification of every
+   * order blob into previous / next / pending-next. Pure derivation:
+   * returns the same content for the same inputs. Recomputes only
+   * when validOrders, deliveries, or `effectiveToday` change
+   * (NFR-001 keeps the work ≤ 16 comparisons / render).
+   *
+   * `effectiveToday` is the FR-009 time-machine-aware anchor: equal
+   * to `today` in production / when debug mode is off, equal to
+   * `today + deliveryDateOffset` when the URL carries
+   * `?delivery_date_offset=N`. The hook into the search params makes
+   * the URL the single source of truth for the time-machine shift,
+   * so refreshing the page in a different offset reproduces the same
+   * view.
+   */
+  const classifiedOrders = useMemo(
+    () => classifyOrderItemsByDelivery(validOrders, deliveries, effectiveToday),
+    [validOrders, deliveries, effectiveToday],
+  );
   const unmatchedItems = receipt?.items || [];
 
   const trulyUnmatchedItems = unmatchedItems.filter(item => classifyOrderItemMatch(item, coverage) === 'unmatched');
@@ -188,7 +348,97 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   });
 
   const categories = Object.keys(itemsByCategory).sort();
-  
+
+  /*
+   * Spec 034 / T032 + FR-008 — flatten the relevant classified groups
+   * into a single GroceryItem[] for the existing pipeline. The chosen
+   * pipeline stages (category / match / search / sort) run unchanged
+   * over the flattened array; the row renderer then looks each item
+   * up in `classifiedItemMap` to attach its DeliveryBadge +
+   * deliveryDate.
+   *
+   * Edge cases handled:
+   *   - deliveryFilter === 'next' && next.length === 0 (pending-next
+   *     placeholder case): we pass an empty flattened list and let
+   *     the row renderer show the placeholder via `pendingNextGroup`
+   *     (T036).
+   *   - deliveryFilter === 'all' merges previous + next, preserving
+   *     each DeliveryGroup so the row renderer can insert a
+   *     per-delivery sub-heading (T035).
+   */
+  const activeGroups: DeliveryGroup[] =
+    deliveryFilter === 'previous'
+      ? classifiedOrders.previous
+      : deliveryFilter === 'next'
+        ? classifiedOrders.next
+        : [...classifiedOrders.previous, ...classifiedOrders.next].sort((a, b) =>
+            a.deliveryDate.localeCompare(b.deliveryDate),
+          );
+  const deliveryFilteredItems: GroceryItem[] = activeGroups.flatMap((g) => g.items);
+
+  /*
+   * Per-item lookup keyed by `${deliveryDate}|${cleanedName}` so each
+   * row can attach the right DeliveryBadge (and the deliveryDate on
+   * the badge) without re-deriving classification inline. Rebuilt
+   * whenever the classified groups change.
+   */
+  const classifiedItemMap = useMemo(() => {
+    const map = new Map<string, DeliveryGroup>();
+    for (const g of activeGroups) {
+      for (const it of g.items) {
+        const key = `${g.deliveryDate}|${cleanItemName(it.name)}`;
+        if (!map.has(key)) map.set(key, g);
+      }
+    }
+    return map;
+  }, [activeGroups]);
+
+  /*
+   * The pending-next placeholder group (if any). Surfaced only when
+   * the Next filter is active and `next` is empty — that's T036's
+   * "Pending next delivery — no order email received yet" row,
+   * which carries the optional `expected {DD MMM}` suffix when
+   * mealsCheckSummary.windows.next_delivery is in the future.
+   */
+  const pendingNextGroup: DeliveryGroup | null =
+    deliveryFilter === 'next' &&
+    classifiedOrders.next.length === 0 &&
+    classifiedOrders.pendingNext.length > 0
+      ? classifiedOrders.pendingNext[0]!
+      : null;
+
+  /*
+   * Spec 034 / FR-010 — the read-only `deliveryFilterState` payload
+   * surfaced in the dashboard's debug-mode chip. Derived here from
+   * the existing `deliveryFilter`, `deliveryFilterSource`,
+   * `effectiveToday`, and `classifiedOrders` useMemo so the chip is
+   * always data-equivalent to the section's runtime state. The next /
+   * previous delivery dates are the canonical first-item-derived
+   * dates from the classified buckets (`previous[last]` is the most
+   * recent previous order; `next[0]` is the earliest next order —
+   * both deterministic since both buckets are sorted ascending by
+   * deliveryDate in `classifyOrderItemsByDelivery`).
+   *
+   * `today` field carries `effectiveToday` so the operator sees the
+   * time-machine-shifted anchor in the chip (FR-009). The `source`
+   * field flips to `'fixture-override'` when the URL carries a
+   * `?delivery_date_offset=N` param — this is one of the three values
+   * already declared on `DeliveryFilterDebugState.source` and is the
+   * only way to tell from the chip that the view is time-shifted.
+   */
+  const deliveryFilterSourceForChip: DeliveryFilterDebugState['source'] =
+    deliveryDateOffset !== 0 ? 'fixture-override' : deliveryFilterSource;
+  const deliveryFilterState: DeliveryFilterDebugState = {
+    active: deliveryFilter,
+    source: deliveryFilterSourceForChip,
+    today: effectiveToday,
+    nextDeliveryDate: classifiedOrders.next[0]?.deliveryDate ?? null,
+    previousDeliveryDate:
+      classifiedOrders.previous.length > 0
+        ? classifiedOrders.previous[classifiedOrders.previous.length - 1]!.deliveryDate
+        : null,
+  };
+
 
   const getCategoryIcon = (itemName: string): string => {
     const name = itemName.toLowerCase();
@@ -213,7 +463,14 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
     return '📦';
   };
 
-  const displayItems = deriveVisibleOrderItems(unmatchedItems, coverage, {
+  /*
+   * Spec 034 / FR-008 — the delivery filter is the FIRST stage of the
+   * pipeline (T032). The chosen group(s) have already been flattened
+   * into `deliveryFilteredItems` above; the existing
+   * category / match / search / sort stages run unchanged over that
+   * array. Spec 008's pipeline invariant is preserved (T036 / FR-008).
+   */
+  const displayItems = deriveVisibleOrderItems(deliveryFilteredItems, coverage, {
     selectedCategories,
     matchedFilter,
     searchQuery: itemSearchQuery,
@@ -580,7 +837,7 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
             <div style={{ ...cardStyle, padding: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '0.75rem', position: 'relative' }}>
                 <h2 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center' as const, margin: 0 }}>🛒 ORDER ITEMS BY CATEGORY</h2>
-                {debugOn && !demoMode && <DashboardDebugChips />}
+                {debugOn && !demoMode && <DashboardDebugChips deliveryFilterState={deliveryFilterState} />}
               </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'minmax(220px, 1.2fr) minmax(0, 1fr) auto auto auto' : '1fr', gap: '0.75rem', alignItems: 'start', marginBottom: '0.75rem' }}>
@@ -659,35 +916,208 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
                   </div>
                 </div>
               </div>
+
+              {/*
+                Spec 034 / T033 — the three filter chips (All / Previous
+                / Next) for the section-level delivery filter. The 5-
+                column desktop controls grid is already at maximum
+                width, so the chips drop to a new flex-wrap row below
+                per spec 008 FR-008's wrap behaviour. The chip set
+                is mutually exclusive (FR-002) and the active chip
+                is highlighted in --accent-blue to match the existing
+                Match chips.
+              */}
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', margin: 0 }}>Delivery</p>
+                {([
+                  ['all', 'All deliveries'],
+                  ['previous', 'Previous delivery'],
+                  ['next', 'Next delivery'],
+                ] as [typeof deliveryFilter, string][]).map(([f, label]) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setDeliveryFilter(f)}
+                    aria-pressed={deliveryFilter === f}
+                    style={{
+                      padding: '0.3rem 0.7rem',
+                      borderRadius: '15px',
+                      fontSize: '10px',
+                      fontWeight: '600',
+                      border: '1px solid',
+                      cursor: 'pointer',
+                      backgroundColor: deliveryFilter === f ? 'var(--accent-blue)' : 'transparent',
+                      borderColor: deliveryFilter === f ? 'var(--accent-blue)' : 'var(--border-color)',
+                      color: deliveryFilter === f ? 'white' : 'var(--text-secondary)',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div style={{ ...cardStyle, padding: '1rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {displayItems.slice(0, showCount).map((item, idx) => {
-                  const qty = item.quantity || 1;
-                  const unitPrice = item.price ? item.price / qty : 0;
-                  const totalPrice = item.price || 0;
-                  const isUnmatched = trulyUnmatchedItems.includes(item);
-                  // When coverage data is missing (stale blob, sync failure), show a neutral
-                  // "?" classification instead of an incorrect ✓/✗, and treat the item as
-                  // neither matched nor unmatched so the row stays visually neutral.
-                  const classificationUnknown = coverage.length === 0;
-                  const showUnmatched = isUnmatched && !classificationUnknown;
-                  return (
-                    <div key={idx} onClick={() => {
-                      const sub = receipt?.substitutions?.find(s => s.original.toLowerCase() === item.name.toLowerCase());
-                      setSelectedItem({ ...item, substitutedWith: item.substitutedWith || sub?.substitutedWith });
-                    }} style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: 1, borderLeft: classificationUnknown ? '3px solid var(--text-muted)' : showUnmatched ? '3px solid var(--accent-rose)' : '3px solid var(--accent-emerald)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-                        <span style={{ color: classificationUnknown ? 'var(--text-muted)' : showUnmatched ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontSize: '14px', flexShrink: 0 }}>{classificationUnknown ? '?' : showUnmatched ? '✗' : '✓'}</span>
-                        <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(item.name)}</span>
+                {(() => {
+                  /*
+                   * Spec 034 / T036 — Pending next delivery placeholder.
+                   * Renders exactly when the Next filter is active and
+                   * `next` is empty. Replaces the item list (not an
+                   * addition). The optional "(expected {DD MMM})"
+                   * suffix shows only when
+                   * mealsCheckSummary.windows.next_delivery is in the
+                   * future, locked by FR-006.
+                   */
+                  if (pendingNextGroup) {
+                    const expectedSuffix = (() => {
+                      const nextDeliveryDate = data.mealsCheckSummary?.windows?.next_delivery;
+                      if (!nextDeliveryDate || nextDeliveryDate < today) return '';
+                      return ` (expected ${formatShortDayMonth(nextDeliveryDate)})`;
+                    })();
+                    return (
+                      <div
+                        data-testid="pending-next-placeholder"
+                        aria-label={`Pending next delivery${expectedSuffix.replace(/[()]/g, '')}`}
+                        style={{
+                          padding: '0.75rem',
+                          borderRadius: '8px',
+                          backgroundColor: 'var(--bg-tertiary)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          opacity: 1,
+                          borderLeft: '3px solid var(--accent-amber)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+                          <DeliveryBadge classification="pending-next" deliveryDate={pendingNextGroup.deliveryDate} />
+                          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>
+                            Pending next delivery — no order email received yet{expectedSuffix}
+                          </span>
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                        {unitPrice > 0 ? (<><span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}</span><span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>£{totalPrice.toFixed(2)}</span></>) : <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>(price N/A)</span>}
+                    );
+                  }
+                  return null;
+                })()}
+
+                {(() => {
+                  /*
+                   * Spec 034 / T034 + T035 — render the per-item
+                   * DeliveryBadge LEFT of the price column (FR-004 /
+                   * AS-014) and, when the All filter is active and
+                   * more than one group is visible, insert a
+                   * per-delivery sub-heading BEFORE each group's
+                   * items. The sub-heading is a plain <div> with
+                   * role="heading" and aria-level="4" — NOT <h4>,
+                   * NOT a button (FR-005 / NFR-004 / AS-014).
+                   */
+                  const items = displayItems.slice(0, showCount);
+
+                  /*
+                   * When the All filter surfaces more than one
+                   * group, regroup the visible items by deliveryDate
+                   * so the row renderer can insert a sub-heading
+                   * before each group. Otherwise the rows render in
+                   * the existing single-window shape.
+                   */
+                  type Row = {
+                    kind: 'sub-heading';
+                    group: DeliveryGroup;
+                    key: string;
+                  } | {
+                    kind: 'item';
+                    item: (typeof items)[number];
+                    group: DeliveryGroup | null;
+                    key: string;
+                  };
+
+                  const rows: Row[] = [];
+                  if (deliveryFilter === 'all' && activeGroups.length > 1) {
+                    let emittedForFirstGroup = false;
+                    for (const g of activeGroups) {
+                      let pushedAny = false;
+                      for (const it of items) {
+                        if (g.items.includes(it)) {
+                          if (!emittedForFirstGroup && rows.length === 0) {
+                            rows.push({ kind: 'sub-heading', group: g, key: `sub-${g.deliveryDate}` });
+                          } else if (pushedAny === false) {
+                            rows.push({ kind: 'sub-heading', group: g, key: `sub-${g.deliveryDate}-${rows.length}` });
+                          }
+                          rows.push({
+                            kind: 'item',
+                            item: it,
+                            group: g,
+                            key: `row-${g.deliveryDate}-${cleanItemName(it.name)}-${rows.length}`,
+                          });
+                          pushedAny = true;
+                          emittedForFirstGroup = true;
+                        }
+                      }
+                    }
+                  } else {
+                    items.forEach((it, idx) => {
+                      const lookup = classifiedItemMap.get(
+                        // Items from the single-active-group case
+                        // share the active group's date; the map
+                        // already contains the right DeliveryGroup
+                        // for items whose key matches; fall back to
+                        // the first active group for miss cases.
+                        (() => {
+                          for (const g of activeGroups) {
+                            const k = `${g.deliveryDate}|${cleanItemName(it.name)}`;
+                            if (classifiedItemMap.has(k)) return k;
+                          }
+                          return `${activeGroups[0]?.deliveryDate ?? ''}|${cleanItemName(it.name)}`;
+                        })()
+                      );
+                      rows.push({
+                        kind: 'item',
+                        item: it,
+                        group: lookup ?? activeGroups[0] ?? null,
+                        key: `row-${idx}`,
+                      });
+                    });
+                  }
+
+                  return rows.map((row) => {
+                    if (row.kind === 'sub-heading') {
+                      return renderDeliverySubHeading(row.group);
+                    }
+                    const item = row.item;
+                    const qty = item.quantity || 1;
+                    const unitPrice = item.price ? item.price / qty : 0;
+                    const totalPrice = item.price || 0;
+                    const isUnmatched = trulyUnmatchedItems.includes(item);
+                    const classificationUnknown = coverage.length === 0;
+                    const showUnmatched = isUnmatched && !classificationUnknown;
+                    return (
+                      <div key={row.key} onClick={() => {
+                        const sub = receipt?.substitutions?.find(s => s.original.toLowerCase() === item.name.toLowerCase());
+                        setSelectedItem({ ...item, substitutedWith: item.substitutedWith || sub?.substitutedWith });
+                      }} style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: 'var(--bg-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: 1, borderLeft: classificationUnknown ? '3px solid var(--text-muted)' : showUnmatched ? '3px solid var(--accent-rose)' : '3px solid var(--accent-emerald)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+                          <span style={{ color: classificationUnknown ? 'var(--text-muted)' : showUnmatched ? 'var(--accent-rose)' : 'var(--accent-emerald)', fontSize: '14px', flexShrink: 0 }}>{classificationUnknown ? '?' : showUnmatched ? '✗' : '✓'}</span>
+                          <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItemName(item.name)}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                          {row.group && (
+                            <DeliveryBadge classification={row.group.classification} deliveryDate={row.group.deliveryDate} />
+                          )}
+                          {unitPrice > 0 ? (
+                            <>
+                              <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{qty > 1 ? `${qty}× £${unitPrice.toFixed(2)}` : ''}</span>
+                              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent-emerald)' }}>£{totalPrice.toFixed(2)}</span>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic' }}>(price N/A)</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
 
               {displayItems.length > showCount && (

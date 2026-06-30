@@ -8,6 +8,12 @@ import type { DashboardData } from '@/lib/dashboard-data';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh: vi.fn() }),
+  // Spec 034 / FR-009 — dashboard-client now calls useSearchParams
+  // to read the optional ?delivery_date_offset=N param. The source-string
+  // tests in this file do not exercise the time-machine path, so the
+  // mock just returns an empty URLSearchParams — same shape Next.js
+  // would return on a URL with no query string.
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 const source = readFileSync(join(process.cwd(), 'components/dashboard-client.tsx'), 'utf8');
@@ -322,8 +328,16 @@ describe('DashboardClient user menu (Spec 026)', () => {
   });
 
   it('hides the debug chips when demo mode is active so demo mode wins', () => {
-    expect(source).toContain('debugOn && !demoMode && <DashboardDebugChips />');
+    // Spec 034 / FR-010 — the chip prop signature now takes
+    // `deliveryFilterState` so the FR-010 read-only chip has its
+    // data when debug mode is on. Assert against the prop-bearing
+    // JSX so the test survives future prop additions; the
+    // "NOT without the prop" assertion is the important guard
+    // (the chip must be gated on demo mode).
+    expect(source).toContain('<DashboardDebugChips deliveryFilterState={deliveryFilterState} />');
+    expect(source).toContain('debugOn && !demoMode && <DashboardDebugChips ');
     expect(source).not.toContain('debugOn && <DashboardDebugChips />');
+    expect(source).not.toMatch(/<DashboardDebugChips\s+\/>/);
   });
 
   it('declares userName: string in the DashboardClient props interface', () => {
@@ -412,6 +426,26 @@ describe('DashboardClient order-item search interaction', () => {
     uiUpdatedAt: '2026-06-12T00:00:00Z',
     loadError: null,
     products: {},
+    // Spec 034 / Phase 3 — the loader exposes `validOrders` even when
+    // it contains only the latest order. This test fixture has a
+    // single delivery today; the Order Items section will classify it
+    // as `next` and the badge will appear on each row.
+    validOrders: [
+      {
+        orderNumber: '123',
+        deliveryDate: '2026-06-12',
+        deliverySlot: 'Evening',
+        orderTotal: 5.55,
+        items: [
+          { name: 'Tesco Broccoli 375g', quantity: 1, price: 1.5, category: 'Fresh' },
+          { name: 'Tesco Broccoli Florets 900g', quantity: 1, price: 2.25, category: 'Fresh' },
+          { name: 'Tesco Milk 4 Pints', quantity: 1, price: 1.8, category: 'Dairy' },
+        ],
+        substitutions: [],
+        unavailable: [],
+        shortLifeItems: [],
+      },
+    ],
   };
 
   it('updates immediately on each keystroke and composes with category, match, and sort controls', () => {

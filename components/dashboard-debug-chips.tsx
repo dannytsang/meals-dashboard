@@ -1,22 +1,30 @@
 /**
  * components/dashboard-debug-chips.tsx
  *
- * Spec 022 / Rev 2 / FR-009 + spec 031 Rev 4 / FR-014:
+ * Spec 022 / Rev 2 / FR-009 + spec 031 Rev 4 / FR-014 + spec 034 / FR-010:
  * the inline debug chips rendered on the main dashboard when the
  * EFFECTIVE debug mode is on (cookie-gated). The server-side gate
  * is enforced in app/page.tsx — this component is only rendered
  * when the gate is satisfied.
  *
- * Three chips are shown:
+ * Four chips are shown:
  *  1. "fresh" — dataGeneratedAt age (green=fresh, red=stale).
  *     Clicking expands the blob-read-freshness diagnostic panel.
  *  2. "cov" — coverage completeness ratio.
  *     Clicking expands the coverage diagnostic panel.
  *  3. "items" — displayItems count + latestOrder status badge.
  *     Clicking expands the items-by-category diagnostic panel.
+ *  4. "delivery" — (spec 034 / FR-010) read-only chip showing the
+ *     section-level delivery filter's runtime state: active value,
+ *     hydration source, canonical `today`, classified next /
+ *     previous delivery dates. The chip is always read-only
+ *     (per spec 022's debug-mode-is-read-only rule) and never
+ *     opens a panel. Surfaced via data-* attributes and a title
+ *     so an operator can inspect every FR-010 field on hover.
  *
  * Only ONE panel can be open at a time — clicking a chip closes
- * any other open panel to prevent overlap.
+ * any other open panel to prevent overlap. The delivery chip is
+ * read-only so it is not part of the open-panel flow.
  */
 'use client';
 
@@ -35,6 +43,21 @@ interface FreshnessDiagnostic {
   manifestDateCoverage: string[];
   manifestDateCoverageMiss: string[];
   coverageWindow: string[];
+}
+
+/**
+ * Spec 034 / FR-010 — the chip payload mirrors the section-level
+ * delivery filter's runtime state. Surfaced as a read-only chip in
+ * the dashboard's debug-mode panel so an operator can verify the
+ * filter is reading the expected values (active filter, hydration
+ * source, today anchor, classified next / previous delivery dates).
+ */
+export interface DeliveryFilterDebugState {
+  active: 'previous' | 'next' | 'all';
+  source: 'sessionStorage' | 'default' | 'fixture-override';
+  today: string;
+  nextDeliveryDate: string | null;
+  previousDeliveryDate: string | null;
 }
 
 const ORDER_STATUS_COLOR: Record<string, string> = {
@@ -179,7 +202,17 @@ function DebugPanelWrapper({
   );
 }
 
-export function DashboardDebugChips() {
+export function DashboardDebugChips({
+  deliveryFilterState,
+}: {
+  /**
+   * Spec 034 / FR-010 — the delivery filter's runtime state. When
+   * omitted (legacy callers / tests that don't need this chip), the
+   * delivery filter chip renders an empty placeholder so the rest of
+   * the chip set still works. The chip is always read-only.
+   */
+  deliveryFilterState?: DeliveryFilterDebugState | null;
+} = {}) {
   // ── Items diagnostic ────────────────────────────────────────────────
   const [itemsDiag, setItemsDiag] = useState<ItemsByCategoryDiagnostic | null>(null);
   const [itemsOpen, setItemsOpen] = useState(false);
@@ -254,10 +287,25 @@ export function DashboardDebugChips() {
     : undefined;
 
   // Close all panels — used to ensure only one is open at a time.
+  // Note: the delivery-filter chip (spec 034) is read-only and
+  // never opens a panel, so it is intentionally not tracked here.
   const closeAll = () => {
     setItemsOpen(false);
     setFreshnessOpen(false);
   };
+
+  /*
+   * Spec 034 / FR-010 — the read-only `deliveryFilterState` chip.
+   * The label is "delivery: <active> (<source>)" when the filter
+   * state has been provided, or "delivery: …" while the parent is
+   * still hydrating. The chip carries all five FR-010 fields as
+   * data-* attributes so tests can assert against them without
+   * depending on the rendered text, and a `title` attribute for
+   * operator inspection on hover.
+   */
+  const deliveryFilterChipLabel = deliveryFilterState
+    ? `delivery: ${deliveryFilterState.active} (${deliveryFilterState.source})`
+    : 'delivery: …';
 
   return (
     <span
@@ -332,6 +380,42 @@ export function DashboardDebugChips() {
           </DebugPanelWrapper>
         )}
       </div>
+
+      {/*
+        ── Delivery-filter chip (spec 034 / FR-010) ─────────────────────
+        The chip is a plain `<span>` (not a `<button>`) because the
+        spec 022 debug-mode is read-only. It sits to the right of the
+        items-by-category chip and never opens a panel / has no
+        operator knob. Its `title` attribute surfaces the full FR-010
+        payload (active, source, today, nextDeliveryDate,
+        previousDeliveryDate) on hover so an operator can inspect
+        every field without a panel. Tests assert against its
+        data-testid="delivery-filter-state-chip" and data-* attrs.
+      */}
+      <span
+        data-testid="delivery-filter-state-chip"
+        data-active={deliveryFilterState?.active ?? 'unknown'}
+        data-source={deliveryFilterState?.source ?? 'unknown'}
+        data-today={deliveryFilterState?.today ?? ''}
+        data-next-delivery-date={deliveryFilterState?.nextDeliveryDate ?? ''}
+        data-previous-delivery-date={deliveryFilterState?.previousDeliveryDate ?? ''}
+        title={
+          deliveryFilterState
+            ? `active=${deliveryFilterState.active} source=${deliveryFilterState.source} today=${deliveryFilterState.today} next=${deliveryFilterState.nextDeliveryDate ?? 'null'} previous=${deliveryFilterState.previousDeliveryDate ?? 'null'}`
+            : 'deliveryFilterState not yet known'
+        }
+        style={{
+          padding: '0.2rem 0.6rem',
+          borderRadius: '12px',
+          fontSize: '0.7rem',
+          fontWeight: 600,
+          backgroundColor: 'var(--bg-tertiary)',
+          color: 'var(--text-secondary)',
+          fontFamily: 'monospace',
+        }}
+      >
+        {deliveryFilterChipLabel}
+      </span>
     </span>
   );
 }

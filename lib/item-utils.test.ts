@@ -1,5 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { cleanItemName, deduplicateMatchedItems, calculateMatchedItemsTotal, type MatchedItem } from './item-utils';
+import {
+  cleanItemName,
+  deduplicateMatchedItems,
+  calculateMatchedItemsTotal,
+  classifyOrderItemsByDelivery,
+  type MatchedItem,
+} from './item-utils';
+import type { OrderBlob } from './dashboard-sync';
+
+function makeOrder(partial: Partial<OrderBlob> & { deliveryDate: string; items?: OrderBlob['items'] }): OrderBlob {
+  return {
+    orderNumber: 'TEST-0000-00',
+    deliverySlot: 'Evening',
+    orderTotal: 0,
+    substitutions: [],
+    unavailable: [],
+    shortLifeItems: [],
+    items: [],
+    ...partial,
+  };
+}
 
 describe('cleanItemName', () => {
   it('strips "Substitutions: On" suffix', () => {
@@ -108,5 +128,154 @@ describe('calculateMatchedItemsTotal', () => {
     ];
 
     expect(calculateMatchedItemsTotal(items)).toBe(14.82);
+  });
+});
+
+/**
+ * Spec 034 / FR-001 + FR-012 — regression coverage for
+ * `classifyOrderItemsByDelivery`. Pure-function derivation; no React
+ * state, no `Date.now()`, no timers. All eight acceptance scenarios
+ * from `tasks.md T010` are covered.
+ */
+describe('classifyOrderItemsByDelivery', () => {
+  const TODAY = '2026-07-01';
+
+  it('T010/case-1: one order with deliveryDate == today + 2 → next, not previous, not pending', () => {
+    const orders = [makeOrder({ deliveryDate: '2026-07-03', items: [{ name: 'Milk', quantity: 1, price: 1.2 }] })];
+    const result = classifyOrderItemsByDelivery(orders, [], TODAY);
+    expect(result.previous).toHaveLength(0);
+    expect(result.next).toHaveLength(1);
+    expect(result.next[0]!.classification).toBe('next');
+    expect(result.next[0]!.deliveryDate).toBe('2026-07-03');
+    expect(result.pendingNext).toHaveLength(0);
+  });
+
+  it('T010/case-2: one order with deliveryDate == today - 7 → previous, not next, not pending', () => {
+    const orders = [makeOrder({ deliveryDate: '2026-06-24', items: [{ name: 'Bread', quantity: 1, price: 1 }] })];
+    const result = classifyOrderItemsByDelivery(orders, [], TODAY);
+    expect(result.next).toHaveLength(0);
+    expect(result.previous).toHaveLength(1);
+    expect(result.previous[0]!.classification).toBe('previous');
+    expect(result.previous[0]!.deliveryDate).toBe('2026-06-24');
+    expect(result.pendingNext).toHaveLength(0);
+  });
+
+  it('T010/case-3: mixed previous + next → both buckets populated', () => {
+    const orders = [
+      makeOrder({ orderNumber: 'A', deliveryDate: '2026-06-24' }),
+      makeOrder({ orderNumber: 'B', deliveryDate: '2026-07-03' }),
+    ];
+    const result = classifyOrderItemsByDelivery(orders, [], TODAY);
+    expect(result.previous).toHaveLength(1);
+    expect(result.previous[0]!.deliveryDate).toBe('2026-06-24');
+    expect(result.next).toHaveLength(1);
+    expect(result.next[0]!.deliveryDate).toBe('2026-07-03');
+  });
+
+  it('T010/case-4: deliveryWindow.date == today + 2 with no matching OrderBlob → pending-next entry with order: null', () => {
+    const deliveryWindows = [{ date: '2026-07-03', slot: 'Evening', orderTotal: 0, status: 'scheduled' as const }];
+    const result = classifyOrderItemsByDelivery([], deliveryWindows, TODAY);
+    expect(result.previous).toHaveLength(0);
+    expect(result.next).toHaveLength(0);
+    expect(result.pendingNext).toHaveLength(1);
+    expect(result.pendingNext[0]!.order).toBeNull();
+    expect(result.pendingNext[0]!.deliveryDate).toBe('2026-07-03');
+    expect(result.pendingNext[0]!.classification).toBe('pending-next');
+  });
+
+  it('T010/case-5: order with deliveryDate == today → next (not previous)', () => {
+    const orders = [makeOrder({ deliveryDate: TODAY })];
+    const result = classifyOrderItemsByDelivery(orders, [], TODAY);
+    expect(result.next).toHaveLength(1);
+    expect(result.previous).toHaveLength(0);
+    expect(result.next[0]!.classification).toBe('next');
+  });
+
+  it('T010/case-6: order with malformed deliveryDate === "not-a-date" → excluded silently, no throw', () => {
+    const orders = [makeOrder({ deliveryDate: 'not-a-date' })];
+    let result;
+    expect(() => {
+      result = classifyOrderItemsByDelivery(orders, [], TODAY);
+    }).not.toThrow();
+    expect(result!.previous).toHaveLength(0);
+    expect(result!.next).toHaveLength(0);
+    expect(result!.pendingNext).toHaveLength(0);
+  });
+
+  it('T010/case-7: cancelled-status order is still classified by date with status exposed', () => {
+    const orders = [
+      makeOrder({ deliveryDate: '2026-07-03', status: 'cancelled' }),
+      makeOrder({ deliveryDate: '2026-06-24', status: 'refunded' }),
+    ];
+    const result = classifyOrderItemsByDelivery(orders, [], TODAY);
+    expect(result.next).toHaveLength(1);
+    expect(result.next[0]!.status).toBe('cancelled');
+    expect(result.previous).toHaveLength(1);
+    expect(result.previous[0]!.status).toBe('refunded');
+  });
+
+  it('T010/case-8: two previous orders sorted earliest-first within the previous bucket', () => {
+    const orders = [
+      makeOrder({ deliveryDate: '2026-06-20' }),
+      makeOrder({ deliveryDate: '2026-06-24' }),
+    ];
+    const result = classifyOrderItemsByDelivery(orders, [], TODAY);
+    expect(result.previous.map((g) => g.deliveryDate)).toEqual(['2026-06-20', '2026-06-24']);
+  });
+
+  // AS-006 / FR-007 — two future orders both show up in `next` so the
+  // sub-heading per-delivery story works.
+  it('AS-006: two future orders both classified as next (each carries its own deliveryDate)', () => {
+    const orders = [
+      makeOrder({ orderNumber: 'IN-FLIGHT', deliveryDate: '2026-07-03' }),
+      makeOrder({ orderNumber: 'FURTHER', deliveryDate: '2026-07-10' }),
+    ];
+    const result = classifyOrderItemsByDelivery(orders, [], TODAY);
+    expect(result.next).toHaveLength(2);
+    expect(result.next[0]!.deliveryDate).toBe('2026-07-03');
+    expect(result.next[1]!.deliveryDate).toBe('2026-07-10');
+    expect(result.previous).toHaveLength(0);
+  });
+
+  // AS-007 / FR-009 — time-machine: shifting `today` re-classifies the
+  // same order without any data sync / pipeline change.
+  it('AS-007: time-machine — today = T+1 reclassifies the same order as previous', () => {
+    const orders = [makeOrder({ deliveryDate: '2026-07-01', items: [{ name: 'Milk', quantity: 1, price: 1.2 }] })];
+    const atT = classifyOrderItemsByDelivery(orders, [], '2026-07-01');
+    expect(atT.next).toHaveLength(1);
+    expect(atT.previous).toHaveLength(0);
+
+    const atTPlus1 = classifyOrderItemsByDelivery(orders, [], '2026-07-02');
+    expect(atTPlus1.next).toHaveLength(0);
+    expect(atTPlus1.previous).toHaveLength(1);
+    expect(atTPlus1.previous[0]!.classification).toBe('previous');
+  });
+
+  // AS-014 — placeholder chain depends on `pendingNext` from the
+  // deliveryWindows cross-reference; double-check that `next.deliveryDate
+  // >= today` is the only condition (NOT `deliveryDate > today`).
+  it('AS-014 / FR-006: a deliveryWindow entry exactly on today counts as pending-next eligible (NOT classified yet)', () => {
+    const deliveryWindows = [
+      { date: TODAY, slot: 'Evening', orderTotal: 0, status: 'scheduled' as const },
+    ];
+    const result = classifyOrderItemsByDelivery([], deliveryWindows, TODAY);
+    // No matching OrderBlob for today, so this is a pending-next entry.
+    // The dashboard will render "(expected 01 Jul)" because TODAY itself
+    // qualifies for the parenthetical per FR-006 (`>= today`).
+    expect(result.pendingNext).toHaveLength(1);
+    expect(result.pendingNext[0]!.deliveryDate).toBe(TODAY);
+  });
+
+  // Edge case: duplicate deliveryDate across multiple OrderBlobs
+  // (amended-order scenario) → items concatenated into one group.
+  it('edge: duplicate deliveryDate across multiple OrderBlobs collapses into a single DeliveryGroup', () => {
+    const orders = [
+      makeOrder({ orderNumber: 'A', deliveryDate: '2026-07-03', items: [{ name: 'Milk', quantity: 1, price: 1.2 }] }),
+      makeOrder({ orderNumber: 'B', deliveryDate: '2026-07-03', items: [{ name: 'Bread', quantity: 2, price: 0.8 }] }),
+    ];
+    const result = classifyOrderItemsByDelivery(orders, [], TODAY);
+    expect(result.next).toHaveLength(1);
+    expect(result.next[0]!.items).toHaveLength(2);
+    expect(result.next[0]!.items.map((i) => i.name).sort()).toEqual(['Bread', 'Milk']);
   });
 });
