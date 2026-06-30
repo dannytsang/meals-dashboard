@@ -2136,7 +2136,13 @@ def build_dashboard_payload(
             print("  ℹ history retention disabled (--no-history)")
         else:
             history_count = max(0, len(orders) - 1) if orders else 0
-            active_id = orders[0]["orderId"] if orders else "<none>"
+            # Find the active (most-recent) entry: the one whose deliveryDate
+            # is the largest in the merged set (spec 034 matcher relies on this
+            # ordering too). Falls back to orders[0] if the set is empty.
+            active_id = "<none>"
+            if orders:
+                active_entry = max(orders, key=lambda o: o.get("deliveryDate", ""))
+                active_id = active_entry.get("orderId") or active_entry.get("orderNumber") or "<unknown>"
             print(f"  ℹ orders: published {len(orders)} (active: {active_id}, history: {history_count}, cap: {max_history})")
 
     grouped_by_date = {}
