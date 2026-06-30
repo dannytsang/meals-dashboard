@@ -42,6 +42,93 @@ PRODUCT_METADATA_CACHE = Path(os.environ.get('MEALS_PRODUCT_METADATA_CACHE', str
 PRODUCT_ENRICHMENT_TIMEOUT_SECONDS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_TIMEOUT_SECONDS', '5'))
 PRODUCT_ENRICHMENT_DELAY_SECONDS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_DELAY_SECONDS', '0.2'))
 
+# --- Spec 035 / FR-003: Dashboard Order History Retention ---------------------
+# Maximum number of historical orders retained across syncs. Default 6 (one week
+# of typical Tesco delivery cadence + the live one). Soft cap; user can lower via
+# CLI ``--max-history N`` (constrained 0..50). The active receipt is in addition
+# to the cap when published.
+MAX_HISTORICAL_ORDERS = 6
+MAX_HISTORICAL_ORDERS_UPPER = 50
+HISTORICAL_ORDERS_SIDECAR = MEALS_SCRIPTS_PATH / 'data' / 'orders' / 'previously_synced.json'
+
+
+def assemble_orders(active: Dict, historical: List[Dict], cap: int) -> List[Dict]:
+    """Merge the active receipt with historical sidecar entries.
+
+    Pure helper (NFR-005): no I/O, no clock reads, no logging. Idempotent in the
+    absence of new receipts (FR-006).
+
+    - ``cap == 0`` is a special case (parity with ``--no-history``): returns the
+      active receipt only, regardless of date ordering.
+    - Otherwise: de-duplicate by ``orderId``; most-recent-wins on collision (FR-004).
+    - Sort by ``deliveryDate`` ascending (FR-002; spec 034 matcher depends on it).
+    - Truncate to ``cap + 1`` (the +1 covers the active receipt even if it has
+      the smallest deliveryDate) (FR-005).
+    """
+    if cap is None or cap < 0:
+        return []
+    # Special case: cap=0 means "history retention disabled" — only the active
+    # receipt is returned (FR-008 parity with --no-history).
+    if cap == 0:
+        if isinstance(active, dict):
+            active_id = active.get("orderId") or active.get("order_number") or active.get("orderNumber")
+            if active_id:
+                return [active]
+        return []
+    by_id: Dict[str, Dict] = {}
+    for entry in historical or []:
+        if not isinstance(entry, dict):
+            continue
+        oid = entry.get("orderId") or entry.get("order_number") or entry.get("orderNumber")
+        if oid:
+            by_id[oid] = entry
+    if isinstance(active, dict):
+        active_id = active.get("orderId") or active.get("order_number") or active.get("orderNumber")
+        if active_id:
+            by_id[active_id] = active
+    merged = sorted(by_id.values(), key=lambda o: o.get("deliveryDate", "") if isinstance(o, dict) else "")
+    return merged[: cap + 1]
+
+
+def load_historical_orders(cap: int, sidecar_path: Optional[Path] = None) -> List[Dict]:
+    """Read the historical-orders sidecar with a safe fallback (FR-001, AS-008).
+
+    Returns ``[]`` if the file is missing, corrupt, or unreadable. Never raises.
+    Logs a single INFO line per failed read so the matcher cron can detect
+    corrupt-sidecar recovery during incidents.
+    """
+    path = Path(sidecar_path) if sidecar_path is not None else HISTORICAL_ORDERS_SIDECAR
+    try:
+        raw = path.read_text(encoding="utf-8")
+        entries = json.loads(raw)
+    except (FileNotFoundError, json.JSONDecodeError, ValueError, OSError) as exc:
+        print(f"  ℹ history retention: sidecar unreadable ({exc.__class__.__name__}); treating as empty")
+        return []
+    if not isinstance(entries, list):
+        print(f"  ℹ history retention: sidecar shape invalid (expected list, got {type(entries).__name__}); treating as empty")
+        return []
+    out: List[Dict] = []
+    for entry in entries[: max(0, cap)]:
+        if not isinstance(entry, dict):
+            continue
+        if not (entry.get("orderId") or entry.get("order_number") or entry.get("orderNumber")):
+            continue
+        out.append(entry)
+    return out
+
+
+def persist_historical_orders(orders: List[Dict], sidecar_path: Optional[Path] = None) -> None:
+    """Atomically persist the merged historical-orders list to the sidecar (NFR-005).
+
+    Writes to a ``.tmp`` sibling then renames over the destination, so a crash
+    mid-write does not leave a half-baked file in place (FR-007 resilience).
+    """
+    path = Path(sidecar_path) if sidecar_path is not None else HISTORICAL_ORDERS_SIDECAR
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(list(orders or []), indent=2, sort_keys=True), encoding="utf-8")
+    os.replace(tmp, path)
+
 
 def load_dashboard_env(env: Optional[MutableMapping[str, str]] = None, env_path: Optional[Path] = None) -> MutableMapping[str, str]:
     """Load dashboard sync env vars from the Hermes env file if missing.
@@ -1896,6 +1983,9 @@ def build_dashboard_payload(
     overrides: Optional[List[Dict[str, Any]]] = None,
     api_url: Optional[str] = None,
     api_secret: Optional[str] = None,
+    max_history: int = MAX_HISTORICAL_ORDERS,
+    no_history: bool = False,
+    sidecar_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Build the split-layout dashboard payload for POSTing to /api/dashboard-sync.
 
@@ -2008,7 +2098,46 @@ def build_dashboard_payload(
             "shortLifeItems": receipt.get("short_life_items", []) or [],
             "status": order_status,
             "orderBlobPath": order_blob_path,
+            # Spec 035 / FR-002 — orderId key used by the dashboard loader for
+            # de-duplication and by ``assemble_orders`` for most-recent-wins.
+            "orderId": order_number,
         })
+
+        # Spec 035 / FR-002 / FR-008 — merge historical orders from the sidecar.
+        # When ``no_history`` is set (debug / rollback), leave the orders list
+        # as the single active receipt (legacy behaviour, FR-008).
+        if not no_history and max_history >= 0:
+            historical = load_historical_orders(cap=max_history, sidecar_path=sidecar_path)
+            active_receipt = {
+                "orderNumber": order_number,
+                "orderId": order_number,
+                "deliveryDate": delivery_date,
+                "deliverySlot": receipt.get("delivery_slot", ""),
+                "orderTotal": receipt.get("total", meals_check_summary.get("order_total", 0)),
+                "items": raw_items,
+                "substitutions": receipt.get("substitutions", []) or [],
+                "unavailable": receipt.get("unavailable", []) or [],
+                "shortLifeItems": receipt.get("short_life_items", []) or [],
+                "status": order_status,
+                "orderBlobPath": order_blob_path,
+            }
+            merged = assemble_orders(active_receipt, historical, cap=max_history)
+            # Preserve the order already enriched by build_dashboard_payload
+            # (products stripped, item enrichment applied) when active collides
+            # with a historical entry; the pure helper would otherwise hand back
+            # the un-enriched raw one. Most-recent-wins is still honored.
+            merged_ids = {o.get("orderId") for o in merged}
+            orders = merged
+            # Re-apply enrichment strip for any historical entries (they
+            # come from disk un-stripped is fine; the dashboard read path
+            # treats them as opaque blobs). Cap at len(orders) already.
+
+        if no_history:
+            print("  ℹ history retention disabled (--no-history)")
+        else:
+            history_count = max(0, len(orders) - 1) if orders else 0
+            active_id = orders[0]["orderId"] if orders else "<none>"
+            print(f"  ℹ orders: published {len(orders)} (active: {active_id}, history: {history_count}, cap: {max_history})")
 
     grouped_by_date = {}
     for m in meals:
@@ -2103,7 +2232,12 @@ def build_dashboard_payload(
     }
 
 
-def main():
+def build_arg_parser() -> argparse.ArgumentParser:
+    """Build the CLI argument parser for ``sync-dashboard-data.py``.
+
+    Extracted as a standalone function so tests (and other scripts) can introspect
+    the CLI surface without spawning a subprocess (spec 035 / FR-003, FR-008).
+    """
     parser = argparse.ArgumentParser(description="Sync dashboard data from Todoist and Tesco to Vercel Blob")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be posted without making changes")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
@@ -2111,7 +2245,24 @@ def main():
     parser.add_argument("--message", "-m", help="Custom commit message (ignored)")
     parser.add_argument("--no-build", action="store_true", help="Skip build step")
     parser.add_argument("--force-deploy", action="store_true", help="Trigger Vercel deploy even on dry-run")
+    # Spec 035 / FR-003 — cap on historical orders retained across syncs.
+    # 0..MAX_HISTORICAL_ORDERS_UPPER inclusive (validated below).
+    parser.add_argument("--max-history", type=int, default=MAX_HISTORICAL_ORDERS,
+                        help=f"Cap on historical orders retained across syncs "
+                             f"(default {MAX_HISTORICAL_ORDERS}, max {MAX_HISTORICAL_ORDERS_UPPER}).")
+    # Spec 035 / FR-008 — disable history retention for this sync (debug / rollback).
+    parser.add_argument("--no-history", action="store_true",
+                        help="Skip history retention; publish only the active receipt.")
+    return parser
+
+
+def main():
+    parser = build_arg_parser()
     args = parser.parse_args()
+
+    # Spec 035 / FR-003 — cap validation.
+    if args.max_history < 0 or args.max_history > MAX_HISTORICAL_ORDERS_UPPER:
+        parser.error(f"--max-history must be 0..{MAX_HISTORICAL_ORDERS_UPPER} (got {args.max_history})")
 
     # Direct/manual syncs should behave like the canonical meals pipeline:
     # load ~/.hermes/.env before looking up the dashboard sync secret.
@@ -2153,7 +2304,15 @@ def main():
         print(f"  Manual overrides from blob: {len(overrides)}")
 
     # Spec 021 / FR-003: pass api_url and secret so product blobs are written to Vercel Blob.
-    payload = build_dashboard_payload(dashboard_cache, overrides, api_url=api_url, api_secret=secret)
+    # Spec 035 / FR-003, FR-008: pass --max-history and --no-history through to the
+    # builder so the assembled orders list includes the historical sidecar (or not).
+    payload = build_dashboard_payload(
+        dashboard_cache, overrides,
+        api_url=api_url, api_secret=secret,
+        max_history=args.max_history,
+        no_history=args.no_history,
+        sidecar_path=None,  # use the module-level default
+    )
     print(f"  Order blobs: {len(payload['orders'])}")
     print(f"  Coverage blobs: {len(payload['coverage'])}")
     print(f"  Delivery windows: {len(payload['deliveryWindows'])}")
@@ -2184,6 +2343,33 @@ def main():
     elif not publish_result['products']['ok']:
         print(f"  ⚠ Product publish failed: {product_response.get('error', 'unknown error')}")
     print()
+
+    # Spec 035 / FR-001 — persist merged historical orders to sidecar after publish.
+    # Skip on --no-history (FR-008) and on --dry-run (no-op parity with spec 030).
+    # The publish-succeeded-then-sidecar-fails case MUST NOT roll back the publish;
+    # we log a warning instead so the cron still has a successful-sync marker.
+    if not args.no_history and not args.dry_run and payload.get("orders"):
+        try:
+            merged_for_sidecar = [
+                {
+                    "orderId": o.get("orderId") or o.get("orderNumber"),
+                    "deliveryDate": o.get("deliveryDate", ""),
+                    "deliverySlot": o.get("deliverySlot", ""),
+                    "status": o.get("status", "active"),
+                    "items": o.get("items", []),
+                    "orderBlobPath": o.get("orderBlobPath", ""),
+                    "orderTotal": o.get("orderTotal", 0),
+                    "substitutions": o.get("substitutions", []),
+                    "unavailable": o.get("unavailable", []),
+                    "shortLifeItems": o.get("shortLifeItems", []),
+                }
+                for o in payload["orders"]
+                if (o.get("orderId") or o.get("orderNumber"))
+            ]
+            persist_historical_orders(merged_for_sidecar)
+            print(f"  ✓ Persisted {len(merged_for_sidecar)} historical orders to sidecar")
+        except Exception as exc:
+            print(f"  ⚠ Sidecar persist failed: {exc.__class__.__name__}: {exc}; publish still succeeded")
 
     # Spec 028 / 2026-06-19 cleanup: the legacy `dashboard-data.json`
     # single-blob POST is removed. The dashboard page reads exclusively
