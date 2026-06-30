@@ -20,8 +20,31 @@ export interface Meal {
   completed_at?: string;
 }
 
+/**
+ * Spec 021 / FR-003 (revised) — order item in storage blobs.
+ * Carries only tpnc (no productBlobPath, no embedded productMetadata).
+ * The dashboard read path resolves `products/{tpnc}.json` independently.
+ */
+export interface OrderItem {
+  name: string;
+  /** Tesco product numeric ID. Used by the dashboard read path to derive products/{tpnc}.json. */
+  tpnc?: string | null;
+  quantity: number;
+  unit?: string;
+  price?: number;
+  category?: string;
+  substitutedWith?: string;
+  /**
+   * Spec 021 / FR-004 — path to the product blob in Vercel Blob.
+   * Present only in legacy data or during sync; stripped by the write path.
+   * NOT used by the modal chip after the spec 021 rev.
+   */
+  productBlobPath?: string;
+}
+
 export interface GroceryItem {
   name: string;
+  tpnc?: string | null;
   quantity: number;
   unit?: string;
   price?: number;

@@ -232,12 +232,19 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   // display, but look up coverage using the shifted future date (not the old
   // past date) so meals are found correctly.
   const todayDate = parseISODateLocal(today);
-  const todayDow = todayDate.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
 
-  // Find last Monday relative to today
-  const daysSinceMonday = todayDow === 0 ? 6 : todayDow - 1;
-  const thisMonday = new Date(todayDate);
-  thisMonday.setDate(todayDate.getDate() - daysSinceMonday);
+  // Anchor the window to the Monday of the week containing the earliest meal
+  // date in coverage (not to "today"), so meals scheduled beyond the current
+  // calendar week are still visible in the UI.
+  const allMealDates = coverage.map(c => c.meal.date).filter(Boolean) as string[];
+  const earliestDateStr = allMealDates.length > 0
+    ? allMealDates.reduce((min, d) => d < min ? d : min)
+    : today;
+  const earliestMealDate = parseISODateLocal(earliestDateStr);
+  const earliestDow = earliestMealDate.getDay();
+  const daysSinceMondayEarliest = earliestDow === 0 ? 6 : earliestDow - 1;
+  const thisMonday = new Date(earliestMealDate);
+  thisMonday.setDate(earliestMealDate.getDate() - daysSinceMondayEarliest);
 
   const days: { date: string; displayDate: string; isToday: boolean; dataKey: string }[] = [];
   for (let i = 0; i < 7; i++) {
@@ -265,6 +272,12 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   const mealTypesWithMeals: Set<string> = new Set();
   coverage.forEach(c => { mealTypesWithMeals.add(getMealType(c.meal)); });
 
+  // Debug: log what the client is working with
+  console.log('[dashboard-client] coverage.length:', coverage.length);
+  console.log('[dashboard-client] coverage dates:', coverage.map(c => c.meal.date));
+  console.log('[dashboard-client] allMealDates (for window anchor):', allMealDates);
+  console.log('[dashboard-client] thisMonday:', thisMonday.toISOString().slice(0, 10), '→', days.map(d => d.date));
+
   useEffect(() => {
     const newCollapsed = new Set<string>();
     ['breakfast', 'lunch', 'dinner'].forEach(type => { if (!mealTypesWithMeals.has(type)) newCollapsed.add(type); });
@@ -291,7 +304,8 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
     Beverages: 'var(--accent-pink)',
   };
 
-  const selectedProductInfo = selectedItem ? resolveProductInfoForItem(selectedItem) : null;
+  // Spec 021 / FR-003 (revised): pass products map to resolve product info by tpnc.
+  const selectedProductInfo = selectedItem ? resolveProductInfoForItem(selectedItem, data.products) : null;
 
   // Spec 010 Rev 5 / FR-010 — fetch the product-resolution chip
   // payload whenever the modal opens and the spec-022 debug gate

@@ -137,6 +137,13 @@ export interface SplitLayoutPayload {
 
 export interface ProductSyncPayload {
   products: Array<{ productBlobPath: string } & ProductBlob>;
+  /**
+   * Full-sync publication passes the freshly-written main manifest here so the
+   * subsequent product-only call cannot accidentally preserve an older pointer
+   * value if Blob pointer reads are stale or two deployments overlap.
+   * Standalone product backfills omit this and preserve the current pointer.
+   */
+  mainManifestPath?: string | null;
 }
 
 export interface SyncResult {
@@ -297,20 +304,52 @@ export async function syncDashboardLayout(
     }
   }
 
-  const { manifestPath, manifestHash } = serialiseManifest(newManifest);
+  const { manifestPath: computedManifestPath, manifestHash } = serialiseManifest(newManifest);
   const currentProductsManifestPath = pointer?.productsManifestPath ?? null;
   const computedProductsManifestPath = productsManifestPath ?? null;
+
+  console.log('[syncDashboardLayout] BRANCH DIAGNOSIS:', {
+    isInitialSync,
+    hasPointer: pointer !== null,
+    pointerManifest: pointer?.manifestPath,
+    computedManifestPath,
+    writtenPathsCount: writtenPaths.length,
+    currentProductsManifestPath,
+    computedProductsManifestPath,
+    productsMatch: (pointer?.productsManifestPath ?? null) === computedProductsManifestPath,
+  });
+
   const trueNoOp =
     !dryRun &&
     !isInitialSync &&
     writtenPaths.length === 0 &&
     pointer !== null &&
-    pointer.manifestPath === manifestPath &&
+    pointer.manifestPath === computedManifestPath &&
     currentProductsManifestPath === computedProductsManifestPath;
 
   if (trueNoOp) {
+    console.log('[syncDashboardLayout] → returning trueNoOp (totalOps: 0) — no writes needed');
     return {
-      manifestPath,
+      manifestPath: computedManifestPath,
+      manifestHash,
+      writtenPaths,
+      skippedPaths,
+      totalOps: 0,
+      isInitialSync,
+      suppressedNoopWrites: true,
+      productsManifestPath: computedProductsManifestPath,
+    };
+  }
+
+  // Idempotency guard: if the pointer already references exactly this manifest
+  // and products manifest, skip all writes.  This ensures a second sync hit on a
+  // different deployment instance still converges on the same state as the first.
+  const pointerMatches = pointer !== null && pointer.manifestPath === computedManifestPath;
+  const productsMatch = (pointer?.productsManifestPath ?? null) === computedProductsManifestPath;
+  if (!dryRun && pointer !== null && pointerMatches && productsMatch) {
+    console.log('[syncDashboardLayout] → returning idempotent noop (totalOps: 0) — pointer already matches computed manifest');
+    return {
+      manifestPath: computedManifestPath,
       manifestHash,
       writtenPaths,
       skippedPaths,
@@ -323,10 +362,11 @@ export async function syncDashboardLayout(
 
   if (!dryRun) {
     // Step 5–7: write manifest then pointer.
+    console.log('[syncDashboardLayout] → WRITING manifest and pointer', { computedManifestPath, totalOps: writtenPaths.length + 2 });
     await client.writeManifest(newManifest);
-    await client.writePointer(manifestPath, computedProductsManifestPath);
+    await client.writePointer(computedManifestPath, computedProductsManifestPath);
     return {
-      manifestPath,
+      manifestPath: computedManifestPath,
       manifestHash,
       writtenPaths,
       skippedPaths,
@@ -339,7 +379,7 @@ export async function syncDashboardLayout(
 
   // Dry run: report what would change, skip all writes.
   return {
-    manifestPath,
+    manifestPath: computedManifestPath,
     manifestHash: 'dry-run',
     writtenPaths,
     skippedPaths,
@@ -349,7 +389,7 @@ export async function syncDashboardLayout(
       !isInitialSync &&
       writtenPaths.length === 0 &&
       pointer !== null &&
-      pointer.manifestPath === manifestPath &&
+      pointer.manifestPath === computedManifestPath &&
       currentProductsManifestPath === computedProductsManifestPath,
     productsManifestPath: computedProductsManifestPath,
   };
@@ -375,7 +415,8 @@ export async function syncDashboardProducts(
     );
   }
 
-  const currentMainManifest: Manifest = await client.readManifest(pointer.manifestPath);
+  const targetMainManifestPath = payload.mainManifestPath || pointer.manifestPath;
+  const currentMainManifest: Manifest = await client.readManifest(targetMainManifestPath);
   const currentProductsManifest: Record<string, string> = pointer.productsManifestPath
     ? (await client.readManifest(pointer.productsManifestPath))
     : {};
@@ -414,11 +455,15 @@ export async function syncDashboardProducts(
   const productsManifestHash = client.computeHash(productsManifestContent);
   const productsManifestPath = `${PRODUCTS_MANIFEST_PREFIX}${productsManifestHash}.json`;
   const { manifestHash } = serialiseManifest(currentMainManifest);
-  const trueNoOp = !dryRun && writtenPaths.length === 0 && pointer.productsManifestPath === productsManifestPath;
+  const trueNoOp =
+    !dryRun &&
+    writtenPaths.length === 0 &&
+    pointer.manifestPath === targetMainManifestPath &&
+    pointer.productsManifestPath === productsManifestPath;
 
   if (trueNoOp) {
     return {
-      manifestPath: pointer.manifestPath,
+      manifestPath: targetMainManifestPath,
       manifestHash,
       writtenPaths,
       skippedPaths,
@@ -441,9 +486,9 @@ export async function syncDashboardProducts(
     );
     if (result.written) writtenPaths.push(productsManifestPath);
     else skippedPaths.push(productsManifestPath);
-    await client.writePointer(pointer.manifestPath, productsManifestPath);
+    await client.writePointer(targetMainManifestPath, productsManifestPath);
     return {
-      manifestPath: pointer.manifestPath,
+      manifestPath: targetMainManifestPath,
       manifestHash,
       writtenPaths,
       skippedPaths,
@@ -455,13 +500,13 @@ export async function syncDashboardProducts(
   }
 
   return {
-    manifestPath: pointer.manifestPath,
+    manifestPath: targetMainManifestPath,
     manifestHash: 'dry-run',
     writtenPaths,
     skippedPaths,
     totalOps: writtenPaths.length + 1,
     isInitialSync: false,
-    suppressedNoopWrites: writtenPaths.length === 0 && pointer.productsManifestPath === productsManifestPath,
+    suppressedNoopWrites: writtenPaths.length === 0 && pointer.manifestPath === targetMainManifestPath && pointer.productsManifestPath === productsManifestPath,
     productsManifestPath,
   };
 }

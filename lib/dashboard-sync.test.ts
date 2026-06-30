@@ -503,6 +503,53 @@ describe('syncDashboardProducts — product-only publication', () => {
     expect(client.store.has('coverage/2026-06-15.json')).toBe(true);
   });
 
+  it('uses explicit mainManifestPath from a full sync instead of reverting to a stale pointer', async () => {
+    const client = new InMemoryBlobStorageClient();
+    const stale = await syncDashboardLayout(makePayload(), client);
+
+    const freshPayload = makePayload();
+    freshPayload.coverage = [
+      ...freshPayload.coverage,
+      {
+        date: '2026-07-01',
+        sourceOrderBlobPath: null,
+        meals: [
+          {
+            meal: makeMeal('m-future', '2026-07-01', 'Future pasta'),
+            status: 'covered',
+            coverageScore: 100,
+            matchedItems: [],
+            missingItems: [],
+          },
+        ],
+        coverageBlobPath: 'coverage/2026-07-01.json',
+      },
+    ];
+    const fresh = await syncDashboardLayout(freshPayload, client);
+
+    // Recreate the production failure mode: product publication observes an
+    // older pointer even though the full sync just returned a fresh manifest.
+    await client.writePointer(stale.manifestPath, null);
+
+    const result = await syncDashboardProducts(
+      {
+        products: [makeProduct('222222', 'Pears')],
+        mainManifestPath: fresh.manifestPath,
+      },
+      client
+    );
+
+    const pointer = await client.readPointer();
+    expect(result.manifestPath).toBe(fresh.manifestPath);
+    expect(pointer?.manifestPath).toBe(fresh.manifestPath);
+
+    const pointedManifest = await client.readManifest(pointer!.manifestPath);
+    expect(Object.keys(pointedManifest).filter((path) => path.startsWith('coverage/')).sort()).toEqual([
+      'coverage/2026-06-15.json',
+      'coverage/2026-07-01.json',
+    ]);
+  });
+
   it('fails when the existing pointer is missing', async () => {
     const client = new InMemoryBlobStorageClient();
 

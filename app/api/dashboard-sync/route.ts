@@ -67,6 +67,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
+  const b = body as Record<string, unknown>;
+  console.log('[dashboard-sync] POST received — top-level dataGeneratedAt:', b.dataGeneratedAt, '| coverage count:', Array.isArray(b.coverage) ? b.coverage.length : 'N/A', '| orders count:', Array.isArray(b.orders) ? b.orders.length : 'N/A');
+  console.log('[dashboard-sync] summary.dataGeneratedAt (nested in summary object):', (b.summary as Record<string, unknown> | null)?.dataGeneratedAt);
+
   const parsed = parseSplitLayoutPayload(body);
   if (!parsed.ok) {
     return NextResponse.json({ error: 'Invalid payload', detail: parsed.error }, { status: 400 });
@@ -78,6 +82,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const client = new VercelBlobStorageClient();
     const result = await syncDashboardLayout(parsed.value, client, { dryRun });
+    console.log('[dashboard-sync] Response:', JSON.stringify({
+      ok: true,
+      manifestPath: result.manifestPath,
+      written: result.writtenPaths,
+      skipped: result.skippedPaths,
+      totalOps: result.totalOps,
+      isInitialSync: result.isInitialSync,
+    }));
     return NextResponse.json({
       ok: true,
       manifestPath: result.manifestPath,

@@ -50,6 +50,7 @@ export async function GET(): Promise<NextResponse> {
   let coverageReads: BlobReadFreshnessDebugPayload['coverageReads'] = [];
   let orderReads: BlobReadFreshnessDebugPayload['orderReads'] = [];
   let productReads: BlobReadFreshnessDebugPayload['productReads'] = [];
+  let manifestCoverageDates: string[] = [];
 
   try {
     const pointer = await reader.readPointer();
@@ -72,7 +73,21 @@ export async function GET(): Promise<NextResponse> {
           .sort()
           .reverse();
         const orderPaths = [...inWindow, ...pastOrders.slice(0, 1)];
-        const coveragePaths = coverageWindow.map((d) => `coverage/${d}.json`).filter((p) => p in manifest);
+        // Extract coverage dates present in the manifest (e.g. 'coverage/2026-06-28.json' → '2026-06-28')
+        // Assigns to the outer scope 'let' declared above the try block.
+        const manifestKeys = manifest && Object.keys(manifest).length > 0 ? Object.keys(manifest) : [];
+        manifestCoverageDates = manifestKeys.filter((k) => k.startsWith('coverage/')).map((k) => k.replace('coverage/', '').replace('.json', ''));
+
+        // Use ALL manifest coverage dates (not just window dates) for the same reason
+        // dashboard-data.ts extends coveragePaths: the Python sync writes sparse blobs
+        // only for meal-plan dates, so manifest dates outside the window are valid.
+        const allManifestCoverageDates = manifestKeys.filter((k) => k.startsWith('coverage/')).map((k) => k.replace('coverage/', '').replace('.json', ''));
+        const coveragePaths = [
+          ...new Set([
+            ...coverageWindow.filter((d) => `coverage/${d}.json` in (manifest ?? {})),
+            ...allManifestCoverageDates,
+          ]),
+        ].map((d) => `coverage/${d}.json`).filter((p) => p in (manifest ?? {}));
 
         const [coverageResults, orderResults] = await Promise.all([
           Promise.all(coveragePaths.map(async (path) => ({ path, status: (await reader.readJsonBlob(path)) ? 'ok' : 'missing' } as const))),
@@ -82,9 +97,12 @@ export async function GET(): Promise<NextResponse> {
         orderReads = orderResults;
 
         const latestOrder = await getDashboardData({ reader, coverageWindow }).then((data) => data.latestOrder);
-        const productPaths = latestOrder
-          ? [...new Set((latestOrder.items as Array<{ productBlobPath?: string | null }>).map((item) => item.productBlobPath).filter((p): p is string => Boolean(p)))]
+        // Spec 021 / FR-003 (revised): derive product blob paths from tpnc using
+        // the convention products/{tpnc}.json. No longer use item.productBlobPath.
+        const allTpncs = latestOrder
+          ? [...new Set((latestOrder.items as Array<{ tpnc?: string | null }>).map((item) => item.tpnc).filter((t): t is string => typeof t === 'string' && t.trim() !== ''))]
           : [];
+        const productPaths = allTpncs.map((tpnc) => `products/${tpnc}.json`);
         productReads = await Promise.all(
           productPaths.map(async (path) => {
             const blob = await reader.readJsonBlob<{ lastFetched?: string }>(path);
@@ -136,6 +154,7 @@ export async function GET(): Promise<NextResponse> {
       selectedProductBlobPath: productReads[0]?.path ?? null,
       loadError: data.loadError,
       coverageWindow,
+      manifestCoverageDates,
       coverageReads,
       orderReads,
       productReads,

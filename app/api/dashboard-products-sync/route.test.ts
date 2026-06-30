@@ -73,10 +73,19 @@ describe('POST /api/dashboard-products-sync', () => {
     const good = await POST(
       makeRequest({
         products: [{ productBlobPath: 'products/123.json', tpnc: '123', title: 'Apples' }],
+        mainManifestPath: 'meta/manifest-fresh.json',
       }) as unknown as import('next/server').NextRequest
     );
     expect(good.status).toBe(200);
     expect(mocks.syncDashboardProducts).toHaveBeenCalledTimes(1);
+    expect(mocks.syncDashboardProducts).toHaveBeenCalledWith(
+      {
+        products: [{ productBlobPath: 'products/123.json', tpnc: '123', title: 'Apples' }],
+        mainManifestPath: 'meta/manifest-fresh.json',
+      },
+      { fake: true },
+      { dryRun: false }
+    );
     expect(mocks.blobCtor).toHaveBeenCalledTimes(1);
   });
 });

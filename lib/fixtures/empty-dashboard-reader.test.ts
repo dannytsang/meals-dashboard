@@ -77,6 +77,7 @@ describe('EmptyDashboardReader', () => {
         dataGeneratedAt: '',
         uiUpdatedAt: '',
         loadError: null,
+        products: {},
       });
     });
   });

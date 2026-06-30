@@ -80,7 +80,9 @@ describe('DashboardClient meal card/detail contract', () => {
     expect(source).not.toContain('api.allorigins');
     expect(source).not.toContain('Open Food Facts');
     expect(source).not.toContain('fetchProductInfo');
-    expect(source).toContain('resolveProductInfoForItem(selectedItem)');
+    // Spec 021 / FR-003 (revised): passes products map so tpnc-based lookup
+    // is a fast in-memory Map read, not an external fetch.
+    expect(source).toContain('resolveProductInfoForItem(selectedItem, data.products)');
   });
 
   it('provides grouped order item controls with sorting', () => {
@@ -409,6 +411,7 @@ describe('DashboardClient order-item search interaction', () => {
     dataGeneratedAt: '2026-06-12T00:00:00Z',
     uiUpdatedAt: '2026-06-12T00:00:00Z',
     loadError: null,
+    products: {},
   };
 
   it('updates immediately on each keystroke and composes with category, match, and sort controls', () => {

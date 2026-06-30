@@ -8,6 +8,7 @@ import type {
   GroceryItem,
   GeneratedProductMetadata,
 } from './meals-data';
+import type { ProductBlob } from './dashboard-sync';
 import { VercelBlobStorageClient, type BlobStorageClient } from './blob-storage';
 import type { CoverageBlob, CoverageMealEntry, DashboardSummary, OrderBlob } from './dashboard-sync';
 
@@ -61,6 +62,13 @@ export interface DashboardBlobData {
   /** When the dashboard UI was last deployed (ISO string, git HEAD commit time at sync time). */
   uiUpdatedAt: string;
   loadError: DashboardLoadError | null;
+  /**
+   * Spec 021 / FR-003 (revised) — tpnc → product blob map.
+   * Resolved at read time by fetching products/{tpnc}.json for each unique tpnc
+   * seen in visible order items. A null value means the product blob was not found.
+   * The modal chip reads from this map rather than from embedded item.productMetadata.
+   */
+  products: Record<string, ProductBlob | null>;
 }
 
 export interface DashboardData extends DashboardBlobData {}
@@ -137,9 +145,25 @@ async function readFromSplitLayout(
   try {
     // 2. Resolve the summary path from the manifest (content-addressable).
     const summaryPath = Object.keys(manifest).find((p) => p.startsWith('meta/summary-'));
-    const coveragePaths = coverageWindow
-      .map((d) => `coverage/${d}.json`)
-      .filter((p) => p in manifest);
+
+    // Collect ALL coverage blob dates from the manifest first.
+    // The manifest is the authoritative record of which coverage blobs exist;
+    // the Python sync only writes blobs for dates that have planned meals (sparse),
+    // not for every date in a contiguous window.
+    const allManifestCoverageDates = Object.keys(manifest)
+      .filter((p) => p.startsWith('coverage/'))
+      .map((p) => p.replace('coverage/', '').replace('.json', ''));
+
+    // Prefer manifest dates within the caller-supplied window; also include
+    // any other manifest coverage dates. This ensures the dashboard calendar
+    // shows all planned meals from the published manifest instead of silently
+    // dropping valid sparse meal-date blobs outside the dense window.
+    const coveragePaths = [
+      ...new Set([
+        ...coverageWindow.filter((d) => `coverage/${d}.json` in manifest),
+        ...allManifestCoverageDates,
+      ]),
+    ].map((d) => `coverage/${d}.json`).filter((p) => p in manifest);
 
     // Find order blobs in the coverage window OR the most recent past order.
     // The window filter alone misses the latest order once its delivery date
@@ -181,30 +205,63 @@ async function readFromSplitLayout(
       Promise.all(orderPaths.map((p) => reader.readJsonBlob<OrderBlob>(p))),
     ]);
 
-    // 4. Inject productMetadata into order items from product blobs (FR-005).
-    // Fetch all referenced product blobs in parallel; individual failures are silent.
-    const productBlobPaths = orderResults
-      .flatMap((o) => (o?.items ?? []) as GroceryItem[])
-      .map((item) => item.productBlobPath)
-      .filter((p): p is string => Boolean(p));
+    // Spec 021 / FR-003 (revised) — resolve product blobs by tpnc.
+    // Fetch products/{tpnc}.json for each unique tpnc seen in order items.
+    // Do this in parallel with orders (already done above).
+    // The products manifest (tpnc → path map) is no longer needed since we
+    // derive the path via the spec 021 convention: products/{tpnc}.json.
+    const allTpncs = orderResults.flatMap((o) => (o?.items ?? []) as GroceryItem[]).map((item) => item.tpnc);
+    const validTpncs = allTpncs.filter((t): t is string => typeof t === 'string' && t.trim() !== '');
+    const uniqueTpncs = [...new Set(validTpncs)];
 
-    const uniqueProductPaths = [...new Set(productBlobPaths)];
+    const productBlobPaths = uniqueTpncs.map((tpnc) => `products/${tpnc}.json`);
     const productBlobResults = await Promise.all(
-      uniqueProductPaths.map((p) => reader.readJsonBlob<GeneratedProductMetadata>(p))
+      productBlobPaths.map((p) => reader.readJsonBlob<ProductBlob>(p))
     );
-    const productBlobMap = new Map<string, GeneratedProductMetadata>();
-    for (let i = 0; i < uniqueProductPaths.length; i++) {
-      if (productBlobResults[i]) {
-        productBlobMap.set(uniqueProductPaths[i]!, productBlobResults[i]!);
+    const products: Record<string, ProductBlob | null> = {};
+    for (let i = 0; i < uniqueTpncs.length; i++) {
+      products[uniqueTpncs[i]!] = productBlobResults[i] ?? null;
+    }
+
+    // Legacy compatibility: also build a productBlobPath → ProductBlob map
+    // for injecting productMetadata into order items. This supports code that
+    // still reads item.productMetadata (e.g. debug-observability, other utils).
+    const legacyProductBlobMap = new Map<string, ProductBlob>();
+    for (const item of orderResults.flatMap((o) => (o?.items ?? []) as GroceryItem[])) {
+      const path = item.productBlobPath;
+      if (path && products[item.tpnc ?? '']) {
+        legacyProductBlobMap.set(path, products[item.tpnc ?? '']!);
       }
     }
 
-    // Inject resolved productMetadata into each GroceryItem.
+    // Inject productMetadata into each GroceryItem for backwards compatibility.
+    // This is still needed because resolveProductInfoForItem reads item.productMetadata.
     for (const order of orderResults) {
       if (!order || !Array.isArray(order.items)) continue;
       for (const item of order.items as GroceryItem[]) {
-        if (item.productBlobPath && productBlobMap.has(item.productBlobPath)) {
-          item.productMetadata = productBlobMap.get(item.productBlobPath)!;
+        const tpnc = item.tpnc;
+        if (tpnc && products[tpnc]) {
+          // Build GeneratedProductMetadata shape from the ProductBlob for injection.
+          const blob = products[tpnc]!;
+          item.productMetadata = {
+            tpnc: blob.tpnc,
+            gtin: blob.gtin,
+            tpnb: blob.tpnb,
+            title: blob.title,
+            imageUrl: blob.imageUrl,
+            productUrl: blob.productUrl,
+            description: blob.description,
+            storage: blob.storage,
+            preparation: blob.preparation,
+            ingredients: blob.ingredients,
+            allergens: blob.allergens,
+            nutrition: blob.nutrition,
+            brand: blob.brand,
+            category: blob.category,
+            source: blob.source,
+            lastFetched: blob.lastFetched,
+            firecrawl: blob.firecrawl,
+          };
         }
       }
     }
@@ -274,6 +331,7 @@ async function readFromSplitLayout(
       })),
     ];
 
+    console.log('[dashboard-data] dataGeneratedAt from summary:', (summary as Record<string, unknown> | null)?.dataGeneratedAt);
     return {
       coverage,
       deliveryWindows,
@@ -282,6 +340,7 @@ async function readFromSplitLayout(
       dataGeneratedAt: (summary as Record<string, unknown> | null)?.dataGeneratedAt as string ?? '',
       uiUpdatedAt: (summary as Record<string, unknown> | null)?.uiUpdatedAt as string ?? '',
       loadError: null,
+      products,
     };
   } catch (err) {
     // Spec 028 cleanup: the legacy `dashboard-data.json` fallback is
@@ -347,6 +406,7 @@ function getEmptyState(loadError: DashboardLoadError | null = null): DashboardBl
     dataGeneratedAt: '',
     uiUpdatedAt: '',
     loadError,
+    products: {},
   };
 }
 

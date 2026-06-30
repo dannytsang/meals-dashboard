@@ -173,6 +173,7 @@ describe('buildBlobReadFreshnessDebugPayload', () => {
         summaryPath: 'meta/summary-2026-06-18.json',
         summaryRead: 'ok',
         coverageWindow: ['2026-06-17', '2026-06-18'],
+        manifestCoverageDates: ['2026-06-17', '2026-06-18'],
         coverageReads: [
           { path: 'coverage/2026-06-17.json', status: 'ok' },
           { path: 'coverage/2026-06-18.json', status: 'missing' },

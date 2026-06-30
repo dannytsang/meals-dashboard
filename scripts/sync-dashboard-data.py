@@ -1491,9 +1491,12 @@ def update_real_data_ts_from_cache(cache_data: Dict) -> bool:
         items = []
         for i in raw_items:
             item = {"name": i.get("name", ""), "quantity": i.get("quantity", 1), "price": i.get("price", 0)}
-            product_metadata = i.get("productMetadata") or i.get("product_metadata")
-            if isinstance(product_metadata, dict):
-                item["productMetadata"] = product_metadata
+            # Spec 021 / FR-003 (revised): strip productBlobPath — real-data.ts
+            # order items carry only tpnc (if available). The dashboard read
+            # path resolves products/{tpnc}.json at runtime.
+            tpnc = i.get("tpnc")
+            if tpnc:
+                item["tpnc"] = tpnc
             substituted_with = i.get("substitutedWith") or i.get("substituted_with") or i.get("substitution")
             if isinstance(substituted_with, dict):
                 substituted_with = substituted_with.get("name") or substituted_with.get("product") or substituted_with.get("title")
@@ -1850,8 +1853,12 @@ def publish_split_dashboard_payload(
 
     if main_ok and products:
         products_url = dashboard_products_api_url(api_url)
+        products_payload = {
+            'products': products,
+            'mainManifestPath': main_response.get('manifestPath'),
+        }
         products_ok, products_response = post_dashboard_data_to_api(
-            {'products': products},
+            products_payload,
             products_url,
             secret,
             dry_run=dry_run,
@@ -1963,8 +1970,11 @@ def build_dashboard_payload(
             if tpnc not in products:
                 products[tpnc] = {'productBlobPath': blob_path, **product_entry}
         # Always strip productMetadata from order items (FR-003/FR-004).
+        # Spec 021 / FR-003 (revised): also strip productBlobPath — order items
+        # carry only tpnc. The dashboard read path resolves products/{tpnc}.json.
         item.pop('productMetadata', None)
         item.pop('product_metadata', None)
+        item.pop('productBlobPath', None)
 
     delivery_date = receipt.get("delivery_date") or meals_check_summary.get("delivery_date") or ""
     order_number = receipt.get("order_number") or "unknown-order"
