@@ -51,6 +51,15 @@ interface FreshnessDiagnostic {
  * the dashboard's debug-mode panel so an operator can verify the
  * filter is reading the expected values (active filter, hydration
  * source, today anchor, classified next / previous delivery dates).
+ *
+ * Spec 037 / FR-008 — extended with `fallbackApplied`, the most
+ * recent empty-state fallback decision. `null` when no fallback has
+ * fired this component instance (the chip payload renders
+ * `fallbackApplied: null` to keep the happy path minimal — per spec
+ * Clarifications Q2). When non-null, the field is `{ from, to,
+ * reason: 'zero_items' }` and surfaces the swap source / target /
+ * reason for the audit trail. The chip remains read-only per spec
+ * 022 — no operator knob is exposed.
  */
 export interface DeliveryFilterDebugState {
   active: 'previous' | 'next' | 'all';
@@ -58,6 +67,9 @@ export interface DeliveryFilterDebugState {
   today: string;
   nextDeliveryDate: string | null;
   previousDeliveryDate: string | null;
+  fallbackApplied:
+    | { from: 'previous' | 'next' | 'all'; to: 'previous' | 'next' | 'all'; reason: 'zero_items' }
+    | null;
 }
 
 const ORDER_STATUS_COLOR: Record<string, string> = {
@@ -399,9 +411,13 @@ export function DashboardDebugChips({
         data-today={deliveryFilterState?.today ?? ''}
         data-next-delivery-date={deliveryFilterState?.nextDeliveryDate ?? ''}
         data-previous-delivery-date={deliveryFilterState?.previousDeliveryDate ?? ''}
+        data-fallback-applied={deliveryFilterState?.fallbackApplied ? 'true' : 'false'}
+        data-fallback-from={deliveryFilterState?.fallbackApplied?.from ?? ''}
+        data-fallback-to={deliveryFilterState?.fallbackApplied?.to ?? ''}
+        data-fallback-reason={deliveryFilterState?.fallbackApplied?.reason ?? ''}
         title={
           deliveryFilterState
-            ? `active=${deliveryFilterState.active} source=${deliveryFilterState.source} today=${deliveryFilterState.today} next=${deliveryFilterState.nextDeliveryDate ?? 'null'} previous=${deliveryFilterState.previousDeliveryDate ?? 'null'}`
+            ? `active=${deliveryFilterState.active} source=${deliveryFilterState.source} today=${deliveryFilterState.today} next=${deliveryFilterState.nextDeliveryDate ?? 'null'} previous=${deliveryFilterState.previousDeliveryDate ?? 'null'} fallbackApplied=${deliveryFilterState.fallbackApplied ? `${deliveryFilterState.fallbackApplied.from}->${deliveryFilterState.fallbackApplied.to} (${deliveryFilterState.fallbackApplied.reason})` : 'null'}`
             : 'deliveryFilterState not yet known'
         }
         style={{

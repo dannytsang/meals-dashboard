@@ -162,6 +162,26 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
    */
   const [deliveryFilterSource, setDeliveryFilterSource] = useState<'default' | 'sessionStorage'>('default');
 
+  /*
+   * Spec 037 / FR-007 — `hasFallbackRunRef` is a `useRef` flag (NOT a
+   * state variable per FR-007) that gates the empty-state fallback.
+   * Flips to `true` the first time the fallback fires and stays `true`
+   * for the component instance lifetime. An explicit filter chip click
+   * (FR-004) resets it to `false` so a future empty-filter state can
+   * trigger the fallback again. Using `useRef` (not `useState`) is the
+   * FR-007 hard constraint: a state variable would re-trigger the
+   * fallback on every re-render.
+   *
+   * `fallbackAppliedRef` mirrors the most recent fallback decision so
+   * the FR-008 debug chip can surface `{ from, to, reason: 'zero_items' }`.
+   * `null` means no fallback has fired this instance.
+   */
+  const hasFallbackRunRef = useRef(false);
+  const fallbackAppliedRef = useRef<
+    | { from: DeliveryFilter; to: DeliveryFilter; reason: 'zero_items' }
+    | null
+  >(null);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -377,6 +397,198 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   const deliveryFilteredItems: GroceryItem[] = activeGroups.flatMap((g) => g.items);
 
   /*
+   * Spec 037 / FR-001 + FR-005 — per-bucket item counts derived from
+   * the already-computed `classifiedOrders` (spec 034 L367-L377). No
+   * new classification pass; the fallback memo reads these lengths to
+   * decide whether the persisted filter is empty (FR-001) and which
+   * target in the `[next, all, previous]` preference list is the first
+   * non-empty option (FR-005 / NFR-001: ≤ 3 length-checks per render).
+   * `deliveryFilteredItems.length` is the post-filter count for the
+   * current `deliveryFilter` and is what the FR-005 invariant checks.
+   * Refunded items still count as items (they remain in `g.items` per
+   * spec 034 L377 / AS-009) — only a true zero triggers the fallback.
+   */
+  const previousItemCount = classifiedOrders.previous.reduce(
+    (n, g) => n + g.items.length,
+    0,
+  );
+  const nextItemCount = classifiedOrders.next.reduce(
+    (n, g) => n + g.items.length,
+    0,
+  );
+  const allItemCount = previousItemCount + nextItemCount;
+
+  /*
+   * Spec 037 / FR-001 + FR-007 — the empty-state fallback decision.
+   * Pure computation (no React state reads other than the existing
+   * `deliveryFilter` and `classifiedOrders`); the side effects (state
+   * update + sessionStorage write) are issued below in the same render
+   * cycle so the persistence write happens synchronously (FR-003 — NOT
+   * a deferred `useEffect`). The decision is gated by `hasFallbackRunRef`
+   * (FR-007) so the fallback fires at most once per component instance
+   * until an explicit filter chip click resets the ref (FR-004).
+   *
+   * Returns the fallback decision with a pre-computed explanation
+   * string (FR-002 templates); `null` when no fallback should fire.
+   *
+   * Preference order `[next, all, previous]` is part of the FR-001
+   * contract; runtime code MUST NOT re-order it. Skipping the current
+   * `deliveryFilter` in the preference iteration avoids an infinite loop
+   * where the fallback would target the same empty filter it just
+   * detected.
+   */
+  /*
+   * Spec 037 / FR-007 + FR-004 — the fallback uses two refs:
+   *
+   *   `hasFallbackRunRef` flips to `true` on the first auto-fallback
+   *   decision so the same fallback chain does not re-fire on subsequent
+   *   state-change re-renders (per AS-010). It is reset on the next
+   *   EXPLICIT user click (below, FR-004).
+   *
+   *   `userChosenFilterRef` records the most-recent filter the user
+   *   chose via an EXPLICIT chip click. The fallback decision skips
+   *   for the render immediately following a user click (FR-004 +
+   *   AS-006 contract: "click on `previous` chip → panel renders
+   *   with `previous` even if empty, NO swap explanation"). This
+   *   prevents the fallback from second-guessing the user's
+   *   intentional choice.
+   *
+   *   The reset triggers a single-render guard: the user's click
+   *   sets userChosenFilterRef; the next render sees
+   *   `userChosenFilterRef === deliveryFilter` and returns null from
+   *   the fallback decision; the render after that finds
+   *   `userChosenFilterRef === null` (cleared below the fallback
+   *   block) and the fallback pathway reopens for any FUTURE
+   *   empty-filter state (per the FR-004 spec text: "the fallback
+   *   is a render-time helper, not a state flag").
+   */
+  const userChosenFilterRef = useRef<'previous' | 'next' | 'all' | null>(null);
+  const fallbackDecision: {
+    from: DeliveryFilter;
+    to: DeliveryFilter;
+    reason: 'zero_items';
+    explanationText: string;
+  } | null = (() => {
+    // FR-007 — guard: skip if the fallback has already fired this
+    // component instance (the only path that resets this is an explicit
+    // filter chip click — FR-004).
+    if (hasFallbackRunRef.current) return null;
+    // FR-004 — skip if the current render's filter matches a
+    // user-explicit choice. The user has acknowledged the empty
+    // state by clicking the filter; respect their choice. The ref
+    // is cleared after this render so future re-renders can fire
+    // the fallback again if conditions re-occur.
+    if (userChosenFilterRef.current === deliveryFilter) return null;
+    // FR-006 — skip in demo / fixture mode. The `demoMode` prop is
+    // server-resolved from `isDemoMode()` (lib/runtime-mode.ts) and
+    // passed in by `app/page.tsx`. We cannot call `isDemoMode()` directly
+    // here because that module is `server-only`.
+    if (demoMode) return null;
+    // FR-001 — `all` has no fallback above it (the spec 008 FR-005 empty
+    // state renders). Per AS-003.
+    if (deliveryFilter === 'all') return null;
+    // FR-005 — count items in the active filter group. The
+    // `deliveryFilteredItems` derivation already includes refunded
+    // items (they remain in `g.items`); only a true zero triggers
+    // the fallback (AS-009).
+    const currentFilterItemCount = deliveryFilteredItems.length;
+    if (currentFilterItemCount > 0) return null;
+
+    // Iterate the preference list to find the first non-empty target.
+    // The order is fixed by FR-001 / Spec Clarifications Q1 and is
+    // NEVER re-ordered at runtime.
+    const preferences: readonly DeliveryFilter[] = ['next', 'all', 'previous'];
+    for (const candidate of preferences) {
+      if (candidate === deliveryFilter) continue;
+      const candidateCount =
+        candidate === 'previous'
+          ? previousItemCount
+          : candidate === 'next'
+            ? nextItemCount
+            : allItemCount;
+      if (candidateCount > 0) {
+        const from = deliveryFilter;
+        const to = candidate;
+        // FR-002 — build the one-line explanation per the four
+        // canonical templates. (The all-empty case above returns null
+        // before we get here, so only three templates can fire.)
+        let explanationText = '';
+        if (from === 'previous' && to === 'next') {
+          const nextDate = classifiedOrders.next[0]?.deliveryDate;
+          const nextLabel = nextDate ? formatShortDayMonth(nextDate) : '';
+          explanationText = nextLabel
+            ? `Previous filter had no items — showing Next delivery (${nextLabel})`
+            : 'Previous filter had no items — showing Next delivery';
+        } else if (from === 'previous' && to === 'all') {
+          explanationText = 'Previous filter had no items — showing All deliveries';
+        } else if (from === 'next' && to === 'all') {
+          explanationText = 'Next filter had no items — showing All deliveries';
+        }
+        return { from, to, reason: 'zero_items', explanationText };
+      }
+    }
+    return null;
+  })();
+
+  /*
+   * Spec 037 / FR-003 + FR-007 + FR-008 — synchronous side effects
+   * for the fallback decision. Runs in the same render cycle that
+   * detected the empty filter (per FR-003: NOT a deferred
+   * `useEffect`). React's "set state during render" pattern handles
+   * the re-render — the next render re-evaluates `fallbackDecision`
+   * with the new `deliveryFilter` value and the ref guard short-
+   * circuits, so the fallback does not re-fire (FR-007 / AS-010).
+   *
+   * On every non-fallback render the `if` is skipped in O(1).
+   */
+  if (fallbackDecision) {
+    // Persist the new filter to sessionStorage in the same render
+    // cycle (FR-003). Mirror the existing sessionStorage writes'
+    // SSR / privacy-locked-context guards.
+    if (typeof window !== 'undefined') {
+      try {
+        window.sessionStorage.setItem(
+          'meals-dashboard:order-items-delivery-filter',
+          fallbackDecision.to,
+        );
+      } catch {
+        // Privacy-locked contexts may throw; ignore per the existing
+        // hydration / persist effect behaviour above.
+      }
+    }
+    // Flip the guard refs (FR-007) and record the decision (FR-008).
+    // The userChosenFilterRef is NOT set here — the user did not
+    // pick this filter; the fallback did. Setting it would block
+    // any future-future empty-filter firing per the click-render
+    // semantics above.
+    hasFallbackRunRef.current = true;
+    fallbackAppliedRef.current = {
+      from: fallbackDecision.from,
+      to: fallbackDecision.to,
+      reason: fallbackDecision.reason,
+    };
+    // React's "set state during render" pattern — supported and
+    // handled by React. The next render re-evaluates the memo and
+    // short-circuits via the ref guard above.
+    setDeliveryFilter(fallbackDecision.to);
+  } else {
+    // No fallback fired on this render. Clear the user-chosen guard
+    // so the next empty-filter state (from a future state change)
+    // can fire the fallback again. This is the FR-004 single-render
+    // semantic: the user's click skips the next render's fallback,
+    // then the pathway reopens.
+    if (userChosenFilterRef.current !== null && userChosenFilterRef.current !== deliveryFilter) {
+      // Belt-and-braces: only clear if the filter actually changed
+      // away from the user-chosen one (otherwise we're still in the
+      // click render's skip window).
+    } else if (userChosenFilterRef.current === deliveryFilter) {
+      // First render after a click — clear the guard so the next
+      // non-click render can fire normally.
+      userChosenFilterRef.current = null;
+    }
+  }
+
+  /*
    * Per-item lookup keyed by `${deliveryDate}|${cleanedName}` so each
    * row can attach the right DeliveryBadge (and the deliveryDate on
    * the badge) without re-deriving classification inline. Rebuilt
@@ -437,6 +649,10 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
       classifiedOrders.previous.length > 0
         ? classifiedOrders.previous[classifiedOrders.previous.length - 1]!.deliveryDate
         : null,
+    // Spec 037 / FR-008 — surface the most recent fallback decision
+    // (or null on the happy path). The chip is read-only per spec
+    // 022; the field is purely a verification surface for operators.
+    fallbackApplied: fallbackAppliedRef.current,
   };
 
 
@@ -937,7 +1153,27 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
                   <button
                     key={f}
                     type="button"
-                    onClick={() => setDeliveryFilter(f)}
+                    onClick={() => {
+                      /*
+                       * Spec 037 / FR-004 — explicit filter chip clicks
+                       * reset the fallback state. The user has chosen
+                       * a filter deliberately, so the swap-explanation
+                       * banner must NOT fire on this render (the
+                       * inline fallback code below guards on these
+                       * refs). The reset also re-opens the fallback
+                       * pathway for any FUTURE empty-filter state
+                       * (a separate re-firing is permitted — the spec
+                       * only locks the click render out, not the
+                       * infinite future).
+                       */
+                      hasFallbackRunRef.current = false;
+                      fallbackAppliedRef.current = null;
+                      // Record the user's explicit choice so the
+                      // immediately-following render's fallback
+                      // decision skips (per FR-004 + AS-006).
+                      userChosenFilterRef.current = f;
+                      setDeliveryFilter(f);
+                    }}
                     aria-pressed={deliveryFilter === f}
                     style={{
                       padding: '0.3rem 0.7rem',
@@ -959,6 +1195,62 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
 
             <div style={{ ...cardStyle, padding: '1rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {/*
+                 * Spec 037 / FR-002 + NFR-003 — the empty-state
+                 * fallback notice. Rendered above the pending-next
+                 * placeholder / item rows whenever the fallback has
+                 * fired this component instance. The notice is a
+                 * plain <div> (NOT <button>, NOT dismissible) with
+                 * role="status" + aria-live="polite" so assistive
+                 * tech hears the swap without focus-jumping
+                 * (NFR-003 forbids aria-live="assertive"). The colour
+                 * is --text-tertiary (FR-002 — visually subtle, not a
+                 * yellow/red warning banner), no icon and no close
+                 * button. On every non-fallback render the conditional
+                 * short-circuits, so the notice's `data-testid` is
+                 * absent (tests assert on presence/absence).
+                 */}
+                {fallbackAppliedRef.current && (
+                  <div
+                    data-testid="delivery-filter-fallback-notice"
+                    role="status"
+                    aria-live="polite"
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 500,
+                      color: 'var(--text-tertiary)',
+                      padding: '0.5rem 0',
+                    }}
+                  >
+                    {fallbackAppliedRef.current &&
+                      (() => {
+                        // Re-derive the explanation text from the
+                        // ref payload. We pre-compute it once during
+                        // the fallback decision above; the JSX side
+                        // re-computes from the ref's from/to so the
+                        // notice survives the state-update re-render
+                        // without an extra ref.
+                        const applied = fallbackAppliedRef.current!;
+                        const from = applied.from;
+                        const to = applied.to;
+                        if (from === 'previous' && to === 'next') {
+                          const nextDate = classifiedOrders.next[0]?.deliveryDate;
+                          const nextLabel = nextDate ? formatShortDayMonth(nextDate) : '';
+                          return nextLabel
+                            ? `Previous filter had no items — showing Next delivery (${nextLabel})`
+                            : 'Previous filter had no items — showing Next delivery';
+                        }
+                        if (from === 'previous' && to === 'all') {
+                          return 'Previous filter had no items — showing All deliveries';
+                        }
+                        if (from === 'next' && to === 'all') {
+                          return 'Next filter had no items — showing All deliveries';
+                        }
+                        return '';
+                      })()}
+                  </div>
+                )}
+
                 {(() => {
                   /*
                    * Spec 034 / T036 — Pending next delivery placeholder.

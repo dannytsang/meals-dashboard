@@ -266,7 +266,7 @@ describe('DashboardClient Order Items by Category (Spec 034 / FR-012)', () => {
     }
   });
 
-  it('FR-012 #4: bumping `today` past the next order reclassifies its items as Previous', () => {
+  it('FR-012 #4 + Spec 037 / FR-001 AS-004: bumping `today` past the next order keeps items visible via the empty-filter fallback', () => {
     // Initial render: today is between the two orders.
     const data = makeTwoOrderData('2026-06-15');
     const { rerender } = render(
@@ -279,28 +279,44 @@ describe('DashboardClient Order Items by Category (Spec 034 / FR-012)', () => {
 
     // Bump today to one day AFTER the next order's deliveryDate
     // (2026-06-20 + 1 = 2026-06-21). The next-order item is now
-    // classified as previous; the default Next filter hides it.
+    // classified as previous; the default Next filter is empty.
+    //
+    // Spec 037 / AS-004 contract: when the persisted filter has
+    // items, the filter renders unchanged. But after the time-
+    // machine bump the persisted filter is still 'next' (the
+    // default) and the previous Next-order item is now in the
+    // previous group, so the Next filter is empty → AS-001 fires
+    // and the panel falls back to 'all'. Both items now visible.
     rerender(createElement(DashboardClient, { today: '2026-06-21', data, userName: 'Danny' }));
 
-    expect(screen.queryByText('Tesco Garlic Bulb')).toBeNull();
-    // Toggling to "previous" now reveals it (alongside milk).
-    fireEvent.click(screen.getByRole('button', { name: 'Previous delivery' }));
+    // After fallback: garlic is visible (now in the previous bucket
+    // but the panel fell back to all). Milk is also visible.
     expect(screen.getByText('Tesco Garlic Bulb')).toBeTruthy();
     expect(screen.getByText('Tesco Milk 4 Pints')).toBeTruthy();
+    // The fallback notice is rendered (one-shot, this is the first
+    // render that triggered the fallback).
+    const notice = screen.getByTestId('delivery-filter-fallback-notice');
+    expect(notice.textContent).toMatch(/Next filter had no items/);
   });
 
-  it('FR-012 #5: with no future order blob, the Next filter renders the Pending placeholder', () => {
-    // Build a data set whose only order is in the past — there's
-    // no future order blob, so the pending-next case fires when
-    // a future deliveryWindow entry exists.
+  it('FR-012 #5 + Spec 037 / AS-002 + AS-003: with no future order blob and no past items, the Next filter renders the Pending placeholder (no items → no fallback target) ', () => {
+    // Build a data set whose only order is in the past AND has no
+    // items. Per Spec 037 / AS-002 + AS-003, with the persisted
+    // `next` filter empty AND no `all` items to fall back to, the
+    // FR-001 preference order has no valid target → the existing
+    // pending-next placeholder renders (no notice).
     const today = '2026-06-15';
     const futureWindow = { date: '2026-06-25', slot: '14:00-16:00', status: 'scheduled' as const, orderTotal: 0 };
     const pastOrder: OrderBlob = {
       orderNumber: 'PAST-1',
       deliveryDate: '2026-06-01',
       deliverySlot: '10:00-12:00',
-      orderTotal: 1.8,
-      items: [{ name: 'Tesco Milk 4 Pints', quantity: 1, price: 1.8, category: 'Dairy' }],
+      orderTotal: 0,
+      // Items array INTENTIONALLY empty so all-bucket also has 0
+      // items — fallback chain terminates at `all` with no items
+      // and the existing spec 008 empty state / pending-next
+      // placeholder renders.
+      items: [],
       substitutions: [],
       unavailable: [],
       shortLifeItems: [],
@@ -322,11 +338,13 @@ describe('DashboardClient Order Items by Category (Spec 034 / FR-012)', () => {
     render(createElement(DashboardClient, { today, data, userName: 'Danny' }));
 
     // Pending placeholder is rendered with the canonical text and
-    // the data-testid hook (T036).
+    // the data-testid hook (T036). The spec 037 fallback has no
+    // target (all is also empty), so the existing FR-006 placeholder
+    // renders. No fallback notice should be visible.
     const placeholder = screen.getByTestId('pending-next-placeholder');
     expect(placeholder.textContent).toMatch(/Pending next delivery/);
-    // The placeholder REPLACES the item list (not in addition to it).
-    expect(screen.queryByText('Tesco Milk 4 Pints')).toBeNull();
+    // Spec 037: no notice because there is no fallback to announce.
+    expect(screen.queryByTestId('delivery-filter-fallback-notice')).toBeNull();
   });
 
   it('FR-012 #6: delivery filter composes with category chips, match filter, search query, and sort', () => {
@@ -490,17 +508,17 @@ describe('DashboardClient Order Items by Category (Spec 034 / FR-012)', () => {
     );
 
     // Default Next filter now hides garlic (it has been reclassified
-    // as previous by the time-machine shift).
-    expect(screen.queryByText('Tesco Garlic Bulb')).toBeNull();
-    // Sanity: the milk item from the original-previous order is
-    // still classified as previous (its date 2026-06-08 is in the
-    // past either way), and is hidden by the default Next filter.
-    expect(screen.queryByText('Tesco Milk 4 Pints')).toBeNull();
-
-    // Toggle to Previous to confirm garlic WAS reclassified as
-    // previous (i.e. the time-machine shift took effect, not just
-    // a default-view flip).
-    fireEvent.click(screen.getByRole('button', { name: 'Previous delivery' }));
+    // as previous by the time-machine shift). With Spec 037's empty-
+    // filter fallback, the panel auto-falls-back to `all` rather
+    // than rendering an empty panel — AS-001 contract fires. Assert
+    // the fallback notice IS rendered (the FR-009 path is the
+    // production-shape smoke test for spec 037).
+    const notice = screen.getByTestId('delivery-filter-fallback-notice');
+    expect(notice).toBeTruthy();
+    expect(notice.textContent).toMatch(/Next filter had no items/);
+    // Both items are now visible because the panel fell back to
+    // `all` (the past order + the time-machine-reclassified next
+    // order).
     expect(screen.getByText('Tesco Garlic Bulb')).toBeTruthy();
     expect(screen.getByText('Tesco Milk 4 Pints')).toBeTruthy();
   });
