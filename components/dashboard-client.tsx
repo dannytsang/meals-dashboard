@@ -706,18 +706,15 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
   // past date) so meals are found correctly.
   const todayDate = parseISODateLocal(today);
 
-  // Anchor the window to the Monday of the week containing the earliest meal
-  // date in coverage (not to "today"), so meals scheduled beyond the current
-  // calendar week are still visible in the UI.
+  // Anchor the window to the Monday of the current calendar week. The
+  // current-day highlight is keyed from this seven-column window, so anchoring
+  // to the earliest loaded meal date can omit today when coverage begins near
+  // the end of the previous week (for example, coverage starting Saturday).
   const allMealDates = coverage.map(c => c.meal.date).filter(Boolean) as string[];
-  const earliestDateStr = allMealDates.length > 0
-    ? allMealDates.reduce((min, d) => d < min ? d : min)
-    : today;
-  const earliestMealDate = parseISODateLocal(earliestDateStr);
-  const earliestDow = earliestMealDate.getDay();
-  const daysSinceMondayEarliest = earliestDow === 0 ? 6 : earliestDow - 1;
-  const thisMonday = new Date(earliestMealDate);
-  thisMonday.setDate(earliestMealDate.getDate() - daysSinceMondayEarliest);
+  const todayDow = todayDate.getDay();
+  const daysSinceMondayToday = todayDow === 0 ? 6 : todayDow - 1;
+  const thisMonday = new Date(todayDate);
+  thisMonday.setDate(todayDate.getDate() - daysSinceMondayToday);
 
   const days: { date: string; displayDate: string; isToday: boolean; dataKey: string }[] = [];
   for (let i = 0; i < 7; i++) {
