@@ -88,6 +88,16 @@ class BuildDashboardPayloadExtraOrderTests(unittest.TestCase):
             blob = next(o for o in payload["orders"] if o.get("orderId") == "6521-EXTRA-9001")
             self.assertEqual(blob["orderBlobPath"], "orders/2026-06-30/6521-EXTRA-9001.json")
 
+    def test_normalizes_human_readable_extra_order_date_for_blob_partition(self):
+        """A pending receipt date must become an ISO Blob partition."""
+        module = load_module()
+        with tempfile.TemporaryDirectory() as tmp:
+            extra = _extra(order_id="3821-8601-762", delivery_date="Tuesday 28 July 2026")
+            extra["orderBlobPath"] = "orders/Tuesday 28 July 2026/3821-8601-762.json"
+            payload = _build(module, extra=extra, sidecar=Path(tmp) / "s.json")
+            blob = next(o for o in payload["orders"] if o.get("orderId") == "3821-8601-762")
+            self.assertEqual(blob["orderBlobPath"], "orders/2026-07-28/3821-8601-762.json")
+
     def test_no_last_email_is_no_op(self):
         """AS-004: without --extra-order, payload matches the spec 035 baseline."""
         module = load_module()

@@ -1959,6 +1959,17 @@ def publish_split_dashboard_payload(
     }
 
 
+def canonical_order_blob_date(delivery_date: Any) -> str:
+    """Return the ISO date partition used by order Blob paths when possible."""
+    value = str(delivery_date or "").strip()
+    for date_format in ("%Y-%m-%d", "%A %d %B %Y", "%d %B %Y"):
+        try:
+            return datetime.strptime(value, date_format).date().isoformat()
+        except ValueError:
+            continue
+    return value
+
+
 def compute_delivery_windows(delivery_metadata: list) -> list:
     """Compute DeliveryWindow entries from raw delivery metadata (shape matches TS DeliveryWindow)."""
     windows = []
@@ -2222,20 +2233,19 @@ def build_dashboard_payload(
             or extra_order_blob.get("orderNumber")
         )
         extra_date = extra_order_blob.get("deliveryDate") or extra_order_blob.get("delivery_date") or ""
-        expected_path = (
-            extra_order_blob.get("orderBlobPath")
-            or (f"orders/{extra_date}/{extra_id}.json" if extra_id and extra_date else "")
-        )
-        canonical = f"orders/{extra_date}/{extra_id}.json" if extra_id and extra_date else ""
+        partition_date = canonical_order_blob_date(extra_date)
+        expected_path = extra_order_blob.get("orderBlobPath")
+        raw_canonical = f"orders/{extra_date}/{extra_id}.json" if extra_id and extra_date else ""
+        canonical = f"orders/{partition_date}/{extra_id}.json" if extra_id and partition_date else ""
         if not extra_id:
             print("  ⚠ extra-order: missing orderId/orderNumber; skipping extra-order write (FR-004)")
-        elif expected_path and canonical and expected_path != canonical:
+        elif expected_path and expected_path not in {raw_canonical, canonical}:
             print(f"  ⚠ extra-order: orderBlobPath '{expected_path}' does not match canonical '{canonical}' (FR-004); skipping extra-order write")
         else:
-            # Stamp canonical orderBlobPath if missing/mismatched above so the
-            # dashboard loader always sees the expected Vercel Blob path.
-            if not extra_order_blob.get("orderBlobPath"):
-                extra_order_blob["orderBlobPath"] = canonical
+            # Always stamp the canonical ISO partition. Pending delivery-day
+            # hand-offs may carry a human-readable deliveryDate, but Blob API
+            # order paths are date-partitioned as orders/YYYY-MM-DD/order.json.
+            extra_order_blob["orderBlobPath"] = canonical
             # De-duplicate against the active receipt: if the extra shares
             # the same orderId, the most-recent delivery wins (spec 035 parity).
             existing_ids = {o.get("orderId") for o in orders}
