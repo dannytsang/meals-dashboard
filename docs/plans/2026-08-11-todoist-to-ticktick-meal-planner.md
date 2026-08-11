@@ -2,9 +2,10 @@
 
 > **For Hermes:** Use the subagent-driven-development skill to implement this plan task-by-task.
 
-**Goal:** Replace Todoist as the meals-check source with TickTick while preserving the Meal Planner project/list, sections, dates, labels/tags, completion semantics, special cases, and dashboard output 1:1.
+**Status (2026-08-11):** Danny approved a forward-only cutover. Todoist parity is explicitly waived; the confirmed live TickTick project/list `🍽️Meal Planner` and columns `Planned` / `Ashlee’s Lunch` are the source of truth. `meal_source: ticktick` is active. Remaining validation is limited to TickTick-backed refresh and dashboard data integrity.
 
-**Architecture:** TickTick becomes the sole read source for planned meals through the official Open API v1. The meals-check pipeline will resolve the destination project and columns by exact name, translate TickTick task fields into the existing internal meal-task shape, and leave Tesco matching, coverage generation, and dashboard Blob publication unchanged. A read-only parity phase will compare Todoist and TickTick before the source switch; no Todoist IDs will be used in TickTick requests.
+
+**Architecture:** TickTick is the sole read source for planned meals through the official Open API v1. The meals-check pipeline resolves the confirmed project and columns by exact live name, translates TickTick task fields into the existing internal meal-task shape, and leaves Tesco matching, coverage generation, and dashboard Blob publication unchanged. Todoist parity is not a prerequisite for this forward-only cutover; no Todoist IDs are used in TickTick requests.
 
 **Tech Stack:** Python 3 standard library, TickTick Open API v1, existing `tesco_meal_check.py` pipeline, YAML configuration, unittest/pytest-compatible tests, Vercel dashboard sync endpoint.
 
