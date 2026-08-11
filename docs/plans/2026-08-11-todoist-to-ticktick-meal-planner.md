@@ -67,7 +67,7 @@ Expected configuration contract:
 meal_source: parity
 
 ticktick:
-  token_file: "/home/hermes/.hermes/ticktick_token.json"
+  token_file: "/home/hermes/.hermes/profiles/chef/ticktick_token.json"
   project_name: "Meal Planner"
   planned_column: "Planned"
   lunch_column: "Ashlee's lunch"
