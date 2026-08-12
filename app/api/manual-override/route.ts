@@ -95,9 +95,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const result = await runApplyManualOverride(args);
     if (result.code !== 0) {
-      console.error('[manual-override] Python script failed:', result.stderr);
+      console.error('[manual-override] Python script failed', {
+        code: result.code,
+        stderrLength: result.stderr.length,
+        stdoutLength: result.stdout.length,
+      });
       return NextResponse.json(
-        { error: 'Failed to apply override', detail: result.stderr || result.stdout },
+        { error: 'Failed to apply override' },
         { status: 500 }
       );
     }
@@ -109,10 +113,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       quantity: body.quantity ?? 1,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[manual-override] Spawn failed:', message, err);
+    console.error('[manual-override] Spawn failed', { error: err instanceof Error ? err.name : 'unknown' });
     return NextResponse.json(
-      { error: 'Failed to invoke override script', detail: message },
+      { error: 'Failed to invoke override script' },
       { status: 500 }
     );
   }

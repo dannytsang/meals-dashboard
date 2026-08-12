@@ -16,6 +16,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 const mockGet = vi.fn();
+const mockGetServerSession = vi.fn();
 
 const cookieJar: Record<string, { value: string } | undefined> = {};
 
@@ -23,6 +24,10 @@ vi.mock('next/headers', () => ({
   cookies: async () => ({
     get: (name: string) => mockGet(name),
   }),
+}));
+
+vi.mock('next-auth', () => ({
+  getServerSession: (...args: unknown[]) => mockGetServerSession(...args),
 }));
 
 import { POST } from './route';
@@ -72,6 +77,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   for (const k of Object.keys(cookieJar)) delete cookieJar[k];
   mockGet.mockImplementation((name: string) => cookieJar[name]);
+  mockGetServerSession.mockResolvedValue({ user: { name: 'Danny Park', email: 'danny@example.com' } });
   delete (process.env as Record<string, string | undefined>).NODE_ENV;
 });
 

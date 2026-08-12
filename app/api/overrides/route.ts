@@ -171,8 +171,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const entries = await readOverridesBlob();
     return NextResponse.json({ ok: true, overrides: entries });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: 'Failed to read overrides', detail: message }, { status: 500 });
+    console.error('[overrides] read failed', { error: err instanceof Error ? err.name : 'unknown' });
+    return NextResponse.json({ error: 'Failed to read overrides' }, { status: 500 });
   }
 }
 
@@ -210,10 +210,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await writeOverridesBlob(updated);
     return NextResponse.json({ ok: true, overrides: updated });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[overrides] Write failed:', message, err);
+    console.error('[overrides] write failed', { error: err instanceof Error ? err.name : 'unknown' });
     return NextResponse.json(
-      { error: 'Failed to persist override', detail: message },
+      { error: 'Failed to persist override' },
       { status: 500 }
     );
   }

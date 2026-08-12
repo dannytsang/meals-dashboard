@@ -11,8 +11,8 @@
  *     If the body is missing or empty, the toggle is treated as "flip"
  *     (current value XOR 1). The body shape is deliberately boring so
  *     the route handler is small and the wire format is obvious.
- *   - Response: 200 with `{ "enabled": boolean, "value": "0" | "1" }` —
- *     the new effective state. Always 200 (no env-var gate to 404 on).
+ *   - Response: 200 with `{ "enabled": boolean, "value": "0" | "1" }` for authenticated users.
+ *     Unauthenticated requests return 401 before touching the cookie.
  *   - Side effect: sets or clears the `meals_debug_mode` cookie using
  *     `next/headers` `cookies()`. The cookie is signed, HttpOnly, and
  *     SameSite=Lax; Secure is set in production only.
@@ -32,6 +32,7 @@ import {
   verifyDebugCookie,
   type DebugCookieValue,
 } from '@/lib/debug-cookie';
+import { hasAuthenticatedSession } from '@/lib/debug-authorization';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +57,9 @@ function cookieOptions() {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  if (!(await hasAuthenticatedSession())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   // Read the current cookie so we can compute the flipped default.
   // Next.js 15 makes `cookies()` async; await it.
   const jar = await cookies();
