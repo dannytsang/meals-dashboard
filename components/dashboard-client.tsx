@@ -828,8 +828,6 @@ export function DashboardClient({ today, data, debugOn, demoMode, userName }: Da
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--text-primary)' }}>🍽️ Meals Dashboard</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {/* TEMPORARY REMOVE AFTER DANNY CONFIRMS DEPLOYMENT */}
-            <span data-testid="deployment-test-label">DEPLOYMENT TEST: GitHub -&gt; Vercel</span>
             {/*
               Spec 024 / FR-017: the demo-mode chip is the first
               element in the action row when demo mode is active.
