@@ -1843,32 +1843,6 @@ def build_dashboard() -> Tuple[bool, str]:
     return True, ""
 
 
-def trigger_vercel_deploy() -> Tuple[bool, str]:
-    """Trigger a production deployment via Vercel CLI."""
-    print("  Running: npx vercel --prod --yes")
-    try:
-        result = subprocess.run(
-            ["npx", "vercel", "--prod", "--yes"],
-            cwd=DASHBOARD_PATH,
-            capture_output=True,
-            text=True,
-            timeout=180,
-            shell=False
-        )
-        if result.returncode == 0:
-            output = result.stdout + result.stderr
-            for line in output.split("\n"):
-                if "Production:" in line or "meals-dashboard" in line:
-                    print(f"  {line.strip()}")
-            return True, ""
-        else:
-            return False, result.stderr[-300:] or result.stdout[-300:]
-    except subprocess.TimeoutExpired:
-        return False, "Deploy timed out after 180s"
-    except Exception as e:
-        return False, str(e)
-
-
 def post_dashboard_data_to_api(payload: Dict[str, Any], api_url: str, secret: str, dry_run: bool = False) -> Tuple[bool, Dict[str, Any]]:
     """POST dashboard data to the dashboard's private API endpoint.
 
@@ -2500,13 +2474,10 @@ def main():
         print("[4] Skipping build (--no-build)")
         print()
 
-    # Trigger Vercel deploy
-    print("[5] Triggering Vercel production deployment...")
-    deploy_ok, deploy_error = trigger_vercel_deploy()
-    if not deploy_ok:
-        print(f"  ⚠ Deploy warning: {deploy_error}")
-    else:
-        print("  ✓ Deployment triggered")
+    # Code deployment is handled by the repository's GitHub -> Vercel
+    # integration after the relevant commit reaches main. This job only
+    # publishes dashboard data and validates the local build.
+    print("[5] Code deployment delegated to GitHub -> Vercel")
     print()
 
     print("=" * 50)

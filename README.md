@@ -123,10 +123,9 @@ python3 scripts/sync-dashboard-data.py --skip-fetch --dry-run
 2. Update `lib/real-data.ts` with fresh data
 3. Update `lib/sync-meta.ts` with timestamp
 4. Commit to git (for version history)
-5. **Trigger force rebuild** via `npx vercel --prod --yes` (bypasses Vercel build cache)
-6. GitHub Actions also runs on `main` push as a fallback/secondary trigger
+5. Validate the local build; code deployment is triggered by the repository's GitHub → Vercel integration when the commit reaches `main`
 
-**Note:** Step 5 (force rebuild) is the critical step that ensures the dashboard always reflects the latest data, even when Vercel's build cache would otherwise suppress a rebuild.
+**Note:** The cron owns data publication to Vercel Blob. It does not require a Vercel deployment token or invoke the Vercel CLI. Production code deployment is owned by GitHub → Vercel after a push to `main`.
 
 ## TypeScript Data Types
 
@@ -206,19 +205,7 @@ npm run lint
 
 ### Deployment Triggers (Build Cache Strategy)
 
-Vercel caches build output aggressively. A git-push trigger only rebuilds when Vercel detects that something in the **build graph** has changed. Data-only changes to `lib/real-data.ts` can be invisible to Vercel's cache invalidation — resulting in stale deployments despite fresh source files.
-
-The sync pipeline handles this by **explicitly triggering a new deployment** after updating `real-data.ts`, bypassing the build cache entirely.
-
-**Implementation options (in order of reliability):**
-
-| Approach | How | Pros | Cons |
-|---|---|---|---|
-| **Vercel API `POST /v6/deployments`** | Call from sync script after push | Full control, no git spam, reliable | Requires `VERCEL_TOKEN` env var |
-| **CLI `vercel --prod --yes`** | `subprocess.run(['npx', 'vercel', '--prod', '--yes'])` in sync script | No API token needed | Slower, parses CLI output |
-| **GitHub Actions `workflow_dispatch`** | Trigger via API from sync script | Uses existing CI infra | More complex |
-
-**Current approach:** CLI-based force rebuild in the sync script (see `scripts/sync-dashboard-data.py`). This was chosen because it requires no additional secrets — `npx vercel` is already authenticated in the environment.
+Production code deployment is owned by the GitHub → Vercel integration. The sync script must not call the Vercel CLI or require `VERCEL_TOKEN`; it publishes data and validates the local build only. A code change reaches production when it is pushed to `main` and Vercel's connected project completes its production deployment.
 
 **Why not git commits as the trigger?**
 
