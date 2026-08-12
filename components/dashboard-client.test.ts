@@ -388,6 +388,20 @@ describe('DashboardClient user menu (Spec 026)', () => {
   });
 });
 
+describe('DashboardClient deployment test badge', () => {
+  it('renders the always-visible deployment test label in the normal dashboard header', () => {
+    const headerStart = source.indexOf('<header');
+    const headerEnd = source.indexOf('</header>');
+    const headerSource = source.slice(headerStart, headerEnd);
+
+    expect(headerSource).toContain('data-testid="deployment-test-label"');
+    expect(headerSource).toContain('DEPLOYMENT TEST: GitHub -&gt; Vercel');
+    expect(headerSource).toContain('TEMPORARY REMOVE AFTER DANNY CONFIRMS DEPLOYMENT');
+    expect(headerSource).not.toMatch(/debugOn[^\n]*deployment-test-label/);
+    expect(headerSource).not.toMatch(/demoMode[^\n]*deployment-test-label/);
+  });
+});
+
 describe('DashboardClient demo-mode contract (Spec 024)', () => {
   it('tags the body element with data-demo-mode instead of the html element', () => {
     expect(layoutSource).toContain('<body className="antialiased" data-demo-mode={demoMode ? \'true\' : \'false\'}');
