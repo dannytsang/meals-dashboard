@@ -56,27 +56,16 @@ class ProductEnrichmentTests(unittest.TestCase):
             self.assertNotIn('productMetadata', enriched[0])
             self.assertEqual(enriched[0]['name'], 'Tesco Unknown Thing')
 
-    def test_tesco_lookup_never_invokes_hermes_when_http_and_apollo_fail(self):
-        calls = []
+    def test_tesco_lookup_has_no_hermes_fallback_when_http_and_apollo_fail(self):
+        self.assertFalse(hasattr(sync_dashboard_data, '_fetch_via_hermes_agent'))
+        self.assertFalse(hasattr(sync_dashboard_data, '_disabled_product_agent_fallback'))
 
-        def forbidden(*args, **kwargs):
-            calls.append((args, kwargs))
-            raise AssertionError('Hermes fallback must not run')
-
-        with tempfile.TemporaryDirectory():
-            original = sync_dashboard_data._fetch_via_hermes_agent if hasattr(sync_dashboard_data, '_fetch_via_hermes_agent') else None
-            try:
-                sync_dashboard_data._fetch_via_hermes_agent = forbidden
-                with mock.patch.object(sync_dashboard_data.urllib.request, 'urlopen', side_effect=OSError('offline')):
-                    result = sync_dashboard_data.fetch_tesco_product_metadata('Tesco Unknown Thing', timeout=0.01)
-            finally:
-                if original is None:
-                    delattr(sync_dashboard_data, '_fetch_via_hermes_agent')
-                else:
-                    sync_dashboard_data._fetch_via_hermes_agent = original
+        with mock.patch.object(sync_dashboard_data.urllib.request, 'urlopen', side_effect=OSError('offline')):
+            with mock.patch.object(sync_dashboard_data, 'subprocess', create=True) as subprocess:
+                result = sync_dashboard_data.fetch_tesco_product_metadata('Tesco Unknown Thing', timeout=0.01)
 
         self.assertIsNone(result)
-        self.assertEqual(calls, [])
+        subprocess.run.assert_not_called()
 
     def test_tesco_lookup_returns_basic_metadata_without_hermes(self):
         html = '<a href="/shop/en-GB/products/12345">item</a>'
