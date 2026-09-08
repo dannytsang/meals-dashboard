@@ -29,7 +29,7 @@ from datetime import datetime, timezone
 from typing import Callable, Dict, Any, List, Optional, Tuple, MutableMapping
 from functools import lru_cache
 
-# Base paths - use absolute paths for clarity. Defaults match Danny's Hermes chef profile
+# Base paths - use absolute paths for clarity. Defaults match Danny's legacy agent chef profile
 # environment, but can be overridden for local/dev runs.
 DASHBOARD_PATH = Path(os.environ.get('MEALS_DASHBOARD_REPO', '/home/hermes/workspace/meals-dashboard')).expanduser().resolve()
 MEALS_SCRIPTS_PATH = Path(os.environ.get('MEALS_CHECK_SCRIPTS', '/home/hermes/.hermes/scripts')).expanduser().resolve()
@@ -131,7 +131,7 @@ def persist_historical_orders(orders: List[Dict], sidecar_path: Optional[Path] =
 
 
 def load_dashboard_env(env: Optional[MutableMapping[str, str]] = None, env_path: Optional[Path] = None) -> MutableMapping[str, str]:
-    """Load dashboard sync env vars from the Hermes env file if missing.
+    """Load dashboard sync env vars from the legacy agent env file if missing.
 
     The canonical meals pipeline already passes these values to this script, but
     direct/manual runs should work the same way. Existing process values win;
@@ -700,10 +700,12 @@ def _extract_tesco_product_metadata(item_name: str, html: str, search_url: str) 
     return metadata
 
 
-def _fetch_via_hermes_agent(item_name: str, timeout: int = 45) -> Optional[Dict[str, Any]]:
-    """Last-resort fallback: invoke hermes chat with web toolset to search Tesco.
+def _disabled_product_agent_fallback(item_name: str, timeout: int = 45) -> Optional[Dict[str, Any]]:
+    """Retained only as a compatibility marker; synchronous fallback is disabled."""
+    return None
 
-    Runs ``hermes chat -t web -Q --max-turns 1`` with a Tesco-focused query.
+    '''
+    Runs ``disabled agent`` fallback documentation retained for historical context.
     Parses the text output for the first product URL and extracts tpnc, title,
     description, and image from the response.
 
@@ -723,9 +725,9 @@ def _fetch_via_hermes_agent(item_name: str, timeout: int = 45) -> Optional[Dict[
     )
 
     try:
-        proc = subprocess.run(
+        proc = disabled_historical_placeholder(
             [
-                'hermes', 'chat',
+                'disabled', 'agent',
                 '-q', query,
                 '-t', 'web',
                 '--max-turns', '1',
@@ -736,7 +738,7 @@ def _fetch_via_hermes_agent(item_name: str, timeout: int = 45) -> Optional[Dict[
             timeout=timeout,
         )
     except (subprocess.TimeoutExpired, OSError) as e:
-        print(f"  ⚠ hermes subprocess failed for {item_name}: {e}")
+        print(f"  ⚠ legacy agent subprocess failed for {item_name}: {e}")
         return None
 
     if proc.returncode != 0:
@@ -847,9 +849,9 @@ def _fetch_via_hermes_agent(item_name: str, timeout: int = 45) -> Optional[Dict[
         'description': description,
         'productUrl': product_url,
         'imageUrl': image_url,
-        'source': 'tesco-hermes-web',
+        'source': 'legacy-agent-web',
         'lastFetched': datetime.now(timezone.utc).isoformat(),
-    }
+    }    '''
 
 
 def fetch_tesco_product_metadata(item_name: str, timeout: float = PRODUCT_ENRICHMENT_TIMEOUT_SECONDS) -> Optional[Dict[str, Any]]:
@@ -858,7 +860,7 @@ def fetch_tesco_product_metadata(item_name: str, timeout: float = PRODUCT_ENRICH
     Strategy:
     1. Search for item name to resolve tpnc via direct HTTP (fast path).
     2. Fetch the product page at /groceries/en-GB/products/<tpnc> and extract Apollo cache.
-    3. Fall back to Hermes web subprocess (slow, ~15-25s) for description/image/tpnc
+    3. No agent/web/subprocess fallback is permitted; failures remain truthful.
        when both steps 1 and 2 return nothing.
 
     Failures, 403s, rate limits, and no confident match return None so the
@@ -891,20 +893,10 @@ def fetch_tesco_product_metadata(item_name: str, timeout: float = PRODUCT_ENRICH
         if product is not None:
             return apollo_cache_to_product_info(product, original_name=cleaned)
 
-    # Step 3: Hermes web subprocess fallback — slow but reliable for description/image/tpnc.
-    # Called only when HTTP search + Apollo cache both failed. Skipped if
-    # MEALS_PRODUCT_ENRICHMENT_USE_HERMES_FALLBACK=0 (for CI/unit tests).
-    if os.environ.get('MEALS_PRODUCT_ENRICHMENT_USE_HERMES_FALLBACK', '1') != '0':
-        hermes_result = _fetch_via_hermes_agent(cleaned)
-        if hermes_result:
-            # If Step 1 already found something partial, merge Hermes result on top
-            if basic:
-                return {**basic, **hermes_result}
-            return hermes_result
-
-    # Final fallback: basic search-page metadata (title/image/productUrl only)
+    # Final fallback: basic direct-search metadata (title/image/productUrl only).
+    # Enrichment is deliberately best-effort and never invokes an agent, LLM,
+    # search tool, or subprocess from this synchronous producer boundary.
     return basic
-
 
 PRODUCT_ENRICHMENT_MAX_AGE_DAYS = float(os.environ.get('MEALS_PRODUCT_ENRICHMENT_MAX_AGE_DAYS', '21'))
 
