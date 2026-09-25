@@ -1,6 +1,7 @@
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import { VercelBlobStorageClient } from '@/lib/blob-storage';
+import { publishRecoverably, PublicationError } from '@/lib/publication-recovery';
 import { syncDashboardProducts, type ProductSyncPayload } from '@/lib/dashboard-sync';
 
 export const runtime = 'nodejs';
@@ -39,7 +40,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   try {
     const client = new VercelBlobStorageClient();
-    const result = await syncDashboardProducts(parsed.value, client, { dryRun });
+    const result = await publishRecoverably(client, body as Record<string, unknown>, 'products', dryRun,
+      unlocked => syncDashboardProducts(parsed.value, unlocked, { dryRun }));
     return NextResponse.json({
       ok: true,
       manifestPath: result.manifestPath,
@@ -50,14 +52,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       isInitialSync: result.isInitialSync,
       suppressedNoopWrites: result.suppressedNoopWrites,
       productsManifestPath: result.productsManifestPath ?? null,
+      publicationProtocol: result.publicationProtocol,
       dryRun,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[dashboard-products-sync] Sync failed:', message, err);
     return NextResponse.json(
-      { error: 'Failed to store data', detail: message },
-      { status: 500 }
+      { error: err instanceof PublicationError ? err.message : 'Failed to store data' },
+      { status: err instanceof PublicationError ? err.status : 500 }
     );
   }
 }

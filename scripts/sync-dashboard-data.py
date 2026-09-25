@@ -28,6 +28,17 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import Callable, Dict, Any, List, Optional, Tuple, MutableMapping
 from functools import lru_cache
+from contextlib import contextmanager, redirect_stdout
+
+
+@contextmanager
+def private_processing_output():
+    """Legacy enrichment may print household labels; dual mode emits counts only."""
+    if os.environ.get('MEALS_PUBLICATION_PROTOCOL') == '1':
+        with open(os.devnull, 'w') as sink, redirect_stdout(sink):
+            yield
+    else:
+        yield
 
 # Base paths - use absolute paths for clarity. Defaults match Danny's legacy agent chef profile
 # environment, but can be overridden for local/dev runs.
@@ -142,7 +153,11 @@ def load_dashboard_env(env: Optional[MutableMapping[str, str]] = None, env_path:
     if not path.exists():
         return target_env
 
-    wanted = {"MEALS_DASHBOARD_DATA_SECRET", "BLOB_READ_WRITE_TOKEN", "DASHBOARD_DATA_API_URL"}
+    wanted = {
+        "MEALS_DASHBOARD_DATA_SECRET", "BLOB_READ_WRITE_TOKEN", "DASHBOARD_DATA_API_URL",
+        "MEAL_PLANNER_DASHBOARD_DATA_API_URL", "MEAL_PLANNER_DASHBOARD_DATA_SECRET",
+        "MEALS_PUBLICATION_PROTOCOL", "MEALS_PUBLICATION_STATE_DIR",
+    }
     try:
         with open(path) as f:
             for raw_line in f:
@@ -1230,33 +1245,34 @@ def resolve_matched_items_for_dashboard(matched_items, raw_items):
     return resolved_matched_items
 
 
-def fetch_manual_overrides(api_url: str, secret: str) -> List[Dict[str, Any]]:
-    """Fetch durable manual override entries from the dashboard's /api/overrides.
+def fetch_manual_overrides(api_url: str, secret: str) -> Optional[List[Dict[str, Any]]]:
+    """Fetch the single authoritative Vercel override snapshot.
 
-    Spec 019 / FR-07 / T061 — the "I have this" button writes overrides to
-    the Vercel blob via /api/overrides POST. This function reads them back
-    so the Python sync can merge them into the coverage blobs.
-
-    Returns an empty list on any failure (network error, auth failure, blob
-    missing). The sync continues with no overrides applied, which is the
-    correct graceful-degradation behaviour for a non-critical data source.
+    Return None on any failure so callers cannot mistake an unavailable source
+    for a successful empty snapshot or claim target parity from it.
     """
     if not api_url or not secret:
-        return []
+        print("  ⚠ Authoritative override snapshot unavailable (URL/auth not configured)")
+        return None
     try:
-        req = urllib.request.Request(
+        # Authenticated overrides route is /api/overrides; this snapshot is
+        # authoritative and its failure must not be treated as empty.
+        request = urllib.request.Request(
             api_url,
             headers={'x-dashboard-secret': secret},
             method='GET',
         )
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(request, timeout=15) as resp:
             body = resp.read().decode('utf-8')
         data = json.loads(body)
-        overrides = data.get('overrides', [])
-        return overrides if isinstance(overrides, list) else []
-    except Exception as e:
-        print(f"  ⚠ Failed to fetch manual overrides from {api_url}: {e}")
-        return []
+        overrides = data.get('overrides')
+        if not isinstance(overrides, list):
+            print("  ⚠ Authoritative override snapshot invalid")
+            return None
+        return overrides
+    except Exception as exc:
+        print(f"  ⚠ Authoritative override snapshot unavailable ({exc.__class__.__name__})")
+        return None
 
 
 def apply_manual_overrides_to_meals(meals: List[Dict[str, Any]], overrides: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -1682,53 +1698,51 @@ def build_dashboard() -> Tuple[bool, str]:
 
 
 def post_dashboard_data_to_api(payload: Dict[str, Any], api_url: str, secret: str, dry_run: bool = False) -> Tuple[bool, Dict[str, Any]]:
-    """POST dashboard data to the dashboard's private API endpoint.
+    """POST one payload to an existing machine-authenticated dashboard API.
 
-    When dry_run=True the request is sent to the split-layout endpoint with `?dryRun=1`.
-    The server computes hashes and reports what would change, but performs no Blob writes.
+    Responses are reduced to non-sensitive publication metadata. Raw response
+    bodies, request payloads, and credentials are never returned or logged.
     """
     if not api_url:
-        return False, {"error": "DASHBOARD_DATA_API_URL not configured"}
+        return False, {"error": "destination URL not configured"}
     if not secret:
-        return False, {"error": "DASHBOARD_DATA_SECRET not configured"}
+        return False, {"error": "destination auth not configured"}
     effective_url = api_url
     if dry_run:
         separator = '&' if '?' in api_url else '?'
         effective_url = f"{api_url}{separator}dryRun=1"
-
     data = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(
         effective_url,
         data=data,
-        headers={
-            'Content-Type': 'application/json',
-            'x-dashboard-secret': secret,
-        },
+        headers={'Content-Type': 'application/json', 'x-dashboard-secret': secret},
         method='POST',
     )
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            body = resp.read().decode('utf-8')
-            parsed = json.loads(body) if body else {}
-            if resp.status in (200, 201):
-                if dry_run:
-                    print("  ✓ Dashboard split-layout dry-run accepted")
-                else:
-                    print("  ✓ Dashboard split-layout stored to Blob")
-                return True, parsed
-            return False, {"error": f"API returned {resp.status}", "body": body[:500]}
-    except urllib.error.HTTPError as e:
-        body = e.read().decode('utf-8') if e.fp else ''
-        parsed = {}
-        try:
-            parsed = json.loads(body) if body else {}
-        except Exception:
-            parsed = {"body": body[:500]}
-        if e.code == 401:
-            return False, {"error": "Unauthorized (check DASHBOARD_DATA_SECRET)", **parsed}
-        return False, {"error": f"HTTP {e.code}", **parsed}
-    except Exception as e:
-        return False, {"error": f"POST failed: {e}"}
+        response = urllib.request.urlopen(req, timeout=20)
+        with response:
+            body = response.read(1024 * 1024 + 1).decode('utf-8')
+            status = response.status
+        if len(body.encode('utf-8')) > 1024 * 1024:
+            return False, {"error": "oversized API response"}
+    except urllib.error.HTTPError as exc:
+        return False, {"error": f"HTTP {exc.code}", "status": exc.code}
+    except Exception as exc:
+        return False, {"error": f"request failed ({exc.__class__.__name__})"}
+    try:
+        parsed = json.loads(body) if body else {}
+    except (TypeError, ValueError):
+        return False, {"error": "invalid JSON response"}
+    if not isinstance(parsed, dict):
+        return False, {"error": "invalid JSON response"}
+    if status not in (200, 201):
+        return False, {"error": f"HTTP {status}"}
+    return True, {
+        key: parsed[key] for key in (
+            'manifestPath', 'manifestHash', 'productsManifestPath',
+            'totalOps', 'dryRun', 'isInitialSync', 'suppressedNoopWrites', 'publicationProtocol',
+        ) if key in parsed
+    }
 
 
 def dashboard_products_api_url(api_url: str) -> str:
@@ -1737,37 +1751,79 @@ def dashboard_products_api_url(api_url: str) -> str:
     return api_url.rsplit('/', 1)[0] + '/dashboard-products-sync'
 
 
+def recovery_publisher():
+    from publication_recovery import RecoveryPublisher
+    root = os.environ.get('MEALS_PUBLICATION_STATE_DIR', str(Path.home() / '.local/state/meals-publication'))
+    return RecoveryPublisher(root, post_dashboard_data_to_api)
+
+
+def _post_with_bounded_retry(payload, api_url, secret, dry_run=False):
+    """Legacy requests have no replay contract; never retry an ambiguous write."""
+    return post_dashboard_data_to_api(payload, api_url, secret, dry_run=dry_run)
+
+
 def publish_split_dashboard_payload(
     payload: Dict[str, Any],
     api_url: str,
     secret: str,
     dry_run: bool = False,
-) -> Dict[str, Dict[str, Any]]:
-    """POST the main dashboard payload first, then the products payload."""
+    secondary_url: Optional[str] = None,
+    secondary_secret: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Fan one immutable main/products payload out independently per target."""
+    destinations = [("primary", api_url, secret)]
+    if secondary_url or secondary_secret:
+        destinations.append(("secondary", secondary_url or '', secondary_secret or ''))
+
+    if os.environ.get('MEALS_PUBLICATION_PROTOCOL') == '1':
+        from publication_recovery import CheckpointError
+        try:
+            return recovery_publisher().publish(payload, destinations, dry_run=dry_run)
+        except CheckpointError:
+            targets = {name: {phase: {'ok': False, 'response': {'error': 'publication checkpoint unavailable'}}
+                              for phase in ('main', 'products')} for name, _, _ in destinations}
+            return {'ok': False, 'status': 'failed', 'targets': targets, **targets['primary']}
+
     main_payload = {k: v for k, v in payload.items() if k != 'products'}
-    main_ok, main_response = post_dashboard_data_to_api(main_payload, api_url, secret, dry_run=dry_run)
     products = list(payload.get('products') or [])
-    products_ok = True
-    products_response: Dict[str, Any] = {}
+    targets = {}
+    for name, target_url, target_secret in destinations:
+        if not target_url or not target_secret:
+            error = "destination URL not configured" if not target_url else "destination auth not configured"
+            targets[name] = {
+                'main': {'ok': False, 'response': {'error': error}},
+                'products': {'ok': not products, 'response': {'skipped': 'no product payload'} if not products else {'error': 'main phase unavailable'}},
+            }
+            continue
 
-    if main_ok and products:
-        products_url = dashboard_products_api_url(api_url)
-        products_payload = {
-            'products': products,
-            'mainManifestPath': main_response.get('manifestPath'),
-        }
-        products_ok, products_response = post_dashboard_data_to_api(
-            products_payload,
-            products_url,
-            secret,
-            dry_run=dry_run,
+        main_ok, main_response = _post_with_bounded_retry(
+            main_payload, target_url, target_secret, dry_run=dry_run,
         )
-        if not products_ok:
-            print("  ⚠ Product publish failed after main dashboard publish")
+        product_result = {
+            'ok': not products,
+            'response': {'skipped': 'no product payload'} if not products else {'error': 'main phase unavailable'},
+        }
+        if main_ok and products:
+            product_payload = {
+                'products': products,
+                'mainManifestPath': main_response.get('manifestPath'),
+            }
+            product_ok, product_response = _post_with_bounded_retry(
+                product_payload, dashboard_products_api_url(target_url), target_secret,
+                dry_run=dry_run,
+            )
+            product_result = {'ok': product_ok, 'response': product_response}
+        targets[name] = {
+            'main': {'ok': main_ok, 'response': main_response},
+            'products': product_result,
+        }
 
+    primary = targets['primary']
     return {
-        'main': {'ok': main_ok, 'response': main_response},
-        'products': {'ok': products_ok, 'response': products_response},
+        'main': primary['main'],
+        'products': primary['products'],
+        'targets': targets,
+        'ok': all(t['main']['ok'] and t['products']['ok'] for t in targets.values()),
     }
 
 
@@ -2134,6 +2190,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--extra-order-key", type=str, default=None,
                         help="Optional stable key for the extra-order Blob "
                              "(default: 'deliveryDate:<ISO>:<orderId>').")
+    parser.add_argument('--replay-publication', action='store_true',
+                        help='Replay only privately checkpointed failed phases; do not collect or build.')
     return parser
 
 
@@ -2148,6 +2206,27 @@ def main():
     # Direct/manual syncs should behave like the canonical meals pipeline:
     # load ~/.hermes/.env before looking up the dashboard sync secret.
     load_dashboard_env()
+
+    if args.replay_publication:
+        if args.dry_run or os.environ.get('MEALS_PUBLICATION_PROTOCOL') != '1':
+            print('Replay requires MEALS_PUBLICATION_PROTOCOL=1 and is not a dry-run command')
+            return 1
+        destinations = [('primary', os.environ.get('DASHBOARD_DATA_API_URL') or
+                         'https://meals-dashboard.vercel.app/api/dashboard-sync',
+                         os.environ.get('MEALS_DASHBOARD_DATA_SECRET', ''))]
+        secondary = (os.environ.get('MEAL_PLANNER_DASHBOARD_DATA_API_URL', ''),
+                     os.environ.get('MEAL_PLANNER_DASHBOARD_DATA_SECRET', ''))
+        if any(secondary): destinations.append(('secondary', *secondary))
+        from publication_recovery import CheckpointError
+        try:
+            results = recovery_publisher().replay(destinations)
+        except CheckpointError:
+            print('Publication checkpoint unavailable')
+            return 1
+        for target, phases in results.items():
+            for phase, result in phases.items():
+                print(f"{target}: {phase}={'ok' if result['ok'] else 'failed'}")
+        return 0 if all(p['ok'] for phases in results.values() for p in phases.values()) else 1
 
     print("=" * 50)
     print("DASHBOARD DATA SYNC (Blob)")
@@ -2178,11 +2257,29 @@ def main():
     # Default to the production split-layout API for both overrides and sync.
     api_url = os.environ.get("DASHBOARD_DATA_API_URL", "") or "https://meals-dashboard.vercel.app/api/dashboard-sync"
     secret = os.environ.get("MEALS_DASHBOARD_DATA_SECRET", "")
+    secondary_url = os.environ.get("MEAL_PLANNER_DASHBOARD_DATA_API_URL", "")
+    secondary_secret = os.environ.get("MEAL_PLANNER_DASHBOARD_DATA_SECRET", "")
+    # A configured secondary is an explicit opt-in; keep the legacy primary-only
+    # path byte-for-byte in effect when neither secondary setting is present.
+    if bool(secondary_url) != bool(secondary_secret):
+        print("  ✗ Secondary publication requires both URL and auth configuration")
+        return 1
+    secondary_configured = bool(secondary_url and secondary_secret)
+    if secondary_configured and os.environ.get('MEALS_PUBLICATION_PROTOCOL') != '1':
+        print('  ✗ Secondary publication requires MEALS_PUBLICATION_PROTOCOL=1')
+        return 1
 
     overrides_api_url = api_url.rsplit('/', 1)[0] + '/overrides' if api_url else ''
-    overrides = fetch_manual_overrides(overrides_api_url, secret) if (overrides_api_url and secret) else []
-    if overrides:
-        print(f"  Manual overrides from blob: {len(overrides)}")
+    overrides = fetch_manual_overrides(overrides_api_url, secret)
+    if overrides is None and secondary_configured:
+        print("  ✗ Sync aborted: authoritative Vercel override snapshot unavailable")
+        return 1
+    if overrides is None:
+        # Preserve the legacy primary-only degradation behaviour; dual mode is
+        # fail-closed above because coverage must use one authoritative snapshot.
+        print("  ⚠ Primary-only sync proceeding without an override snapshot (legacy behavior)")
+        overrides = []
+    print(f"  Manual overrides from authoritative source: {len(overrides)}")
 
     # Spec 036 / FR-001 / FR-009 — read the round-1 hand-off file(s). Malformed
     # JSON or a missing path is logged and skipped; the main write still
@@ -2222,15 +2319,16 @@ def main():
     # builder so the assembled orders list includes the historical sidecar (or not).
     # Spec 036 / FR-001 / FR-005: pass --extra-order Blob through to the builder so
     # the canonical path is published in the same sync (delivery-day hand-off).
-    payload = build_dashboard_payload(
-        dashboard_cache, overrides,
-        api_url=api_url, api_secret=secret,
-        max_history=args.max_history,
-        no_history=args.no_history,
-        sidecar_path=None,  # use the module-level default
-        extra_order_blob=extra_blob,
-        extra_order_key=selected_key,
-    )
+    with private_processing_output():
+        payload = build_dashboard_payload(
+            dashboard_cache, overrides,
+            api_url=api_url, api_secret=secret,
+            max_history=args.max_history,
+            no_history=args.no_history,
+            sidecar_path=None,  # use the module-level default
+            extra_order_blob=extra_blob,
+            extra_order_key=selected_key,
+        )
     print(f"  Order blobs: {len(payload['orders'])}")
     print(f"  Coverage blobs: {len(payload['coverage'])}")
     print(f"  Delivery windows: {len(payload['deliveryWindows'])}")
@@ -2243,14 +2341,21 @@ def main():
     print("[3] Posting data to dashboard Blob API...")
     if not api_url:
         api_url = "https://meals-dashboard.vercel.app/api/dashboard-sync"
-    publish_result = publish_split_dashboard_payload(payload, api_url, secret, dry_run=args.dry_run)
+    publish_result = publish_split_dashboard_payload(
+        payload, api_url, secret, dry_run=args.dry_run,
+        secondary_url=secondary_url, secondary_secret=secondary_secret,
+    )
+    for target_name, phases in publish_result['targets'].items():
+        main_phase = phases['main']
+        product_phase = phases['products']
+        main_state = 'ok' if main_phase['ok'] else main_phase['response'].get('error', 'failed')
+        product_state = 'ok' if product_phase['ok'] else product_phase['response'].get('error', 'failed')
+        print(f"  {target_name}: main={main_state}; products={product_state}")
     if not publish_result['main']['ok']:
-        response = publish_result['main']['response']
-        print(f"  ✗ Failed to post data: {response.get('error', 'unknown error')}")
-        detail = response.get('detail') or response.get('body')
-        if detail:
-            print(f"    {str(detail)[:300]}")
+        print("  ✗ Primary dashboard publication failed")
         return 1
+    if not publish_result['ok']:
+        print("  ⚠ One or more required publication phases failed; normal meal report continues")
     response = publish_result['main']['response']
     print(f"  Manifest path: {response.get('manifestPath', 'n/a')}")
     if 'written' in response or 'skipped' in response:
@@ -2296,6 +2401,9 @@ def main():
     # Operations quota on every sync).
 
     if args.dry_run:
+        if not publish_result['ok']:
+            print("[dry-run] One or more configured destination phases failed validation.")
+            return 1
         print("[dry-run] Split-layout API exercised successfully.")
         print("  No Blob writes, commits, pushes, or deployments were performed.")
         return 0
@@ -2319,9 +2427,9 @@ def main():
     print()
 
     print("=" * 50)
-    print("SYNC COMPLETE")
+    print("SYNC COMPLETE" if publish_result['ok'] else "SYNC PARTIAL FAILURE")
     print("=" * 50)
-    return 0
+    return 0 if publish_result['ok'] else 1
 
 
 if __name__ == "__main__":

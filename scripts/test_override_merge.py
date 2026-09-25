@@ -147,13 +147,25 @@ class TestApplyManualOverridesToMeals(unittest.TestCase):
 class TestFetchManualOverrides(unittest.TestCase):
     """Smoke test that the fetch function handles missing config gracefully."""
 
-    def test_returns_empty_when_no_url(self):
+    def test_returns_unavailable_when_no_url(self):
         result = sync_dashboard_data.fetch_manual_overrides('', 'some-secret')
-        self.assertEqual(result, [])
+        self.assertIsNone(result)
 
-    def test_returns_empty_when_no_secret(self):
+    def test_returns_unavailable_when_no_secret(self):
         result = sync_dashboard_data.fetch_manual_overrides('https://example.com/api/overrides', '')
-        self.assertEqual(result, [])
+        self.assertIsNone(result)
+
+    def test_reports_unavailable_read_without_echoing_url_or_exception(self):
+        from contextlib import redirect_stdout
+        from io import StringIO
+        from unittest.mock import patch
+        output = StringIO()
+        with patch.object(sync_dashboard_data.urllib.request, 'urlopen', side_effect=TimeoutError('private details')):
+            with redirect_stdout(output):
+                result = sync_dashboard_data.fetch_manual_overrides('https://secret-host.example/api/overrides', 'secret')
+        self.assertIsNone(result)
+        self.assertNotIn('secret-host', output.getvalue())
+        self.assertNotIn('private details', output.getvalue())
 
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 import 'server-only';
-import { put, list, del, head } from '@vercel/blob';
+import { put, list, del, head, get } from '@vercel/blob';
 import { createHash } from 'node:crypto';
 
 /**
@@ -44,6 +44,7 @@ export interface BlobStorageClient {
   writeManifest(manifest: Manifest): Promise<{ manifestPath: string; manifestHash: string }>;
   /** Write the mutable pointer blob. Pass productsManifestPath to include it (spec 021). */
   writePointer(manifestPath: string, productsManifestPath?: string | null): Promise<void>;
+  withLock?<T>(operation: () => Promise<T>): Promise<T>;
 }
 
 /**
@@ -59,7 +60,18 @@ export class VercelBlobStorageClient implements BlobStorageClient {
     this.token = token;
   }
 
+  async withLock<T>(operation: () => Promise<T>): Promise<T> {
+    if (process.env.MEALS_PUBLICATION_PROTOCOL !== '1') return operation();
+    // Store-enforced create-if-absent. Never steal a timed-out writer's lock.
+    const lock = await put('publication/lock.json', '{}', {
+      access: 'private', addRandomSuffix: false, allowOverwrite: false, token: this.token,
+    });
+    try { return await operation(); }
+    finally { await del(lock.url, { token: this.token, ifMatch: lock.etag }); }
+  }
+
   async readPointer(): Promise<PointerContents | null> {
+    if (process.env.MEALS_PUBLICATION_PROTOCOL === '1') return this.readJsonBlob<PointerContents>(POINTER_PATH);
     // Spec 028: use head() instead of list({prefix: POINTER_PATH}) to downgrade
     // this read from a Vercel Blob Advanced Operation to a Simple Operation.
     // head() returns null on 404 (verified in @vercel/blob@2.4.0 source).
@@ -78,6 +90,11 @@ export class VercelBlobStorageClient implements BlobStorageClient {
   }
 
   async readManifest(manifestPath: string): Promise<Manifest> {
+    if (process.env.MEALS_PUBLICATION_PROTOCOL === '1') {
+      const value = await this.readJsonBlob<Manifest>(manifestPath);
+      if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Publication manifest unavailable');
+      return value;
+    }
     // Spec 028: use head() instead of list({prefix: manifestPath}) for the same
     // cost reason as readPointer above. The caller passes the exact manifest path
     // (typically read from PointerContents.manifestPath), so no list scan is needed.
@@ -101,6 +118,14 @@ export class VercelBlobStorageClient implements BlobStorageClient {
   }
 
   async readJsonBlob<T>(path: string): Promise<T | null> {
+    if (process.env.MEALS_PUBLICATION_PROTOCOL === '1') {
+      const result = await get(path, { access: 'private', useCache: false, token: this.token });
+      if (!result) return null;
+      if (result.statusCode !== 200) throw new Error('Fresh publication read unavailable');
+      const value = await new Response(result.stream).json() as T;
+      if (path === 'publication/latest.json' && (!value || typeof value !== 'object' || Array.isArray(value))) throw new Error('Publication journal unavailable');
+      return value;
+    }
     const blobs = await list({ prefix: path, token: this.token });
     const match = blobs.blobs.find((b) => b.pathname === path);
     if (!match) {

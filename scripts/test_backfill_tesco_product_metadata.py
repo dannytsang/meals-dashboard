@@ -147,6 +147,32 @@ class TestBackfillPayloadConstruction(unittest.TestCase):
         self.assertEqual(payload['products'][0]['productBlobPath'], 'products/123456789.json')
         self.assertEqual(payload['products'][0]['tpnc'], '123456789')
 
+    def test_product_backfill_fans_out_independently(self):
+        payload = {"products": [{"productBlobPath": "products/123.json"}]}
+        with patch.object(_sync_mod, '_post_with_bounded_retry', side_effect=[
+            (False, {"error": "HTTP 500"}),
+            (True, {"productsManifestPath": "meta/local-products.json"}),
+        ]) as post:
+            result = _backfill_mod._publish_products_to_targets(payload, [
+                ('primary', 'https://primary.test/api/dashboard-sync', 'p'),
+                ('secondary', 'https://secondary.test/api/dashboard-sync', 's'),
+            ])
+        self.assertFalse(result['primary']['ok'])
+        self.assertTrue(result['secondary']['ok'])
+        self.assertEqual(post.call_count, 2)
+        self.assertIn('/api/dashboard-products-sync', post.call_args_list[1].args[1])
+
+    def test_product_backfill_missing_secondary_auth_is_explicit(self):
+        payload = {"products": [{"productBlobPath": "products/123.json"}]}
+        with patch.object(_sync_mod, '_post_with_bounded_retry', return_value=(True, {"productsManifestPath": "meta/p.json"})):
+            result = _backfill_mod._publish_products_to_targets(payload, [
+                ('primary', 'https://primary.test/api/dashboard-sync', 'p'),
+                ('secondary', 'https://secondary.test/api/dashboard-sync', ''),
+            ])
+        self.assertTrue(result['primary']['ok'])
+        self.assertFalse(result['secondary']['ok'])
+        self.assertEqual(result['secondary']['error'], 'destination URL/auth not configured')
+
     def test_returns_none_for_empty_product_snapshot(self):
         """Without products, the backfill payload should be omitted."""
         payload = _build_backfill_payload({})

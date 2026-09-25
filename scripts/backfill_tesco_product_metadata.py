@@ -157,32 +157,36 @@ def _write_products_to_api(
     api_url: str,
     secret: str,
 ) -> Optional[str]:
-    """Write a product-only payload to the product endpoint.
-
-    Returns the productsManifestPath on success, None on failure.
-    """
+    """Write one product-only payload; return only its manifest path."""
     if not payload:
         return None
-    body_bytes = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(
-        api_url,
-        data=body_bytes,
-        headers={
-            'Content-Type': 'application/json',
-            'x-dashboard-secret': secret,
-        },
-        method='POST',
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            if resp.status in (200, 201):
-                resp_body = resp.read().decode('utf-8')
-                result = json.loads(resp_body) if resp_body else {}
-                return result.get('productsManifestPath')
-            return None
-    except Exception as e:
-        print(f"  ⚠ API write failed: {e}")
-        return None
+    ok, result = sync_dashboard_data._post_with_bounded_retry(payload, api_url, secret)
+    return result.get('productsManifestPath') if ok else None
+
+
+def _publish_products_to_targets(payload, destinations):
+    """Publish product-only data independently to each configured target."""
+    results = {}
+    if os.environ.get('MEALS_PUBLICATION_PROTOCOL') == '1':
+        from publication_recovery import CheckpointError
+        try:
+            result = sync_dashboard_data.recovery_publisher().publish(payload, destinations, products_only=True)
+        except CheckpointError:
+            return {name: {'ok': False, 'error': 'publication checkpoint unavailable'} for name, _, _ in destinations}
+        return {name: {'ok': phases['products']['ok'], **phases['products']['response']}
+                for name, phases in result['targets'].items()}
+    for name, api_url, secret in destinations:
+        if not api_url or not secret:
+            results[name] = {'ok': False, 'error': 'destination URL/auth not configured'}
+            continue
+        products_url = sync_dashboard_data.dashboard_products_api_url(api_url)
+        ok, response = sync_dashboard_data._post_with_bounded_retry(payload, products_url, secret)
+        results[name] = {
+            'ok': ok,
+            'productsManifestPath': response.get('productsManifestPath') if ok else None,
+            'error': response.get('error') if not ok else None,
+        }
+    return results
 
 
 def main() -> int:
@@ -196,6 +200,11 @@ def main() -> int:
     sync_dashboard_data.load_dashboard_env()
     api_url = os.environ.get('DASHBOARD_DATA_API_URL', '') or 'https://meals-dashboard.vercel.app/api/dashboard-sync'
     secret = os.environ.get('MEALS_DASHBOARD_DATA_SECRET', '')
+    secondary_url = os.environ.get('MEAL_PLANNER_DASHBOARD_DATA_API_URL', '')
+    secondary_secret = os.environ.get('MEAL_PLANNER_DASHBOARD_DATA_SECRET', '')
+    if (secondary_url or secondary_secret) and os.environ.get('MEALS_PUBLICATION_PROTOCOL') != '1':
+        print('Secondary publication requires MEALS_PUBLICATION_PROTOCOL=1')
+        return 1
 
     cache = _read_cache(PRODUCT_METADATA_CACHE)
     total = len(cache)
@@ -234,7 +243,7 @@ def main() -> int:
                 blob_path = f'products/{tpnc}.json'
                 products_manifest[tpnc] = blob_path
                 product_blobs[tpnc] = {'productBlobPath': blob_path, **entry}
-            print(f"  SKIP {key}: already enriched")
+            print("  SKIP: already enriched")
             continue
 
         # Check freshness
@@ -246,30 +255,31 @@ def main() -> int:
                 blob_path = f'products/{tpnc}.json'
                 products_manifest[tpnc] = blob_path
                 product_blobs[tpnc] = {'productBlobPath': blob_path, **entry}
-            print(f"  SKIP {key}: fresh (force to re-fetch)")
+            print("  SKIP: fresh (force to re-fetch)")
             continue
 
         if args.dry_run:
-            print(f"  WOULD BACKFILL {key}: {display_name}")
+            print("  WOULD BACKFILL: product metadata")
             upgraded += 1
             continue
 
-        # Perform backfill
+        # Perform backfill without logging household product labels in dual mode.
         try:
-            result = backfill_entry(entry, display_name, force=args.force)
+            with sync_dashboard_data.private_processing_output():
+                result = backfill_entry(entry, display_name, force=args.force)
         except Exception as e:
-            print(f"  ERROR {key}: {e}")
-            entry['unmatched'] = f'backfill error: {e}'
+            print("  ERROR: product enrichment unavailable")
+            entry['unmatched'] = f'backfill error: {type(e).__name__}'
             unmatched += 1
             continue
 
         if result.get('unmatched'):
-            print(f"  UNMATCHED {key}: {result['unmatched']}")
+            print("  UNMATCHED: product metadata unavailable")
             cache[key] = result  # write the unmatched reason
             unmatched += 1
         else:
             tpnc = result.get('tpnc')
-            print(f"  UPGRADED {key}: tpnc={tpnc} image={bool(result.get('imageUrl'))} storage={bool(result.get('storage'))} prep={bool(result.get('preparation'))}")
+            print(f"  UPGRADED: image={bool(result.get('imageUrl'))} storage={bool(result.get('storage'))} prep={bool(result.get('preparation'))}")
             # Write under both key and tpnc
             cache[key] = result
             if tpnc and tpnc != key:
@@ -292,29 +302,29 @@ def main() -> int:
     if not args.dry_run:
         _write_cache(cache, PRODUCT_METADATA_CACHE)
 
-    # FR-015: write product blobs to Vercel Blob via API, then write products manifest.
-    product_api_url = sync_dashboard_data.dashboard_products_api_url(api_url) if api_url else ''
-    if not args.dry_run and product_blobs and product_api_url and secret:
+    destinations = [('primary', api_url, secret)]
+    if secondary_url or secondary_secret:
+        destinations.append(('secondary', secondary_url, secondary_secret))
+    publication_results = {}
+    if not args.dry_run and product_blobs:
         payload = _build_backfill_payload(product_blobs)
         if payload is None:
-            print("  ⚠ Skipping Vercel Blob write: no product payload available")
-            manifest_path = None
+            print("  ⚠ Skipping product publication: no product payload available")
         else:
-            manifest_path = _write_products_to_api(payload, product_api_url, secret)
-        if manifest_path:
-            print(f"  ✓ Wrote {len(product_blobs)} product blobs; manifest: {manifest_path}")
-        else:
-            print(f"  ⚠ Failed to write product blobs to Vercel Blob (API error)")
+            publication_results = _publish_products_to_targets(payload, destinations)
+            for target_name, result in publication_results.items():
+                status = result.get('productsManifestPath') or result.get('error') or 'failed'
+                print(f"  {target_name} products: {status}")
 
     summary = f"\nSummary: upgraded={upgraded} already_complete={already_complete} unmatched={unmatched} skipped={skipped} total={total}"
     print(summary)
     if not args.dry_run:
         print(f"Cache written to {PRODUCT_METADATA_CACHE}")
 
-    # Exit 0 always — unmatched items are reported but don't cause non-zero exit.
-    # The spec says "Exit 0" for the backfill script.
-    sys.exit(0)
+    # Backfill remains best-effort for unmatched items, but publication failures
+    # are non-zero so a configured destination is never reported as successful.
+    return 1 if publication_results and not all(r['ok'] for r in publication_results.values()) else 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

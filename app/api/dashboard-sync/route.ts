@@ -1,6 +1,7 @@
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import { VercelBlobStorageClient } from '@/lib/blob-storage';
+import { publishRecoverably, PublicationError } from '@/lib/publication-recovery';
 import {
   syncDashboardLayout,
   type SplitLayoutPayload,
@@ -67,9 +68,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
-  const b = body as Record<string, unknown>;
-  console.log('[dashboard-sync] POST received — top-level dataGeneratedAt:', b.dataGeneratedAt, '| coverage count:', Array.isArray(b.coverage) ? b.coverage.length : 'N/A', '| orders count:', Array.isArray(b.orders) ? b.orders.length : 'N/A');
-  console.log('[dashboard-sync] summary.dataGeneratedAt (nested in summary object):', (b.summary as Record<string, unknown> | null)?.dataGeneratedAt);
 
   const parsed = parseSplitLayoutPayload(body);
   if (!parsed.ok) {
@@ -81,15 +79,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   try {
     const client = new VercelBlobStorageClient();
-    const result = await syncDashboardLayout(parsed.value, client, { dryRun });
-    console.log('[dashboard-sync] Response:', JSON.stringify({
-      ok: true,
-      manifestPath: result.manifestPath,
-      written: result.writtenPaths,
-      skipped: result.skippedPaths,
-      totalOps: result.totalOps,
-      isInitialSync: result.isInitialSync,
-    }));
+    const result = await publishRecoverably(client, body as Record<string, unknown>, 'main', dryRun,
+      unlocked => syncDashboardLayout(parsed.value, unlocked, { dryRun }));
     return NextResponse.json({
       ok: true,
       manifestPath: result.manifestPath,
@@ -100,14 +91,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       isInitialSync: result.isInitialSync,
       suppressedNoopWrites: result.suppressedNoopWrites,
       productsManifestPath: result.productsManifestPath ?? null,
+      publicationProtocol: result.publicationProtocol,
       dryRun,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[dashboard-sync] Sync failed:', message, err);
     return NextResponse.json(
-      { error: 'Failed to store data', detail: message },
-      { status: 500 }
+      { error: err instanceof PublicationError ? err.message : 'Failed to store data' },
+      { status: err instanceof PublicationError ? err.status : 500 }
     );
   }
 }
