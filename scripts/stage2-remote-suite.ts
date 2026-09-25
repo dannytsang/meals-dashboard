@@ -24,7 +24,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   // Counts actual requests, including any SDK retry; cap before dispatch. Never logs auth/body.
   class BudgetAgent extends Agent {
     dispatch(options: Parameters<Agent['dispatch']>[0], handler: Parameters<Agent['dispatch']>[1]) {
-      operations++; if (operations > 180) throw new TypeError('Synthetic operation cap');
+      // Continuation ledger reserves40 prior +30 setup/cleanup operations.
+      if (operations >= 130) throw new TypeError('Synthetic operation cap');
+      operations++;
       return super.dispatch(options, handler);
     }
   }
