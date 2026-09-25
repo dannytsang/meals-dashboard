@@ -2262,8 +2262,9 @@ def main():
     # A configured secondary is an explicit opt-in; keep the legacy primary-only
     # path byte-for-byte in effect when neither secondary setting is present.
     if bool(secondary_url) != bool(secondary_secret):
-        print("  ✗ Secondary publication requires both URL and auth configuration")
-        return 1
+        # Preserve the invalid target for sanitized partial results in fan-out,
+        # which denies its transport calls without suppressing a valid primary.
+        print("  ⚠ Secondary publication requires both URL and auth configuration; primary continues")
     secondary_configured = bool(secondary_url and secondary_secret)
     if secondary_configured and os.environ.get('MEALS_PUBLICATION_PROTOCOL') != '1':
         print('  ✗ Secondary publication requires MEALS_PUBLICATION_PROTOCOL=1')

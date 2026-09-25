@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
  *   coverage/{date}.json                         ← mutable per-meal-date coverage
  *   meta/manifest-{hash}.json                    ← content-addressable manifest (append-only)
  *   meta/summary-{hash}.json                     ← content-addressable pre-composed summary
- *   pointers/latest.json                         ← only blob that is delete+rewritten every sync
+ *   pointers/latest.json                         ← mutable pointer replaced by one overwrite PUT
  *
  * Content-hash dedup: every data blob is SHA-256 hashed; the manifest maps path → hash;
  * unchanged blobs are skipped (not re-uploaded). The manifest is content-addressable by
@@ -194,13 +194,8 @@ export class VercelBlobStorageClient implements BlobStorageClient {
     const content: PointerContents = { manifestPath, productsManifestPath: productsManifestPath ?? null };
     const contentStr = JSON.stringify(content, null, 2);
     console.log('[blob-storage] writePointer: manifestPath=', manifestPath, 'productsManifestPath=', productsManifestPath ?? null);
-    // Pointer is the only blob that is delete+rewritten every sync (FR-05, FR-11).
-    try {
-      await del(POINTER_PATH, { token: this.token });
-      console.log('[blob-storage] writePointer: del ok');
-    } catch (err) {
-      console.log('[blob-storage] writePointer: del failed (swallowed):', err instanceof Error ? err.message : String(err));
-    }
+    // Replace in one PUT: deleting first loses the committed main on failure.
+    // Protocol callers already hold the store-wide lock and generation fence.
     await put(POINTER_PATH, contentStr, {
       access: 'private',
       addRandomSuffix: false,

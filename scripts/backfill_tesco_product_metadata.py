@@ -202,7 +202,9 @@ def main() -> int:
     secret = os.environ.get('MEALS_DASHBOARD_DATA_SECRET', '')
     secondary_url = os.environ.get('MEAL_PLANNER_DASHBOARD_DATA_API_URL', '')
     secondary_secret = os.environ.get('MEAL_PLANNER_DASHBOARD_DATA_SECRET', '')
-    if (secondary_url or secondary_secret) and os.environ.get('MEALS_PUBLICATION_PROTOCOL') != '1':
+    if bool(secondary_url) != bool(secondary_secret):
+        print('Secondary publication requires both URL and auth configuration; primary continues')
+    if secondary_url and secondary_secret and os.environ.get('MEALS_PUBLICATION_PROTOCOL') != '1':
         print('Secondary publication requires MEALS_PUBLICATION_PROTOCOL=1')
         return 1
 
@@ -316,6 +318,10 @@ def main() -> int:
                 status = result.get('productsManifestPath') or result.get('error') or 'failed'
                 print(f"  {target_name} products: {status}")
 
+    if publication_results:
+        successes = [r['ok'] for r in publication_results.values()]
+        status = 'complete' if all(successes) else 'partial failure' if any(successes) else 'failed'
+        print(f"Publication: {status}")
     summary = f"\nSummary: upgraded={upgraded} already_complete={already_complete} unmatched={unmatched} skipped={skipped} total={total}"
     print(summary)
     if not args.dry_run:

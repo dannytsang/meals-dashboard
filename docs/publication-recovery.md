@@ -10,6 +10,14 @@ Deploy the reviewed server route/storage changes to both destinations before set
 
 Server receipts enforce immutable run/target/phase and generation ordering. Product-only backfill uses the same controls and never submits empty main data. Full-sync product phases retain their target's exact main manifest. Dry runs never alter checkpoints or data. Legacy single-target calls retain their response shape and do not retry ambiguous writes without the protocol.
 
+## Correction cycle 1: ordinary faults and partial configuration
+
+App002 AS-007/AS-008 refine FR-002/FR-003/NFR-002 (integration015 FR-003/FR-004/FR-005). Both Blob adapters replace the committed pointer with one overwrite PUT, never a delete followed by PUT. The existing store lock, payload hash and generation fences are unchanged. An ordinary pointer failure retains main; pointer success followed by receipt failure can replay the identical products phase without replaying main. This is separate from the killed-server lock limitation below.
+
+Full and product-only commands with URL-only or auth-only secondary settings retain a sanitized failed-secondary result and still attempt a healthy primary. They return a partial-failure exit, not all-target success; full-sync explicitly preserves normal meal report flow. No secondary transport call is made without both settings. Complete dual configuration still requires the protocol, and full sync still fails closed if the authoritative override snapshot is unavailable. Remove both settings for disabled-secondary rollback.
+
+Permanent regressions: `app/api/publication-pointer-recovery.test.ts` in both apps (pointer/receipt before/after commit, exact readback, identity/stale/concurrency rejection); `scripts/test_publication_config_isolation.py` (actual command matrix with protocol enabled/disabled, disabled/complete/URL-only/auth-only secondary, plus authority rejection). Independent tester review and caller-held activation remain required.
+
 ## Safety ceilings and operator actions
 
 - Vercel Blob serialization uses server-enforced create-if-absent and ETag-conditional release. Private mutable state is fetched with `useCache: false`. Local serialization uses the existing inter-process lock.
