@@ -1,0 +1,42 @@
+# Read-only source export (not activated)
+
+Governing contract: Meal Planner spec001 FR-011–013 / AS-006–008, `source-export-contract.md`; spec-first checkpoint `e9b4082b78fc9772f3fbd4ce7adf308035ffaf44`. Task t_bf8099a8, caller acceptance v1 SHA-256 `845a38f2d489800e542a36b44be8461cd44ed16bdf7dca32592bceb58f893cda`.
+
+## Boundary
+
+`POST /api/internal/source-export` is an opt-in Node server route. POST is read transport, not permission to mutate. It imports only the fresh Blob `get` SDK function through a separate read-only adapter, never the legacy writer/locking adapter, producer, reporting or override route. No list operation: all retained historical references in the active dashboard/product graphs are followed without date filtering. Orphans/old unreachable manifests and publication journals are outside this graph, not silently claimed exported. The existing OIDC/browser, publisher, verification and override boundaries are unchanged.
+
+Disabled/invalid configuration and unsupported methods return generic 404. Only `x-source-export-secret` authorizes the POST. Browser sessions, `x-dashboard-secret`, verification credentials and query tokens do not. Wrong/missing export auth is 401. Body is exactly JSON `{"version":1}`, content type application/json, maximum 256 actual streamed bytes; query strings, unknown fields and encoded bodies fail (400). All responses are JSON with private/no-store and nosniff. Success has a fixed attachment filename. No application logging or provider metadata/URLs in diagnostics.
+
+Configuration names only (none configured by this implementation):
+- `MEALS_SOURCE_EXPORT_ENABLED=1`
+- `MEALS_SOURCE_EXPORT_SECRET`: 64 lowercase hex characters generated from 32 random bytes through secure configuration; never put the value in chat, Git, logs or argv.
+- `MEALS_SOURCE_EXPORT_EXPIRES_AT`: future UTC ISO timestamp; after expiry the route refuses requests.
+- Existing runtime `BLOB_READ_WRITE_TOKEN`, server-side only. No local token retrieval or OIDC fallback/bypass. Export secret cannot equal this token, `MEALS_DASHBOARD_DATA_SECRET`, `MEALS_PUBLICATION_VERIFY_SECRET` or `NEXTAUTH_SECRET`.
+
+One in-flight export per process gives bounded local backpressure (429); it is not a cross-instance ingress/rate limit. Activation must assess Vercel deployment protections/ingress restrictions separately.
+
+## Versioned private archive
+
+Envelope `meal-planner-source-export.v1`, scope `active-reachable-with-retained-history`, consistency `observed-records-rechecked-not-atomic`, atomicSnapshot false. Sorted records contain only `path`, `identity` (SHA-256 UTF-8 path), `sha256` (exact original bytes), `bytes`, `base64`. Paths and payloads are sensitive inside this authenticated response; do not log responses.
+
+Requires active pointer and both manifests, one summary, reachable coverage/orders/products/product manifests, and present authoritative `overrides/manual.json`. Empty product manifest and override array succeed only when read and validated, never synthesized from missing objects/errors. Strict JSON and storage schema, content hashes, cross references and identity checks precede success. Every observed object is read twice with cache disabled, pointer last; movement/disappearance on reread returns inconclusive409. This cannot exclude ABA changes or prove a transactionally atomic whole-store snapshot. Missing/corrupt/unsupported/excessive graph or storage error returns closed incomplete422, never a partial archive; deadline returns504.
+
+Bounds: 1,000 records, 1 MiB/object, 4 MiB source bytes including rereads, 3.5 MiB serialized response, 25-second request deadline, 30-second platform maxDuration. Oversized and stalled streams are cancelled; limits are not caller-configurable.
+
+The later authorized inventory must capture privately outside Git in a 0700 directory/0600 file, with bounded private transport and short-lived retention. Meal Planner's `inventory:offline -- --source-export <private-file> --target <readonly-store>` reads it in memory without extracting/writing records, validates original bytes and independently traverses schemas/hashes/references. Only sanitized reports belong in evidence. An export HTTP200 alone is not history completeness, parity or import readiness.
+
+## Synthetic verification
+
+- `npx vitest run lib/source-export.test.ts`
+- `MEAL_PLANNER_REVIEW_ROOT=/path/to/meal-planner npx vitest run scripts/source-export-compatibility.test.ts` exercises actual independent archive and graph readers. Without that explicit checkout, the cross-repo test is skipped, not passed.
+- `MEAL_PLANNER_REVIEW_ROOT=/path/to/meal-planner npm test`
+- `npx tsc --noEmit && npm run build && npm run scan:static-private-data`
+
+Inspect `.next/server/app/api/internal/source-export/route.js.nft.json`: no credential files, test files, scripts, producer or legacy storage dependencies. Check `.next/static` for export auth/format/test-sentinel leakage. SDK write/list spies must remain untouched. Test fixtures are synthetic only.
+
+## Separate activation and rollback gate
+
+Source-level independent tester approval is required first. Then the caller must establish exact Vercel project/deployment mapping, secure distinct secret and expiry, allowed ingress, current private backup/restore safety, reviewed-revision deployment and exact-production bad/missing-secret denial plus bounded private readback. No configuration, deployment or live export is performed on the implementation card. Existing inventory t_ab800602 remains scheduled until that gate and caller release; do not duplicate its graph.
+
+Rollback: disable export flag and remove/revoke only the export credential, then remove route in a separately reviewed revision if appropriate. Do not rotate publisher secrets or alter Vercel primary/override authority. No import, cutover, schedule/worker/producer change, retirement, or deferred issue #1/T011 fix is authorized.
