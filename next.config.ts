@@ -24,6 +24,15 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Dynamic subprocess tracing must not package isolated Stage2 test tooling.
+  // Keep other scripts and the manual-override runtime dependency graph intact.
+  outputFileTracingExcludes: {
+    '/*': [
+      './scripts/stage2-remote-suite.ts',
+      './scripts/stage2-remote-suite.test.ts',
+      './scripts/check-stage2-artifacts*.mjs',
+    ],
+  },
   images: {
     unoptimized: true,
   },
