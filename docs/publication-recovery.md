@@ -27,6 +27,10 @@ Permanent regressions: `app/api/publication-pointer-recovery.test.ts` in both ap
 - Clock/generation conflict and stale work fail closed rather than overriding later successful data. Do not edit queued identities or reuse a generation for modified data.
 - The feature worktree is NOT the active `/home/hermes/workspace/meals-dashboard` runtime. Promotion must copy/cherry-pick only accepted scoped changes without publishing unrelated local main history.
 
+## Production build layout compatibility
+
+Vercel's managed Next.js build omits `.next/next-server.js.nft.json`; it packages route functions rather than the standalone Next server. The existing postbuild artifact checker must permit that one missing server trace only when `VERCEL=1` and standalone output is not required. Every route trace, referenced dependency and tooling-exclusion check remains mandatory; ordinary/standalone builds still require the server trace. This narrowly corrects the actual run437 ENOENT installation failure without removing the packaging safety check or introducing a new verification framework.
+
 ## Reproduce synthetic verification
 
 `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q -p no:cacheprovider scripts/test_publication_recovery.py scripts/test_publication_entrypoints.py scripts/test_sync_dashboard_data_split.py scripts/test_override_merge.py scripts/test_backfill_tesco_product_metadata.py scripts/test_sync_dashboard_data_env.py scripts/test_sync_dashboard_history.py`
