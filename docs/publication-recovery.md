@@ -1,6 +1,6 @@
 # Optional dual publication and bounded recovery
 
-Source implementation only: app002 in Meal Planner and Hermes integration015 are the governing contracts. This branch must not activate or deploy itself. `vercel.json` disables Git deployments for `coder/dual-publish-20260925` only; production branches retain their settings.
+App002 in Meal Planner and Hermes integration015 are the governing contracts. Current release authority is Danny's 2026-09-26 replacement: `Hermes-Skills/data-science/meals-check/references/dual-publish-manual-verification-release.md`, SHA256 `dec2b70b10a45182bcdba573664d965ae248d8e701cbc23eb8ad8b64c95d23b6`. Run existing relevant unit tests, then install tested receivers and producer through existing destinations and the default meal runtime. Verify deployed identity/health, secure wiring, private backup and rollback without publishing; Danny manually triggers the first functional send. Expanded Stage2/billing/temporary-resource gates are retired, not permission to reset historical claims. Authentication, primary isolation, unknown-record refusal and data preservation remain mandatory. Same-card independent tester reviews actual installation; coder cannot self-approve or close root. The feature branch remains Git-deployment-suppressed; do not remove suppression as a shortcut or push unrelated active main history.
 
 ## Opt-in and rollback
 
