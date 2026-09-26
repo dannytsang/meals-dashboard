@@ -17,15 +17,15 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   const key = process.env.STAGE2_SECRET;
   const supplied = req.headers['x-stage2-secret'];
   if (req.method !== 'POST' || !key || typeof supplied !== 'string' || !timingSafeEqual(digest(key), digest(supplied))) { res.statusCode = 401; res.end('{}'); return; }
-  if (claimed || process.env.VERCEL_ENV !== 'preview' || !process.env.STAGE2_PROJECT_ID || process.env.VERCEL_PROJECT_ID !== process.env.STAGE2_PROJECT_ID || !process.env.STAGE2_STORE_ID || process.env.BLOB_STORE_ID !== process.env.STAGE2_STORE_ID || process.env.DASHBOARD_STORE_DIR || process.env.VERCEL_BLOB_RETRIES !== '0') { res.statusCode = 409; res.end('{"error":"Isolation or once-only gate"}'); return; }
+  if (claimed || process.env.VERCEL_ENV !== 'preview' || !process.env.STAGE2_PROJECT_ID || process.env.VERCEL_PROJECT_ID !== process.env.STAGE2_PROJECT_ID || !process.env.STAGE2_STORE_ID || process.env.BLOB_STORE_ID !== process.env.STAGE2_STORE_ID || !process.env.BLOB_READ_WRITE_TOKEN || !process.env.MEALS_DASHBOARD_DATA_SECRET || !process.env.MEALS_PUBLICATION_VERIFY_SECRET || !process.env.STAGE2_SOURCE_SHA || process.env.STAGE2_OPERATION_CAP !== '114' || process.env.DASHBOARD_STORE_DIR || process.env.VERCEL_BLOB_RETRIES !== '0') { res.statusCode = 409; res.end('{"error":"Isolation or once-only gate"}'); return; }
   claimed = true;
   let operations = 0; let uploadBytes = 0; let phase = 'once-only';
   const checks: string[] = [];
   // Counts actual requests, including any SDK retry; cap before dispatch. Never logs auth/body.
   class BudgetAgent extends Agent {
     dispatch(options: Parameters<Agent['dispatch']>[0], handler: Parameters<Agent['dispatch']>[1]) {
-      // Continuation ledger reserves40 prior +30 setup/cleanup operations.
-      if (operations >= 130) throw new TypeError('Synthetic operation cap');
+      // Continuation ledger reserves56 prior +30 setup/cleanup operations.
+      if (operations >= 114) throw new TypeError('Synthetic operation cap');
       operations++;
       return super.dispatch(options, handler);
     }

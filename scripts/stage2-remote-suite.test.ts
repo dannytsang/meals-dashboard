@@ -13,17 +13,33 @@ vi.mock('@vercel/blob', () => {
   };
 });
 afterEach(() => vi.unstubAllEnvs());
+it.each([
+  ['VERCEL_ENV', 'production'], ['VERCEL_PROJECT_ID', 'wrong-project'],
+  ['BLOB_STORE_ID', 'wrong-store'], ['BLOB_READ_WRITE_TOKEN', ''],
+  ['MEALS_DASHBOARD_DATA_SECRET', ''], ['MEALS_PUBLICATION_VERIFY_SECRET', ''],
+  ['STAGE2_OPERATION_CAP', '130'], ['STAGE2_SOURCE_SHA', ''],
+  ['DASHBOARD_STORE_DIR', '/synthetic/local'],
+])('refuses %s=%s before any SDK dispatch', async (key, value) => {
+  for (const [k, v] of Object.entries({ STAGE2_SECRET: 'synthetic-only', VERCEL_ENV: 'preview', VERCEL_PROJECT_ID: 'synthetic-project', STAGE2_PROJECT_ID: 'synthetic-project', BLOB_STORE_ID: 'synthetic-store', STAGE2_STORE_ID: 'synthetic-store', BLOB_READ_WRITE_TOKEN: 'synthetic-not-a-live-token', VERCEL_BLOB_RETRIES: '0', DASHBOARD_STORE_DIR: '', MEALS_PUBLICATION_VERIFY: '1', MEALS_PUBLICATION_PROTOCOL: '1', MEALS_PUBLICATION_VERIFY_SECRET: 'synthetic-verification-key-not-live', MEALS_DASHBOARD_DATA_SECRET: 'synthetic-writer', STAGE2_SOURCE_SHA: 'synthetic-source', STAGE2_OPERATION_CAP: '114' })) vi.stubEnv(k, v);
+  vi.stubEnv(key, value);
+  vi.resetModules(); const { default: handler } = await import('./stage2-remote-suite');
+  const before = wire.dispatched;
+  const res = { statusCode: 0, setHeader: vi.fn(), end: vi.fn() };
+  await handler({ method: 'POST', headers: { 'x-stage2-secret': 'synthetic-only' } } as never, res as never);
+  expect(res.statusCode).toBe(409); expect(wire.dispatched).toBe(before);
+});
+
 it('runs the entire bounded harness through real route/core code; refuses re-entry', async () => {
-  for (const [k, v] of Object.entries({ STAGE2_SECRET: 'synthetic-only', VERCEL_ENV: 'preview', VERCEL_PROJECT_ID: 'synthetic-project', STAGE2_PROJECT_ID: 'synthetic-project', BLOB_STORE_ID: 'synthetic-store', STAGE2_STORE_ID: 'synthetic-store', VERCEL_BLOB_RETRIES: '0', DASHBOARD_STORE_DIR: '', MEALS_PUBLICATION_VERIFY: '1', MEALS_PUBLICATION_PROTOCOL: '1', MEALS_PUBLICATION_VERIFY_SECRET: 'synthetic-verification-key-not-live', MEALS_DASHBOARD_DATA_SECRET: 'synthetic-writer', STAGE2_SOURCE_SHA: 'synthetic-source' })) vi.stubEnv(k, v);
+  for (const [k, v] of Object.entries({ STAGE2_SECRET: 'synthetic-only', VERCEL_ENV: 'preview', VERCEL_PROJECT_ID: 'synthetic-project', STAGE2_PROJECT_ID: 'synthetic-project', BLOB_STORE_ID: 'synthetic-store', STAGE2_STORE_ID: 'synthetic-store', VERCEL_BLOB_RETRIES: '0', DASHBOARD_STORE_DIR: '', MEALS_PUBLICATION_VERIFY: '1', MEALS_PUBLICATION_PROTOCOL: '1', MEALS_PUBLICATION_VERIFY_SECRET: 'synthetic-verification-key-not-live', MEALS_DASHBOARD_DATA_SECRET: 'synthetic-writer', STAGE2_SOURCE_SHA: 'synthetic-source', STAGE2_OPERATION_CAP: '114', BLOB_READ_WRITE_TOKEN: 'synthetic-not-a-live-token' })) vi.stubEnv(k, v);
   vi.resetModules(); const { default: handler } = await import('./stage2-remote-suite');
   let output = ''; const res = { statusCode: 0, setHeader: vi.fn(), end: (s: string) => { output = s; } };
   const req = { method: 'POST', headers: { 'x-stage2-secret': 'synthetic-only' } };
   await handler(req as never, res as never);
-  expect(res.statusCode, output).toBe(200); const result = JSON.parse(output); expect(result.checks).toHaveLength(14); expect(result.uploadBytes).toBeLessThan(90 * 1024); expect(wire.calls).toBeLessThanOrEqual(130); expect(result.operations).toBe(wire.calls); expect(wire.store.has('publication/lock.json')).toBe(false);
+  expect(res.statusCode, output).toBe(200); const result = JSON.parse(output); expect(result.checks).toHaveLength(14); expect(result.uploadBytes).toBeLessThan(90 * 1024); expect(wire.calls).toBeLessThanOrEqual(114); expect(result.operations).toBe(wire.calls); expect(wire.store.has('publication/lock.json')).toBe(false);
   // Exercise the actual dispatcher, not a source-string check or SDK call count alone.
-  for (let n = result.operations; n < 130; n++) wire.agent.dispatch({}, {});
-  expect(wire.dispatched).toBe(130);
+  for (let n = result.operations; n < 114; n++) wire.agent.dispatch({}, {});
+  expect(wire.dispatched).toBe(114);
   expect(() => wire.agent.dispatch({}, {})).toThrow('Synthetic operation cap');
-  expect(wire.dispatched).toBe(130);
+  expect(wire.dispatched).toBe(114);
   const previous = wire.calls; await handler(req as never, res as never); expect(res.statusCode).toBe(409); expect(wire.calls).toBe(previous);
 });
