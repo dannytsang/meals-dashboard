@@ -29,6 +29,41 @@ export function fixture(options: { empty?: boolean; mutate?: (data: Record<strin
   records.set(POINTER, encode({ manifestPath, productsManifestPath: productManifestPath })); records.set(OVERRIDES, Buffer.from('[ ]\n'));
   return { records, manifestPath, summaryPath, productManifestPath };
 }
+type ScalarField = 'overrideStatus' | 'coverageStatus' | 'orderStatus' | 'tpnc' | 'sourceOrderBlobPath' | 'orderNumber' | 'mealId';
+function scalarFixture(field: ScalarField, value: unknown) {
+  const entry: Record<string, unknown> = { meal: { id: 'synthetic-meal', content: '', date: '2030-01-01', labels: [], section: '' }, status: 'covered', coverageScore: 1, matchedItems: [], missingItems: [] };
+  const overrides = [{ meal_date: '2030-01-01', meal_name: 'Synthetic', item_name: 'Synthetic', quantity: 1, reason: '', status: field === 'overrideStatus' ? value : 'covered', created_at: '', updated_at: '' }];
+  const result = fixture({ mutate: data => {
+    const order = data['orders/2030-01-01/synthetic-2030-01-01.json'] as Record<string, unknown>;
+    const coverage = data['coverage/2030-01-01.json'] as Record<string, unknown>;
+    coverage.meals = [entry];
+    if (field === 'coverageStatus') entry.status = value;
+    if (field === 'mealId') (entry.meal as Record<string, unknown>).id = value;
+    if (field === 'orderStatus') order.status = value;
+    if (field === 'orderNumber') order.orderNumber = value;
+    if (field === 'sourceOrderBlobPath') coverage.sourceOrderBlobPath = value;
+    if (field === 'tpnc') {
+      (order.items as Record<string, unknown>[])[0].tpnc = value;
+      if (value === '00100') data['products/00100.json'] = product('00100');
+    }
+  } });
+  result.records.set(OVERRIDES, encode(overrides)); return result;
+}
+const invalidScalars: [ScalarField, unknown][] = [
+  ['overrideStatus', ['covered']], ['coverageStatus', ['covered']], ['orderStatus', ['active']], ['tpnc', ['100']],
+  ['sourceOrderBlobPath', ['orders/2030-01-01/synthetic-2030-01-01.json']], ['orderNumber', ['synthetic-2030-01-01']], ['mealId', ['synthetic-meal']],
+  ...(['overrideStatus', 'coverageStatus', 'orderStatus', 'tpnc', 'sourceOrderBlobPath', 'orderNumber', 'mealId'] as const).flatMap(field => [false, 100, {}].map(value => [field, value] as [ScalarField, unknown])),
+  ['overrideStatus', null], ['coverageStatus', null], ['orderStatus', null], ['overrideStatus', undefined], ['coverageStatus', undefined],
+  ['tpnc', '100\n'], ['tpnc', '1e2'], ['tpnc', ''],
+];
+const validScalars: [ScalarField, unknown][] = [
+  ...['covered', 'partial'].map(value => ['overrideStatus', value] as [ScalarField, unknown]),
+  ...['covered', 'partial', 'missing', 'unknown'].map(value => ['coverageStatus', value] as [ScalarField, unknown]),
+  ...['active', 'cancelled', 'superseded', 'refunded', undefined].map(value => ['orderStatus', value] as [ScalarField, unknown]),
+  ...['100', '00100', null, undefined].map(value => ['tpnc', value] as [ScalarField, unknown]),
+  ['sourceOrderBlobPath', null], ['sourceOrderBlobPath', 'orders/2030-01-01/synthetic-2030-01-01.json'],
+  ['orderNumber', 'synthetic-2030-01-01'], ['mealId', 'synthetic-meal'],
+];
 let f = fixture();
 function mockGet(path: string) {
   const bytes = f.records.get(path); if (!bytes) return null;
@@ -107,6 +142,19 @@ describe('export route authorization, privacy and nonmutation', () => {
 });
 
 describe('graph completeness, strict data and bounded fresh reads', () => {
+  it.each(invalidScalars)('rejects malformed scalar %s = %j with no archive or mutation', async (field, value) => {
+    f = scalarFixture(field, value); const before = [...f.records].map(([path, bytes]) => [path, hashBytes(bytes)]);
+    const r = await route.POST(request()); expect(r.status).toBe(422);
+    expect(await r.json()).toEqual({ error: 'incomplete' }); expect(r.headers.get('cache-control')).toContain('no-store');
+    expect(r.headers.get('content-disposition')).toBeNull();
+    expect([...f.records].map(([path, bytes]) => [path, hashBytes(bytes)])).toEqual(before);
+    for (const name of ['put', 'del', 'list', 'head', 'copy'] as const) expect(sdk[name]).not.toHaveBeenCalled();
+  });
+  it.each(validScalars)('preserves valid scalar/optional compatibility %s = %j', async (field, value) => {
+    f = scalarFixture(field, value); const r = await route.POST(request()); expect(r.status).toBe(200);
+    const archive = await r.json();
+    for (const rec of archive.records) expect(Buffer.from(rec.base64, 'base64')).toEqual(f.records.get(rec.path));
+  });
   it('exports independent products and positively verified empty state', async () => {
     f = fixture({ independent: true }); expect((await route.POST(request())).status).toBe(200);
     f = fixture({ empty: true }); const r = await route.POST(request()); expect(r.status).toBe(200); const a = await r.json(); expect(a.records).toHaveLength(5);
