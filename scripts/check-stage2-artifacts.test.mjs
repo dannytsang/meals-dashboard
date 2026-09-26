@@ -27,6 +27,19 @@ afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
 test('accepts a complete clean build and retained runtime dependencies', () => {
   assert.deepEqual(checkArtifacts(root), { traces: 2, standalone: false, stage2Files: 0 });
 });
+test('managed Vercel permits only the absent standalone-server trace', () => {
+  fs.unlinkSync(path.join(root, '.next/next-server.js.nft.json'));
+  assert.deepEqual(checkArtifacts(root, false, true), { traces: 1, standalone: false, stage2Files: 0 });
+  assert.throws(() => checkArtifacts(root));
+  assert.throws(() => checkArtifacts(root, true, true));
+  trace(['missing.py']);
+  assert.throws(() => checkArtifacts(root, false, true), /Missing traced dependency/);
+  put('scripts/stage2-remote-suite.ts', 'synthetic');
+  trace(['route.js', '../../../../../scripts/stage2-remote-suite.ts']);
+  assert.throws(() => checkArtifacts(root, false, true), /Stage2-only tooling/);
+  fs.unlinkSync(path.join(root, `${route}.nft.json`));
+  assert.throws(() => checkArtifacts(root, false, true), /Missing manual-override dependency trace/);
+});
 test('fails closed on missing build, route, trace, or dependencies', () => {
   for (const file of ['.next/BUILD_ID', route, `${route}.nft.json`]) {
     const value = fs.readFileSync(path.join(root, file));

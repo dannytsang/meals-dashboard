@@ -13,13 +13,15 @@ function walk(root) {
   });
 }
 
-export function checkArtifacts(root, standalone = false) {
+export function checkArtifacts(root, standalone = false, managedVercel = false) {
   const build = path.join(root, '.next');
   assert.ok(fs.readFileSync(path.join(build, 'BUILD_ID'), 'utf8').trim(), 'Missing build identity');
   const route = path.join(build, 'server/app/api/manual-override/route.js');
   assert.ok(fs.statSync(route).size > 0, 'Missing built manual-override route');
   const traces = walk(path.join(build, 'server')).filter((file) => file.endsWith('.nft.json'));
-  traces.push(path.join(build, 'next-server.js.nft.json'));
+  const serverTrace = path.join(build, 'next-server.js.nft.json');
+  // Managed Vercel builds package route functions, not the standalone server.
+  if (fs.existsSync(serverTrace) || standalone || !managedVercel) traces.push(serverTrace);
   assert.ok(traces.includes(`${route}.nft.json`), 'Missing manual-override dependency trace');
   const violations = [];
   for (const trace of traces) {
@@ -43,5 +45,5 @@ export function checkArtifacts(root, standalone = false) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const rootArg = process.argv.find((arg) => arg.startsWith('--root='));
-  console.log(JSON.stringify(checkArtifacts(rootArg ? rootArg.slice(7) : process.cwd(), process.argv.includes('--standalone'))));
+  console.log(JSON.stringify(checkArtifacts(rootArg ? rootArg.slice(7) : process.cwd(), process.argv.includes('--standalone'), process.env.VERCEL === '1')));
 }
