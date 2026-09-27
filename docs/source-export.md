@@ -37,6 +37,18 @@ The later authorized inventory must capture privately outside Git in a 0700 dire
 
 Inspect `.next/server/app/api/internal/source-export/route.js.nft.json`: no credential files, test files, scripts, producer or legacy storage dependencies. Check `.next/static` for export auth/format/test-sentinel leakage. SDK write/list spies must remain untouched. Test fixtures are synthetic only.
 
+## Closed diagnosis v1 (source only; not activated)
+
+FR-014/AS-009 in the owning source-export-contract.md adds exact body `{"version":1,"mode":"diagnose"}` under identical export config/auth/expiry/bounds. The original `{"version":1}` archive behavior is unchanged. Diagnosis exercises the same strict graph, hashes, references, rereads and archive serialization cap, then discards the archive. Response has ONLY primitive `format`, `outcome`, `stage`, `category` fields; no attachment, IDs/paths/counts/hashes/URLs/timing/private data/provider text or application logging.
+
+Format is `meal-planner-source-diagnostic.v1`; outcomes valid/incomplete/inconclusive/deadline map to200/422/409/504. Success uses complete/none. Stages are complete/provider_read/provider_metadata/source_bound/record_json/record_schema/graph_schema/integrity/references/consistency/serialization/unknown. Categories are none/pointer/dashboardManifest/productsManifest/summary/coverage/orders/products/overrides. Denials and deadlines before a validated diagnostic body remain unchanged closed errors. Actual failure-site attribution is local to each typed failure, never last-read state. Unknown exceptions are not inspected/coerced. No schema/data repair or acceptance relaxation.
+
+Task t_f3fa5dba diagnosis-v1 SHA256250c57dddfe5b7a80aa26ef37144bc79f2b2e1441bc69284c0098051d089a56c authorizes synthetic source work and independent tester review only. Spec-first planner checkpoint d6fa8c117ac2648df3e0225148763969c22fa92a was pushed before runtime edits. Scoped source branch coder/source-diagnosis-20260927 disables Git deployment in vercel.json; pushing is not permission for any deployment.
+
+Historical original source review run456 passed with notes. Run457's sole live archive request returned422/incomplete/no archive; run458 independently verified rollback and NOT_READY. Run459 reproduced a null products pointer in the LOCAL secondary backup only; PRIMARY cause remains unknown. These failures are not waived by diagnostic implementation or review.
+
+Later activation requires explicit approval naming the exact independently accepted new source commit, protected short-lived credential/expiry/SSO, fresh production mapping and backup/rollback checks, denial probes and at most ONE bounded authenticated diagnostic-only request, not another archive attempt. Historical rollback target621dd3c/dpl_E5veKiZjjbXtaYZWb4962pcgTpLh must be freshly verified. Restore exact preactivation aliases/deployment and remove only newly created export env on failure; immutable deployment env may persist until expiry. No new secret, Vercel API call, diagnostic deployment/live request, source-data repair or inventory release is authorized now. t_ab800602 stays scheduled; migration remains Proposed.
+
 ## Separate activation and rollback gate
 
 Source-level independent tester approval is required first. Then the caller must establish exact Vercel project/deployment mapping, secure distinct secret and expiry, allowed ingress, current private backup/restore safety, reviewed-revision deployment and exact-production bad/missing-secret denial plus bounded private readback. No configuration, deployment or live export is performed on the implementation card. Existing inventory t_ab800602 remains scheduled until that gate and caller release; do not duplicate its graph.

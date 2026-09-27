@@ -4,6 +4,8 @@ import { EXPORT_LIMITS, exportSource, hashBytes, POINTER, OVERRIDES, boundedByte
 import { parseExportJson } from './source-export-json';
 import { createSourceExportReader } from './source-export-reader';
 import * as route from '../app/api/internal/source-export/route';
+import * as core from './source-export';
+import { diagnosticFailure, ExportFailure, DIAGNOSTIC_STAGES, DIAGNOSTIC_CATEGORIES } from './source-export-diagnostic';
 
 const sdk = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn(), del: vi.fn(), list: vi.fn(), head: vi.fn(), copy: vi.fn() }));
 vi.mock('@vercel/blob', () => sdk);
@@ -138,6 +140,203 @@ describe('export route authorization, privacy and nonmutation', () => {
     await vi.advanceTimersByTimeAsync(EXPORT_LIMITS.milliseconds + 1); expect((await pending).status).toBe(504);
     const req = new Request('https://synthetic.invalid', { method: 'POST', headers: { 'content-type': 'application/json', 'x-source-export-secret': secret }, body: new ReadableStream({ pull: () => new Promise(() => {}) }), duplex: 'half' } as RequestInit);
     const next = route.POST(req); await vi.advanceTimersByTimeAsync(EXPORT_LIMITS.milliseconds + 1); expect((await next).status).toBe(504);
+  });
+});
+
+describe('closed diagnostic mode', () => {
+  const body = '{"version":1,"mode":"diagnose"}';
+  const envelope = (outcome: string, stage: string, category: string) => ({ format: 'meal-planner-source-diagnostic.v1', outcome, stage, category });
+  const logs: ReturnType<typeof vi.spyOn>[] = [];
+  beforeEach(() => { for (const method of ['log', 'error', 'warn', 'info', 'debug'] as const) logs.push(vi.spyOn(console, method)); });
+  afterEach(() => {
+    for (const name of ['put', 'del', 'list', 'head', 'copy'] as const) expect(sdk[name]).not.toHaveBeenCalled();
+    for (const log of logs.splice(0)) { expect(log).not.toHaveBeenCalled(); log.mockRestore(); }
+    vi.restoreAllMocks();
+  });
+  async function diagnostic(stage: string, cat: string, status = 422, stable = true) {
+    const before = [...f.records].map(([p, b]) => [p, hashBytes(b)]);
+    const r = await route.POST(request(body)), text = await r.text();
+    expect(r.status).toBe(status);
+    expect(JSON.parse(text)).toEqual(envelope(status === 200 ? 'valid' : status === 409 ? 'inconclusive' : status === 504 ? 'deadline' : 'incomplete', stage, cat));
+    expect(r.headers.get('cache-control')).toContain('private, no-store'); expect(r.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(r.headers.get('content-disposition')).toBeNull();
+    const output = text + JSON.stringify([...r.headers]);
+    for (const sentinel of ['SYNTHETIC_PRIVATE_SENTINEL', 'synthetic-blob-token', secret, 'synthetic-2030', 'private.invalid', 'products/100.json', f.manifestPath, hashBytes(f.records.get(POINTER) ?? '')]) expect(output).not.toContain(sentinel);
+    if (stable) expect([...f.records].map(([p, b]) => [p, hashBytes(b)])).toEqual(before);
+    for (const [, opts] of sdk.get.mock.calls) expect(opts).toMatchObject({ access: 'private', useCache: false, token: 'synthetic-blob-token' });
+    return r;
+  }
+  function replaceManifest(value: unknown, products = false) {
+    const bytes = encode(value), path = `meta/${products ? 'products-manifest' : 'manifest'}-${hashBytes(bytes)}.json`;
+    f.records.set(path, bytes);
+    const pointer = JSON.parse(f.records.get(POINTER)!.toString());
+    pointer[products ? 'productsManifestPath' : 'manifestPath'] = path; f.records.set(POINTER, encode(pointer));
+  }
+  it.each(['pointer', 'dashboardManifest', 'productsManifest', 'summary', 'coverage', 'orders', 'products', 'overrides'])('missing %s is an attributed read failure', async cat => {
+    const path = [...f.records.keys()].find(p => category(p) === cat)!; f.records.delete(path);
+    await diagnostic('provider_read', cat);
+    const original = await route.POST(request()); expect(await original.json()).toEqual({ error: 'incomplete' });
+  });
+  it.each([Buffer.from('{'), Buffer.from([255]), Buffer.from('{"x":1,"\\u0078":2}'), Buffer.from('1e999'), Buffer.from('['.repeat(70) + '0' + ']'.repeat(70))])('closes malformed JSON/UTF8/depth without a payload', async bytes => {
+    f.records.set(OVERRIDES, bytes); await diagnostic('record_json', 'overrides');
+  });
+  it.each(invalidScalars)('preserves strict scalar rejection for %s = %j', async (field, value) => {
+    f = scalarFixture(field, value);
+    await diagnostic('record_schema', field === 'overrideStatus' ? 'overrides' : ['coverageStatus', 'mealId', 'sourceOrderBlobPath'].includes(field) ? 'coverage' : 'orders');
+  });
+  it.each(validScalars)('preserves legacy/null/string compatibility for %s = %j', async (field, value) => {
+    f = scalarFixture(field, value); await diagnostic('complete', 'none', 200);
+  });
+  it.each([true, false])('preserves positively validated empty/independent graph %s', async empty => {
+    f = fixture({ empty, independent: true }); await diagnostic('complete', 'none', 200);
+  });
+  it('attributes graph validation to the product manifest after products were read', async () => {
+    f = fixture({ independent: true });
+    replaceManifest({ 100: 'products/100.json', invalid: 'SYNTHETIC_PRIVATE_SENTINEL' }, true);
+    await diagnostic('graph_schema', 'productsManifest');
+    expect(sdk.get.mock.calls.at(-1)?.[0]).toBe('products/100.json');
+  });
+  it('attributes unsafe graph paths before reading them', async () => {
+    replaceManifest({ '../SYNTHETIC_PRIVATE_SENTINEL': 'a'.repeat(64) }); await diagnostic('graph_schema', 'dashboardManifest');
+    expect(sdk.get.mock.calls.some(([p]) => p.startsWith('../'))).toBe(false);
+  });
+  it('attributes missing summary cardinality without blaming overrides', async () => {
+    replaceManifest({}); await diagnostic('graph_schema', 'summary'); expect(sdk.get.mock.calls.at(-1)?.[0]).toBe(OVERRIDES);
+  });
+  it('attributes a missing product reference to the order', async () => {
+    f = fixture({ mutate: d => { ((d['orders/2030-01-01/synthetic-2030-01-01.json'] as Record<string, unknown>).items as Record<string, unknown>[])[0].tpnc = '999'; } });
+    await diagnostic('references', 'orders');
+  });
+  it('attributes duplicate order identity to orders', async () => {
+    f = fixture({ mutate: d => { (d['orders/2030-01-02/synthetic-2030-01-02.json'] as Record<string, unknown>).orderNumber = 'synthetic-2030-01-01'; } });
+    await diagnostic('references', 'orders');
+  });
+  it.each(['products', 'summary'])('attributes content/path hash mismatch to %s', async cat => {
+    const path = [...f.records.keys()].find(p => category(p) === cat)!;
+    f.records.set(path, Buffer.concat([f.records.get(path)!, Buffer.from(' ')])); await diagnostic('integrity', cat);
+  });
+  it.each(['size', 'path', 'type', 'status', 'length', 'missingBlob'])('closes dishonest provider metadata %s', async kind => {
+    sdk.get.mockImplementation((p: string) => {
+      const r = mockGet(p)!;
+      if (kind === 'size') r.blob.size = EXPORT_LIMITS.objectBytes + 1;
+      if (kind === 'path') r.blob.pathname = 'SYNTHETIC_PRIVATE_SENTINEL';
+      if (kind === 'type') r.blob.contentType = 'text/html';
+      if (kind === 'status') r.statusCode = 304;
+      if (kind === 'length') r.blob.size++;
+      if (kind === 'missingBlob') Object.defineProperty(r, 'blob', { get() { throw new Error('SYNTHETIC_PRIVATE_SENTINEL'); } });
+      return r;
+    });
+    await diagnostic(kind === 'size' ? 'source_bound' : 'provider_metadata', 'pointer');
+  });
+  it('bounds dishonest streamed bytes and cancels without leaking', async () => {
+    const cancel = vi.fn(); sdk.get.mockResolvedValue({ statusCode: 200, blob: { pathname: POINTER, size: 1, contentType: 'application/json' }, stream: new ReadableStream({ start(c) { c.enqueue(Buffer.alloc(EXPORT_LIMITS.objectBytes + 1)); }, cancel }) });
+    await diagnostic('source_bound', 'pointer'); expect(cancel).toHaveBeenCalled();
+  });
+  it('closes stream exceptions and rejected cancellation', async () => {
+    sdk.get.mockResolvedValue({ statusCode: 200, blob: { pathname: POINTER, size: 1, contentType: 'application/json' }, stream: new ReadableStream({ pull() { throw new Error('SYNTHETIC_PRIVATE_SENTINEL'); }, cancel() { return Promise.reject(new Error('SYNTHETIC_PRIVATE_SENTINEL')); } }) });
+    await diagnostic('provider_read', 'pointer');
+  });
+  it('bounds manifest entry count', async () => {
+    f = fixture({ mutate: d => { for (let i = 0; i < 1001; i++) d[`products/${i + 1000}.json`] = product(String(i + 1000)); } });
+    await diagnostic('source_bound', 'dashboardManifest');
+  });
+  it('bounds total records even when each manifest is within the cap', async () => {
+    f = fixture({ empty: true, independent: true, mutate: d => { for (let i = 0; i < 998; i++) d[`products/${i + 1000}.json`] = product(String(i + 1000)); } });
+    await diagnostic('source_bound', 'products');
+  });
+  it('bounds cumulative source bytes including rereads', async () => {
+    f = fixture({ mutate: d => { for (const id of ['100', '101', '102']) d[`products/${id}.json`] = { ...product(id), description: 'x'.repeat(750000) }; } });
+    await diagnostic('source_bound', 'products'); // includes the remaining-byte limit on reread
+  });
+  it.each(['cap', 'throw'])('applies archive serialization %s even though diagnosis discards it', async kind => {
+    const original = JSON.stringify;
+    const stringify = vi.spyOn(JSON, 'stringify').mockImplementation((value, ...args) => {
+      if (value?.format === 'meal-planner-source-export.v1') {
+        if (kind === 'throw') throw new Error('SYNTHETIC_PRIVATE_SENTINEL');
+        return 'x'.repeat(EXPORT_LIMITS.responseBytes + 1);
+      }
+      return original(value, ...args);
+    });
+    try { await diagnostic('serialization', 'none'); } finally { stringify.mockRestore(); }
+  });
+  it.each(['pointer', 'productsManifest', 'products', 'overrides'])('attributes movement/disappearance to %s', async cat => {
+    const path = [...f.records.keys()].find(p => category(p) === cat)!; let n = 0;
+    sdk.get.mockImplementation((p: string) => {
+      if (p === path && ++n === 2) { if (cat === 'pointer') return null; f.records.set(p, Buffer.concat([f.records.get(p)!, Buffer.from(' ')])); }
+      return mockGet(p);
+    });
+    await diagnostic('consistency', cat, 409, false);
+  });
+  it('bounds SDK timeout and recovers for an unrelated next request', async () => {
+    vi.useFakeTimers(); sdk.get.mockImplementation(() => new Promise(() => {}));
+    const pending = diagnostic('provider_read', 'pointer', 504);
+    await vi.advanceTimersByTimeAsync(EXPORT_LIMITS.milliseconds + 1); await pending;
+    sdk.get.mockImplementation(mockGet); await diagnostic('complete', 'none', 200);
+  });
+  it('cancels stalled diagnostic streams at deadline', async () => {
+    vi.useFakeTimers(); const cancel = vi.fn();
+    sdk.get.mockResolvedValue({ statusCode: 200, blob: { pathname: POINTER, size: 1, contentType: 'application/json' }, stream: new ReadableStream({ pull: () => new Promise(() => {}), cancel }) });
+    const pending = diagnostic('provider_read', 'pointer', 504); await vi.advanceTimersByTimeAsync(EXPORT_LIMITS.milliseconds + 1); await pending; expect(cancel).toHaveBeenCalled();
+  });
+  it.each(['export', 'diagnose'])('isolates mixed concurrent calls while %s is in flight', async mode => {
+    let started!: () => void; const entered = new Promise<void>(r => { started = r; });
+    sdk.get.mockImplementation(() => { started(); return new Promise(() => {}); });
+    const controller = new AbortController();
+    const first = route.POST(new Request(request(mode === 'export' ? '{"version":1}' : body), { signal: controller.signal }));
+    await entered;
+    const busy = await route.POST(request(mode === 'export' ? body : '{"version":1}')); expect(busy.status).toBe(429); expect(await busy.json()).toEqual({ error: 'busy' });
+    controller.abort(); const ended = await first; expect(ended.status).toBe(504);
+    expect(await ended.json()).toEqual(mode === 'export' ? { error: 'deadline' } : envelope('deadline', 'provider_read', 'pointer'));
+    sdk.get.mockImplementation(mockGet); f.records.set(OVERRIDES, Buffer.from('{'));
+    await diagnostic('record_json', 'overrides'); const failedArchive = await route.POST(request()); expect(await failedArchive.json()).toEqual({ error: 'incomplete' });
+    f = fixture(); await diagnostic('complete', 'none', 200); expect((await route.POST(request())).headers.get('content-disposition')).toContain('attachment');
+  });
+  it.each(['{"version":1,"mode":"other"}', '{"version":1,"mode":["diagnose"]}', '{"version":1,"mode":null}', '{"version":1,"mode":"diagnose","path":"private"}', '{"version":1,"mode":"diagnose","mode":"diagnose"}'])('denies nonexact diagnostic bodies', async input => {
+    const r = await route.POST(request(input)); expect(r.status).toBe(400); expect(await r.json()).toEqual({ error: 'invalid_request' }); expect(sdk.get).not.toHaveBeenCalled();
+  });
+  it.each(['disabled', 'expired', 'unauthorized', 'encoded', 'query', 'oversized', 'aborted'])('preserves %s denial without diagnostic disclosure', async kind => {
+    if (kind === 'disabled') vi.stubEnv('MEALS_SOURCE_EXPORT_ENABLED', '0');
+    if (kind === 'expired') vi.stubEnv('MEALS_SOURCE_EXPORT_EXPIRES_AT', '2020-01-01T00:00:00Z');
+    const req = request(body, kind === 'unauthorized' ? { 'x-source-export-secret': 'wrong' } : kind === 'encoded' ? { 'content-encoding': 'gzip' } : kind === 'oversized' ? { 'content-length': '257' } : {}, kind === 'query' ? '?private=1' : '');
+    const controller = new AbortController(); if (kind === 'aborted') controller.abort();
+    const r = await route.POST(new Request(req, { signal: controller.signal }));
+    const code = ['disabled', 'expired'].includes(kind) ? 'unavailable' : kind === 'unauthorized' ? 'unauthorized' : kind === 'aborted' ? 'deadline' : 'invalid_request';
+    expect(await r.json()).toEqual({ error: code }); expect(sdk.get).not.toHaveBeenCalled();
+  });
+  it('never inspects hostile thrown objects or trusts duck-typed failure codes', async () => {
+    const touched = vi.fn(() => { throw new Error('SYNTHETIC_PRIVATE_SENTINEL'); });
+    const hostile = new Proxy({}, { get: touched, getPrototypeOf: touched });
+    for (const value of [undefined, null, 'SYNTHETIC_PRIVATE_SENTINEL', { code: 'deadline', stage: 'complete', category: 'products' }, hostile]) {
+      sdk.get.mockRejectedValue(value); await diagnostic('provider_read', 'pointer');
+      expect(diagnosticFailure(value, false)).toEqual(envelope('incomplete', 'unknown', 'none'));
+    }
+    expect(touched).not.toHaveBeenCalled();
+    const exporter = vi.spyOn(core, 'exportSource').mockRejectedValue(hostile);
+    try { await diagnostic('unknown', 'none'); expect(touched).not.toHaveBeenCalled(); } finally { exporter.mockRestore(); }
+  });
+  it('rejects invalid enum coercion and isolates immutable failure metadata', () => {
+    const malformed = new ExportFailure(['deadline'] as never, ['complete'] as never, { toString: () => 'products' } as never);
+    expect(diagnosticFailure(malformed, false)).toEqual(envelope('incomplete', 'unknown', 'none'));
+    const good = new ExportFailure('inconclusive', 'consistency', 'overrides'); Object.assign(good, { code: 'SYNTHETIC_PRIVATE_SENTINEL', stage: 'complete', category: 'orders' });
+    expect(diagnosticFailure(good, false)).toEqual(envelope('inconclusive', 'consistency', 'overrides'));
+    expect(Object.isFrozen(DIAGNOSTIC_STAGES)).toBe(true); expect(Object.isFrozen(DIAGNOSTIC_CATEGORIES)).toBe(true);
+  });
+  it('validates without returning any archive or attachment', async () => {
+    const r = await route.POST(request(body)); expect(r.status).toBe(200);
+    expect(await r.json()).toEqual(envelope('valid', 'complete', 'none'));
+    expect(r.headers.get('content-disposition')).toBeNull();
+  });
+  it('attributes the null products pointer to pointer schema, not primary cause', async () => {
+    f.records.set(POINTER, encode({ manifestPath: f.manifestPath, productsManifestPath: null }));
+    const r = await route.POST(request(body)); expect(r.status).toBe(422);
+    expect(await r.json()).toEqual(envelope('incomplete', 'record_schema', 'pointer'));
+    expect(sdk.get).toHaveBeenCalledTimes(1);
+  });
+  it('attributes references to coverage even after reading overrides', async () => {
+    f = fixture({ mutate: d => { (d['coverage/2030-01-01.json'] as Record<string, unknown>).sourceOrderBlobPath = 'orders/2030-01-01/missing.json'; } });
+    const r = await route.POST(request(body)); expect(r.status).toBe(422);
+    expect(sdk.get.mock.calls.at(-1)?.[0]).toBe(OVERRIDES);
+    expect(await r.json()).toEqual(envelope('incomplete', 'references', 'coverage'));
   });
 });
 

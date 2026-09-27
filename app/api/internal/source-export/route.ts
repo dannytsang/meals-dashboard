@@ -3,6 +3,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { boundedBytes, EXPORT_LIMITS, ExportFailure, exportSource, object } from '@/lib/source-export';
 import { parseExportJson } from '@/lib/source-export-json';
 import { createSourceExportReader } from '@/lib/source-export-reader';
+import { diagnosticSuccess, diagnosticFailure, failureDetails } from '@/lib/source-export-diagnostic';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,20 +43,24 @@ export async function POST(request: Request): Promise<Response> {
   request.signal.addEventListener('abort', abort, { once: true });
   if (request.signal.aborted) abort();
   const timer = setTimeout(abort, EXPORT_LIMITS.milliseconds);
+  let diagnose = false; // only set after full bounded request validation
   try {
     let input: unknown;
     try {
       if (!request.body) throw new ExportFailure('invalid_request');
       input = parseExportJson(await boundedBytes(request.body, EXPORT_LIMITS.requestBytes, controller.signal));
-      if (!object(input) || Object.keys(input).length !== 1 || input.version !== 1) throw new ExportFailure('invalid_request');
-    } catch (e) {
+      if (!object(input) || input.version !== 1 || !(Object.keys(input).length === 1 || Object.keys(input).length === 2 && input.mode === 'diagnose')) throw new ExportFailure('invalid_request');
+      diagnose = input.mode === 'diagnose';
+    } catch {
       if (controller.signal.aborted) throw new ExportFailure('deadline');
       throw new ExportFailure('invalid_request');
     }
-    return response(await exportSource(createSourceExportReader(token), controller.signal), 200, true);
+    const archive = await exportSource(createSourceExportReader(token), controller.signal);
+    return diagnose ? response(diagnosticSuccess(), 200) : response(archive, 200, true);
   } catch (e) {
-    const code = controller.signal.aborted ? 'deadline' : e instanceof ExportFailure ? e.code : 'incomplete';
-    return response({ error: code }, code === 'invalid_request' ? 400 : code === 'inconclusive' ? 409 : code === 'deadline' ? 504 : 422);
+    const code = controller.signal.aborted ? 'deadline' : failureDetails(e).code;
+    const value = diagnose ? diagnosticFailure(e, controller.signal.aborted) : { error: code };
+    return response(value, code === 'invalid_request' ? 400 : code === 'inconclusive' ? 409 : code === 'deadline' ? 504 : 422);
   } finally {
     controller.abort(); clearTimeout(timer);
     request.signal.removeEventListener('abort', abort); active = false;

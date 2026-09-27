@@ -1,14 +1,13 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { parseExportJson } from './source-export-json';
+import { ExportFailure, atStage, atStageAsync, verifyExport, type DiagnosticCategory } from './source-export-diagnostic';
+export { ExportFailure } from './source-export-diagnostic';
 
 export const EXPORT_LIMITS = Object.freeze({ records: 1000, objectBytes: 1048576, totalBytes: 4194304, responseBytes: 3670016, milliseconds: 25000, requestBytes: 256 });
 export const POINTER = 'pointers/latest.json';
 export const OVERRIDES = 'overrides/manual.json';
 export const hashBytes = (bytes: Uint8Array | string): string => createHash('sha256').update(bytes).digest('hex');
-export class ExportFailure extends Error {
-  constructor(readonly code: 'incomplete' | 'inconclusive' | 'deadline' | 'invalid_request') { super(code); }
-}
 function check(ok: unknown): asserts ok { if (!ok) throw new ExportFailure('incomplete'); }
 export const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 const exact = (v: unknown, re: RegExp): v is string => typeof v === 'string' && re.exec(v)?.[0] === v;
@@ -16,7 +15,7 @@ const date = (v: unknown): v is string => exact(v, /^\d{4}-\d{2}-\d{2}$/) && Num
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0;
 const integer = (v: unknown) => finite(v) && Number.isSafeInteger(v);
 const strings = (v: unknown) => Array.isArray(v) && v.every(x => typeof x === 'string');
-export function category(p: string): string | null {
+export function category(p: string): DiagnosticCategory | null {
   if (p.length > 200) return null;
   if (p === POINTER) return 'pointer';
   if (p === OVERRIDES) return 'overrides';
@@ -65,7 +64,7 @@ export async function boundedBytes(stream: ReadableStream<Uint8Array>, limit: nu
   try {
     while (true) {
       const { done, value } = await abortable(() => reader.read(), signal); if (done) break;
-      size += value.byteLength; check(size <= limit); chunks.push(value);
+      size += value.byteLength; verifyExport(size <= limit, 'source_bound', 'none'); chunks.push(value);
     }
     return Buffer.concat(chunks);
   } finally { void reader.cancel().catch(() => {}); reader.releaseLock(); }
@@ -81,73 +80,79 @@ export type SourceArchive = {
 export async function exportSource(read: ExportReader, signal: AbortSignal): Promise<SourceArchive> {
   const records = new Map<string, { bytes: Uint8Array; value: unknown }>(); let total = 0;
   const load = async (path: string, reread = false): Promise<Uint8Array> => {
-    check(category(path));
-    const limit = Math.min(EXPORT_LIMITS.objectBytes, EXPORT_LIMITS.totalBytes - total); check(limit > 0);
-    const bytes = await abortable(() => read(path, limit, signal), signal);
-    if (reread && bytes === null) throw new ExportFailure('inconclusive');
-    check(bytes instanceof Uint8Array && bytes.byteLength <= limit);
+    const cat = category(path); verifyExport(cat, 'graph_schema', 'none');
+    const limit = Math.min(EXPORT_LIMITS.objectBytes, EXPORT_LIMITS.totalBytes - total); verifyExport(limit > 0, 'source_bound', cat);
+    const bytes = await atStageAsync('provider_read', cat, () => abortable(() => read(path, limit, signal), signal));
+    if (reread && bytes === null) throw new ExportFailure('inconclusive', 'consistency', cat);
+    verifyExport(bytes instanceof Uint8Array, 'provider_read', cat);
+    verifyExport(bytes.byteLength <= limit, 'source_bound', cat);
     total += bytes.byteLength; return bytes;
   };
   const add = async (path: string, expected?: string): Promise<unknown> => {
+    const cat = category(path) ?? 'none';
     let rec = records.get(path);
     if (!rec) {
-      check(records.size < EXPORT_LIMITS.records);
-      const bytes = await load(path); const value = parseExportJson(bytes);
-      validateRecord(category(path)!, path, value);
+      verifyExport(records.size < EXPORT_LIMITS.records, 'source_bound', cat);
+      const bytes = await load(path);
+      const value = atStage('record_json', cat, () => parseExportJson(bytes));
+      atStage('record_schema', cat, () => validateRecord(cat, path, value));
       rec = { bytes, value }; records.set(path, rec);
     }
     const digest = hashBytes(rec.bytes);
-    if (expected !== undefined) check(exact(expected, /^[a-f0-9]{64}$/) && digest === expected);
-    if (path.startsWith('meta/')) check(path.endsWith(`-${digest}.json`));
+    if (expected !== undefined) verifyExport(exact(expected, /^[a-f0-9]{64}$/) && digest === expected, 'integrity', cat);
+    if (path.startsWith('meta/')) verifyExport(path.endsWith(`-${digest}.json`), 'integrity', cat);
     return rec.value;
   };
-  const pointer = await add(POINTER); check(object(pointer));
-  check(typeof pointer.manifestPath === 'string' && category(pointer.manifestPath) === 'dashboardManifest');
-  check(typeof pointer.productsManifestPath === 'string' && category(pointer.productsManifestPath) === 'productsManifest');
-  check(Object.keys(pointer).every(k => ['manifestPath', 'productsManifestPath'].includes(k)));
-  const manifest = await add(pointer.manifestPath); check(object(manifest));
-  check(Object.keys(manifest).length <= EXPORT_LIMITS.records);
+  const pointer = await add(POINTER); verifyExport(object(pointer), 'record_schema', 'pointer');
+  verifyExport(typeof pointer.manifestPath === 'string' && category(pointer.manifestPath) === 'dashboardManifest', 'record_schema', 'pointer');
+  verifyExport(typeof pointer.productsManifestPath === 'string' && category(pointer.productsManifestPath) === 'productsManifest', 'record_schema', 'pointer');
+  verifyExport(Object.keys(pointer).every(k => ['manifestPath', 'productsManifestPath'].includes(k)), 'record_schema', 'pointer');
+  const manifest = await add(pointer.manifestPath); verifyExport(object(manifest), 'graph_schema', 'dashboardManifest');
+  verifyExport(Object.keys(manifest).length <= EXPORT_LIMITS.records, 'source_bound', 'dashboardManifest');
   for (const [path, hash] of Object.entries(manifest).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
-    check(['summary', 'coverage', 'orders', 'products', 'productsManifest'].includes(category(path) ?? '') && typeof hash === 'string');
+    verifyExport(['summary', 'coverage', 'orders', 'products', 'productsManifest'].includes(category(path) ?? '') && typeof hash === 'string', 'graph_schema', 'dashboardManifest');
     await add(path, hash);
   }
   await add(pointer.productsManifestPath);
   const productPaths = new Set<string>();
   for (const [path, { value }] of [...records]) if (category(path) === 'productsManifest') {
-    check(object(value) && Object.keys(value).length <= EXPORT_LIMITS.records);
+    verifyExport(object(value), 'graph_schema', 'productsManifest');
+    verifyExport(Object.keys(value).length <= EXPORT_LIMITS.records, 'source_bound', 'productsManifest');
     for (const [id, pp] of Object.entries(value)) {
-      check(exact(id, /^\d+$/) && pp === `products/${id}.json`);
+      verifyExport(exact(id, /^\d+$/) && pp === `products/${id}.json`, 'graph_schema', 'productsManifest');
       productPaths.add(pp as string); await add(pp as string);
     }
   }
   await add(OVERRIDES);
-  check([...records.keys()].filter(p => category(p) === 'summary').length === 1);
+  verifyExport([...records.keys()].filter(p => category(p) === 'summary').length === 1, 'graph_schema', 'summary');
   const identities = new Set<string>();
-  const unique = (id: string) => { check(!identities.has(id)); identities.add(id); };
+  const unique = (id: string, cat: DiagnosticCategory) => { verifyExport(!identities.has(id), 'references', cat); identities.add(id); };
   for (const [path, { value }] of records) {
     if (!object(value)) continue;
     if (category(path) === 'orders') {
-      unique(`order:${value.orderNumber}`);
-      for (const item of value.items as Record<string, unknown>[]) if (item.tpnc != null) check(productPaths.has(`products/${item.tpnc}.json`));
+      unique(`order:${value.orderNumber}`, 'orders');
+      for (const item of value.items as Record<string, unknown>[]) if (item.tpnc != null) verifyExport(productPaths.has(`products/${item.tpnc}.json`), 'references', 'orders');
     }
     if (category(path) === 'coverage') {
-      if (typeof value.sourceOrderBlobPath === 'string') check(records.has(value.sourceOrderBlobPath));
-      for (const entry of value.meals as { meal: { id: string } }[]) unique(`meal:${entry.meal.id}`);
+      if (typeof value.sourceOrderBlobPath === 'string') verifyExport(records.has(value.sourceOrderBlobPath), 'references', 'coverage');
+      for (const entry of value.meals as { meal: { id: string } }[]) unique(`meal:${entry.meal.id}`, 'coverage');
     }
   }
   // Exact-byte rereads include independent products and authoritative overrides.
   // Finish with pointer again; this detects movement, not ABA or atomic whole-store state.
   for (const path of [...records.keys()].filter(p => p !== POINTER).sort().concat(POINTER)) {
-    if (hashBytes(await load(path, true)) !== hashBytes(records.get(path)!.bytes)) throw new ExportFailure('inconclusive');
+    if (hashBytes(await load(path, true)) !== hashBytes(records.get(path)!.bytes)) throw new ExportFailure('inconclusive', 'consistency', category(path)!);
   }
-  const archive: SourceArchive = {
-    format: 'meal-planner-source-export.v1', scope: 'active-reachable-with-retained-history',
-    consistency: 'observed-records-rechecked-not-atomic', atomicSnapshot: false,
-    records: [...records].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([path, { bytes }]) => ({
-      path, identity: hashBytes(path), sha256: hashBytes(bytes), bytes: bytes.byteLength, base64: Buffer.from(bytes).toString('base64'),
-    })),
-  };
-  check(Buffer.byteLength(JSON.stringify(archive)) <= EXPORT_LIMITS.responseBytes);
-  if (signal.aborted) throw new ExportFailure('deadline');
-  return archive;
+  return atStage('serialization', 'none', () => {
+    const archive: SourceArchive = {
+      format: 'meal-planner-source-export.v1', scope: 'active-reachable-with-retained-history',
+      consistency: 'observed-records-rechecked-not-atomic', atomicSnapshot: false,
+      records: [...records].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([path, { bytes }]) => ({
+        path, identity: hashBytes(path), sha256: hashBytes(bytes), bytes: bytes.byteLength, base64: Buffer.from(bytes).toString('base64'),
+      })),
+    };
+    verifyExport(Buffer.byteLength(JSON.stringify(archive)) <= EXPORT_LIMITS.responseBytes, 'serialization', 'none');
+    if (signal.aborted) throw new ExportFailure('deadline');
+    return archive;
+  });
 }

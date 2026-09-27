@@ -2,7 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "coder/dual-publish-20260925": false
+      "coder/dual-publish-20260925": false,
+      "coder/source-diagnosis-20260927": false
     }
   }
 }
