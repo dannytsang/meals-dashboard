@@ -49,7 +49,9 @@ beforeEach(() => {
     'coverage/2026-06-17.json': 'sha256-cov-1',
     'orders/2026-06-17/ORD-123.json': 'sha256-order-1',
   });
-  mockReader.readJsonBlob.mockResolvedValue({ lastFetched: '2026-06-18T10:00:00.000Z' });
+  mockReader.readJsonBlob.mockImplementation(async (path: string) => path === 'products/manifest-123.json'
+    ? { '123456789': 'products/123456789.json' }
+    : { lastFetched: '2026-06-18T10:00:00.000Z' });
   mockGetDashboardData.mockResolvedValue({
     coverage: [],
     deliveryWindows: [],

@@ -329,6 +329,11 @@ export function buildItemsByCategoryDebugPayload(args: {
   };
 }
 
+/** Logical date of a legacy or immutable manifest coverage reference. No server imports. */
+export function coverageDateFromPath(path: string): string | null {
+  return /^coverage\/(\d{4}-\d{2}-\d{2})(?:-[a-f0-9]{64})?\.json$/.exec(path)?.[1] ?? null;
+}
+
 export function buildBlobReadFreshnessDebugPayload(args: {
   now: string;
   runtimeMode: DebugRuntimeMode;
@@ -368,10 +373,7 @@ export function buildBlobReadFreshnessDebugPayload(args: {
     productReads: Array<{ path: string; status: 'ok' | 'missing' | 'error' | 'bypassed'; lastFetched?: string }>;
   };
 }): BlobReadFreshnessDebugPayload {
-  const toCoverageDate = (path: string): string | null => {
-    const match = /^coverage\/(\d{4}-\d{2}-\d{2})\.json$/.exec(path);
-    return match?.[1] ?? null;
-  };
+  const toCoverageDate = coverageDateFromPath;
   const manifestDateCoverage = args.trace.selectedCoverageBlobPaths
     .map(toCoverageDate)
     .filter((date): date is string => Boolean(date));

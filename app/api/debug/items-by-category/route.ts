@@ -6,11 +6,13 @@ import { NextResponse } from 'next/server';
 import { DEBUG_COOKIE_NAME, verifyDebugCookie } from '@/lib/debug-cookie';
 import {
   buildItemsByCategoryDebugPayload,
+  coverageDateFromPath,
   type ItemsByCategoryDebugPayload,
 } from '@/lib/debug-observability';
 import { getDashboardData, buildCoverageWindowDates } from '@/lib/dashboard-data';
 import { runtimeModeStatus } from '@/lib/runtime-mode';
 import { StaticFixtureReader } from '@/lib/fixtures/static-fixture-reader';
+import { pinDashboardReader } from '@/lib/debug-snapshot-reader';
 import { VercelBlobStorageClient } from '@/lib/blob-storage';
 import { transformCachedOrderSafely } from '@/lib/dashboard-ui-utils';
 
@@ -45,7 +47,7 @@ export async function GET(): Promise<NextResponse> {
   twoWeeksLater.setUTCDate(twoWeeksLater.getUTCDate() + 14);
   const endDate = toIsoDate(twoWeeksLater);
   const coverageWindow = buildCoverageWindowDates(today, endDate);
-  const reader = pickReader();
+  const reader = pinDashboardReader(pickReader());
 
   const pointer = await reader.readPointer();
   const manifestPath = pointer?.manifestPath ?? null;
@@ -63,7 +65,10 @@ export async function GET(): Promise<NextResponse> {
     .sort()
     .reverse();
   const orderPaths = [...inWindow, ...pastOrders.slice(0, 1)];
-  const coveragePaths = coverageWindow.map((d) => `coverage/${d}.json`).filter((p) => p in manifest);
+  const coveragePaths = Object.keys(manifest).filter((path) => {
+    const date = coverageDateFromPath(path);
+    return date !== null && coverageWindow.includes(date);
+  });
 
   const data = await getDashboardData({ reader, coverageWindow });
   const receipt = transformCachedOrderSafely(data.latestOrder);

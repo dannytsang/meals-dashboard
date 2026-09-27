@@ -1,5 +1,17 @@
 # Offline migration safety source checkpoint — 2026-09-27
 
+## R1 correction — run473, independent retest pending
+
+Run472 independently returned FAIL_ACCEPTANCE_CRITERIA: immutable publication broke the debug read contracts. That verdict remains historical; the original run471 green suites did not cover these sibling consumers. First same-card correction only, not a new retry graph.
+
+Spec-first checkpoints planner0756d64629b4531490dbd5db29b648b17bbf8d0b and sourcef468038e4ee7d4a68859de2304599e9d6d9d1b3f were pushed and remote-exact before correction. Freshness/items routes now select physical manifest references; a client-safe parser returns logical coverage dates; product lookup preserves the legacy-only fallback boundary. A request-local pinned reader prevents diagnostic pointer A from being mixed with data from newly published pointer B. No mutable aliases or writer changes.
+
+The unchanged reviewer probe fails3/3 before and passes3/3 after in EACH app. Added13 cases per app cover sparse/missing references, legacy stable graphs, immutable main-only/missing-product-manifest refusal, debug denial and two actual writer-produced advancing-pointer cases (those two reproduced RED before the pinning fix). Final planner747/source980 tests, zero failures/skips; producer200/governance4; both builds/types/static privacy pass. Fresh actual local pipeline backup/restore and separate-process readback pass:17 exact files,2 retained graphs,2 orders,1 product,1 override,0 network calls. Scoped secret-pattern/whitespace and all build traces pass, installed wrapper/publisher/recovery hashes unchanged. Broader privacy and live gates remain as below.
+
+Full correction report: planner docs/verification/2026-09-27-migration-safety-r1.md; exact successor SHAs and source-control readback are in the SAME-card handoff. No activation, live source access or inventory release; selected legacy-only fallback unchanged. Run473 needs independent tester acceptance.
+
+## Historical run471 handoff
+
 Task t_d007ecc9, run471. Source-only; independent SAME-card tester review pending. No deployment, installed publisher/wrapper replacement, live source read, publication or inventory release.
 
 Spec checkpoints: this repository 0099496b7285b8d33e8e707ef0eaac3c3b75f7b0 and selected-policy addendum 0a03c9f002b484421e6a73545050a0fb74869d5a; planner 37af96d212772c5658f8445c05efd35354da4165 then 4d8b489c195fbd8cf96cfc32f84626dcf6dd1196. Both were pushed before respective implementation. Candidate Vercel branch deployment is explicitly disabled in vercel.json. Installed source was not edited.

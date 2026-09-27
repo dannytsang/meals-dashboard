@@ -6,11 +6,13 @@ import { NextResponse } from 'next/server';
 import { DEBUG_COOKIE_NAME, verifyDebugCookie } from '@/lib/debug-cookie';
 import {
   buildBlobReadFreshnessDebugPayload,
+  coverageDateFromPath,
   type BlobReadFreshnessDebugPayload,
 } from '@/lib/debug-observability';
 import { getDashboardData, buildCoverageWindowDates } from '@/lib/dashboard-data';
 import { runtimeModeStatus } from '@/lib/runtime-mode';
 import { StaticFixtureReader } from '@/lib/fixtures/static-fixture-reader';
+import { pinDashboardReader } from '@/lib/debug-snapshot-reader';
 import { VercelBlobStorageClient } from '@/lib/blob-storage';
 
 export const dynamic = 'force-dynamic';
@@ -40,7 +42,7 @@ export async function GET(): Promise<NextResponse> {
   const endDate = toIsoDate(twoWeeksLater);
   const coverageWindow = buildCoverageWindowDates(today, endDate);
   const mode = runtimeModeStatus();
-  const reader = mode.blobConfigured ? new VercelBlobStorageClient() : new StaticFixtureReader();
+  const reader = pinDashboardReader(mode.blobConfigured ? new VercelBlobStorageClient() : new StaticFixtureReader());
 
   let pointerRead: BlobReadFreshnessDebugPayload['pointerRead'] = 'bypassed';
   let manifestRead: BlobReadFreshnessDebugPayload['manifestRead'] = 'bypassed';
@@ -73,21 +75,11 @@ export async function GET(): Promise<NextResponse> {
           .sort()
           .reverse();
         const orderPaths = [...inWindow, ...pastOrders.slice(0, 1)];
-        // Extract coverage dates present in the manifest (e.g. 'coverage/2026-06-28.json' → '2026-06-28')
-        // Assigns to the outer scope 'let' declared above the try block.
-        const manifestKeys = manifest && Object.keys(manifest).length > 0 ? Object.keys(manifest) : [];
-        manifestCoverageDates = manifestKeys.filter((k) => k.startsWith('coverage/')).map((k) => k.replace('coverage/', '').replace('.json', ''));
-
-        // Use ALL manifest coverage dates (not just window dates) for the same reason
-        // dashboard-data.ts extends coveragePaths: the Python sync writes sparse blobs
-        // only for meal-plan dates, so manifest dates outside the window are valid.
-        const allManifestCoverageDates = manifestKeys.filter((k) => k.startsWith('coverage/')).map((k) => k.replace('coverage/', '').replace('.json', ''));
-        const coveragePaths = [
-          ...new Set([
-            ...coverageWindow.filter((d) => `coverage/${d}.json` in (manifest ?? {})),
-            ...allManifestCoverageDates,
-          ]),
-        ].map((d) => `coverage/${d}.json`).filter((p) => p in (manifest ?? {}));
+        // Follow exact committed references, including sparse dates outside the
+        // visible window. Digest suffixes identify bytes, not logical dates.
+        const manifestKeys = Object.keys(manifest);
+        const coveragePaths = manifestKeys.filter((path) => coverageDateFromPath(path) !== null);
+        manifestCoverageDates = coveragePaths.map((path) => coverageDateFromPath(path)!);
 
         const [coverageResults, orderResults] = await Promise.all([
           Promise.all(coveragePaths.map(async (path) => ({ path, status: (await reader.readJsonBlob(path)) ? 'ok' : 'missing' } as const))),
@@ -97,12 +89,19 @@ export async function GET(): Promise<NextResponse> {
         orderReads = orderResults;
 
         const latestOrder = await getDashboardData({ reader, coverageWindow }).then((data) => data.latestOrder);
-        // Spec 021 / FR-003 (revised): derive product blob paths from tpnc using
-        // the convention products/{tpnc}.json. No longer use item.productBlobPath.
+        // Resolve physical product records through the same committed manifest
+        // as the dashboard. Only legacy main graphs without a product manifest
+        // may derive stable aliases; immutable main-only graphs must not leak them.
         const allTpncs = latestOrder
           ? [...new Set((latestOrder.items as Array<{ tpnc?: string | null }>).map((item) => item.tpnc).filter((t): t is string => typeof t === 'string' && t.trim() !== ''))]
           : [];
-        const productPaths = allTpncs.map((tpnc) => `products/${tpnc}.json`);
+        const productsManifest = productsManifestPath
+          ? await reader.readJsonBlob<Record<string, string>>(productsManifestPath) ?? {}
+          : {};
+        const immutableMain = manifestKeys.some((path) => /^(orders|coverage)\//.test(path) && /-[a-f0-9]{64}\.json$/.test(path));
+        const productPaths = allTpncs.map((tpnc) => productsManifestPath
+          ? productsManifest[tpnc] : immutableMain ? undefined : `products/${tpnc}.json`)
+          .filter((path): path is string => typeof path === 'string');
         productReads = await Promise.all(
           productPaths.map(async (path) => {
             const blob = await reader.readJsonBlob<{ lastFetched?: string }>(path);
