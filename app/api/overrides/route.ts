@@ -77,33 +77,32 @@ async function readOverridesBlob(): Promise<ManualOverrideEntry[]> {
     throw new Error('BLOB_READ_WRITE_TOKEN not configured');
   }
   try {
-    // Spec 028 / 2026-06-19 cleanup: use head() (a Simple Operation)
-    // instead of list({prefix}) (an Advanced Operation that hit the
-    // Vercel Blob Advanced Operations quota). The override blob lives
-    // at a single known path (`overrides/manual.json`); no prefix scan
-    // is needed.
-    //
-    // head() returns the blob metadata (including its signed `url`) on
-    // success and null on 404 (verified in @vercel/blob@2.4.0 source).
     const meta = await head(OVERRIDES_BLOB_PATH, { token: BLOB_TOKEN });
-    if (!meta) return [];
-    // The `meta.url` from head() is a private Vercel blob URL that
-    // requires an Authorization header to fetch. Without it the
-    // server returns 403. This matches the pattern used by the
-    // dashboard's VercelBlobStorageClient.readJsonBlob().
+    if (!meta) throw new Error('Authority unavailable');
     const resp = await fetch(meta.url, {
       headers: { Authorization: `Bearer ${BLOB_TOKEN}` },
+      cache: 'no-store',
     });
-    if (!resp.ok) {
-      console.log('[overrides] fetch failed:', resp.status, resp.statusText);
-      return [];
-    }
-    const text = await resp.text();
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) ? (parsed as ManualOverrideEntry[]) : [];
-  } catch (err) {
-    console.log('[overrides] readOverridesBlob error:', err instanceof Error ? err.message : String(err));
-    return [];
+    if (!resp.ok) throw new Error('Authority unavailable');
+    const parsed: unknown = JSON.parse(await resp.text());
+    const identities = new Set<string>();
+    if (!Array.isArray(parsed) || !parsed.every((entry: unknown) => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+      const e = entry as Record<string, unknown>;
+      const key = JSON.stringify([e.meal_date, e.meal_name, e.item_name]);
+      if (identities.has(key)) return false;
+      identities.add(key);
+      return ['meal_date', 'meal_name', 'item_name', 'reason', 'created_at', 'updated_at'].every(k => typeof e[k] === 'string')
+        && /^\d{4}-\d{2}-\d{2}$/.test(e.meal_date as string)
+        && Number.isFinite(Date.parse(e.meal_date as string))
+        && new Date(e.meal_date as string).toISOString().slice(0, 10) === e.meal_date
+        && typeof e.quantity === 'number' && Number.isFinite(e.quantity) && e.quantity >= 0
+        && (e.status === 'covered' || e.status === 'partial')
+        && (e.cleared_at == null || typeof e.cleared_at === 'string');
+    })) throw new Error('Authority unavailable');
+    return parsed as ManualOverrideEntry[];
+  } catch {
+    throw new Error('Authoritative overrides unavailable');
   }
 }
 
@@ -171,7 +170,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const entries = await readOverridesBlob();
     return NextResponse.json({ ok: true, overrides: entries });
   } catch (err) {
-    console.error('[overrides] read failed', { error: err instanceof Error ? err.name : 'unknown' });
+    console.error('[overrides] read failed');
     return NextResponse.json({ error: 'Failed to read overrides' }, { status: 500 });
   }
 }
@@ -210,7 +209,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await writeOverridesBlob(updated);
     return NextResponse.json({ ok: true, overrides: updated });
   } catch (err) {
-    console.error('[overrides] write failed', { error: err instanceof Error ? err.name : 'unknown' });
+    console.error('[overrides] write failed');
     return NextResponse.json(
       { error: 'Failed to persist override' },
       { status: 500 }

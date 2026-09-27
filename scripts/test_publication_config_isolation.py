@@ -49,7 +49,7 @@ def test_partial_secondary_preserves_primary_and_reports_partial(tmp_path, proto
          patch.object(sync, 'post_dashboard_data_to_api', side_effect=post), redirect_stdout(output):
         if entrypoint == 'full':
             with patch.object(sync.sys, 'argv', ['sync', '--no-history', '--no-build']), \
-                 patch.object(sync, 'read_dashboard_cache', return_value={'meals': []}), \
+                 patch.object(sync, 'read_dashboard_cache', return_value={'meals': [], 'coverage_base_version': 1}), \
                  patch.object(sync, 'fetch_manual_overrides', return_value=[]) as authority, \
                  patch.object(sync, 'build_dashboard_payload', return_value=payload) as build, \
                  patch.object(sync, 'publish_split_dashboard_payload', wraps=sync.publish_split_dashboard_payload) as fanout:
@@ -106,7 +106,7 @@ def test_complete_dual_authority_failure_remains_fail_closed(tmp_path):
     output = StringIO()
     with patch.dict(os.environ, env, clear=True), patch.object(sync, 'load_dashboard_env'), \
          patch.object(sync.sys, 'argv', ['sync', '--no-history', '--no-build']), \
-         patch.object(sync, 'read_dashboard_cache', return_value={'meals': []}), \
+         patch.object(sync, 'read_dashboard_cache', return_value={'meals': [], 'coverage_base_version': 1}), \
          patch.object(sync, 'fetch_manual_overrides', return_value=None) as authority, \
          patch.object(sync, 'build_dashboard_payload') as build, \
          patch.object(sync, 'post_dashboard_data_to_api') as transport, redirect_stdout(output):

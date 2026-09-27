@@ -65,9 +65,7 @@ class RecoveryPublisher:
                     time.sleep(0.025)
             self._load()
             yield
-        except CheckpointError:
-            raise
-        except (OSError, ValueError, TypeError, KeyError):
+        except Exception:
             raise CheckpointError('Publication checkpoint unavailable') from None
         finally:
             if fd is not None:
@@ -134,15 +132,28 @@ class RecoveryPublisher:
     def _attempt(self, entry, url, secret, dry_run=False):
         target_url = _products_url(url) if entry['phase'] == 'products' else url
         body = entry['payload']
+        def send(dry):
+            # Transport exceptions and remote error payloads are untrusted. They
+            # must not erase earlier acknowledgments or reach logs/checkpoints.
+            try:
+                ok, response = self.post(body, target_url, secret, dry_run=dry)
+                if not isinstance(response, dict):
+                    return False, {'error': 'invalid publication response'}
+                if ok:
+                    return True, response
+                return False, {'error': 'publication request failed',
+                               **({'status': response['status']} if type(response.get('status')) is int else {})}
+            except Exception:
+                return False, {'error': 'publication request failed'}
         # Authenticate and prove protocol BEFORE any non-dry write, including
         # on replay after a server rollback. Legacy servers ignore unknown fields.
-        ok, response = self.post(body, target_url, secret, dry_run=True)
+        ok, response = send(True)
         if not ok or response.get('publicationProtocol') != 1:
             return False, {'error': 'publication protocol preflight failed'}
         if dry_run:
             return True, response
         for attempt in range(2):
-            ok, response = self.post(body, target_url, secret, dry_run=False)
+            ok, response = send(False)
             if ok:
                 if response.get('publicationProtocol') != 1:
                     return False, {'error': 'publication protocol acknowledgment missing'}
@@ -153,9 +164,13 @@ class RecoveryPublisher:
                 time.sleep(0.25)
         return False, response
 
-    def _run_entry(self, entry, url, secret):
+    def _run_entry(self, entry, url, secret, result=None):
+        # Publish acknowledgments into caller-owned results BEFORE any later
+        # checkpoint operation can fail. Durable replay retains server identity.
+        if result is None:
+            result = {}
         ok, response = self._attempt(entry, url, secret)
-        result = {entry['phase']: {'ok': ok, 'response': response}}
+        result[entry['phase']] = {'ok': ok, 'response': response}
         if not ok:
             return result
         self.state['entries'].remove(entry)
@@ -163,31 +178,46 @@ class RecoveryPublisher:
             manifest = response.get('manifestPath')
             if not isinstance(manifest, str) or not manifest.startswith('meta/manifest-'):
                 self.state['entries'].append(entry)
-                return {'main': {'ok': False, 'response': {'error': 'main manifest acknowledgment missing'}}}
+                result['products'] = {'ok': False, 'response': {'error': 'main manifest acknowledgment missing'}}
+                return result
             product_entry = {k: v for k, v in entry.items() if k not in ('payload', 'products')}
             product_entry['phase'] = 'products'
             product_entry['payload'] = {'products': entry['products'], 'mainManifestPath': manifest,
                 'publication': {**entry['payload']['publication'], 'phase': 'products'}}
             self.state['entries'].append(product_entry)
             self._save()  # suppress successful main even if process stops here
-            result.update(self._run_entry(product_entry, url, secret))
+            self._run_entry(product_entry, url, secret, result)
         self._save()
         return result
 
     def replay(self, destinations):
         results = {}
         configured = {name: (url, secret) for name, url, secret in destinations}
-        with self._locked():
-            self._save()  # persist retention cleanup even without pending work
-            for entry in list(self.state['entries']):
-                config = configured.get(entry['target'])
-                if config and (not all(config) or _endpoint(config[0]) != entry['endpoint']):
-                    results[entry['target']] = {entry['phase']: {'ok': False, 'response': {'error': 'replay destination unavailable or changed'}}}
-                    continue
-                if not config:
-                    continue
-                results[entry['target']] = self._run_entry(entry, *config)
-        return results
+        checkpoint_ok = True
+        try:
+            with self._locked():
+                for entry in self.state['entries']:
+                    phases = results.setdefault(entry['target'], {})
+                    phases[entry['phase']] = {'ok': False, 'response': {'error': 'publication not attempted'}}
+                    if entry.get('products'):
+                        phases['products'] = {'ok': False, 'response': {'error': 'main phase unavailable'}}
+                self._save()  # persist retention cleanup even without pending work
+                for entry in list(self.state['entries']):
+                    phases = results[entry['target']]
+                    config = configured.get(entry['target'])
+                    if not config or not all(config) or _endpoint(config[0]) != entry['endpoint']:
+                        phases[entry['phase']] = {'ok': False, 'response': {'error': 'replay destination unavailable or changed'}}
+                        continue
+                    self._run_entry(entry, *config, result=phases)
+        except CheckpointError:
+            checkpoint_ok = False
+            if not any(p['ok'] for phases in results.values() for p in phases.values()):
+                raise
+        ok = checkpoint_ok and all(p['ok'] for phases in results.values() for p in phases.values())
+        successes = any(p['ok'] for phases in results.values() for p in phases.values())
+        return {'targets': results, 'checkpoint': {'ok': checkpoint_ok,
+                **({} if checkpoint_ok else {'error': 'publication checkpoint unavailable'})},
+                'ok': ok, 'status': 'complete' if ok else 'partial' if successes else 'failed'}
 
     def publish(self, payload, destinations, products_only=False, dry_run=False):
         payload = copy.deepcopy(payload)
@@ -200,7 +230,10 @@ class RecoveryPublisher:
             raise CheckpointError('Invalid publication generation') from None
         run_id = hashlib.sha256(_encoded({'generation': generation, 'payload': payload})).hexdigest()[:32]
         phase = 'products' if products_only else 'main'
-        targets = {}
+        targets = {name: {
+            'main': {'ok': products_only, 'response': {'skipped': 'product-only'} if products_only else {'error': 'publication not attempted'}},
+            'products': {'ok': not payload.get('products'), 'response': {'skipped': 'no products'} if not payload.get('products') else {'error': 'publication not attempted'}},
+        } for name, _, _ in destinations}
         def work():
             for name, url, secret in destinations:
                 if name not in ('primary', 'secondary'):
@@ -221,7 +254,7 @@ class RecoveryPublisher:
                     if existing is not None:
                         if existing['phase'] == 'products' and not products_only:
                             phases['main'] = {'ok': True, 'response': {'recovered': True}}
-                        phases.update(self._run_entry(existing, url, secret))
+                        self._run_entry(existing, url, secret, phases)
                         continue
                 main = {k: v for k, v in payload.items() if k != 'products'} if not products_only else payload
                 entry = {'target': name, 'endpoint': _endpoint(url), 'phase': phase, 'created': time.time(),
@@ -245,12 +278,19 @@ class RecoveryPublisher:
                 self.state['latest'][name] = generation
                 self.state['entries'].append(entry)
                 self._save()  # write-ahead pending phase closes process-crash gap
-                phases.update(self._run_entry(entry, url, secret))
-        if dry_run:
-            work()
-        else:
-            with self._locked(): work()
-        ok = all(t['main']['ok'] and t['products']['ok'] for t in targets.values())
+                self._run_entry(entry, url, secret, phases)
+        checkpoint_ok = True
+        try:
+            if dry_run:
+                work()
+            else:
+                with self._locked(): work()
+        except CheckpointError:
+            checkpoint_ok = False
+            if not any(p['ok'] and not p['response'].get('skipped') for t in targets.values() for p in t.values()):
+                raise
+        ok = checkpoint_ok and all(t['main']['ok'] and t['products']['ok'] for t in targets.values())
         successes = any(p['ok'] and not p['response'].get('skipped') for t in targets.values() for p in t.values())
-        return {'targets': targets, 'ok': ok, 'status': 'complete' if ok else 'partial' if successes else 'failed',
+        return {'checkpoint': {'ok': checkpoint_ok, **({} if checkpoint_ok else {'error': 'publication checkpoint unavailable'})},
+                'targets': targets, 'ok': ok, 'status': 'complete' if ok else 'partial' if successes else 'failed',
                 **targets.get('primary', {})}

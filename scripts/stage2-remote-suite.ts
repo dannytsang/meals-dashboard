@@ -8,6 +8,7 @@ import { POST as products } from '../app/api/dashboard-products-sync/route';
 import { POST as verify } from '../app/api/internal/publication-verify/route';
 import { VercelBlobStorageClient } from '../lib/blob-storage';
 import { canonicalHash } from '../lib/publication-verification';
+import { immutableRecordPath } from '../lib/immutable-records';
 
 const digest = (s: string) => createHash('sha256').update(s).digest();
 const assert = (v: unknown) => { if (!v) throw new Error('Synthetic assertion failed'); };
@@ -64,7 +65,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
     const id = { version: 1, runId: 'a'.repeat(32), generation: 100, target: 'primary', phase: 'main' };
     const order = { orderBlobPath: 'orders/2026-09-25/synthetic.json', items: [] };
-    const coverage = { coverageBlobPath: 'coverage/2026-09-25.json', meals: [] };
+    const coverage = { coverageBlobPath: 'coverage/2026-09-25.json', sourceOrderBlobPath: null, meals: [] };
     const stamp = '2026-09-25T00:00:00Z';
     const payload = { orders: [order], coverage: [coverage], summary: {}, deliveryWindows: [], coverageWindow: [], dataGeneratedAt: stamp, uiUpdatedAt: stamp, publication: id };
     phase = 'main';
@@ -90,7 +91,8 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     checks.push('pointer-fault-preserves-main', 'receipt-fault-replay', 'successful-main-not-replayed');
     const summary = { dataGeneratedAt: stamp, uiUpdatedAt: stamp };
     const sh = createHash('sha256').update(JSON.stringify(summary, null, 2)).digest('hex');
-    const expected = { version: 1, runId: id.runId, generation: 100, target: 'primary', mainHash: canonicalHash(payload), productsHash: canonicalHash(body), mainManifestPath: ack.manifestPath, productsManifestPath: pa.productsManifestPath, expectedRecords: { [order.orderBlobPath]: canonicalHash(order), [coverage.coverageBlobPath]: canonicalHash(coverage), [`meta/summary-${sh}.json`]: canonicalHash(summary), [product.productBlobPath]: canonicalHash(product) } };
+    const physical = (p: string, v: unknown) => immutableRecordPath(p, JSON.stringify(v, null, 2));
+    const expected = { version: 1, runId: id.runId, generation: 100, target: 'primary', mainHash: canonicalHash(payload), productsHash: canonicalHash(body), mainManifestPath: ack.manifestPath, productsManifestPath: pa.productsManifestPath, expectedRecords: { [physical(order.orderBlobPath, order)]: canonicalHash(order), [physical(coverage.coverageBlobPath, coverage)]: canonicalHash(coverage), [`meta/summary-${sh}.json`]: canonicalHash(summary), [physical(product.productBlobPath, product)]: canonicalHash(product) } };
     phase = 'exact-verification';
     assert((await verify(request(expected, true, false))).status === 401);
     const vr = await verify(request(expected, true)); assert(vr.status === 200); assert((await vr.json()).hashesMatch === true);

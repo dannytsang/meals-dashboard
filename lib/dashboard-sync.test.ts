@@ -9,7 +9,16 @@ import {
   type ProductBlob,
 } from './dashboard-sync';
 import { InMemoryBlobStorageClient } from './blob-storage';
+import { logicalRecordPath } from './immutable-records';
 import type { Meal, MatchedItem } from './meals-data';
+
+async function referencedPath(client: InMemoryBlobStorageClient, logical: string): Promise<string> {
+  const pointer = (await client.readPointer())!;
+  const manifest = await client.readManifest(pointer.manifestPath);
+  const path = Object.keys(manifest).find(p => logicalRecordPath(p) === logical);
+  expect(path).toBeDefined();
+  return path!;
+}
 
 function makeMeal(id: string, date: string, content: string): Meal {
   return { id, content, date, labels: ['adult'], section: 'Planned' };
@@ -124,8 +133,8 @@ describe('syncDashboardLayout — first sync (no manifest exists)', () => {
     expect(result.totalOps).toBe(5);
     expect(result.manifestPath).toMatch(/^meta\/manifest-[0-9a-f]{64}\.json$/);
 
-    expect(client.store.has('orders/2026-06-15/5421-8594-00.json')).toBe(true);
-    expect(client.store.has('coverage/2026-06-15.json')).toBe(true);
+    expect(client.store.has(await referencedPath(client, 'orders/2026-06-15/5421-8594-00.json'))).toBe(true);
+    expect(client.store.has(await referencedPath(client, 'coverage/2026-06-15.json'))).toBe(true);
     expect(client.store.has(result.manifestPath)).toBe(true);
     expect(client.store.has('pointers/latest.json')).toBe(true);
 
@@ -135,7 +144,8 @@ describe('syncDashboardLayout — first sync (no manifest exists)', () => {
 
   it('SC-01 — two delivery cycles produce 2 order blobs, neither overwritten', async () => {
     const client = new InMemoryBlobStorageClient();
-    await syncDashboardLayout(makePayload(), client);
+    const first = await syncDashboardLayout(makePayload(), client);
+    const firstOrderPath = await referencedPath(client, 'orders/2026-06-15/5421-8594-00.json');
 
     const second = makePayload();
     second.orders[0]!.orderNumber = '9999-0000-11';
@@ -147,10 +157,11 @@ describe('syncDashboardLayout — first sync (no manifest exists)', () => {
     second.coverage[0]!.meals[0]!.meal = makeMeal('m2', '2026-06-19', 'Curry');
     await syncDashboardLayout(second, client);
 
-    expect(client.store.has('orders/2026-06-15/5421-8594-00.json')).toBe(true);
-    expect(client.store.has('orders/2026-06-19/9999-0000-11.json')).toBe(true);
+    expect(client.store.has(firstOrderPath)).toBe(true);
+    expect((await client.readManifest(first.manifestPath))[firstOrderPath]).toBe(client.store.get(firstOrderPath)!.hash);
+    expect(client.store.has(await referencedPath(client, 'orders/2026-06-19/9999-0000-11.json'))).toBe(true);
     const firstOrder = await client.readJsonBlob<{ orderNumber: string }>(
-      'orders/2026-06-15/5421-8594-00.json'
+      firstOrderPath
     );
     expect(firstOrder?.orderNumber).toBe('5421-8594-00');
   });
@@ -188,8 +199,8 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
     second.coverage[0]!.meals[0]!.missingItems = ['Carrots'];
 
     const result = await syncDashboardLayout(second, client);
-    expect(result.writtenPaths).toContain('coverage/2026-06-15.json');
-    expect(result.skippedPaths).toContain('orders/2026-06-15/5421-8594-00.json');
+    expect(result.writtenPaths).toContain(await referencedPath(client, 'coverage/2026-06-15.json'));
+    expect(result.skippedPaths).toContain(await referencedPath(client, 'orders/2026-06-15/5421-8594-00.json'));
     expect(result.totalOps).toBe(result.writtenPaths.length + 2);
     expect(client.store.has(first.manifestPath)).toBe(true);
     const pointer = await client.readPointer();
@@ -210,7 +221,7 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
     expect(writePointerSpy).toHaveBeenCalledTimes(1);
     expect(second.suppressedNoopWrites).toBe(false);
     expect(second.productsManifestPath).not.toBe(first.productsManifestPath);
-    expect(second.writtenPaths).toContain('products/222222.json');
+    expect(second.writtenPaths).toContain((await client.readManifest(second.productsManifestPath!))['222222']);
     expect(second.writtenPaths.some((path) => path.startsWith('meta/products-manifest-'))).toBe(true);
   });
 
@@ -220,7 +231,7 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
     await syncDashboardLayout(makePayload(), client);
     const blob = await client.readJsonBlob<{
       meals: Array<{ stale?: boolean; staleReason?: string | null }>;
-    }>('coverage/2026-06-15.json');
+    }>(await referencedPath(client, 'coverage/2026-06-15.json'));
     expect(blob).not.toBeNull();
     for (const meal of blob!.meals) {
       expect(meal.stale).toBe(false);
@@ -240,7 +251,7 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
           use_by_date?: string;
         }>;
       }>;
-    }>('coverage/2026-06-15.json');
+    }>(await referencedPath(client, 'coverage/2026-06-15.json'));
     expect(blob).not.toBeNull();
     for (const meal of blob!.meals) {
       for (const item of meal.matchedItems) {
@@ -262,18 +273,16 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
       client
     );
 
-    // The matching coverage blob path is in the write list (transient stale
-    // write + fresh write). The fresh write produces content that hashes
-    // to the same value as the original (stale=false, staleReason=null are
-    // the post-invalidation defaults), so the manifest hash is unchanged.
-    // What matters is that both the transient stale write and the fresh
-    // write ran; writtenPaths contains the matching path twice.
-    expect(result.writtenPaths.filter((p) => p === 'coverage/2026-06-15.json')).toHaveLength(2);
+    // Stale bytes are staged unreferenced; the already fresh committed bytes
+    // are reused, never overwritten by a transient stale marker.
+    expect(result.writtenPaths.filter((p) => logicalRecordPath(p) === 'coverage/2026-06-15.json')).toHaveLength(1);
+    const staged = await client.readJsonBlob<{ meals: Array<{ stale: boolean; staleReason: string }> }>(result.writtenPaths[0]!);
+    expect(staged!.meals[0]).toMatchObject({ stale: true, staleReason: 'order_updated' });
 
     // After invalidation, the coverage blob is fresh: stale=false, staleReason=null.
     const finalBlob = await client.readJsonBlob<{
       meals: Array<{ stale: boolean; staleReason: string | null }>;
-    }>('coverage/2026-06-15.json');
+    }>(await referencedPath(client, 'coverage/2026-06-15.json'));
     expect(finalBlob).not.toBeNull();
     for (const meal of finalBlob!.meals) {
       expect(meal.stale).toBe(false);
@@ -310,12 +319,12 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
 
     // Only the 2026-06-15 coverage blob was invalidated; the 2026-06-19 blob
     // (which references a different order) was left untouched.
-    expect(result.writtenPaths).toContain('coverage/2026-06-15.json');
-    expect(result.writtenPaths).not.toContain('coverage/2026-06-19.json');
+    expect(result.writtenPaths.map(logicalRecordPath)).toContain('coverage/2026-06-15.json');
+    expect(result.writtenPaths.map(logicalRecordPath)).not.toContain('coverage/2026-06-19.json');
 
     const untouched = await client.readJsonBlob<{
       meals: Array<{ stale: boolean; staleReason: string | null }>;
-    }>('coverage/2026-06-19.json');
+    }>(await referencedPath(client, 'coverage/2026-06-19.json'));
     expect(untouched).not.toBeNull();
     for (const meal of untouched!.meals) {
       // The untouched blob never had invalidation applied; it should still
@@ -337,14 +346,14 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
         reason,
         local
       );
-      // Both the transient stale write and the fresh write should land in
-      // the writtenPaths list (the trigger rewrites the blob twice with
-      // different content).
-      expect(result.writtenPaths.filter((p) => p === 'coverage/2026-06-15.json')).toHaveLength(2);
+      // Staged stale content is immutable and not exposed to readers.
+      expect(result.writtenPaths.filter((p) => logicalRecordPath(p) === 'coverage/2026-06-15.json')).toHaveLength(1);
+      const staged = await local.readJsonBlob<{ meals: Array<{ stale: boolean; staleReason: string }> }>(result.writtenPaths[0]!);
+      expect(staged!.meals[0]).toMatchObject({ stale: true, staleReason: reason });
       // After invalidation, the final blob is fresh: staleReason cleared.
       const final = await local.readJsonBlob<{
         meals: Array<{ stale: boolean; staleReason: string | null }>;
-      }>('coverage/2026-06-15.json');
+      }>(await referencedPath(local, 'coverage/2026-06-15.json'));
       expect(final!.meals[0]!.stale).toBe(false);
       expect(final!.meals[0]!.staleReason).toBeNull();
     }
@@ -356,7 +365,7 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
     const firstManifest = await client.readManifest(first.manifestPath);
     const firstSummaryPath = Object.keys(firstManifest).find((p) => p.startsWith('meta/summary-'));
     expect(firstSummaryPath).toBeDefined();
-    expect(Object.keys(firstManifest)).toContain('coverage/2026-06-15.json');
+    expect(Object.keys(firstManifest).map(logicalRecordPath)).toContain('coverage/2026-06-15.json');
 
     const second = makePayload();
     second.summary = { ...second.summary, coverage_percentage: 60 };
@@ -367,8 +376,8 @@ describe('syncDashboardLayout — partial change (SC-03 secondary)', () => {
     const secondSummaryPath = Object.keys(secondManifest).find((p) => p.startsWith('meta/summary-'));
     expect(secondSummaryPath).toBeDefined();
     expect(secondSummaryPath).not.toBe(firstSummaryPath);
-    expect(Object.keys(secondManifest)).not.toContain('coverage/2026-06-15.json');
-    expect(Object.keys(secondManifest)).not.toContain('orders/2026-06-15/5421-8594-00.json');
+    expect(Object.keys(secondManifest).map(logicalRecordPath)).not.toContain('coverage/2026-06-15.json');
+    expect(Object.keys(secondManifest).map(logicalRecordPath)).not.toContain('orders/2026-06-15/5421-8594-00.json');
     expect(Object.keys(secondManifest).filter((p) => p.startsWith('meta/summary-'))).toHaveLength(1);
   });
 });
@@ -464,6 +473,43 @@ describe('syncDashboardLayout — audit-log-friendly written paths', () => {
 });
 
 
+describe('immutable full-layout products', () => {
+  it('dry-run predicts the exact graph and unchanged products cause zero publication writes', async () => {
+    const client = new InMemoryBlobStorageClient();
+    const payload = { ...makePayload(), products: [makeProduct('111111', 'Apples')] };
+    const preview = await syncDashboardLayout(payload, client, { dryRun: true });
+    expect(client.store.size).toBe(0);
+    const actual = await syncDashboardLayout(payload, client);
+    expect(preview.manifestPath).toBe(actual.manifestPath);
+    expect(preview.writtenPaths).toEqual(actual.writtenPaths);
+    expect(preview.totalOps).toBe(actual.totalOps);
+    const writes = vi.spyOn(client, 'writeBlobIfChanged');
+    const pointer = vi.spyOn(client, 'writePointer');
+    const manifest = vi.spyOn(client, 'writeManifest');
+    const replay = await syncDashboardLayout(payload, client);
+    expect(replay.totalOps).toBe(0); expect(replay.writtenPaths).toEqual([]);
+    expect(pointer).not.toHaveBeenCalled(); expect(manifest).not.toHaveBeenCalled();
+    for (const result of writes.mock.results) expect((await result.value).written).toBe(false);
+  });
+  it('never normalizes a logical order identifier ending in a hash-like token', async () => {
+    const client = new InMemoryBlobStorageClient();
+    const payload = makePayload(); const id = `order-${'a'.repeat(64)}`;
+    const logical = `orders/2026-06-15/${id}.json`;
+    payload.orders[0]!.orderNumber = id; payload.orders[0]!.orderBlobPath = logical;
+    payload.coverage[0]!.sourceOrderBlobPath = logical;
+    const result = await syncDashboardLayout(payload, client);
+    const manifest = await client.readManifest(result.manifestPath);
+    const path = Object.keys(manifest).find(p => p.startsWith('orders/'))!;
+    expect(path).toBe(`orders/2026-06-15/${id}-${client.computeHash(client.store.get(path)!.content)}.json`);
+    expect(logicalRecordPath(path)).toBe(logical);
+    expect(await client.readJsonBlob(path)).toMatchObject({ orderNumber: id, orderBlobPath: logical });
+    for (const reference of [logical, path]) {
+      const invalidated = await invalidateCoverageForOrder(reference, 'order_updated', client);
+      expect(invalidated.writtenPaths.some(p => p.startsWith('coverage/'))).toBe(true);
+    }
+  });
+});
+
 describe('syncDashboardProducts — product-only publication', () => {
   it('writes only product blobs and preserves the existing main manifest pointer', async () => {
     const client = new InMemoryBlobStorageClient();
@@ -489,7 +535,7 @@ describe('syncDashboardProducts — product-only publication', () => {
       client
     );
 
-    expect(result.writtenPaths).toContain('products/222222.json');
+    expect(result.writtenPaths).toContain((await client.readManifest(result.productsManifestPath!))['222222']);
     expect(result.writtenPaths.some((path) => path.startsWith('orders/'))).toBe(false);
     expect(result.writtenPaths.some((path) => path.startsWith('coverage/'))).toBe(false);
     expect(result.writtenPaths.some((path) => path.startsWith('meta/summary-'))).toBe(false);
@@ -499,11 +545,11 @@ describe('syncDashboardProducts — product-only publication', () => {
     expect(pointer?.manifestPath).toBe(initial.manifestPath);
     expect(pointer?.productsManifestPath).toBe(result.productsManifestPath);
     expect(client.store.has(initial.manifestPath)).toBe(true);
-    expect(client.store.has('orders/2026-06-15/5421-8594-00.json')).toBe(true);
-    expect(client.store.has('coverage/2026-06-15.json')).toBe(true);
+    expect(client.store.has(await referencedPath(client, 'orders/2026-06-15/5421-8594-00.json'))).toBe(true);
+    expect(client.store.has(await referencedPath(client, 'coverage/2026-06-15.json'))).toBe(true);
   });
 
-  it('uses explicit mainManifestPath from a full sync instead of reverting to a stale pointer', async () => {
+  it('refuses an explicit mainManifestPath that disagrees with the current pointer', async () => {
     const client = new InMemoryBlobStorageClient();
     const stale = await syncDashboardLayout(makePayload(), client);
 
@@ -531,23 +577,16 @@ describe('syncDashboardProducts — product-only publication', () => {
     // older pointer even though the full sync just returned a fresh manifest.
     await client.writePointer(stale.manifestPath, null);
 
-    const result = await syncDashboardProducts(
+    const before = new Map(client.store);
+    await expect(syncDashboardProducts(
       {
         products: [makeProduct('222222', 'Pears')],
         mainManifestPath: fresh.manifestPath,
       },
       client
-    );
-
-    const pointer = await client.readPointer();
-    expect(result.manifestPath).toBe(fresh.manifestPath);
-    expect(pointer?.manifestPath).toBe(fresh.manifestPath);
-
-    const pointedManifest = await client.readManifest(pointer!.manifestPath);
-    expect(Object.keys(pointedManifest).filter((path) => path.startsWith('coverage/')).sort()).toEqual([
-      'coverage/2026-06-15.json',
-      'coverage/2026-07-01.json',
-    ]);
+    )).rejects.toThrow('Product publication main snapshot superseded');
+    expect(client.store).toEqual(before);
+    expect((await client.readPointer())!.manifestPath).toBe(stale.manifestPath);
   });
 
   it('fails when the existing pointer is missing', async () => {

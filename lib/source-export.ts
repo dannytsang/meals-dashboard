@@ -1,4 +1,5 @@
 import 'server-only';
+import { logicalRecordPath } from './immutable-records';
 import { createHash } from 'node:crypto';
 import { parseExportJson } from './source-export-json';
 import { ExportFailure, atStage, atStageAsync, verifyExport, verifyPointer, type DiagnosticCategory } from './source-export-diagnostic';
@@ -17,6 +18,7 @@ const integer = (v: unknown) => finite(v) && Number.isSafeInteger(v);
 const strings = (v: unknown) => Array.isArray(v) && v.every(x => typeof x === 'string');
 export function category(p: string): DiagnosticCategory | null {
   if (p.length > 200) return null;
+  if (/^(orders|coverage|products)\//.test(p)) p = logicalRecordPath(p);
   if (p === POINTER) return 'pointer';
   if (p === OVERRIDES) return 'overrides';
   for (const [name, re] of [
@@ -32,6 +34,7 @@ export function category(p: string): DiagnosticCategory | null {
 
 /** Matches the existing offline inventory storage schema, not meal-policy parity. */
 function validateRecord(cat: string, path: string, v: unknown): void {
+  if (/^(orders|coverage|products)\//.test(path)) path = logicalRecordPath(path);
   if (cat === 'overrides') {
     check(Array.isArray(v)); const ids = new Set<string>();
     for (const e of v) {
@@ -101,7 +104,7 @@ export async function exportSource(read: ExportReader, signal: AbortSignal): Pro
     }
     const digest = hashBytes(rec.bytes);
     if (expected !== undefined) verifyExport(exact(expected, /^[a-f0-9]{64}$/) && digest === expected, 'integrity', cat);
-    if (path.startsWith('meta/')) verifyExport(path.endsWith(`-${digest}.json`), 'integrity', cat);
+    if (path.startsWith('meta/') || /-[a-f0-9]{64}\.json$/.test(path)) verifyExport(path.endsWith(`-${digest}.json`), 'integrity', cat);
     return rec.value;
   };
   const pointer = await add(POINTER); verifyPointer(object(pointer), 'pointer_object');
@@ -123,8 +126,8 @@ export async function exportSource(read: ExportReader, signal: AbortSignal): Pro
     verifyExport(object(value), 'graph_schema', 'productsManifest');
     verifyExport(Object.keys(value).length <= EXPORT_LIMITS.records, 'source_bound', 'productsManifest');
     for (const [id, pp] of Object.entries(value)) {
-      verifyExport(exact(id, /^\d+$/) && pp === `products/${id}.json`, 'graph_schema', 'productsManifest');
-      productPaths.add(pp as string); await add(pp as string);
+      verifyExport(exact(id, /^\d+$/) && typeof pp === 'string' && category(pp) === 'products' && logicalRecordPath(pp) === `products/${id}.json`, 'graph_schema', 'productsManifest');
+      productPaths.add(logicalRecordPath(pp as string)); await add(pp as string);
     }
   }
   await add(OVERRIDES);

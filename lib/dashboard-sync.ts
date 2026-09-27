@@ -7,6 +7,7 @@ import type {
 } from './meals-data';
 import type { BlobStorageClient, Manifest } from './blob-storage';
 import { createHash } from 'node:crypto';
+import { immutableRecordPath, logicalRecordPath } from './immutable-records';
 
 export interface DashboardSummary {
   coverage_percentage: number;
@@ -138,9 +139,9 @@ export interface SplitLayoutPayload {
 export interface ProductSyncPayload {
   products: Array<{ productBlobPath: string } & ProductBlob>;
   /**
-   * Full-sync publication passes the freshly-written main manifest here so the
-   * subsequent product-only call cannot accidentally preserve an older pointer
-   * value if Blob pointer reads are stale or two deployments overlap.
+   * Full-sync publication binds its subsequent product phase to the committed
+   * main manifest. Disagreement with the current pointer is rejected; never
+   * overwrite a newer main snapshot on behalf of a stale product publisher.
    * Standalone product backfills omit this and preserve the current pointer.
    */
   mainManifestPath?: string | null;
@@ -205,6 +206,15 @@ export async function syncDashboardLayout(
   client: BlobStorageClient,
   options: { dryRun?: boolean } = {}
 ): Promise<SyncResult> {
+  const run = () => syncDashboardLayoutUnlocked(payload, client, options);
+  return client.withLock ? client.withLock(run) : run();
+}
+
+async function syncDashboardLayoutUnlocked(
+  payload: SplitLayoutPayload,
+  client: BlobStorageClient,
+  options: { dryRun?: boolean } = {}
+): Promise<SyncResult> {
   const { dryRun = false } = options;
 
   // Step 1 + 2: read pointer and current manifest.
@@ -222,11 +232,18 @@ export async function syncDashboardLayout(
   // Step 3: build local data blobs.
   // Each blob is keyed by its path; we serialise once and reuse the string for hashing.
   const dataBlobs: Array<{ path: string; content: string }> = [];
+  const orderReferences = new Map<string, string>();
   for (const order of normalisedPayload.orders) {
-    dataBlobs.push({ path: order.orderBlobPath, content: JSON.stringify(order, null, 2) });
+    const content = JSON.stringify(order, null, 2);
+    const path = immutableRecordPath(order.orderBlobPath, content);
+    orderReferences.set(order.orderBlobPath, path);
+    dataBlobs.push({ path, content });
   }
   for (const cov of normalisedPayload.coverage) {
-    dataBlobs.push({ path: cov.coverageBlobPath, content: JSON.stringify(cov, null, 2) });
+    const sourceOrderBlobPath = cov.sourceOrderBlobPath
+      ? orderReferences.get(cov.sourceOrderBlobPath) ?? cov.sourceOrderBlobPath : null;
+    const content = JSON.stringify({ ...cov, sourceOrderBlobPath }, null, 2);
+    dataBlobs.push({ path: immutableRecordPath(cov.coverageBlobPath, content), content });
   }
   // Summary is also a content-addressable data blob (FR-13).
   // Inject timestamps into the summary so they survive Blob storage and round-trip.
@@ -256,23 +273,17 @@ export async function syncDashboardLayout(
         throw new Error(`Invalid productBlobPath: ${product.productBlobPath}`);
       }
       const content = JSON.stringify(product, null, 2);
+      const path = immutableRecordPath(product.productBlobPath, content);
+      const hash = client.computeHash(content);
+      newManifest[path] = hash;
       if (!dryRun) {
-        const result = await client.writeBlobIfChanged(product.productBlobPath, content, currentManifest);
-        newManifest[product.productBlobPath] = result.hash;
-        if (result.written) writtenPaths.push(product.productBlobPath);
-        else skippedPaths.push(product.productBlobPath);
-      } else {
-        const hash = client.computeHash(content);
-        newManifest[product.productBlobPath] = hash;
-        if (currentManifest[product.productBlobPath] === hash) {
-          skippedPaths.push(product.productBlobPath);
-        } else {
-          writtenPaths.push(product.productBlobPath);
-        }
-      }
-      // Extract tpnc from path (e.g. "products/123456.json" → "123456")
+        const result = await client.writeBlobIfChanged(path, content, currentManifest);
+        if (result.written) writtenPaths.push(path);
+        else skippedPaths.push(path);
+      } else if (currentManifest[path] === hash) skippedPaths.push(path);
+      else writtenPaths.push(path);
       const tpnc = product.productBlobPath.replace('products/', '').replace('.json', '');
-      productsManifest[tpnc] = product.productBlobPath;
+      productsManifest[tpnc] = path;
     }
     // Write products manifest (content-addressable by its own hash).
     const manifestContent = JSON.stringify(productsManifest, null, 2);
@@ -280,11 +291,12 @@ export async function syncDashboardLayout(
     const computedProductsManifestPath = `${PRODUCTS_MANIFEST_PREFIX}${manifestHash}.json`;
     productsManifestPath = computedProductsManifestPath;
     if (!dryRun) {
-      const result = await client.writeBlobIfChanged(computedProductsManifestPath, manifestContent, newManifest);
-      newManifest[computedProductsManifestPath] = result.hash;
+      const result = await client.writeBlobIfChanged(computedProductsManifestPath, manifestContent, currentManifest);
       if (result.written) writtenPaths.push(computedProductsManifestPath);
       else skippedPaths.push(computedProductsManifestPath);
-    }
+    } else if (currentManifest[computedProductsManifestPath] === manifestHash) skippedPaths.push(computedProductsManifestPath);
+    else writtenPaths.push(computedProductsManifestPath);
+    newManifest[computedProductsManifestPath] = manifestHash;
   }
 
   for (const { path, content } of dataBlobs) {
@@ -407,6 +419,15 @@ export async function syncDashboardProducts(
   client: BlobStorageClient,
   options: { dryRun?: boolean } = {}
 ): Promise<SyncResult> {
+  const run = () => syncDashboardProductsUnlocked(payload, client, options);
+  return client.withLock ? client.withLock(run) : run();
+}
+
+async function syncDashboardProductsUnlocked(
+  payload: ProductSyncPayload,
+  client: BlobStorageClient,
+  options: { dryRun?: boolean } = {}
+): Promise<SyncResult> {
   const { dryRun = false } = options;
   const pointer = await client.readPointer();
   if (!pointer) {
@@ -415,7 +436,10 @@ export async function syncDashboardProducts(
     );
   }
 
-  const targetMainManifestPath = payload.mainManifestPath || pointer.manifestPath;
+  if (payload.mainManifestPath && payload.mainManifestPath !== pointer.manifestPath) {
+    throw new Error('Product publication main snapshot superseded');
+  }
+  const targetMainManifestPath = pointer.manifestPath;
   const currentMainManifest: Manifest = await client.readManifest(targetMainManifestPath);
   const currentProductsManifest: Record<string, string> = pointer.productsManifestPath
     ? (await client.readManifest(pointer.productsManifestPath))
@@ -430,23 +454,17 @@ export async function syncDashboardProducts(
       throw new Error(`Invalid productBlobPath: ${product.productBlobPath}`);
     }
     const content = JSON.stringify(product, null, 2);
+    const path = immutableRecordPath(product.productBlobPath, content);
+    const hash = client.computeHash(content);
+    const tpnc = product.productBlobPath.replace('products/', '').replace('.json', '');
+    const previous = currentProductsManifest[tpnc] === path ? { [path]: hash } : currentMainManifest;
     if (!dryRun) {
-      const result = await client.writeBlobIfChanged(product.productBlobPath, content, currentMainManifest);
-      if (result.written) writtenPaths.push(product.productBlobPath);
-      else skippedPaths.push(product.productBlobPath);
-    } else {
-      const hash = client.computeHash(content);
-      if (currentMainManifest[product.productBlobPath] === hash) {
-        skippedPaths.push(product.productBlobPath);
-      } else {
-        writtenPaths.push(product.productBlobPath);
-      }
-    }
-    const tpnc =
-      typeof product.tpnc === 'string' && product.tpnc
-        ? product.tpnc
-        : product.productBlobPath.replace('products/', '').replace('.json', '');
-    newProductsManifest[tpnc] = product.productBlobPath;
+      const result = await client.writeBlobIfChanged(path, content, previous);
+      if (result.written) writtenPaths.push(path);
+      else skippedPaths.push(path);
+    } else if (previous[path] === hash) skippedPaths.push(path);
+    else writtenPaths.push(path);
+    newProductsManifest[tpnc] = path;
   }
 
   const currentProductsManifestContent = JSON.stringify(currentProductsManifest, null, 2);
@@ -528,12 +546,12 @@ export function buildCoverageBlobPath(date: string): string {
  *
  * When an order changes (amendment content, cancellation, move, refund),
  * the meals-check pipeline should invalidate every coverage blob whose
- * `sourceOrderBlobPath` matches the affected order. The trigger rewrites
- * each matching blob twice:
+ * `sourceOrderBlobPath` matches the affected logical order. The trigger stages
+ * immutable records without changing any committed coverage bytes:
  *
  *   1. transient write with `stale: true` + `staleReason = reason`
- *      (race-condition safety: a read during this window shows the
- *      "⚠️ stale coverage" indicator and does not use the data)
+ *      (unreferenced until a complete graph is published; readers continue
+ *      seeing their previous committed snapshot)
  *   2. fresh write with `stale: false` + `staleReason = null`
  *      (the data is the same content; the recalculation is owned by
  *      the Python pipeline which decides what new coverage to compute)
@@ -546,6 +564,16 @@ export function buildCoverageBlobPath(date: string): string {
  * @param client The Blob storage client (in-memory in tests, real Vercel SDK in prod).
  */
 export async function invalidateCoverageForOrder(
+  orderPath: string,
+  reason: 'order_updated' | 'order_cancelled' | 'order_superseded' | 'order_refunded',
+  client: BlobStorageClient,
+  options: { dryRun?: boolean } = {}
+): Promise<SyncResult> {
+  const run = () => invalidateCoverageForOrderUnlocked(orderPath, reason, client, options);
+  return client.withLock ? client.withLock(run) : run();
+}
+
+async function invalidateCoverageForOrderUnlocked(
   orderPath: string,
   reason: 'order_updated' | 'order_cancelled' | 'order_superseded' | 'order_refunded',
   client: BlobStorageClient,
@@ -566,7 +594,7 @@ export async function invalidateCoverageForOrder(
   for (const [blobPath, _hash] of Object.entries(currentManifest)) {
     if (!blobPath.startsWith('coverage/') || !blobPath.endsWith('.json')) continue;
     const blob = await client.readJsonBlob<{ sourceOrderBlobPath?: string | null }>(blobPath);
-    if (blob && blob.sourceOrderBlobPath === orderPath) {
+    if (blob?.sourceOrderBlobPath && (blob.sourceOrderBlobPath === orderPath || logicalRecordPath(blob.sourceOrderBlobPath) === orderPath)) {
       matchingPaths.push(blobPath);
     }
   }
@@ -595,9 +623,10 @@ export async function invalidateCoverageForOrder(
         null,
         2
       );
-      const staleResult = await client.writeBlobIfChanged(path, staleContent, currentManifest);
-      newManifest[path] = staleResult.hash;
-      if (staleResult.written) writtenPaths.push(path);
+      const stalePath = immutableRecordPath(logicalRecordPath(path), staleContent);
+      const staleResult = await client.writeBlobIfChanged(stalePath, staleContent, currentManifest);
+      // Staged stale bytes are unreferenced; never mutate the committed graph.
+      if (staleResult.written) writtenPaths.push(stalePath);
     }
 
     // (2) fresh write per matching blob (same content, stale cleared)
@@ -620,14 +649,16 @@ export async function invalidateCoverageForOrder(
         null,
         2
       );
-      const freshResult = await client.writeBlobIfChanged(path, freshContent, newManifest);
-      newManifest[path] = freshResult.hash;
-      if (freshResult.written) writtenPaths.push(path);
+      const freshPath = immutableRecordPath(logicalRecordPath(path), freshContent);
+      const freshResult = await client.writeBlobIfChanged(freshPath, freshContent, newManifest);
+      delete newManifest[path];
+      newManifest[freshPath] = freshResult.hash;
+      if (freshResult.written) writtenPaths.push(freshPath);
     }
 
     // (3) new manifest + pointer update
     const { manifestPath, manifestHash } = await client.writeManifest(newManifest);
-    await client.writePointer(manifestPath);
+    await client.writePointer(manifestPath, pointer.productsManifestPath);
 
     return {
       manifestPath,
@@ -639,7 +670,7 @@ export async function invalidateCoverageForOrder(
       totalOps: writtenPaths.length + 2,
       isInitialSync: false,
       suppressedNoopWrites: false,
-      productsManifestPath: null,
+      productsManifestPath: pointer.productsManifestPath ?? null,
     };
   } else {
     // Dry run: report what would be written without making any changes.
@@ -655,7 +686,7 @@ export async function invalidateCoverageForOrder(
       totalOps: writtenPaths.length + 2,
       isInitialSync: false,
       suppressedNoopWrites: false,
-      productsManifestPath: null,
+      productsManifestPath: pointer.productsManifestPath ?? null,
     };
   }
 }

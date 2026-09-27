@@ -172,8 +172,11 @@ def _publish_products_to_targets(payload, destinations):
         try:
             result = sync_dashboard_data.recovery_publisher().publish(payload, destinations, products_only=True)
         except CheckpointError:
-            return {name: {'ok': False, 'error': 'publication checkpoint unavailable'} for name, _, _ in destinations}
-        return {name: {'ok': phases['products']['ok'], **phases['products']['response']}
+            return {name: {'ok': False, 'error': 'publication checkpoint unavailable',
+                           'checkpoint': {'ok': False, 'error': 'publication checkpoint unavailable'}}
+                    for name, _, _ in destinations}
+        return {name: {**phases['products']['response'], 'ok': phases['products']['ok'],
+                       'checkpoint': result['checkpoint']}
                 for name, phases in result['targets'].items()}
     for name, api_url, secret in destinations:
         if not api_url or not secret:
@@ -317,10 +320,13 @@ def main() -> int:
             for target_name, result in publication_results.items():
                 status = result.get('productsManifestPath') or result.get('error') or 'failed'
                 print(f"  {target_name} products: {status}")
+                if not result.get('checkpoint', {'ok': True})['ok']:
+                    print('  Publication checkpoint unavailable')
 
     if publication_results:
         successes = [r['ok'] for r in publication_results.values()]
-        status = 'complete' if all(successes) else 'partial failure' if any(successes) else 'failed'
+        durable = all(r.get('checkpoint', {'ok': True})['ok'] for r in publication_results.values())
+        status = 'complete' if all(successes) and durable else 'partial failure' if any(successes) else 'failed'
         print(f"Publication: {status}")
     summary = f"\nSummary: upgraded={upgraded} already_complete={already_complete} unmatched={unmatched} skipped={skipped} total={total}"
     print(summary)
@@ -329,7 +335,8 @@ def main() -> int:
 
     # Backfill remains best-effort for unmatched items, but publication failures
     # are non-zero so a configured destination is never reported as successful.
-    return 1 if publication_results and not all(r['ok'] for r in publication_results.values()) else 0
+    return 1 if publication_results and not all(r['ok'] and r.get('checkpoint', {'ok': True})['ok']
+                                               for r in publication_results.values()) else 0
 
 
 if __name__ == '__main__':

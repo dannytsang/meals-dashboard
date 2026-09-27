@@ -167,19 +167,10 @@ async function readFromSplitLayout(
     // the Python sync only writes blobs for dates that have planned meals (sparse),
     // not for every date in a contiguous window.
     const allManifestCoverageDates = Object.keys(manifest)
-      .filter((p) => p.startsWith('coverage/'))
-      .map((p) => p.replace('coverage/', '').replace('.json', ''));
+      .filter((p) => /^coverage\/\d{4}-\d{2}-\d{2}(?:-[a-f0-9]{64})?\.json$/.test(p));
 
-    // Prefer manifest dates within the caller-supplied window; also include
-    // any other manifest coverage dates. This ensures the dashboard calendar
-    // shows all planned meals from the published manifest instead of silently
-    // dropping valid sparse meal-date blobs outside the dense window.
-    const coveragePaths = [
-      ...new Set([
-        ...coverageWindow.filter((d) => `coverage/${d}.json` in manifest),
-        ...allManifestCoverageDates,
-      ]),
-    ].map((d) => `coverage/${d}.json`).filter((p) => p in manifest);
+    // Read exact manifest references, never reconstruct a mutable logical path.
+    const coveragePaths = allManifestCoverageDates;
 
     // Find order blobs in the coverage window OR the most recent past order.
     // The window filter alone misses the latest order once its delivery date
@@ -221,18 +212,18 @@ async function readFromSplitLayout(
       Promise.all(orderPaths.map((p) => reader.readJsonBlob<OrderBlob>(p))),
     ]);
 
-    // Spec 021 / FR-003 (revised) — resolve product blobs by tpnc.
-    // Fetch products/{tpnc}.json for each unique tpnc seen in order items.
-    // Do this in parallel with orders (already done above).
-    // The products manifest (tpnc → path map) is no longer needed since we
-    // derive the path via the spec 021 convention: products/{tpnc}.json.
+    // Resolve each visible tpnc through this snapshot's products manifest.
+    // Only legacy pointers without a product manifest use stable aliases;
+    // missing entries in a committed manifest must never fall back to them.
     const allTpncs = orderResults.flatMap((o) => (o?.items ?? []) as GroceryItem[]).map((item) => item.tpnc);
     const validTpncs = allTpncs.filter((t): t is string => typeof t === 'string' && t.trim() !== '');
     const uniqueTpncs = [...new Set(validTpncs)];
 
-    const productBlobPaths = uniqueTpncs.map((tpnc) => `products/${tpnc}.json`);
+    const immutableMain = Object.keys(manifest).some(path => /^(orders|coverage)\//.test(path) && /-[a-f0-9]{64}\.json$/.test(path));
+    const productBlobPaths = uniqueTpncs.map((tpnc) => pointer.productsManifestPath
+      ? productsManifest[tpnc] : immutableMain ? undefined : `products/${tpnc}.json`);
     const productBlobResults = await Promise.all(
-      productBlobPaths.map((p) => reader.readJsonBlob<ProductBlob>(p))
+      productBlobPaths.map((p) => p ? reader.readJsonBlob<ProductBlob>(p) : Promise.resolve(null))
     );
     const products: Record<string, ProductBlob | null> = {};
     for (let i = 0; i < uniqueTpncs.length; i++) {

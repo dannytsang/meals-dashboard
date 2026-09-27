@@ -1,4 +1,5 @@
 import 'server-only';
+import { logicalRecordPath } from './immutable-records';
 import { createHash } from 'node:crypto';
 import { constants } from 'node:fs';
 import { lstat, open } from 'node:fs/promises';
@@ -13,8 +14,8 @@ const MAIN = /^meta\/manifest-[a-f0-9]{64}\.json$/;
 const PRODUCTS = /^meta\/products-manifest-[a-f0-9]{64}\.json$/;
 const SUMMARY = /^meta\/summary-[a-f0-9]{64}\.json$/;
 const ORDER = /^orders\/\d{4}-\d{2}-\d{2}\/[A-Za-z0-9._-]+\.json$/;
-const COVERAGE = /^coverage\/\d{4}-\d{2}-\d{2}\.json$/;
-const PRODUCT = /^products\/\d+\.json$/;
+const COVERAGE = /^coverage\/\d{4}-\d{2}-\d{2}(?:-[a-f0-9]{64})?\.json$/;
+const PRODUCT = /^products\/\d+(?:-[a-f0-9]{64})?\.json$/;
 const exact = (v: unknown, re: RegExp): v is string => typeof v === 'string' && re.exec(v)?.[0] === v;
 const object = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
 const fail = (): never => { throw new Error('Publication verification failed'); };
@@ -120,17 +121,34 @@ export async function verifyPublication(expected: Verification, read: (path: str
   const main = await load(expected.mainManifestPath); const products = await load(expected.productsManifestPath);
   requireTrue(`meta/manifest-${hash(main.text)}.json` === expected.mainManifestPath);
   requireTrue(`meta/products-manifest-${hash(products.text)}.json` === expected.productsManifestPath);
-  const entries = Object.entries(main.value); const productEntries = Object.entries(products.value);
-  requireTrue(entries.length <= MAX_RECORDS && productEntries.length <= MAX_RECORDS);
-  requireTrue(entries.every(([p, h]) => recordPath(p) && !exact(p, PRODUCT) && exact(h, HASH)));
-  requireTrue(productEntries.every(([id, p]) => exact(id, /^\d+$/) && p === `products/${id}.json` && recordPath(p)));
-  const paths = [...entries.map(([p]) => p), ...productEntries.map(([, p]) => p as string)];
-  requireTrue(paths.length <= MAX_RECORDS && new Set(paths).size === paths.length);
+  const entries = Object.entries(main.value);
+  requireTrue(entries.length <= MAX_RECORDS);
+  requireTrue(entries.every(([p, h]) => (recordPath(p) || exact(p, PRODUCTS)) && exact(h, HASH)));
+  const pathsSet = new Set(entries.filter(([p]) => recordPath(p)).map(([p]) => p));
+  const addProducts = (value: Record<string, unknown>) => {
+    const productEntries = Object.entries(value);
+    requireTrue(productEntries.length <= MAX_RECORDS);
+    requireTrue(productEntries.every(([id, p]) => exact(id, /^\d+$/) && typeof p === 'string' && logicalRecordPath(p) === `products/${id}.json` && recordPath(p)));
+    for (const [, p] of productEntries) pathsSet.add(p as string);
+  };
+  addProducts(products.value);
+  // Full-layout writers may retain their own product graph in main, while a
+  // later product-only pointer selects a newer graph. Verify both, never
+  // silently replace the older main references with current product paths.
+  for (const [p, h] of entries) if (exact(p, PRODUCTS)) {
+    const retained = p === expected.productsManifestPath ? products : await load(p);
+    requireTrue(hash(retained.text) === h && p === `meta/products-manifest-${hash(retained.text)}.json`);
+    addProducts(retained.value);
+  }
+  const paths = [...pathsSet];
+  requireTrue(paths.length <= MAX_RECORDS);
   requireTrue(paths.length === Object.keys(expected.expectedRecords).length && paths.every(p => Object.hasOwn(expected.expectedRecords, p)));
   const records = { orders: 0, coverage: 0, summaries: 0, products: 0 };
   for (const path of paths) {
     const record = await load(path);
     requireTrue(canonicalHash(record.value) === expected.expectedRecords[path]);
+    if (/^(orders|coverage|products)\//.test(path) && /-[a-f0-9]{64}\.json$/.test(path)) requireTrue(path.endsWith(`-${hash(record.text)}.json`));
+    if (exact(path, COVERAGE) && record.value.sourceOrderBlobPath != null) requireTrue(typeof record.value.sourceOrderBlobPath === 'string' && Object.hasOwn(main.value, record.value.sourceOrderBlobPath) && exact(record.value.sourceOrderBlobPath, ORDER));
     if (Object.hasOwn(main.value, path)) requireTrue(hash(record.text) === main.value[path]);
     if (exact(path, SUMMARY)) { requireTrue(`meta/summary-${hash(record.text)}.json` === path); records.summaries++; }
     else if (exact(path, ORDER)) records.orders++;

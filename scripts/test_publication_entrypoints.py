@@ -29,7 +29,7 @@ class EntryPointTests(unittest.TestCase):
         for authority in [snapshot, None]:
             with patch.dict(os.environ, env, clear=True), patch.object(sync, 'load_dashboard_env'), \
                  patch.object(sync.sys, 'argv', ['sync', '--no-history', '--no-build']), \
-                 patch.object(sync, 'read_dashboard_cache', return_value={'meals': []}), \
+                 patch.object(sync, 'read_dashboard_cache', return_value={'meals': [], 'coverage_base_version': 1}), \
                  patch.object(sync, 'fetch_manual_overrides', return_value=authority) as fetch, \
                  patch.object(sync, 'build_dashboard_payload', return_value=payload) as build, \
                  patch.object(sync, 'publish_split_dashboard_payload', return_value=result) as publish, \

@@ -43,6 +43,7 @@ function writer(revision: string) {
         if (id === '@vercel/blob') return sdk;
         if (id === 'node:crypto') return require(id);
         if (id === './blob-storage') return load('lib/blob-storage.ts');
+        if (id === './immutable-records') return load('lib/immutable-records.ts');
         throw new Error('Unexpected fixture dependency');
       },
       console: { log: vi.fn(), error: vi.fn(), warn: vi.fn() },
@@ -94,10 +95,10 @@ beforeEach(() => { vi.stubGlobal('fetch', vi.fn(() => { throw new Error('Network
 afterEach(() => { expect(globalThis.fetch).not.toHaveBeenCalled(); vi.unstubAllGlobals(); });
 
 describe.skipIf(!historyRoot || !plannerRoot)('actual writer/reader/exporter/independent consumer matrix', () => {
-  it('pins production/candidate/current writer and reader bytes, not a reconstructed format', () => {
+  it('pins historical production/candidate writer and reader bytes', () => {
     for (const file of ['lib/blob-storage.ts', 'lib/dashboard-sync.ts', 'lib/dashboard-data.ts', 'scripts/sync-dashboard-data.py', 'scripts/publication_recovery.py']) {
       expect(sourceText(PRODUCTION, file)).toBe(sourceText(CANDIDATE, file));
-      expect(sourceText(PRODUCTION, file)).toBe(sourceText('current', file));
+
     }
   });
   describe.each([PRODUCTION, CANDIDATE, 'current'])('writer revision %s', revision => {
@@ -128,12 +129,17 @@ describe.skipIf(!historyRoot || !plannerRoot)('actual writer/reader/exporter/ind
       expect(result.complete).toBe(true); expect(result.categories.orders).toBe(2); expect(result.categories.products).toBe(kind === 'explicit-empty-products-phase' ? 0 : 1);
       expect(archive.records.length).toBe(Object.keys(result.hashes).length);
     });
-    it('null reference with retained manifest still cannot certify independent product evidence', async () => {
+    it('preserves product association on revised invalidation; historical null stays incomplete', async () => {
       const w = writer(revision); await w.sync().syncDashboardLayout(payload(true), w.client);
       await w.sync().invalidateCoverageForOrder('orders/2030-01-02/synthetic-2030-01-02.json', 'order_updated', w.client);
       w.records.set(OVERRIDES, Buffer.from('[]'));
       expect([...w.records.keys()].some(p => p.startsWith('meta/products-manifest-'))).toBe(true);
-      await exportFailure(w, 'products_null');
+      if (revision === 'current') {
+        expect((await w.client.readPointer())!.productsManifestPath).toMatch(/^meta\/products-manifest-/);
+        const archive = await exportSource(async p => w.records.get(p) ?? null, new AbortController().signal);
+        const { inventory, parseSourceExport } = await consumer();
+        expect((await inventory(parseSourceExport(Buffer.from(JSON.stringify(archive))))).complete).toBe(true);
+      } else await exportFailure(w, 'products_null');
     });
     it.each(['missing-overrides', 'missing-products-manifest', 'legacy-order', 'extra-pointer-metadata'])('preserves failure closure for %s', async kind => {
       const w = writer(revision); const p = payload(true);
@@ -155,5 +161,21 @@ describe.skipIf(!historyRoot || !plannerRoot)('actual writer/reader/exporter/ind
     expect(Object.keys(JSON.parse(w.records.get(POINTER)!.toString()))).toEqual(['manifestPath']);
     await exportFailure(w, 'products_absent');
     const { parseSourceExport } = await consumer(); expect(() => parseSourceExport(manualArchive(w.records))).toThrow('source_export_invalid');
+  });
+  it('exports both retained and current immutable product versions without losing exact-byte integrity', async () => {
+    const w = writer('current'); await w.sync().syncDashboardLayout(payload(true), w.client);
+    const oldPointer = (await w.client.readPointer())!;
+    const oldProducts = await w.client.readManifest(oldPointer.productsManifestPath!);
+    const oldPath = oldProducts['100']!; const oldBytes = Buffer.from(w.records.get(oldPath)!);
+    await w.sync().syncDashboardProducts({ products: [{ ...product, title: 'Synthetic changed' }] }, w.client);
+    w.records.set(OVERRIDES, Buffer.from('[ ]\n'));
+    expect(w.records.get(oldPath)).toEqual(oldBytes);
+    const archive = await exportSource(async p => w.records.get(p) ?? null, new AbortController().signal);
+    const { inventory, parseSourceExport } = await consumer();
+    const result = await inventory(parseSourceExport(Buffer.from(JSON.stringify(archive))));
+    expect(result.complete).toBe(true); expect(result.categories.products).toBe(2);
+    // Canonical JSON is unchanged by whitespace, but retained exact hashes must fail.
+    w.records.set(oldPath, Buffer.concat([oldBytes, Buffer.from('\n')]));
+    await expect(exportSource(async p => w.records.get(p) ?? null, new AbortController().signal)).rejects.toThrow('incomplete');
   });
 });

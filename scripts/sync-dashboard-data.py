@@ -15,6 +15,8 @@ Usage:
 
 import sys
 import json
+import copy
+import math
 import argparse
 import subprocess
 import re
@@ -1263,15 +1265,36 @@ def fetch_manual_overrides(api_url: str, secret: str) -> Optional[List[Dict[str,
             method='GET',
         )
         with urllib.request.urlopen(request, timeout=15) as resp:
+            if resp.status != 200:
+                raise ValueError('Authority unavailable')
             body = resp.read().decode('utf-8')
         data = json.loads(body)
+        if not isinstance(data, dict) or data.get('ok') is not True:
+            raise ValueError('Authority unavailable')
         overrides = data.get('overrides')
         if not isinstance(overrides, list):
-            print("  ⚠ Authoritative override snapshot invalid")
-            return None
+            raise ValueError('Authority unavailable')
+        identities = set()
+        for entry in overrides:
+            if not isinstance(entry, dict) or not all(isinstance(entry.get(k), str) for k in
+                    ('meal_date', 'meal_name', 'item_name', 'reason', 'created_at', 'updated_at')):
+                raise ValueError('Authority unavailable')
+            day = entry['meal_date']
+            if not re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}', day) or datetime.fromisoformat(day).date().isoformat() != day:
+                raise ValueError('Authority unavailable')
+            quantity = entry.get('quantity')
+            if (not isinstance(quantity, (int, float)) or isinstance(quantity, bool)
+                    or not math.isfinite(quantity) or quantity < 0
+                    or entry.get('status') not in ('covered', 'partial')
+                    or (entry.get('cleared_at') is not None and not isinstance(entry['cleared_at'], str))):
+                raise ValueError('Authority unavailable')
+            identity = (day, entry['meal_name'], entry['item_name'])
+            if identity in identities:
+                raise ValueError('Authority unavailable')
+            identities.add(identity)
         return overrides
-    except Exception as exc:
-        print(f"  ⚠ Authoritative override snapshot unavailable ({exc.__class__.__name__})")
+    except Exception:
+        print("  ⚠ Authoritative override snapshot unavailable")
         return None
 
 
@@ -1311,6 +1334,8 @@ def apply_manual_overrides_to_meals(meals: List[Dict[str, Any]], overrides: List
     # before passing the meal list to us. We accept the meal as already
     # having matched_items and just append a new override entry.
     for ov in overrides:
+        if ov.get('cleared_at') is not None:
+            continue
         ov_date = _norm(ov.get('meal_date'))
         ov_meal = _norm(ov.get('meal_name'))
         ov_item = _norm(ov.get('item_name'))
@@ -1782,7 +1807,8 @@ def publish_split_dashboard_payload(
         except CheckpointError:
             targets = {name: {phase: {'ok': False, 'response': {'error': 'publication checkpoint unavailable'}}
                               for phase in ('main', 'products')} for name, _, _ in destinations}
-            return {'ok': False, 'status': 'failed', 'targets': targets, **targets['primary']}
+            return {'ok': False, 'status': 'failed', 'targets': targets,
+                    'checkpoint': {'ok': False, 'error': 'publication checkpoint unavailable'}, **targets['primary']}
 
     main_payload = {k: v for k, v in payload.items() if k != 'products'}
     products = list(payload.get('products') or [])
@@ -1898,12 +1924,11 @@ def build_dashboard_payload(
     `api_url` and `api_secret` are passed to `enrich_order_items_with_product_metadata`
     which uses them to write product blobs to Vercel Blob (spec 021 / FR-003).
     """
+    cache_data = copy.deepcopy(cache_data)
     meals = cache_data.get("meals", [])
 
-    # Spec 019 / FR-07 / T061 — merge manual overrides into the meals
-    # list before projecting into coverage blobs. The apply function
-    # mutates the meals in-place and returns the same list.
-    if overrides:
+    # Apply exactly once to a private clean-base copy, including empty snapshots.
+    if overrides is not None:
         meals = apply_manual_overrides_to_meals(meals, overrides)
 
     receipt = dict(cache_data.get("receipt", {}) or {})
@@ -2223,10 +2248,12 @@ def main():
         except CheckpointError:
             print('Publication checkpoint unavailable')
             return 1
-        for target, phases in results.items():
+        for target, phases in results['targets'].items():
             for phase, result in phases.items():
                 print(f"{target}: {phase}={'ok' if result['ok'] else 'failed'}")
-        return 0 if all(p['ok'] for phases in results.values() for p in phases.values()) else 1
+        if not results['checkpoint']['ok']:
+            print('Publication checkpoint unavailable')
+        return 0 if results['ok'] else 1
 
     print("=" * 50)
     print("DASHBOARD DATA SYNC (Blob)")
@@ -2270,6 +2297,10 @@ def main():
         print('  ✗ Secondary publication requires MEALS_PUBLICATION_PROTOCOL=1')
         return 1
 
+    if secondary_configured and (type(dashboard_cache.get('coverage_base_version')) is not int
+                                 or dashboard_cache['coverage_base_version'] != 1):
+        print('  ✗ Sync aborted: clean coverage base unavailable; regenerate with reviewed wrapper')
+        return 1
     overrides_api_url = api_url.rsplit('/', 1)[0] + '/overrides' if api_url else ''
     overrides = fetch_manual_overrides(overrides_api_url, secret)
     if overrides is None and secondary_configured:
@@ -2280,7 +2311,8 @@ def main():
         # fail-closed above because coverage must use one authoritative snapshot.
         print("  ⚠ Primary-only sync proceeding without an override snapshot (legacy behavior)")
         overrides = []
-    print(f"  Manual overrides from authoritative source: {len(overrides)}")
+    else:
+        print(f"  Manual overrides from authoritative source: {len(overrides)}")
 
     # Spec 036 / FR-001 / FR-009 — read the round-1 hand-off file(s). Malformed
     # JSON or a missing path is logged and skipped; the main write still
@@ -2352,6 +2384,8 @@ def main():
         main_state = 'ok' if main_phase['ok'] else main_phase['response'].get('error', 'failed')
         product_state = 'ok' if product_phase['ok'] else product_phase['response'].get('error', 'failed')
         print(f"  {target_name}: main={main_state}; products={product_state}")
+    if not publish_result.get('checkpoint', {'ok': True})['ok']:
+        print('  Publication checkpoint unavailable')
     if not publish_result['main']['ok']:
         print("  ✗ Primary dashboard publication failed")
         return 1

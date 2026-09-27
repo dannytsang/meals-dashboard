@@ -21,6 +21,8 @@ import json
 import os
 import sys
 import unittest
+import tempfile
+from pathlib import Path
 from datetime import datetime, timezone
 from unittest import mock
 
@@ -246,10 +248,30 @@ class FirecrawlSearchSyncTests(unittest.TestCase):
         self.assertEqual(enriched[0]['name'], 'Tesco Blueberries 150G')
         self.assertFalse(mock_firecrawl.called)
 
-    def test_curated_static_product_lookup_reads_real_database(self):
-        info = sdd.find_curated_static_product_info('Tesco Blueberries 150G')
-        self.assertIsNotNone(info)
-        self.assertIn('Fresh British blueberries', info['description'])
+    def test_curated_static_product_lookup_current_source_has_no_fallback(self):
+        # Spec 010 Rev 4 removed this catalogue. Never resolve the installed
+        # repo or household caches to satisfy the obsolete fixture assumption.
+        sdd._load_curated_static_database.cache_clear()
+        try:
+            with mock.patch.object(sdd, 'DASHBOARD_PATH', Path(__file__).resolve().parents[1]):
+                self.assertIsNone(sdd.find_curated_static_product_info('Tesco Blueberries 150G'))
+        finally:
+            sdd._load_curated_static_database.cache_clear()
+
+    def test_curated_static_parser_uses_isolated_synthetic_legacy_fixture(self):
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root)
+            (path / 'lib').mkdir()
+            (path / 'lib/product-database.ts').write_text(
+                "const products = {\n  'synthetic item': {\n"
+                "    name: 'Synthetic item',\n    description: 'Synthetic fixture description',\n  },\n};\n")
+            sdd._load_curated_static_database.cache_clear()
+            try:
+                with mock.patch.object(sdd, 'DASHBOARD_PATH', path):
+                    info = sdd.find_curated_static_product_info('Synthetic Item')
+                    self.assertEqual(info['description'], 'Synthetic fixture description')
+            finally:
+                sdd._load_curated_static_database.cache_clear()
 
     def test_empty_snippet_returns_not_found(self):
         os.environ[sdd.MEALS_FIRECRAWL_FALLBACK_ENV] = '1'

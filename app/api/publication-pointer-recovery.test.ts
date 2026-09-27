@@ -96,8 +96,10 @@ it.each<Fault>(['none', 'pointer-before', 'pointer-after', 'receipt-before', 're
       expect(blobs.get(path)?.body).toBe(content);
       expect(store.computeHash(content)).toBe(manifest[path]);
     }
-    expect(await store.readJsonBlob(pointer!.productsManifestPath!)).toEqual({ '1': 'products/1.json' });
-    expect(await store.readJsonBlob('products/1.json')).toEqual(product);
+    const productRefs = (await store.readJsonBlob<Record<string, string>>(pointer!.productsManifestPath!))!;
+    expect(Object.keys(productRefs)).toEqual(['1']);
+    expect(productRefs['1']).toBe(`products/1-${store.computeHash(JSON.stringify(product, null, 2))}.json`);
+    expect(await store.readJsonBlob(productRefs['1']!)).toEqual(product);
     const journal = JSON.parse(blobs.get('publication/latest.json')!.body);
     expect(journal).toMatchObject({ generation: 100, runId: identity.runId, target: 'primary', phases: {
       main: mainReceipt, products: { hash: journalAfterFault.phases.products.hash, result: {
