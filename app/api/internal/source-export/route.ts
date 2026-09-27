@@ -44,22 +44,27 @@ export async function POST(request: Request): Promise<Response> {
   if (request.signal.aborted) abort();
   const timer = setTimeout(abort, EXPORT_LIMITS.milliseconds);
   let diagnose = false; // only set after full bounded request validation
+  let diagnosticVersion: 1 | 2 = 1;
   try {
     let input: unknown;
     try {
       if (!request.body) throw new ExportFailure('invalid_request');
       input = parseExportJson(await boundedBytes(request.body, EXPORT_LIMITS.requestBytes, controller.signal));
-      if (!object(input) || input.version !== 1 || !(Object.keys(input).length === 1 || Object.keys(input).length === 2 && input.mode === 'diagnose')) throw new ExportFailure('invalid_request');
-      diagnose = input.mode === 'diagnose';
+      if (!object(input)) throw new ExportFailure('invalid_request');
+      const archiveRequest = input.version === 1 && Object.keys(input).length === 1;
+      const diagnosticRequest = (input.version === 1 || input.version === 2) && input.mode === 'diagnose' && Object.keys(input).length === 2;
+      if (!archiveRequest && !diagnosticRequest) throw new ExportFailure('invalid_request');
+      diagnose = diagnosticRequest;
+      diagnosticVersion = input.version === 2 ? 2 : 1;
     } catch {
       if (controller.signal.aborted) throw new ExportFailure('deadline');
       throw new ExportFailure('invalid_request');
     }
     const archive = await exportSource(createSourceExportReader(token), controller.signal);
-    return diagnose ? response(diagnosticSuccess(), 200) : response(archive, 200, true);
+    return diagnose ? response(diagnosticSuccess(diagnosticVersion), 200) : response(archive, 200, true);
   } catch (e) {
     const code = controller.signal.aborted ? 'deadline' : failureDetails(e).code;
-    const value = diagnose ? diagnosticFailure(e, controller.signal.aborted) : { error: code };
+    const value = diagnose ? diagnosticFailure(e, controller.signal.aborted, diagnosticVersion) : { error: code };
     return response(value, code === 'invalid_request' ? 400 : code === 'inconclusive' ? 409 : code === 'deadline' ? 504 : 422);
   } finally {
     controller.abort(); clearTimeout(timer);

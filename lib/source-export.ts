@@ -1,7 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { parseExportJson } from './source-export-json';
-import { ExportFailure, atStage, atStageAsync, verifyExport, type DiagnosticCategory } from './source-export-diagnostic';
+import { ExportFailure, atStage, atStageAsync, verifyExport, verifyPointer, type DiagnosticCategory } from './source-export-diagnostic';
 export { ExportFailure } from './source-export-diagnostic';
 
 export const EXPORT_LIMITS = Object.freeze({ records: 1000, objectBytes: 1048576, totalBytes: 4194304, responseBytes: 3670016, milliseconds: 25000, requestBytes: 256 });
@@ -40,6 +40,7 @@ function validateRecord(cat: string, path: string, v: unknown): void {
     }
     return;
   }
+  if (cat === 'pointer') verifyPointer(object(v), 'pointer_object');
   check(object(v));
   if (cat === 'summary') check(['covered', 'missing', 'meals_total', 'meals_covered'].every(k => integer(v[k])) && finite(v.coverage_percentage) && v.coverage_percentage <= 100 && finite(v.order_total) && typeof v.delivery_date === 'string' && object(v.windows) && ['last_delivery', 'next_delivery', 'next_window_end'].every(k => (v.windows as Record<string, unknown>)[k] === null || date((v.windows as Record<string, unknown>)[k])) && Number(v.meals_covered) <= Number(v.meals_total));
   if (cat === 'coverage') check(date(v.date) && path === `coverage/${v.date}.json` && (v.sourceOrderBlobPath === null || typeof v.sourceOrderBlobPath === 'string' && category(v.sourceOrderBlobPath) === 'orders') && Array.isArray(v.meals) && v.meals.every(e => object(e) && object(e.meal) && typeof e.meal.id === 'string' && typeof e.meal.content === 'string' && e.meal.date === v.date && strings(e.meal.labels) && typeof e.meal.section === 'string' && typeof e.status === 'string' && ['covered', 'partial', 'missing', 'unknown'].includes(e.status) && finite(e.coverageScore) && Array.isArray(e.matchedItems) && strings(e.missingItems)));
@@ -103,10 +104,13 @@ export async function exportSource(read: ExportReader, signal: AbortSignal): Pro
     if (path.startsWith('meta/')) verifyExport(path.endsWith(`-${digest}.json`), 'integrity', cat);
     return rec.value;
   };
-  const pointer = await add(POINTER); verifyExport(object(pointer), 'record_schema', 'pointer');
-  verifyExport(typeof pointer.manifestPath === 'string' && category(pointer.manifestPath) === 'dashboardManifest', 'record_schema', 'pointer');
-  verifyExport(typeof pointer.productsManifestPath === 'string' && category(pointer.productsManifestPath) === 'productsManifest', 'record_schema', 'pointer');
-  verifyExport(Object.keys(pointer).every(k => ['manifestPath', 'productsManifestPath'].includes(k)), 'record_schema', 'pointer');
+  const pointer = await add(POINTER); verifyPointer(object(pointer), 'pointer_object');
+  verifyPointer(Object.hasOwn(pointer, 'manifestPath'), 'main_absent');
+  verifyPointer(typeof pointer.manifestPath === 'string' && category(pointer.manifestPath) === 'dashboardManifest', 'main_invalid');
+  verifyPointer(Object.hasOwn(pointer, 'productsManifestPath'), 'products_absent');
+  verifyPointer(pointer.productsManifestPath !== null, 'products_null');
+  verifyPointer(typeof pointer.productsManifestPath === 'string' && category(pointer.productsManifestPath) === 'productsManifest', 'products_invalid');
+  verifyPointer(Object.keys(pointer).every(k => ['manifestPath', 'productsManifestPath'].includes(k)), 'pointer_keys');
   const manifest = await add(pointer.manifestPath); verifyExport(object(manifest), 'graph_schema', 'dashboardManifest');
   verifyExport(Object.keys(manifest).length <= EXPORT_LIMITS.records, 'source_bound', 'dashboardManifest');
   for (const [path, hash] of Object.entries(manifest).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {

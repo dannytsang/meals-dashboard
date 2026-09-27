@@ -32,7 +32,9 @@ The later authorized inventory must capture privately outside Git in a 0700 dire
 
 - `npx vitest run lib/source-export.test.ts`
 - `MEAL_PLANNER_REVIEW_ROOT=/path/to/meal-planner npx vitest run scripts/source-export-compatibility.test.ts` exercises actual independent archive and graph readers. Without that explicit checkout, the cross-repo test is skipped, not passed.
-- `MEAL_PLANNER_REVIEW_ROOT=/path/to/meal-planner npm test`
+- `MEAL_PLANNER_REVIEW_ROOT=/path/to/meal-planner MEALS_SOURCE_HISTORY_ROOT=/path/to/meals-dashboard-git npx vitest run lib/source-export.test.ts scripts/source-export-compatibility.test.ts lib/source-export-writer.test.ts` runs actual historical/current writer fixtures and both independent consumers. Execute from a sanitized isolated copy, not the scheduled producer checkout. History root is Git-object read-only; it never executes installed publisher scripts. Missing roots skip the matrix and are unverified, not passed.
+- `MEAL_PLANNER_REVIEW_ROOT=/path/to/meal-planner MEALS_SOURCE_HISTORY_ROOT=/path/to/meals-dashboard-git npm test`
+- `npm run prebuild` generates the committed synthetic demo seed before isolated suites/typechecks; do not copy a runtime-generated fixture from the active checkout.
 - `npx tsc --noEmit && npm run build && npm run scan:static-private-data`
 
 Inspect `.next/server/app/api/internal/source-export/route.js.nft.json`: no credential files, test files, scripts, producer or legacy storage dependencies. Check `.next/static` for export auth/format/test-sentinel leakage. SDK write/list spies must remain untouched. Test fixtures are synthetic only.
@@ -49,13 +51,13 @@ Historical original source review run456 passed with notes. Run457's sole live a
 
 Later activation requires explicit approval naming the exact independently accepted new source commit, protected short-lived credential/expiry/SSO, fresh production mapping and backup/rollback checks, denial probes and at most ONE bounded authenticated diagnostic-only request, not another archive attempt. Historical rollback target621dd3c/dpl_E5veKiZjjbXtaYZWb4962pcgTpLh must be freshly verified. Restore exact preactivation aliases/deployment and remove only newly created export env on failure; immutable deployment env may persist until expiry. No new secret, Vercel API call, diagnostic deployment/live request, source-data repair or inventory release is authorized now. t_ab800602 stays scheduled; migration remains Proposed.
 
-## Pointer invariant diagnosis v2 (specified, not activated)
+## Pointer invariant diagnosis v2 (implemented, independent review pending; not activated)
 
 Offline recovery task t_ddbc1e39 / acceptance SHA2564fa92f819d1278c3c046afa30ac67f255f39d5a4eaef047c1569531106212b29 adds only exact `{"version":2,"mode":"diagnose"}`. Existing archive v1 and diagnostic v1 remain unchanged. V2 envelope has exactly format `meal-planner-source-diagnostic.v2`, outcome, stage, category, and invariant. Closed invariant enum: none/pointer_object/main_absent/main_invalid/products_absent/products_null/products_invalid/pointer_keys. Actual pointer record-schema sites only; precedence object → main presence/type/path → products presence/null/type/path → allowed keys. All other failure sites and success use none. No input-derived names, values, metadata or logging; maximum256B, no attachment. Same auth/expiry/get-only/bounds/cancellation/backpressure and graph validation.
 
 Actual source621dd3c and reviewed569dca7 writer/readers are identical. Main sync without products writes null, historical pre-products writer omitted the field, and tolerant UI rendering is not proof of complete product evidence. Missing/null manifests and missing overrides stay incomplete; no arbitrary metadata allowance or fabricated archive. Run468 primary pointer-stage evidence cannot identify a field. This is diagnostic-only source work; no publisher code change, data repair or activation.
 
-Source branch coder/pointer-contract-20260927 has Git automatic deployment disabled before push. Independent SAME-card tester review and exact source commit are required before a later explicit v2 activation decision. Preserve failed archive/rollback history and live retry budgets; t_ab800602 remains scheduled. Fresh configuration/expiry/alias-convergence/backup/rollback evidence is a later gate, not authority granted here.
+Source branch coder/pointer-contract-20260927 has Git automatic deployment disabled before push. [Writer/reader/exporter/consumer matrix and executed evidence](pointer-contract-matrix.md) distinguish actual supported display formats from complete archive evidence. Independent SAME-card tester review and exact source commit are required before a later explicit v2 activation decision. Preserve failed archive/rollback history and live retry budgets; t_ab800602 remains scheduled. Fresh configuration/expiry/alias-convergence/backup/rollback evidence is a later gate, not authority granted here.
 
 ## Separate activation and rollback gate
 

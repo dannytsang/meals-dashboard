@@ -143,9 +143,9 @@ describe('export route authorization, privacy and nonmutation', () => {
   });
 });
 
-describe('closed diagnostic mode', () => {
-  const body = '{"version":1,"mode":"diagnose"}';
-  const envelope = (outcome: string, stage: string, category: string) => ({ format: 'meal-planner-source-diagnostic.v1', outcome, stage, category });
+describe.each([1, 2] as const)('closed diagnostic mode v%s', version => {
+  const body = JSON.stringify({ version, mode: 'diagnose' });
+  const envelope = (outcome: string, stage: string, category: string, invariant = 'none') => ({ format: `meal-planner-source-diagnostic.v${version}`, outcome, stage, category, ...(version === 2 ? { invariant } : {}) });
   const logs: ReturnType<typeof vi.spyOn>[] = [];
   beforeEach(() => { for (const method of ['log', 'error', 'warn', 'info', 'debug'] as const) logs.push(vi.spyOn(console, method)); });
   afterEach(() => {
@@ -159,6 +159,7 @@ describe('closed diagnostic mode', () => {
     expect(r.status).toBe(status);
     expect(JSON.parse(text)).toEqual(envelope(status === 200 ? 'valid' : status === 409 ? 'inconclusive' : status === 504 ? 'deadline' : 'incomplete', stage, cat));
     expect(r.headers.get('cache-control')).toContain('private, no-store'); expect(r.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(Buffer.byteLength(text)).toBeLessThanOrEqual(256);
     expect(r.headers.get('content-disposition')).toBeNull();
     const output = text + JSON.stringify([...r.headers]);
     for (const sentinel of ['SYNTHETIC_PRIVATE_SENTINEL', 'synthetic-blob-token', secret, 'synthetic-2030', 'private.invalid', 'products/100.json', f.manifestPath, hashBytes(f.records.get(POINTER) ?? '')]) expect(output).not.toContain(sentinel);
@@ -308,7 +309,7 @@ describe('closed diagnostic mode', () => {
     const hostile = new Proxy({}, { get: touched, getPrototypeOf: touched });
     for (const value of [undefined, null, 'SYNTHETIC_PRIVATE_SENTINEL', { code: 'deadline', stage: 'complete', category: 'products' }, hostile]) {
       sdk.get.mockRejectedValue(value); await diagnostic('provider_read', 'pointer');
-      expect(diagnosticFailure(value, false)).toEqual(envelope('incomplete', 'unknown', 'none'));
+      expect(diagnosticFailure(value, false, version)).toEqual(envelope('incomplete', 'unknown', 'none'));
     }
     expect(touched).not.toHaveBeenCalled();
     const exporter = vi.spyOn(core, 'exportSource').mockRejectedValue(hostile);
@@ -316,9 +317,9 @@ describe('closed diagnostic mode', () => {
   });
   it('rejects invalid enum coercion and isolates immutable failure metadata', () => {
     const malformed = new ExportFailure(['deadline'] as never, ['complete'] as never, { toString: () => 'products' } as never);
-    expect(diagnosticFailure(malformed, false)).toEqual(envelope('incomplete', 'unknown', 'none'));
+    expect(diagnosticFailure(malformed, false, version)).toEqual(envelope('incomplete', 'unknown', 'none'));
     const good = new ExportFailure('inconclusive', 'consistency', 'overrides'); Object.assign(good, { code: 'SYNTHETIC_PRIVATE_SENTINEL', stage: 'complete', category: 'orders' });
-    expect(diagnosticFailure(good, false)).toEqual(envelope('inconclusive', 'consistency', 'overrides'));
+    expect(diagnosticFailure(good, false, version)).toEqual(envelope('inconclusive', 'consistency', 'overrides'));
     expect(Object.isFrozen(DIAGNOSTIC_STAGES)).toBe(true); expect(Object.isFrozen(DIAGNOSTIC_CATEGORIES)).toBe(true);
   });
   it('validates without returning any archive or attachment', async () => {
@@ -329,8 +330,49 @@ describe('closed diagnostic mode', () => {
   it('attributes the null products pointer to pointer schema, not primary cause', async () => {
     f.records.set(POINTER, encode({ manifestPath: f.manifestPath, productsManifestPath: null }));
     const r = await route.POST(request(body)); expect(r.status).toBe(422);
-    expect(await r.json()).toEqual(envelope('incomplete', 'record_schema', 'pointer'));
+    expect(await r.json()).toEqual(envelope('incomplete', 'record_schema', 'pointer', 'products_null'));
     expect(sdk.get).toHaveBeenCalledTimes(1);
+  });
+  it.each([
+    ['object-null', 'pointer_object'], ['object-array', 'pointer_object'], ['object-string', 'pointer_object'],
+    ['main-absent', 'main_absent'], ['main-null', 'main_invalid'], ['main-array', 'main_invalid'], ['main-number', 'main_invalid'], ['main-url', 'main_invalid'],
+    ['products-absent', 'products_absent'], ['products-null', 'products_null'], ['products-array', 'products_invalid'], ['products-number', 'products_invalid'], ['products-url', 'products_invalid'],
+    ['extra', 'pointer_keys'], ['proto', 'pointer_keys'],
+  ])('attributes closed pointer invariant %s without reflecting fields', async (kind, invariant) => {
+    let p: unknown = { manifestPath: f.manifestPath, productsManifestPath: f.productManifestPath };
+    if (kind.startsWith('object-')) p = kind === 'object-null' ? null : kind === 'object-array' ? [] : 'SYNTHETIC_PRIVATE_SENTINEL';
+    else if (kind === 'extra') (p as Record<string, unknown>).SYNTHETIC_PRIVATE_SENTINEL = 'private';
+    else if (kind === 'proto') Object.defineProperty(p, '__proto__', { value: { private: true }, enumerable: true });
+    else {
+      const key = kind.startsWith('main-') ? 'manifestPath' : 'productsManifestPath';
+      if (kind.endsWith('absent')) delete (p as Record<string, unknown>)[key];
+      else (p as Record<string, unknown>)[key] = kind.endsWith('null') ? null : kind.endsWith('array') ? [f.manifestPath] : kind.endsWith('number') ? 12 : 'https://private.invalid/SYNTHETIC_PRIVATE_SENTINEL';
+    }
+    f.records.set(POINTER, encode(p)); const before = hashBytes(f.records.get(POINTER)!);
+    const r = await route.POST(request(body)); expect(r.status).toBe(422);
+    const text = await r.text(); expect(JSON.parse(text)).toEqual(envelope('incomplete', 'record_schema', 'pointer', invariant));
+    expect(text).not.toContain('SYNTHETIC_PRIVATE_SENTINEL'); expect(Buffer.byteLength(text)).toBeLessThanOrEqual(256);
+    expect(hashBytes(f.records.get(POINTER)!)).toBe(before); expect(sdk.get).toHaveBeenCalledTimes(1);
+    const original = await route.POST(request()); expect(await original.json()).toEqual({ error: 'incomplete' });
+  });
+  it('keeps invalid JSON distinct from pointer schema', async () => {
+    f.records.set(POINTER, Buffer.from('{')); await diagnostic('record_json', 'pointer');
+  });
+  it.each(['{"version":2}', '{"version":"2","mode":"diagnose"}', '{"version":[2],"mode":"diagnose"}', '{"version":2,"mode":"export"}', '{"version":2,"mode":["diagnose"]}', '{"version":2,"mode":"diagnose","extra":true}', '{"version":2,"mode":"diagnose","version":2}'])('denies nonexact v2 request %s', async input => {
+    const r = await route.POST(request(input)); expect(r.status).toBe(400); expect(await r.json()).toEqual({ error: 'invalid_request' }); expect(sdk.get).not.toHaveBeenCalled();
+  });
+  it('keeps invariant metadata private, closed and tied to actual pointer site', () => {
+    const touched = vi.fn(() => { throw new Error('SYNTHETIC_PRIVATE_SENTINEL'); });
+    for (const spoof of [['products_null'], { toString: touched }, new Proxy({}, { get: touched })]) {
+      const e = new ExportFailure('incomplete', 'record_schema', 'pointer', spoof as never);
+      expect(diagnosticFailure(e, false, version)).toEqual(envelope('incomplete', 'record_schema', 'pointer'));
+    }
+    const e = new ExportFailure('incomplete', 'record_schema', 'pointer', 'products_absent');
+    Object.assign(e, { invariant: 'SYNTHETIC_PRIVATE_SENTINEL', category: 'products' });
+    expect(diagnosticFailure(e, false, version)).toEqual(envelope('incomplete', 'record_schema', 'pointer', 'products_absent'));
+    expect(diagnosticFailure(new ExportFailure('incomplete', 'provider_read', 'pointer', 'products_null'), false, version)).toEqual(envelope('incomplete', 'provider_read', 'pointer'));
+    expect(diagnosticFailure({ invariant: 'products_null', category: 'pointer', stage: 'record_schema' }, false, version)).toEqual(envelope('incomplete', 'unknown', 'none'));
+    expect(touched).not.toHaveBeenCalled();
   });
   it('attributes references to coverage even after reading overrides', async () => {
     f = fixture({ mutate: d => { (d['coverage/2030-01-01.json'] as Record<string, unknown>).sourceOrderBlobPath = 'orders/2030-01-01/missing.json'; } });
