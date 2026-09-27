@@ -5,6 +5,10 @@ import { EXPORT_LIMITS, hashBytes, OVERRIDES, POINTER } from './source-export';
 import * as route from '../app/api/internal/source-export/route';
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
+import { performance } from 'node:perf_hooks';
+import { setImmediate } from 'node:timers';
+import * as sourceExport from './source-export';
+import * as sourceJson from './source-export-json';
 
 const sdk = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn(), del: vi.fn(), list: vi.fn(), head: vi.fn(), copy: vi.fn() }));
 vi.mock('@vercel/blob', () => sdk);
@@ -160,6 +164,68 @@ it('aborts a stalled SDK operation and releases busy state', async () => {
   expect((await pending).status).toBe(504);
   expect((await route.POST(request())).status).toBe(200);
 });
+it('repeated references hash immutable product bytes once plus one race reread', async () => {
+  const product = { raw: 'x'.repeat(EXPORT_LIMITS.objectBytes - 10) };
+  f = fixture({ data: {
+    'orders/2030-01-01/legacy.json': { items: Array.from({ length: 60000 }, () => ({ tpnc: '007' })) },
+    'products/007.json': product,
+  } });
+  const hashes = vi.spyOn(sourceExport, 'hashBytes');
+  const start = performance.now();
+  const r = await route.POST(request());
+  expect(performance.now() - start).toBeLessThan(EXPORT_LIMITS.milliseconds);
+  expect(r.status).toBe(200);
+  const out = await r.json();
+  expect(out.records.filter((v: { path: string }) => v.path === 'products/007.json')).toHaveLength(1);
+  expect(hashes.mock.calls.filter(([bytes]) => typeof bytes !== 'string' && bytes.byteLength === EXPORT_LIMITS.objectBytes)).toHaveLength(2);
+  expect(sdk.get.mock.calls.filter(([path]) => path === 'products/007.json')).toHaveLength(2);
+}, 30000);
+
+it.each(['body', 'provider', 'provider-error', 'parse', 'traversal', 'capture-serialization', 'response-serialization'] as const)('elapsed deadline closes %s work even when timer has not fired', async phase => {
+  let now = 0;
+  vi.spyOn(performance, 'now').mockImplementation(() => now);
+  const expire = () => { now = EXPORT_LIMITS.milliseconds; };
+  if (phase === 'body') {
+    const body = new ReadableStream({ pull(c) { expire(); c.enqueue(encode({ version: 2, mode: 'compatibility' })); c.close(); } });
+    const r = await route.POST(new Request('https://synthetic.invalid/api/internal/source-export', { method: 'POST', headers: { 'content-type': 'application/json', 'x-source-export-secret': secret }, body, duplex: 'half' } as RequestInit));
+    expect(r.status).toBe(504); expect(await r.json()).toEqual({ error: 'deadline' });
+    expect(sdk.get).not.toHaveBeenCalled(); return;
+  }
+  if (phase.startsWith('provider')) {
+    const get = sdk.get.getMockImplementation()!;
+    sdk.get.mockImplementationOnce(async (...args: unknown[]) => { expire(); if (phase === 'provider-error') throw new Error('SYNTHETIC_CAPTURE_PRIVATE'); return get(...args); });
+  }
+  if (phase === 'parse') {
+    const parse = sourceJson.parseExportJson;
+    vi.spyOn(sourceJson, 'parseExportJson').mockImplementation(bytes => { const result = parse(bytes); if (sourceExport.object(result) && 'manifestPath' in result) expire(); return result; });
+  }
+  if (phase === 'traversal') {
+    const object = sourceExport.object;
+    vi.spyOn(sourceExport, 'object').mockImplementation((v: unknown): v is Record<string, unknown> => { if (object(v) && 'qty' in v) expire(); return object(v); });
+  }
+  if (phase.endsWith('serialization')) {
+    const stringify = JSON.stringify; let serializations = 0;
+    vi.spyOn(JSON, 'stringify').mockImplementation(((v: unknown, ...args: unknown[]) => {
+      const result = (stringify as (...a: unknown[]) => string)(v, ...args);
+      if (sourceExport.object(v) && v.format === 'meal-planner-source-capture.v2' && ++serializations === (phase === 'capture-serialization' ? 1 : 2)) expire();
+      return result;
+    }) as typeof JSON.stringify);
+  }
+  const r = await route.POST(request());
+  expect(r.status).toBe(504); expect(await r.json()).toEqual({ error: 'deadline' });
+  expect(r.headers.has('content-disposition')).toBe(false);
+  vi.mocked(performance.now).mockRestore();
+  expect((await route.POST(request())).status).toBe(200); // busy flag released
+});
+
+it('yields reference-free item traversal for cancellation without a timer tick', async () => {
+  f = fixture({ data: { 'orders/2030-01-01/legacy.json': { items: Array.from({ length: 20000 }, () => ({ qty: 1 })) } } });
+  const controller = new AbortController();
+  setImmediate(() => controller.abort());
+  const r = await route.POST(new Request(request(), { signal: controller.signal }));
+  expect(r.status).toBe(504); expect(await r.json()).toEqual({ error: 'deadline' });
+});
+
 it('request cancellation returns only deadline', async () => {
   const controller = new AbortController(); controller.abort();
   const r = await route.POST(new Request(request(), { signal: controller.signal })); expect(r.status).toBe(504);

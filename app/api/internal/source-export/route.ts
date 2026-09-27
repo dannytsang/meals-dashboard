@@ -2,7 +2,7 @@ import 'server-only';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { boundedBytes, EXPORT_LIMITS, ExportFailure, exportSource, object } from '@/lib/source-export';
 import { parseExportJson } from '@/lib/source-export-json';
-import { captureSource } from '@/lib/source-capture';
+import { captureSource, createCaptureDeadline } from '@/lib/source-capture';
 import { createSourceExportReader } from '@/lib/source-export-reader';
 import { diagnosticSuccess, diagnosticFailure, failureDetails } from '@/lib/source-export-diagnostic';
 
@@ -40,6 +40,7 @@ export async function POST(request: Request): Promise<Response> {
   if (active) return response({ error: 'busy' }, 429);
   active = true;
   const controller = new AbortController();
+  const checkCaptureDeadline = createCaptureDeadline(controller.signal);
   const abort = () => controller.abort();
   request.signal.addEventListener('abort', abort, { once: true });
   if (request.signal.aborted) abort();
@@ -65,10 +66,18 @@ export async function POST(request: Request): Promise<Response> {
       throw new ExportFailure('invalid_request');
     }
     const read = createSourceExportReader(token);
-    if (compatibility) return response(await captureSource(read, controller.signal), 200, true);
+    if (compatibility) {
+      checkCaptureDeadline(); // Includes elapsed request-body time, not a new budget.
+      const result = response(await captureSource(read, controller.signal, checkCaptureDeadline), 200, true);
+      checkCaptureDeadline(); // JSON encoding/Response construction must not emit expired success.
+      return result;
+    }
     const archive = await exportSource(read, controller.signal);
     return diagnose ? response(diagnosticSuccess(diagnosticVersion), 200) : response(archive, 200, true);
   } catch (e) {
+    if (compatibility) {
+      try { checkCaptureDeadline(); } catch { e = new ExportFailure('deadline'); }
+    }
     const code = controller.signal.aborted ? 'deadline' : failureDetails(e).code;
     const value = diagnose ? diagnosticFailure(e, controller.signal.aborted, diagnosticVersion) : { error: code };
     return response(value, code === 'invalid_request' ? 400 : code === 'inconclusive' ? 409 : code === 'deadline' ? 504 : 422);

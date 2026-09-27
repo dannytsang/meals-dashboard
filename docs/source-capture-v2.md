@@ -10,6 +10,8 @@ Raw preservation does NOT certify application schema or repair legacy orderId/qt
 
 Limits remain1000 objects,1MiB/object,4MiB total including rereads,3.5MiB response and25 seconds. Source capture owns copied read buffers to prevent later provider mutation. No source reader is reused that would turn exceptions into empty results.
 
+Review480 R1 found repeated cached-product hashing could starve the deadline timer. The first correction caches the digest of owned immutable bytes while preserving every expected-hash check and fresh reread hash. A monotonic request budget spans body reading, traversal and final response serialization; bounded cooperative yields service cancellation even for reference-free items. Expiration produces only504/deadline without an attachment. Checks surround bounded synchronous work; this is not OS-level preemption of an individual operation or a paused process. The original reviewer fixture and deterministic expiration/cancellation regressions are retained; independent same-card retest remains required.
+
 Verification commands (synthetic only):
 
     MEALS_SOURCE_HISTORY_ROOT=/path/to/meals-dashboard-git MEAL_PLANNER_REVIEW_ROOT=/path/to/meal-planner-as-working npm test
@@ -19,6 +21,6 @@ Verification commands (synthetic only):
 
 Actual source621dd3c serializers/reader run inside a VM with in-memory SDK mocks. The new capture and independent Planner consumer preserve modern and legacy output byte-for-byte; actual reader results before/after preservation agree for tested fixtures. This is NOT live household parity. Include lib/source-capture.test.ts, lib/source-export-writer.test.ts and all existing strict-v1 regressions. New test/tool files are excluded from server tracing; no client capture/secret/sentinel marker is allowed.
 
-No new concrete defect distinct from deferred issue#1 was established: optional product pointers and legacy records are compatibility inputs, not repairs. Missing/integrity failures remain capture blockers, not ignored source bugs. Existing issue#1 and T011 are untouched/deferred.
+No new concrete source-data defect distinct from deferred issue#1 was established: optional product pointers and legacy records are compatibility inputs, not repairs. R1 is a defect in this new compatibility implementation, corrected here rather than deferred as a production issue. Missing/integrity failures remain capture blockers, not ignored source bugs. Existing issue#1 and T011 are untouched/deferred.
 
 Next gate: SAME-card independent tester with adversarial fixtures and exact pushed source readback. Only a later explicit activation contract may authorize secret configuration, exact deployment/alias/SSO/backup/rollback and a bounded private source read. t_ab800602 stays SCHEDULED; t_46e30b5f remains BLOCKED, no retry. No import/cutover or override authority transfer follows.
