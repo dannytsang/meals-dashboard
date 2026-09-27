@@ -31,6 +31,8 @@ const nextConfig: NextConfig = {
       './scripts/stage2-remote-suite.ts',
       './scripts/stage2-remote-suite.test.ts',
       './scripts/check-stage2-artifacts*.mjs',
+      './lib/source-capture.test.ts',
+      './lib/source-export-writer.test.ts',
     ],
   },
   images: {

@@ -9,6 +9,7 @@ import { createRequire } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import { exportSource, hashBytes, POINTER, OVERRIDES } from './source-export';
+import { captureSource } from './source-capture';
 import { diagnosticFailure } from './source-export-diagnostic';
 import type * as Storage from './blob-storage';
 import type * as Sync from './dashboard-sync';
@@ -146,6 +147,42 @@ describe.skipIf(!historyRoot || !plannerRoot)('actual writer/reader/exporter/ind
       await expect(exportSource(async p => w.records.get(p) ?? null, new AbortController().signal)).rejects.toThrow('incomplete');
       if (kind === 'legacy-order') { const { inventory } = await consumer(); const r = await inventory(w.source); expect(r.complete).toBe(false); expect(r.errors).toContain('invalid_schema'); }
       if (kind === 'extra-pointer-metadata') { const { inventory, parseSourceExport } = await consumer(); expect((await inventory(parseSourceExport(manualArchive(w.records)))).complete).toBe(true); } // existing consumer is permissive; never exporter success
+    });
+  });
+  describe.each([PRODUCTION, 'current'])('as-working capture writer %s', revision => {
+    it.each(['modern-null', 'legacy-absent', 'legacy-null', 'modern-referenced', 'empty-products'])('preserves %s exact bytes and actual dashboard reader output', async kind => {
+      const w = writer(revision); const p = payload(kind === 'modern-referenced');
+      const order = p.orders[0] as unknown as Record<string, unknown>;
+      if (kind.startsWith('legacy')) { delete order.orderNumber; order.orderId = 'synthetic-legacy'; order.items = [{ name: 'Synthetic', qty: '2 kg', tpnc: '100', productBlobPath: 'products/100.json' }]; }
+      else order.items = [{ name: 'Synthetic', quantity: 2, tpnc: '100' }];
+      await w.sync().syncDashboardLayout(p, w.client);
+      if (kind === 'empty-products') await w.sync().syncDashboardProducts({ products: [] }, w.client);
+      // Product can exist outside either manifest: the actual reader derives it by tpnc.
+      if (!w.records.has('products/100.json')) await w.client.writeBlobIfChanged('products/100.json', JSON.stringify(product), {});
+      if (kind === 'legacy-absent') {
+        const legacy = writer(LEGACY); await legacy.client.writePointer((await w.client.readPointer())!.manifestPath);
+        w.records.set(POINTER, legacy.records.get(POINTER)!);
+      }
+      w.records.set(OVERRIDES, Buffer.from('[ ]\n'));
+      const before = [...w.records].map(([path, bytes]) => [path, Buffer.from(bytes)]);
+      const visible = await w.data().getDashboardData({ reader: w.client, coverageWindow: p.coverageWindow });
+      expect(visible.loadError).toBeNull(); expect(visible.products['100']).not.toBeNull();
+      for (const fn of Object.values(w.sdk)) fn.mockClear();
+      const archive = await captureSource(async path => w.records.get(path) ?? null, new AbortController().signal);
+      for (const fn of Object.values(w.sdk)) expect(fn).not.toHaveBeenCalled();
+      const { parseSourceCapture } = await import(/* @vite-ignore */ pathToFileURL(resolve(plannerRoot!, 'lib/source-capture-archive.ts')).href);
+      const accepted = parseSourceCapture(Buffer.from(JSON.stringify(archive)));
+      expect(accepted.assessment).toEqual(archive.assessment); expect(accepted.report.importReady).toBe(false);
+      const restored = writer(revision);
+      for (const rec of accepted.records) {
+        expect(Buffer.from(rec.base64, 'base64')).toEqual(w.records.get(rec.path));
+        restored.records.set(rec.path, Buffer.from(rec.base64, 'base64'));
+      }
+      expect(await restored.data().getDashboardData({ reader: restored.client, coverageWindow: p.coverageWindow })).toEqual(visible);
+      expect([...w.records]).toEqual(before);
+      expect(archive.assessment.productPointer).toBe(kind === 'legacy-absent' ? 'absent' : ['modern-referenced', 'empty-products'].includes(kind) ? 'referenced' : 'null');
+      // Intentionally do not repair orderId/qty or certify them as modern records.
+      if (kind.startsWith('legacy')) expect(JSON.parse(restored.records.get(p.orders[0].orderBlobPath)!.toString())).toMatchObject({ orderId: 'synthetic-legacy', items: [{ qty: '2 kg' }] });
     });
   });
   it('historical pre-products writer emits absent reference, not verified emptiness', async () => {

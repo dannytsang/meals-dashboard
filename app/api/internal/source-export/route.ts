@@ -2,6 +2,7 @@ import 'server-only';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { boundedBytes, EXPORT_LIMITS, ExportFailure, exportSource, object } from '@/lib/source-export';
 import { parseExportJson } from '@/lib/source-export-json';
+import { captureSource } from '@/lib/source-capture';
 import { createSourceExportReader } from '@/lib/source-export-reader';
 import { diagnosticSuccess, diagnosticFailure, failureDetails } from '@/lib/source-export-diagnostic';
 
@@ -44,6 +45,7 @@ export async function POST(request: Request): Promise<Response> {
   if (request.signal.aborted) abort();
   const timer = setTimeout(abort, EXPORT_LIMITS.milliseconds);
   let diagnose = false; // only set after full bounded request validation
+  let compatibility = false;
   let diagnosticVersion: 1 | 2 = 1;
   try {
     let input: unknown;
@@ -53,14 +55,18 @@ export async function POST(request: Request): Promise<Response> {
       if (!object(input)) throw new ExportFailure('invalid_request');
       const archiveRequest = input.version === 1 && Object.keys(input).length === 1;
       const diagnosticRequest = (input.version === 1 || input.version === 2) && input.mode === 'diagnose' && Object.keys(input).length === 2;
-      if (!archiveRequest && !diagnosticRequest) throw new ExportFailure('invalid_request');
+      const compatibilityRequest = input.version === 2 && input.mode === 'compatibility' && Object.keys(input).length === 2;
+      if (!archiveRequest && !diagnosticRequest && !compatibilityRequest) throw new ExportFailure('invalid_request');
+      compatibility = compatibilityRequest;
       diagnose = diagnosticRequest;
       diagnosticVersion = input.version === 2 ? 2 : 1;
     } catch {
       if (controller.signal.aborted) throw new ExportFailure('deadline');
       throw new ExportFailure('invalid_request');
     }
-    const archive = await exportSource(createSourceExportReader(token), controller.signal);
+    const read = createSourceExportReader(token);
+    if (compatibility) return response(await captureSource(read, controller.signal), 200, true);
+    const archive = await exportSource(read, controller.signal);
     return diagnose ? response(diagnosticSuccess(diagnosticVersion), 200) : response(archive, 200, true);
   } catch (e) {
     const code = controller.signal.aborted ? 'deadline' : failureDetails(e).code;

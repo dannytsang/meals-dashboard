@@ -1,5 +1,7 @@
 # Read-only source export (not activated)
 
+Current additive preservation mode: [As-working capture v2](source-capture-v2.md), task t_4fbca9e5. It does not relax the strict-v1/diagnostic contracts or rewrite the historical failures below. Raw JSON preservation is not application-schema, historical-completeness, live-parity or import certification.
+
 Governing contract: Meal Planner spec001 FR-011–013 / AS-006–008, `source-export-contract.md`; spec-first checkpoint `e9b4082b78fc9772f3fbd4ce7adf308035ffaf44`. Task t_bf8099a8, caller acceptance v1 SHA-256 `845a38f2d489800e542a36b44be8461cd44ed16bdf7dca32592bceb58f893cda`.
 
 ## Boundary
