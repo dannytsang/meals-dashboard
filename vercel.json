@@ -4,7 +4,8 @@
     "deploymentEnabled": {
       "coder/dual-publish-20260925": false,
       "coder/source-diagnosis-20260927": false,
-      "coder/pointer-contract-20260927": false
+      "coder/pointer-contract-20260927": false,
+      "coder/as-working-t_4fbca9e5": false
     }
   }
 }
