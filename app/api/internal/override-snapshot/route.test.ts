@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-import { makeSnapshot } from '@/lib/override-snapshot';
+import { makeSnapshot, validateSnapshot } from '@/lib/override-snapshot';
 const fake = vi.hoisted(() => ({ files: new Map<string, { bytes: Uint8Array; etag: string }>(), next: 0, writes: [] as string[], fail: '' }));
 vi.mock('@vercel/blob', () => ({
   get: vi.fn(async (path: string) => {
@@ -20,7 +20,7 @@ vi.mock('@vercel/blob', () => ({
     fake.files.delete(path);
   }),
 }));
-import { BlobOverrideStore, bootstrapFencedSource, readFencedSource } from '@/lib/override-source-store';
+import { BlobOverrideStore, bootstrapFencedSource, editFencedSource, readFencedSource } from '@/lib/override-source-store';
 import { POST as capture, GET as disabledGet } from './route';
 import { POST as edit, GET as read } from '../../overrides/route';
 import { POST as legacy } from '../../manual-override/route';
@@ -30,7 +30,7 @@ const entry = { meal_date: '2026-01-02', meal_name: 'Fixture', item_name: 'Ingre
   reason: 'synthetic', status: 'partial' as const, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-02T00:00:00Z', cleared_at: null };
 const bytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value));
 const request = (auth = secret) => new Request('http://localhost/api/internal/override-snapshot', {
-  method: 'POST', headers: { 'content-type': 'application/json', 'x-override-snapshot-secret': auth }, body: JSON.stringify({ version: 1 }),
+  method: 'POST', headers: { 'content-type': 'application/json', 'x-override-snapshot-secret': auth }, body: JSON.stringify({ version: 2 }),
 });
 const editRequest = (body: unknown) => new NextRequest('http://localhost/api/overrides', {
   method: 'POST', headers: { 'content-type': 'application/json', 'x-dashboard-secret': 'other-secret' }, body: JSON.stringify(body),
@@ -66,8 +66,9 @@ describe('real source adapter and routes', () => {
   });
   it('bootstraps only present valid data under lock; capture preserves positive empty and every field', async () => {
     seed('overrides/manual.json', []);
-    expect(await bootstrapFencedSource(store, 'fixture')).toEqual(makeSnapshot('fixture', 1, []));
-    expect(await result()).toEqual({ status: 200, body: makeSnapshot('fixture', 1, []) });
+    const initial = await bootstrapFencedSource(store, 'fixture');
+    expect(initial).toEqual(makeSnapshot('fixture', 1, [], initial.committedAt));
+    expect(await result()).toEqual({ status: 200, body: initial });
     expect((await read(new NextRequest('http://localhost/api/overrides', { headers: { 'x-dashboard-secret': 'other-secret' } }))).status).toBe(200);
     const response = await edit(editRequest({ meal_date: entry.meal_date, meal_name: entry.meal_name, item_name: entry.item_name }));
     expect(response.status).toBe(200);
@@ -76,7 +77,8 @@ describe('real source adapter and routes', () => {
     expect(fake.writes).toContain('overrides/manual.json');
     fake.files.clear();
     seed('overrides/manual.json', [entry]);
-    expect(await bootstrapFencedSource(store, 'fixture')).toEqual(makeSnapshot('fixture', 1, [entry]));
+    const seeded = await bootstrapFencedSource(store, 'fixture');
+    expect(seeded).toEqual(makeSnapshot('fixture', 1, [entry], seeded.committedAt));
     const update = await edit(editRequest({ meal_date: entry.meal_date, meal_name: entry.meal_name, item_name: entry.item_name, quantity: 3 }));
     expect(update.status).toBe(200);
     const snapshot = (await result()).body;
@@ -116,6 +118,48 @@ describe('real source adapter and routes', () => {
     });
     expect((await capture(malformed)).status).toBe(400);
     expect((await edit(editRequest({ ...entry, quantity: 0 }))).status).toBe(400);
+  });
+  it('binds commit time to revision and rejects legacy timestamp-free metadata', async () => {
+    seed('overrides/manual.json', []);
+    const initial = await bootstrapFencedSource(store, 'fixture');
+    expect(initial.version).toBe(2);
+    expect(initial.committedAt).toMatch(/Z$/);
+    expect((await result()).body.committedAt).toBe(initial.committedAt);
+    const editResult = await edit(editRequest({ meal_date: entry.meal_date, meal_name: entry.meal_name, item_name: entry.item_name }));
+    expect(editResult.status).toBe(200);
+    const after = (await result()).body;
+    expect(after.revision).toBe(2);
+    expect(after.committedAt).toMatch(/Z$/);
+    expect((await result()).body.committedAt).toBe(after.committedAt);
+    seed('overrides/source-revision.json', { epoch: 'fixture', revision: 2, rawHash: 'a'.repeat(64) });
+    expect((await result()).body.error).toBe('corrupt');
+    expect((await capture(new Request('http://localhost/api/internal/override-snapshot', { method: 'POST', headers: {
+      'content-type': 'application/json', 'x-override-snapshot-secret': secret }, body: JSON.stringify({ version: 1 }) }))).status).toBe(400);
+  });
+  it('rejects invalid time representations at the source wire and persisted revision boundary', async () => {
+    const good = makeSnapshot('fixture', 1, [], '2026-09-28T12:00:00Z');
+    for (const committedAt of [undefined, '2026-09-28T13:00:00+01:00', '2026-02-30T12:00:00Z', 'not-a-date']) {
+      expect(() => validateSnapshot({ ...good, committedAt })).toThrow();
+    }
+    expect(() => validateSnapshot({ ...good, version: 1 })).toThrow();
+    seed('overrides/manual.json', []);
+    await bootstrapFencedSource(store, 'fixture');
+    const meta = JSON.parse(Buffer.from(fake.files.get('overrides/source-revision.json')!.bytes).toString());
+    seed('overrides/source-revision.json', { ...meta, committedAt: '2026-09-28T13:00:00+01:00' });
+    expect((await result()).body.error).toBe('corrupt');
+  });
+  it('assigns snapshot time to delete/empty commit, independent of future-dated entry fields', async () => {
+    seed('overrides/manual.json', [{ ...entry, updated_at: '2099-01-01T00:00:00Z' }]);
+    const initial = await bootstrapFencedSource(store, 'fixture');
+    const deleted = await editFencedSource(store, 'fixture', () => []);
+    expect(deleted.entries).toEqual([]);
+    expect(deleted.revision).toBe(initial.revision + 1);
+    expect(deleted.committedAt).not.toBe('2099-01-01T00:00:00Z');
+    expect((await result()).body).toEqual(deleted);
+    const emptyCommit = await editFencedSource(store, 'fixture', (entries) => entries);
+    expect(emptyCommit.revision).toBe(deleted.revision + 1);
+    expect(emptyCommit.committedAt).toMatch(/Z$/);
+    expect((await result()).body).toEqual(emptyCommit);
   });
   it('denies bootstrap twice and refuses an orphan lock rather than stealing after restart', async () => {
     seed('overrides/manual.json', []); await bootstrapFencedSource(store, 'fixture');

@@ -1,13 +1,13 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { del, get, put } from '@vercel/blob';
-import { makeSnapshot, OverrideFailure, OVERRIDE_LIMITS, snapshotBytes, validateEntries, type OverrideEntry, type OverrideSnapshot } from './override-snapshot';
+import { makeSnapshot, OverrideFailure, OVERRIDE_LIMITS, snapshotBytes, validCommittedAt, validateEntries, type OverrideEntry, type OverrideSnapshot } from './override-snapshot';
 
 const DATA = 'overrides/manual.json';
 const REVISION = 'overrides/source-revision.json';
 const LOCK = 'overrides/source-lock.json';
 const digest = (bytes: Uint8Array | string) => createHash('sha256').update(bytes).digest('hex');
-export type SourceRevision = { epoch: string; revision: number; rawHash: string };
+export type SourceRevision = { epoch: string; revision: number; rawHash: string; committedAt: string; version: 2 };
 
 /** The create-if-absent and conditional delete must be enforced by the shared store, not a process mutex. */
 export interface OverrideStore {
@@ -55,7 +55,8 @@ function parseRevision(bytes: Uint8Array): SourceRevision {
   const value = decode(bytes);
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new OverrideFailure('corrupt');
   const v = value as Record<string, unknown>;
-  if (Object.keys(v).sort().join(',') !== 'epoch,rawHash,revision' ||
+  if (Object.keys(v).sort().join(',') !== 'committedAt,epoch,rawHash,revision,version' || v.version !== 2 ||
+      !validCommittedAt(v.committedAt) ||
       typeof v.epoch !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(v.epoch) ||
       !Number.isSafeInteger(v.revision) || (v.revision as number) < 1 ||
       typeof v.rawHash !== 'string' || !/^[a-f0-9]{64}$/.test(v.rawHash)) throw new OverrideFailure('corrupt');
@@ -92,7 +93,7 @@ async function current(store: OverrideStore, epoch: string): Promise<{ bytes: Ui
 export async function readFencedSource(store: OverrideStore, epoch: string): Promise<OverrideSnapshot> {
   return locked(store, async () => {
     const { entries, meta } = await current(store, epoch);
-    return makeSnapshot(meta.epoch, meta.revision, entries);
+    return makeSnapshot(meta.epoch, meta.revision, entries, meta.committedAt);
   });
 }
 export async function editFencedSource(store: OverrideStore, epoch: string, edit: (entries: OverrideEntry[]) => OverrideEntry[]): Promise<OverrideSnapshot> {
@@ -103,11 +104,12 @@ export async function editFencedSource(store: OverrideStore, epoch: string, edit
     const data = Buffer.from(snapshotBytes(next));
     if (data.byteLength > OVERRIDE_LIMITS.bytes) throw new OverrideFailure('too_large');
     const revision = meta.revision + 1;
+    const committedAt = new Date().toISOString();
     await store.write(DATA, data, true);
-    await store.write(REVISION, encode({ epoch, revision, rawHash: digest(data) }), true);
+    await store.write(REVISION, encode({ version: 2, epoch, revision, rawHash: digest(data), committedAt }), true);
     const checked = await current(store, epoch);
-    if (checked.meta.revision !== revision || digest(checked.bytes) !== digest(data)) throw new OverrideFailure('inconsistent_source');
-    return makeSnapshot(epoch, revision, checked.entries);
+    if (checked.meta.revision !== revision || checked.meta.committedAt !== committedAt || digest(checked.bytes) !== digest(data)) throw new OverrideFailure('inconsistent_source');
+    return makeSnapshot(epoch, revision, checked.entries, committedAt);
   });
 }
 /** Offline bootstrap only after operators independently fence *all* older deployments/editors.
@@ -120,10 +122,11 @@ export async function bootstrapFencedSource(store: OverrideStore, epoch: string)
     const bytes = await store.read(DATA, OVERRIDE_LIMITS.bytes);
     if (!bytes) throw new OverrideFailure('missing');
     const entries = parseRaw(bytes);
-    await store.write(REVISION, encode({ epoch, revision: 1, rawHash: digest(bytes) }), false);
+    const committedAt = new Date().toISOString();
+    await store.write(REVISION, encode({ version: 2, epoch, revision: 1, rawHash: digest(bytes), committedAt }), false);
     const checked = await current(store, epoch);
-    if (digest(checked.bytes) !== digest(bytes)) throw new OverrideFailure('inconsistent_source');
-    return makeSnapshot(epoch, 1, entries);
+    if (digest(checked.bytes) !== digest(bytes) || checked.meta.committedAt !== committedAt) throw new OverrideFailure('inconsistent_source');
+    return makeSnapshot(epoch, 1, entries, committedAt);
   });
 }
 export function configuredSource(): { store: OverrideStore; epoch: string } {

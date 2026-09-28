@@ -8,8 +8,16 @@ export type OverrideEntry = {
   updated_at: string; cleared_at?: string | null;
 };
 export type OverrideSnapshot = {
-  epoch: string; revision: number; hash: string; entries: OverrideEntry[];
+  version: 2; epoch: string; revision: number; hash: string; committedAt: string; entries: OverrideEntry[];
 };
+/** Strict, bounded UTC wire time. Time is audit evidence; only revision orders snapshots. */
+export function validCommittedAt(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length < 20 || value.length > 35 ||
+      !/^\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?Z$/.test(value)) return false;
+  const time = Date.parse(value);
+  return Number.isFinite(time) && time >= Date.UTC(2000, 0, 1) && time < Date.UTC(2100, 0, 1) &&
+    new Date(time).toISOString().slice(0, 19) === value.slice(0, 19);
+}
 export class OverrideFailure extends Error {
   constructor(readonly code: string) { super(code); }
 }
@@ -42,7 +50,8 @@ export function snapshotBytes(entries: OverrideEntry[]): string {
 export function validateSnapshot(value: unknown): OverrideSnapshot {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new OverrideFailure('invalid_snapshot');
   const s = value as Record<string, unknown>;
-  if (Object.keys(s).sort().join(',') !== 'entries,epoch,hash,revision' ||
+  if (Object.keys(s).sort().join(',') !== 'committedAt,entries,epoch,hash,revision,version' || s.version !== 2 ||
+      !validCommittedAt(s.committedAt) ||
       typeof s.epoch !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(s.epoch) ||
       !Number.isSafeInteger(s.revision) || (s.revision as number) < 1 ||
       typeof s.hash !== 'string' || !/^[a-f0-9]{64}$/.test(s.hash)) throw new OverrideFailure('invalid_snapshot');
@@ -51,11 +60,11 @@ export function validateSnapshot(value: unknown): OverrideSnapshot {
   if (Buffer.byteLength(bytes) > OVERRIDE_LIMITS.bytes || sha256(bytes) !== s.hash) throw new OverrideFailure('invalid_snapshot');
   return s as OverrideSnapshot;
 }
-export function makeSnapshot(epoch: string, revision: number, value: unknown): OverrideSnapshot {
+export function makeSnapshot(epoch: string, revision: number, value: unknown, committedAt: string): OverrideSnapshot {
   const entries = validateEntries(value);
   const bytes = snapshotBytes(entries);
   if (Buffer.byteLength(bytes) > OVERRIDE_LIMITS.bytes) throw new OverrideFailure('too_large');
-  return validateSnapshot({ epoch, revision, entries, hash: sha256(bytes) });
+  return validateSnapshot({ version: 2, epoch, revision, entries, hash: sha256(bytes), committedAt });
 }
 export async function boundedBody(request: Request): Promise<unknown> {
   if (request.headers.has('content-encoding') || !/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(request.headers.get('content-type') ?? '')) throw new OverrideFailure('invalid_request');

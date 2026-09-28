@@ -20,15 +20,15 @@ export const DELETE = unavailable;
  * with edits and verify a monotonic epoch/revision bound to exact raw bytes.
  * This pure parser remains available for synthetic malformed-record tests.
  */
-export type FencedRead = () => Promise<{ bytes: Uint8Array | null; epoch: string; revision: number }>;
+export type FencedRead = () => Promise<{ bytes: Uint8Array | null; epoch: string; revision: number; committedAt: string }>;
 export async function captureFenced(read: FencedRead) {
-  const { bytes, epoch, revision } = await read();
+  const { bytes, epoch, revision, committedAt } = await read();
   if (bytes === null) throw new OverrideFailure('missing');
   if (bytes.byteLength > OVERRIDE_LIMITS.bytes) throw new OverrideFailure('too_large');
   let parsed: unknown;
   try { parsed = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)); }
   catch { throw new OverrideFailure('corrupt'); }
-  return makeSnapshot(epoch, revision, parsed);
+  return makeSnapshot(epoch, revision, parsed, committedAt);
 }
 
 /** A successful capture is read under the same storage lock used by all new edits. */
@@ -43,7 +43,7 @@ export async function POST(request: Request): Promise<Response> {
   if (new URL(request.url).search) return reply({ error: 'invalid_request' }, 400);
   try {
     const body = await boundedBody(request);
-    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length !== 1 || (body as { version?: unknown }).version !== 1) throw new OverrideFailure('invalid_request');
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).length !== 1 || (body as { version?: unknown }).version !== 2) throw new OverrideFailure('invalid_request');
     const { store, epoch } = configuredSource();
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
