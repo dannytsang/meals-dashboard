@@ -72,6 +72,7 @@ describe('real source adapter and routes', () => {
     expect((await read(new NextRequest('http://localhost/api/overrides', { headers: { 'x-dashboard-secret': 'other-secret' } }))).status).toBe(200);
     const response = await edit(editRequest({ meal_date: entry.meal_date, meal_name: entry.meal_name, item_name: entry.item_name }));
     expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, outcome: 'primary_committed/secondary_pending', revision: 2 });
     expect((await result()).body.entries[0].meal_date).toBe(entry.meal_date);
     expect((await result()).body.revision).toBe(2);
     expect(fake.writes).toContain('overrides/manual.json');
@@ -171,7 +172,9 @@ describe('real source adapter and routes', () => {
   it('failed second write leaves mismatch, never an acknowledged snapshot', async () => {
     seed('overrides/manual.json', []); await bootstrapFencedSource(store, 'fixture');
     fake.fail = 'overrides/source-revision.json';
-    expect((await edit(editRequest({ meal_date: 'd', meal_name: 'm', item_name: 'i' }))).status).toBe(503);
+    const ambiguous = await edit(editRequest({ meal_date: 'd', meal_name: 'm', item_name: 'i' }));
+    expect(ambiguous.status).toBe(503);
+    expect((await ambiguous.json()).outcome).toBe('primary_unknown');
     fake.fail = '';
     expect((await result()).body.error).toBe('inconsistent_source');
   });

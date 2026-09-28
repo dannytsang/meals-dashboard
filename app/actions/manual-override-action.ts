@@ -19,12 +19,13 @@ export interface ManualOverrideResult {
   meal_name?: string;
   item_name?: string;
   quantity?: number;
+  outcome?: 'primary_committed/secondary_pending' | 'primary_unknown';
   error?: string;
 }
 
 interface OverridesRouteResponse {
   ok: boolean;
-  overrides?: unknown[];
+  outcome?: 'primary_committed/secondary_pending' | 'primary_unknown';
   error?: string;
   detail?: string;
 }
@@ -96,24 +97,27 @@ export async function submitManualOverrideAction(formData: FormData): Promise<Ma
     console.error('[manual-override-action] override route call failed', {
       error: error instanceof Error ? error.name : 'unknown',
     });
-    return { ok: false, error: 'Failed to apply manual override' };
+    return { ok: false, outcome: 'primary_unknown', error: 'Primary outcome unknown; do not repeat the edit. Reconcile before retrying.' };
   }
 
   if (!response.ok) {
     console.error('[manual-override-action] override route rejected request', {
       status: response.status,
     });
-    return { ok: false, error: 'Failed to apply manual override' };
+    return { ok: false, outcome: 'primary_unknown', error: 'Primary outcome unknown; do not repeat the edit. Reconcile before retrying.' };
   }
 
-  const data = (await response.json()) as OverridesRouteResponse;
-  if (!data.ok) {
-    console.error('[manual-override-action] override route returned ok:false');
-    return { ok: false, error: 'Failed to apply manual override' };
+  let data: OverridesRouteResponse;
+  try { data = (await response.json()) as OverridesRouteResponse; }
+  catch { return { ok: false, outcome: 'primary_unknown', error: 'Primary outcome unknown; reconcile before retrying.' }; }
+  if (!data.ok || data.outcome !== 'primary_committed/secondary_pending') {
+    console.error('[manual-override-action] override route returned unverified outcome');
+    return { ok: false, outcome: 'primary_unknown', error: 'Primary outcome unknown; reconcile before retrying.' };
   }
 
   return {
     ok: true,
+    outcome: 'primary_committed/secondary_pending',
     meal_date: mealDate,
     meal_name: mealName,
     item_name: itemName,

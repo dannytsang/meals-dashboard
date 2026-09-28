@@ -131,8 +131,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const { store, epoch } = source();
     const snapshot = await editFencedSource(store, epoch, (entries) => applyUpsert(entries, body));
-    return NextResponse.json({ ok: true, overrides: snapshot.entries });
+    // The source transaction is durable, but this serverless route cannot prove
+    // private local ingress. The independently authenticated local relay must
+    // observe this revision before any response can claim secondary success.
+    return NextResponse.json({ ok: true, outcome: 'primary_committed/secondary_pending',
+      overrides: snapshot.entries, epoch: snapshot.epoch, revision: snapshot.revision, hash: snapshot.hash,
+      committedAt: snapshot.committedAt }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (err) {
-    return storageFailure(err);
+    // A failed response after a Blob write/release can be ambiguous. Never
+    // instruct the caller to repeat an edit whose primary commit may exist.
+    const code = err instanceof OverrideFailure ? err.code : 'storage_error';
+    if (['missing', 'source_busy', 'unfenced_source', 'inconsistent_source', 'wrong_epoch', 'invalid_snapshot', 'duplicate_identity', 'too_large', 'revision_exhausted'].includes(code)) {
+      const response = storageFailure(err);
+      return response;
+    }
+    return NextResponse.json({ ok: false, outcome: 'primary_unknown', error: code }, { status: 503 });
   }
 }

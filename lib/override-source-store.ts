@@ -105,11 +105,15 @@ export async function editFencedSource(store: OverrideStore, epoch: string, edit
     if (data.byteLength > OVERRIDE_LIMITS.bytes) throw new OverrideFailure('too_large');
     const revision = meta.revision + 1;
     const committedAt = new Date().toISOString();
-    await store.write(DATA, data, true);
-    await store.write(REVISION, encode({ version: 2, epoch, revision, rawHash: digest(data), committedAt }), true);
-    const checked = await current(store, epoch);
-    if (checked.meta.revision !== revision || checked.meta.committedAt !== committedAt || digest(checked.bytes) !== digest(data)) throw new OverrideFailure('inconsistent_source');
-    return makeSnapshot(epoch, revision, checked.entries, committedAt);
+    try {
+      await store.write(DATA, data, true);
+      await store.write(REVISION, encode({ version: 2, epoch, revision, rawHash: digest(data), committedAt }), true);
+      const checked = await current(store, epoch);
+      if (checked.meta.revision !== revision || checked.meta.committedAt !== committedAt || digest(checked.bytes) !== digest(data)) throw new OverrideFailure('inconsistent_source');
+      return makeSnapshot(epoch, revision, checked.entries, committedAt);
+    } catch {
+      throw new OverrideFailure('commit_unknown');
+    }
   });
 }
 /** Offline bootstrap only after operators independently fence *all* older deployments/editors.

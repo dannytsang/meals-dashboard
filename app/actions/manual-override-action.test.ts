@@ -16,7 +16,8 @@ describe('submitManualOverrideAction hardening', () => {
   });
 
   it('returns generic external errors instead of raw exception or route response detail', () => {
-    expect(source).toContain("error: 'Failed to apply manual override'");
+    expect(source).toContain("outcome: 'primary_unknown'");
+    expect(source).toContain('Reconcile before retrying.');
     expect(source).not.toContain('Failed to call /api/overrides: ${message}');
     expect(source).not.toContain('Override route returned ${response.status}: ${detail}');
     expect(source).not.toContain('parsed.detail || parsed.error');
