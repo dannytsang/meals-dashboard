@@ -193,12 +193,9 @@ describe('Manual override API route', () => {
     expect(apiRoute).toContain('MEALS_DASHBOARD_DATA_SECRET');
   });
 
-  it('accepts meal_date, meal_name, item_name, quantity and forwards to apply_manual_override', () => {
-    expect(apiRoute).toContain('meal_date');
-    expect(apiRoute).toContain('meal_name');
-    expect(apiRoute).toContain('item_name');
-    expect(apiRoute).toContain('quantity');
-    expect(apiRoute).toContain('apply_manual_override');
+  it('disables the legacy subprocess writer rather than bypassing the durable source fence', () => {
+    expect(apiRoute).toContain('Legacy override writer disabled');
+    expect(apiRoute).not.toContain('node:child_process');
   });
 });
 
@@ -228,7 +225,8 @@ describe('Durable manual override route (/api/overrides)', () => {
 
   it('writes to a blob at overrides/manual.json (durable Vercel blob, not ephemeral disk)', () => {
     expect(routeSrc).toContain('overrides/manual.json');
-    expect(routeSrc).toContain("import { put");
+    expect(routeSrc).toContain("editFencedSource");
+    expect(readFileSync(join(process.cwd(), 'lib/override-source-store.ts'), 'utf8')).toContain("import { del, get, put } from '@vercel/blob'");
     // The route must NOT actually call spawn() (that's the bug we're
     // fixing). We match `spawn(` to exclude the docstring mentions.
     expect(routeSrc).not.toMatch(/\bspawn\s*\(/);

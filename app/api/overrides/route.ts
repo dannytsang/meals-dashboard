@@ -1,57 +1,19 @@
-/**
- * Spec 019 / FR-07 / T062 — durable manual-override persistence.
- *
- * GET  /api/overrides
- *   Auth: x-dashboard-secret header.
- *   Returns the full list of manual override entries as JSON.
- *   Empty list (`[]`) if no overrides have ever been written.
- *
- * POST /api/overrides
- *   Auth: x-dashboard-secret header.
- *   Body: { meal_date, meal_name, item_name, quantity?, reason?, status? }
- *   Upserts an override keyed by the triple (meal_date, meal_name, item_name).
- *   Returns the full list after the write.
- *
- * Storage: a single small blob at `overrides/manual.json`. We deliberately
- * keep this as a single file rather than content-hashed-per-entry because
- * (a) the list is small (handful of entries), (b) we always want a
- * complete-read-modify-write transaction, and (c) the dedup benefit of
- * content-hashing doesn't apply when the file is rewritten on every POST.
- *
- * This replaces the previous design where the dashboard "I have this"
- * button spawned a Python subprocess that wrote to a path on the
- * serverless function's ephemeral disk — that file died on the next
- * cold start, so the override was lost. With this route, the write
- * hits the Vercel blob (durable) and the next Python sync reads it
- * via GET.
- *
- * Auth model matches the other dashboard API routes
- * (`/api/dashboard-data`, `/api/dashboard-sync`, `/api/manual-override`):
- * a shared `MEALS_DASHBOARD_DATA_SECRET` header. The dashboard's server
- * component forwards it from env so the client never sees the secret.
- */
+/* Offline candidate: both /api/overrides methods now require a store-wide
+ * create-if-absent lock and a checked durable revision. The raw array remains
+ * at overrides/manual.json for existing read/record semantics; an independent
+ * revision object binds its exact bytes. Failed intermediate commits block
+ * reads/writes until privately reconciled. Installed production is unchanged. */
 
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
-import { put, head } from '@vercel/blob';
+import { configuredSource, editFencedSource, readFencedSource } from '@/lib/override-source-store';
+import { boundedBody, OverrideFailure, type OverrideEntry } from '@/lib/override-snapshot';
 
 export const runtime = 'nodejs';
 
-const DASHBOARD_DATA_SECRET = process.env.MEALS_DASHBOARD_DATA_SECRET;
-const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
 const OVERRIDES_BLOB_PATH = 'overrides/manual.json';
 
-interface ManualOverrideEntry {
-  meal_date: string;
-  meal_name: string;
-  item_name: string;
-  quantity: number;
-  reason: string;
-  status: 'covered' | 'partial';
-  created_at: string;
-  updated_at: string;
-  cleared_at?: string | null;
-}
+type ManualOverrideEntry = OverrideEntry;
 
 interface UpsertRequestBody {
   meal_date: string;
@@ -66,62 +28,22 @@ function isUpsertRequestBody(value: unknown): value is UpsertRequestBody {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   return (
-    typeof v.meal_date === 'string' &&
-    typeof v.meal_name === 'string' &&
-    typeof v.item_name === 'string'
+    typeof v.meal_date === 'string' && !!v.meal_date.trim() &&
+    typeof v.meal_name === 'string' && !!v.meal_name.trim() &&
+    typeof v.item_name === 'string' && !!v.item_name.trim() &&
+    (v.quantity === undefined || (Number.isSafeInteger(v.quantity) && (v.quantity as number) >= 1)) &&
+    (v.reason === undefined || (typeof v.reason === 'string' && !!v.reason.trim())) &&
+    (v.status === undefined || v.status === 'covered' || v.status === 'partial') &&
+    Object.keys(v).every((key) => ['meal_date', 'meal_name', 'item_name', 'quantity', 'reason', 'status'].includes(key))
   );
 }
 
-async function readOverridesBlob(): Promise<ManualOverrideEntry[]> {
-  if (!BLOB_TOKEN) {
-    throw new Error('BLOB_READ_WRITE_TOKEN not configured');
-  }
-  try {
-    // Spec 028 / 2026-06-19 cleanup: use head() (a Simple Operation)
-    // instead of list({prefix}) (an Advanced Operation that hit the
-    // Vercel Blob Advanced Operations quota). The override blob lives
-    // at a single known path (`overrides/manual.json`); no prefix scan
-    // is needed.
-    //
-    // head() returns the blob metadata (including its signed `url`) on
-    // success and null on 404 (verified in @vercel/blob@2.4.0 source).
-    const meta = await head(OVERRIDES_BLOB_PATH, { token: BLOB_TOKEN });
-    if (!meta) return [];
-    // The `meta.url` from head() is a private Vercel blob URL that
-    // requires an Authorization header to fetch. Without it the
-    // server returns 403. This matches the pattern used by the
-    // dashboard's VercelBlobStorageClient.readJsonBlob().
-    const resp = await fetch(meta.url, {
-      headers: { Authorization: `Bearer ${BLOB_TOKEN}` },
-    });
-    if (!resp.ok) {
-      console.log('[overrides] fetch failed:', resp.status, resp.statusText);
-      return [];
-    }
-    const text = await resp.text();
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) ? (parsed as ManualOverrideEntry[]) : [];
-  } catch (err) {
-    console.log('[overrides] readOverridesBlob error:', err instanceof Error ? err.message : String(err));
-    return [];
-  }
-}
-
-async function writeOverridesBlob(entries: ManualOverrideEntry[]): Promise<void> {
-  if (!BLOB_TOKEN) {
-    throw new Error('BLOB_READ_WRITE_TOKEN not configured');
-  }
-  const payload = JSON.stringify(entries, null, 2) + '\n';
-  const result = await put(OVERRIDES_BLOB_PATH, payload, {
-    access: 'private',
-    token: BLOB_TOKEN,
-    allowOverwrite: true,
-    addRandomSuffix: false,
-    contentType: 'application/json',
-  });
-  if (!result.url) {
-    throw new Error('Override blob write returned no URL');
-  }
+// All reads and writes now share the storage-enforced source lock and revision.
+// A legacy raw array without metadata is present but unfenced: never map it to [].
+function source() { return configuredSource(); }
+function storageFailure(err: unknown): NextResponse {
+  const code = err instanceof OverrideFailure ? err.code : 'storage_error';
+  return NextResponse.json({ error: code }, { status: code === 'missing' ? 404 : ['source_busy', 'unfenced_source', 'inconsistent_source', 'wrong_epoch'].includes(code) ? 409 : 503 });
 }
 
 function applyUpsert(entries: ManualOverrideEntry[], body: UpsertRequestBody): ManualOverrideEntry[] {
@@ -160,6 +82,7 @@ function applyUpsert(entries: ManualOverrideEntry[], body: UpsertRequestBody): M
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  const DASHBOARD_DATA_SECRET = process.env.MEALS_DASHBOARD_DATA_SECRET;
   if (!DASHBOARD_DATA_SECRET) {
     return NextResponse.json({ error: 'Server not configured' }, { status: 500 });
   }
@@ -168,15 +91,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
-    const entries = await readOverridesBlob();
-    return NextResponse.json({ ok: true, overrides: entries });
+    const { store, epoch } = source();
+    const snapshot = await readFencedSource(store, epoch);
+    return NextResponse.json({ ok: true, overrides: snapshot.entries }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (err) {
-    console.error('[overrides] read failed', { error: err instanceof Error ? err.name : 'unknown' });
-    return NextResponse.json({ error: 'Failed to read overrides' }, { status: 500 });
+    return storageFailure(err);
   }
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const DASHBOARD_DATA_SECRET = process.env.MEALS_DASHBOARD_DATA_SECRET;
   if (!DASHBOARD_DATA_SECRET) {
     return NextResponse.json({ error: 'Server not configured' }, { status: 500 });
   }
@@ -187,9 +111,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   let body: unknown;
   try {
-    body = await request.json();
+    body = await boundedBody(request);
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid JSON or bounded payload' }, { status: 400 });
   }
   if (!isUpsertRequestBody(body)) {
     return NextResponse.json(
@@ -205,15 +129,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const existing = await readOverridesBlob();
-    const updated = applyUpsert(existing, body);
-    await writeOverridesBlob(updated);
-    return NextResponse.json({ ok: true, overrides: updated });
+    const { store, epoch } = source();
+    const snapshot = await editFencedSource(store, epoch, (entries) => applyUpsert(entries, body));
+    return NextResponse.json({ ok: true, overrides: snapshot.entries });
   } catch (err) {
-    console.error('[overrides] write failed', { error: err instanceof Error ? err.name : 'unknown' });
-    return NextResponse.json(
-      { error: 'Failed to persist override' },
-      { status: 500 }
-    );
+    return storageFailure(err);
   }
 }

@@ -1,68 +1,134 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextRequest } from 'next/server';
 import { makeSnapshot } from '@/lib/override-snapshot';
-const blob = vi.hoisted(() => ({ get: vi.fn() }));
-vi.mock('@vercel/blob', () => ({ get: blob.get }));
-import { captureFenced, POST, GET } from './route';
+const fake = vi.hoisted(() => ({ files: new Map<string, { bytes: Uint8Array; etag: string }>(), next: 0, writes: [] as string[], fail: '' }));
+vi.mock('@vercel/blob', () => ({
+  get: vi.fn(async (path: string) => {
+    const file = fake.files.get(path);
+    return file ? { statusCode: 200, blob: { size: file.bytes.byteLength }, stream: new Response(Buffer.from(file.bytes)).body } : null;
+  }),
+  put: vi.fn(async (path: string, bytes: Uint8Array, options: { allowOverwrite: boolean }) => {
+    if (fake.fail === path) throw new Error('synthetic private failure');
+    if (!options.allowOverwrite && fake.files.has(path)) throw new Error('already exists');
+    const etag = String(++fake.next);
+    fake.files.set(path, { bytes: new Uint8Array(bytes), etag }); fake.writes.push(path);
+    return { url: `https://fixture.invalid/${path}`, etag };
+  }),
+  del: vi.fn(async (url: string, options: { ifMatch: string }) => {
+    const path = new URL(url).pathname.slice(1);
+    if (fake.files.get(path)?.etag !== options.ifMatch) throw new Error('etag mismatch');
+    fake.files.delete(path);
+  }),
+}));
+import { BlobOverrideStore, bootstrapFencedSource, readFencedSource } from '@/lib/override-source-store';
+import { POST as capture, GET as disabledGet } from './route';
+import { POST as edit, GET as read } from '../../overrides/route';
+import { POST as legacy } from '../../manual-override/route';
 
 const secret = 'a'.repeat(64);
-const entry = {
-  meal_date: '2026-01-02', meal_name: 'Fixture', item_name: 'Ingredient', quantity: 2,
-  reason: 'synthetic', status: 'partial' as const, created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-02T00:00:00Z', cleared_at: null,
-};
+const entry = { meal_date: '2026-01-02', meal_name: 'Fixture', item_name: 'Ingredient', quantity: 2,
+  reason: 'synthetic', status: 'partial' as const, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-02T00:00:00Z', cleared_at: null };
 const bytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value));
 const request = (auth = secret) => new Request('http://localhost/api/internal/override-snapshot', {
   method: 'POST', headers: { 'content-type': 'application/json', 'x-override-snapshot-secret': auth }, body: JSON.stringify({ version: 1 }),
 });
-const result = async (auth = secret) => { const response = await POST(request(auth)); return { status: response.status, body: await response.json() }; };
-const source = (value: unknown) => {
-  const payload = bytes(value);
-  blob.get.mockResolvedValue({ statusCode: 200, stream: new Response(payload).body });
-};
-beforeEach(() => {
-  vi.stubEnv('MEALS_OVERRIDE_SNAPSHOT_ENABLED', '1');
-  vi.stubEnv('MEALS_OVERRIDE_SNAPSHOT_SECRET', secret);
-  vi.stubEnv('BLOB_READ_WRITE_TOKEN', 'synthetic-token');
-  vi.stubEnv('MEALS_DASHBOARD_DATA_SECRET', 'other-secret');
+const editRequest = (body: unknown) => new NextRequest('http://localhost/api/overrides', {
+  method: 'POST', headers: { 'content-type': 'application/json', 'x-dashboard-secret': 'other-secret' }, body: JSON.stringify(body),
 });
-afterEach(() => { vi.unstubAllEnvs(); vi.resetAllMocks(); });
+const store = new BlobOverrideStore('fixture-token');
+const seed = (path: string, value: unknown) => fake.files.set(path, { bytes: bytes(value), etag: String(++fake.next) });
+const result = async () => { const response = await capture(request()); return { status: response.status, body: await response.json() }; };
+beforeEach(() => {
+  fake.files.clear(); fake.writes.length = 0; fake.fail = ''; fake.next = 0;
+  vi.stubEnv('MEALS_OVERRIDE_SNAPSHOT_ENABLED', '1'); vi.stubEnv('MEALS_OVERRIDE_SNAPSHOT_SECRET', secret);
+  vi.stubEnv('MEALS_OVERRIDE_FENCE_ENABLED', '1'); vi.stubEnv('MEALS_OVERRIDE_FENCE_EPOCH', 'fixture');
+  vi.stubEnv('BLOB_READ_WRITE_TOKEN', 'fixture-token'); vi.stubEnv('MEALS_DASHBOARD_DATA_SECRET', 'other-secret');
+});
+afterEach(() => { vi.unstubAllEnvs(); vi.clearAllMocks(); });
 
-describe('strict source boundary', () => {
-  it('rejects browser/other auth and GET without touching storage', async () => {
-    expect((await result('b'.repeat(64))).status).toBe(401);
-    expect((await GET()).status).toBe(404);
-    expect(blob.get).not.toHaveBeenCalled();
+describe('real source adapter and routes', () => {
+  it('denies unauthenticated, unsafe methods and disabled fence without writes', async () => {
+    expect((await capture(request('b'.repeat(64)))).status).toBe(401);
+    expect((await disabledGet()).status).toBe(404);
+    vi.stubEnv('MEALS_OVERRIDE_FENCE_ENABLED', '0');
+    expect((await result()).body.error).toBe('fence_disabled');
+    expect((await edit(editRequest({ meal_date: entry.meal_date, meal_name: entry.meal_name, item_name: entry.item_name }))).status).toBe(503);
+    expect(fake.writes).toEqual([]);
   });
-  it('distinguishes missing, corrupt, unexpected shape, storage failure and positive empty without inventing a revision', async () => {
-    blob.get.mockResolvedValueOnce(null);
+  it('does not invent revision for missing, corrupt or valid legacy [] and fails closed on storage error', async () => {
     expect((await result()).body.error).toBe('missing');
-    blob.get.mockResolvedValueOnce({ statusCode: 200, stream: new Response('{').body });
+    fake.files.set('overrides/manual.json', { bytes: new TextEncoder().encode('{'), etag: '1' });
     expect((await result()).body.error).toBe('corrupt');
-    source({ entries: [] });
-    expect((await result()).body.error).toBe('invalid_snapshot');
-    blob.get.mockRejectedValueOnce(new Error('private fixture token'));
-    expect((await result()).body.error).toBe('storage_error');
-    source([]);
+    seed('overrides/manual.json', []);
     expect(await result()).toEqual({ status: 409, body: { error: 'unfenced_source' } });
+    fake.fail = 'overrides/source-lock.json';
+    expect((await result()).body.error).toBe('source_busy');
   });
-  it('enforces bounds, request shape and preserves private errors', async () => {
+  it('bootstraps only present valid data under lock; capture preserves positive empty and every field', async () => {
+    seed('overrides/manual.json', []);
+    expect(await bootstrapFencedSource(store, 'fixture')).toEqual(makeSnapshot('fixture', 1, []));
+    expect(await result()).toEqual({ status: 200, body: makeSnapshot('fixture', 1, []) });
+    expect((await read(new NextRequest('http://localhost/api/overrides', { headers: { 'x-dashboard-secret': 'other-secret' } }))).status).toBe(200);
+    const response = await edit(editRequest({ meal_date: entry.meal_date, meal_name: entry.meal_name, item_name: entry.item_name }));
+    expect(response.status).toBe(200);
+    expect((await result()).body.entries[0].meal_date).toBe(entry.meal_date);
+    expect((await result()).body.revision).toBe(2);
+    expect(fake.writes).toContain('overrides/manual.json');
+    fake.files.clear();
+    seed('overrides/manual.json', [entry]);
+    expect(await bootstrapFencedSource(store, 'fixture')).toEqual(makeSnapshot('fixture', 1, [entry]));
+    const update = await edit(editRequest({ meal_date: entry.meal_date, meal_name: entry.meal_name, item_name: entry.item_name, quantity: 3 }));
+    expect(update.status).toBe(200);
+    const snapshot = (await result()).body;
+    expect(snapshot.entries[0].cleared_at).toBeNull();
+    expect(snapshot.entries[0].created_at).toBe(entry.created_at);
+    expect(snapshot.entries[0].quantity).toBe(3);
+  });
+  it('serializes writers across instances and survives restart with monotonic revision', async () => {
+    seed('overrides/manual.json', []); await bootstrapFencedSource(store, 'fixture');
+    const body = { meal_date: entry.meal_date, meal_name: entry.meal_name, item_name: entry.item_name };
+    const responses = await Promise.all([edit(editRequest(body)), edit(editRequest(body))]);
+    expect(responses.map((r) => r.status).sort()).toEqual([200, 409]);
+    expect((await readFencedSource(new BlobOverrideStore('fixture-token'), 'fixture')).revision).toBe(2);
+    expect((await edit(editRequest(body))).status).toBe(200);
+    expect((await result()).body.revision).toBe(3);
+  });
+  it('refuses stale raw bytes, wrong epoch, interrupted metadata and legacy subprocess bypass', async () => {
+    seed('overrides/manual.json', [entry]); await bootstrapFencedSource(store, 'fixture');
+    seed('overrides/manual.json', []);
+    expect((await result()).body.error).toBe('inconsistent_source');
+    expect((await edit(editRequest({ meal_date: entry.meal_date, meal_name: entry.meal_name, item_name: entry.item_name }))).status).toBe(409);
+    seed('overrides/manual.json', [entry]);
+    vi.stubEnv('MEALS_OVERRIDE_FENCE_EPOCH', 'later');
+    expect((await result()).body.error).toBe('wrong_epoch');
+    const bypass = await legacy(new NextRequest('http://localhost/api/manual-override', { method: 'POST', headers: { 'x-dashboard-secret': 'other-secret' }, body: '{}' }));
+    expect(bypass.status).toBe(403);
+  });
+  it('rejects duplicate/oversize/unexpected records and malformed request without serving []', async () => {
+    seed('overrides/manual.json', [entry, entry]);
+    expect((await result()).body.error).toBe('duplicate_identity');
+    seed('overrides/manual.json', { entries: [] });
+    expect((await result()).body.error).toBe('invalid_snapshot');
+    seed('overrides/manual.json', Array.from({ length: 501 }, (_, index) => ({ ...entry, item_name: `fixture-${index}` })));
+    expect((await result()).body.error).toBe('invalid_snapshot');
     const malformed = new Request('http://localhost/api/internal/override-snapshot', {
       method: 'POST', headers: { 'content-type': 'application/json', 'x-override-snapshot-secret': secret }, body: '{',
     });
-    expect((await POST(malformed)).status).toBe(400);
-    source(Array.from({ length: 501 }, () => entry));
-    expect((await result()).status).toBe(422);
-    const huge = new Request('http://localhost/api/internal/override-snapshot', {
-      method: 'POST', headers: { 'content-type': 'application/json', 'content-length': '999999', 'x-override-snapshot-secret': secret }, body: '{}',
-    });
-    expect((await POST(huge)).status).toBe(400);
-    blob.get.mockRejectedValueOnce(new Error('private fixture token'));
-    expect(JSON.stringify((await result()).body)).not.toContain('private fixture token');
+    expect((await capture(malformed)).status).toBe(400);
+    expect((await edit(editRequest({ ...entry, quantity: 0 }))).status).toBe(400);
   });
-  it('fenced injected transaction preserves every supported field and positive []', async () => {
-    expect(await captureFenced(async () => ({ bytes: bytes([]), epoch: 'fixture', revision: 1 }))).toEqual(makeSnapshot('fixture', 1, []));
-    expect(await captureFenced(async () => ({ bytes: bytes([entry]), epoch: 'fixture', revision: 2 }))).toEqual(makeSnapshot('fixture', 2, [entry]));
-    await expect(captureFenced(async () => ({ bytes: bytes([entry, entry]), epoch: 'fixture', revision: 3 }))).rejects.toMatchObject({ code: 'duplicate_identity' });
-    await expect(captureFenced(async () => ({ bytes: null, epoch: 'fixture', revision: 3 }))).rejects.toMatchObject({ code: 'missing' });
+  it('denies bootstrap twice and refuses an orphan lock rather than stealing after restart', async () => {
+    seed('overrides/manual.json', []); await bootstrapFencedSource(store, 'fixture');
+    await expect(bootstrapFencedSource(store, 'fixture')).rejects.toMatchObject({ code: 'already_initialized' });
+    seed('overrides/source-lock.json', { orphan: true });
+    expect((await result()).body.error).toBe('source_busy');
+    expect((await edit(editRequest({ meal_date: 'd', meal_name: 'm', item_name: 'i' }))).status).toBe(409);
+  });
+  it('failed second write leaves mismatch, never an acknowledged snapshot', async () => {
+    seed('overrides/manual.json', []); await bootstrapFencedSource(store, 'fixture');
+    fake.fail = 'overrides/source-revision.json';
+    expect((await edit(editRequest({ meal_date: 'd', meal_name: 'm', item_name: 'i' }))).status).toBe(503);
+    fake.fail = '';
+    expect((await result()).body.error).toBe('inconsistent_source');
   });
 });
