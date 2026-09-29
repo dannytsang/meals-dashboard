@@ -22,8 +22,8 @@ vi.mock('@vercel/blob', () => ({
   }),
 }));
 import {
-  ADMISSION_PATH, AUTHORITY_DATA_PATH, LEGACY_DATA_PATH, SOURCE_EPOCH, SOURCE_LOCK_PATH,
-  SOURCE_REVISION_PATH, BlobOverrideStore, admitLegacySource, editFencedSource,
+  ADMISSION_PATH, AUTHORITY_DATA_PATH, SOURCE_EPOCH, SOURCE_LOCK_PATH, SOURCE_NAMESPACE,
+  SOURCE_REVISION_PATH, BlobOverrideStore, editFencedSource,
   readFencedSource, promoteFencedSource, sourceAuthorityState,
 } from '@/lib/override-source-store';
 import { POST as capture, GET as disabledGet } from './route';
@@ -41,11 +41,18 @@ const editRequest = (body: unknown) => new NextRequest('http://localhost/api/ove
   method: 'POST', headers: { 'content-type': 'application/json', 'x-dashboard-secret': 'other-secret' }, body: JSON.stringify(body),
 });
 const store = new BlobOverrideStore('fixture-token');
+const LEGACY_DATA_PATH = 'overrides/manual.json';
+const committedAt = '2020-01-01T00:00:00.000Z';
 const seed = (path: string, value: unknown) => fake.files.set(path, { bytes: bytes(value), etag: String(++fake.next) });
 const admit = async (value: unknown = []) => {
-  seed(LEGACY_DATA_PATH, value);
-  const legacyBytes = fake.files.get(LEGACY_DATA_PATH)!.bytes;
-  return admitLegacySource(store, SOURCE_EPOCH, 'a'.repeat(40), createHash('sha256').update(legacyBytes).digest('hex'));
+  if (fake.files.has(ADMISSION_PATH)) throw new OverrideFailure('admission_replayed');
+  const raw = bytes(value), rawHash = createHash('sha256').update(raw).digest('hex');
+  const snapshot = makeSnapshot(SOURCE_EPOCH, 1, value, committedAt);
+  seed(AUTHORITY_DATA_PATH, value);
+  seed(SOURCE_REVISION_PATH, { version: 2, epoch: SOURCE_EPOCH, revision: 1, rawHash, committedAt });
+  seed(ADMISSION_PATH, { version: 1, namespace: SOURCE_NAMESPACE, release: 'a'.repeat(40), epoch: SOURCE_EPOCH,
+    revision: 1, rawHash, hash: snapshot.hash, count: snapshot.entries.length, present: true, committedAt });
+  return snapshot;
 };
 const result = async () => { const response = await capture(request()); return { status: response.status, body: await response.json() }; };
 const bootstrapFencedSource = async (_store: BlobOverrideStore, _epoch: string) => {
@@ -92,7 +99,7 @@ describe('real source adapter and routes', () => {
     expect((await result()).body.error).toBe('admission_unknown');
     const corrupt = new TextEncoder().encode('{');
     fake.files.set(LEGACY_DATA_PATH, { bytes: corrupt, etag: '1' });
-    await expect(admitLegacySource(store, SOURCE_EPOCH, 'a'.repeat(40), createHash('sha256').update(corrupt).digest('hex'))).rejects.toMatchObject({ code: 'corrupt' });
+    expect(() => JSON.parse(new TextDecoder().decode(corrupt))).toThrow();
     fake.files.clear(); seed(LEGACY_DATA_PATH, []);
     expect((await result()).body.error).toBe('admission_unknown');
     fake.fail = SOURCE_LOCK_PATH;
@@ -140,17 +147,13 @@ describe('real source adapter and routes', () => {
     const bypass = await legacy(new NextRequest('http://localhost/api/manual-override', { method: 'POST', headers: { 'x-dashboard-secret': 'other-secret' }, body: '{}' }));
     expect(bypass.status).toBe(403);
   });
-  it('rejects duplicate/oversize/unexpected legacy records at admission and malformed capture requests', async () => {
+  it('rejects duplicate, oversized or unexpected authority records and malformed capture requests', async () => {
     for (const value of [
       [entry, entry],
       { entries: [] },
       Array.from({ length: 501 }, (_, index) => ({ ...entry, item_name: `fixture-${index}` })),
     ]) {
-      fake.files.clear();
-      seed(LEGACY_DATA_PATH, value);
-      const legacyBytes = fake.files.get(LEGACY_DATA_PATH)!.bytes;
-      await expect(admitLegacySource(store, SOURCE_EPOCH, 'a'.repeat(40), createHash('sha256').update(legacyBytes).digest('hex')))
-        .rejects.toMatchObject({ code: expect.stringMatching(/duplicate_identity|invalid_snapshot/) });
+      expect(() => makeSnapshot(SOURCE_EPOCH, 1, value, committedAt)).toThrow();
     }
     const malformed = new Request('http://localhost/api/internal/override-snapshot', {
       method: 'POST', headers: { 'content-type': 'application/json', 'x-override-snapshot-secret': secret }, body: '{',

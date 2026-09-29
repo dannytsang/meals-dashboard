@@ -5,7 +5,6 @@ import { makeSnapshot, OverrideFailure, OVERRIDE_LIMITS, snapshotBytes, validCom
 
 export const SOURCE_NAMESPACE = 'override-authority/v3';
 export const SOURCE_EPOCH = 'source-v3';
-export const LEGACY_DATA_PATH = 'overrides/manual.json';
 export const AUTHORITY_DATA_PATH = `${SOURCE_NAMESPACE}/manual.json`;
 export const SOURCE_REVISION_PATH = `${SOURCE_NAMESPACE}/source-revision.json`;
 export const SOURCE_LOCK_PATH = `${SOURCE_NAMESPACE}/source-lock.json`;
@@ -198,51 +197,6 @@ async function admittedCurrent(store: OverrideStore, epoch: string): Promise<Ove
   return validateAdmittedSnapshot(admissionBytes, revisionBytes, dataBytes, epoch);
 }
 
-/**
- * One-time Stage A capability transfer. The only legacy read in accepted code is
- * this temporary admission function; ordinary source operations are v3-only.
- */
-export async function admitLegacySource(
-  store: OverrideStore, epoch: string, release: string, expectedLegacyHash: string,
-): Promise<AdmissionRecord & { admitted: true }> {
-  if (epoch !== SOURCE_EPOCH) throw new OverrideFailure('wrong_epoch');
-  if (!/^[a-f0-9]{40}$/.test(release)) throw new OverrideFailure('release_mismatch');
-  if (!/^[a-f0-9]{64}$/.test(expectedLegacyHash)) throw new OverrideFailure('source_identity_mismatch');
-  return locked(store, async () => {
-    const marker = await readAdmissionState(store);
-    if (marker) throw new OverrideFailure('admission_replayed');
-    const occupied = await Promise.all([
-      store.read(AUTHORITY_DATA_PATH, OVERRIDE_LIMITS.bytes),
-      store.read(SOURCE_REVISION_PATH, 4096),
-      store.read(AUTHORITY_PATH, 1024),
-    ]);
-    if (occupied.some(Boolean)) throw new OverrideFailure('admission_unknown');
-
-    const first = await store.read(LEGACY_DATA_PATH, OVERRIDE_LIMITS.bytes);
-    if (!first) throw new OverrideFailure('missing');
-    const entries = parseRaw(first);
-    if (digest(first) !== expectedLegacyHash) throw new OverrideFailure('source_identity_mismatch');
-    const second = await store.read(LEGACY_DATA_PATH, OVERRIDE_LIMITS.bytes);
-    if (!second) throw new OverrideFailure('source_changed');
-    parseRaw(second);
-    if (digest(second) !== expectedLegacyHash || !Buffer.from(first).equals(Buffer.from(second))) throw new OverrideFailure('source_changed');
-
-    const committedAt = new Date().toISOString();
-    await store.write(AUTHORITY_DATA_PATH, first, false);
-    await store.write(SOURCE_REVISION_PATH, encode({ version: 2, epoch, revision: 1, rawHash: expectedLegacyHash, committedAt }), false);
-    const checked = await current(store, epoch);
-    if (digest(checked.bytes) !== expectedLegacyHash || checked.meta.committedAt !== committedAt) throw new OverrideFailure('inconsistent_source');
-    const snapshot = makeSnapshot(epoch, 1, checked.entries, committedAt);
-    const record: AdmissionRecord = {
-      version: 1, namespace: SOURCE_NAMESPACE, release, epoch, revision: 1,
-      rawHash: expectedLegacyHash, hash: snapshot.hash, count: entries.length, present: true, committedAt,
-    };
-    await store.write(ADMISSION_PATH, encode(record), false);
-    const durable = await readAdmissionState(store);
-    if (!durable || JSON.stringify(durable) !== JSON.stringify(record)) throw new OverrideFailure('admission_unknown');
-    return { ...durable, admitted: true as const };
-  });
-}
 /** Non-HTTP operator transaction. Operators must drain old deployments and hold
  * the external all-writer/producer fence throughout. A crash leaves the durable
  * source in frozen, never source-writable. Rerun only with fresh local proof. */

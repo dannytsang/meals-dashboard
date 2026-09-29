@@ -12,7 +12,7 @@ export async function GET(): Promise<Response> {
       headers: { 'Cache-Control': 'public, no-store, max-age=0', 'X-Content-Type-Options': 'nosniff' },
     });
   }
-  return Response.json({ commit, namespace: SOURCE_NAMESPACE, admissionSchema: 1 }, {
+  return Response.json({ commit, namespace: SOURCE_NAMESPACE, admissionSchema: 1, admissionRoute: 'removed' }, {
     headers: { 'Cache-Control': 'public, no-store, max-age=0', 'X-Content-Type-Options': 'nosniff' },
   });
 }

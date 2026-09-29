@@ -1,16 +1,17 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { makeSnapshot } from './override-snapshot';
 import {
   ADMISSION_PATH,
   AUTHORITY_DATA_PATH,
   AUTHORITY_PATH,
-  LEGACY_DATA_PATH,
   SOURCE_LOCK_PATH,
   SOURCE_EPOCH,
   SOURCE_NAMESPACE,
   SOURCE_REVISION_PATH,
-  admitLegacySource,
   editFencedSource,
   readAdmissionState,
   readFencedSource,
@@ -32,18 +33,13 @@ class MemoryStore implements OverrideStore {
   writes: string[] = [];
   reads: string[] = [];
   next = 0;
-  mutateLegacyAfterFirstRead?: Uint8Array;
 
   async read(path: string, limit: number) {
     this.reads.push(path);
     const found = this.files.get(path);
     if (!found) return null;
     if (found.bytes.byteLength > limit) throw new Error('bounded');
-    const result = new Uint8Array(found.bytes);
-    if (path === LEGACY_DATA_PATH && this.mutateLegacyAfterFirstRead && this.reads.filter(p => p === path).length === 1) {
-      this.files.set(path, { bytes: this.mutateLegacyAfterFirstRead, etag: String(++this.next) });
-    }
-    return result;
+    return new Uint8Array(found.bytes);
   }
   async write(path: string, bytes: Uint8Array, overwrite: boolean) {
     if (!overwrite && this.files.has(path)) throw new Error('exists');
@@ -62,55 +58,57 @@ class MemoryStore implements OverrideStore {
   }
 }
 
+const LEGACY_DATA_PATH = 'overrides/manual.json';
+const committedAt = '2020-01-01T00:00:00.000Z';
+
 async function admitted(entries: unknown = [entry]) {
   const store = new MemoryStore();
-  const legacy = encode(entries);
-  store.seed(LEGACY_DATA_PATH, legacy);
-  const identity = await admitLegacySource(store, SOURCE_EPOCH, release, hash(legacy));
-  return { store, legacy, identity };
+  const raw = encode(entries);
+  const rawHash = hash(raw);
+  const snapshot = makeSnapshot(SOURCE_EPOCH, 1, entries, committedAt);
+  store.seed(AUTHORITY_DATA_PATH, raw);
+  store.seed(SOURCE_REVISION_PATH, encode({ version: 2, epoch: SOURCE_EPOCH, revision: 1, rawHash, committedAt }));
+  store.seed(ADMISSION_PATH, encode({
+    version: 1, namespace: SOURCE_NAMESPACE, release, epoch: SOURCE_EPOCH,
+    revision: 1, rawHash, hash: snapshot.hash, count: snapshot.entries.length,
+    present: true, committedAt,
+  }));
+  return { store, snapshot };
 }
 
 describe('Stage A namespace isolation', () => {
-  it('admits stable strict legacy bytes once into only the fixed v3 namespace', async () => {
-    const { store, identity } = await admitted();
-    expect(identity).toMatchObject({ admitted: true, namespace: SOURCE_NAMESPACE, release, epoch: SOURCE_EPOCH, revision: 1, count: 1, present: true });
-    expect(store.writes).toEqual([SOURCE_LOCK_PATH, AUTHORITY_DATA_PATH, SOURCE_REVISION_PATH, ADMISSION_PATH]);
-    expect(store.writes).not.toContain(LEGACY_DATA_PATH);
-    expect(store.files.has(AUTHORITY_PATH)).toBe(false);
+  it('recognizes only durable admitted bytes in the fixed v3 namespace', async () => {
+    const { store, snapshot } = await admitted();
     expect(await readAdmissionState(store)).toMatchObject({ namespace: SOURCE_NAMESPACE, release, epoch: SOURCE_EPOCH, revision: 1 });
-    expect((await readFencedSource(store, SOURCE_EPOCH)).entries).toEqual([entry]);
+    expect((await readFencedSource(store, SOURCE_EPOCH))).toEqual(snapshot);
+    expect(store.files.has(AUTHORITY_PATH)).toBe(false);
+    expect(store.reads).not.toContain(LEGACY_DATA_PATH);
   });
 
   it('never falls back after admission and makes later legacy writes irrelevant', async () => {
-    const { store, identity } = await admitted();
+    const { store, snapshot } = await admitted();
     store.seed(LEGACY_DATA_PATH, encode([]));
-    expect((await readFencedSource(store, SOURCE_EPOCH)).hash).toBe(identity.hash);
+    expect((await readFencedSource(store, SOURCE_EPOCH)).hash).toBe(snapshot.hash);
     const edited = await editFencedSource(store, SOURCE_EPOCH, entries => entries);
     expect(edited.revision).toBe(2);
     expect(store.writes.slice(-2)).toEqual([AUTHORITY_DATA_PATH, SOURCE_REVISION_PATH]);
     store.files.delete(AUTHORITY_DATA_PATH);
     await expect(readFencedSource(store, SOURCE_EPOCH)).rejects.toMatchObject({ code: 'missing' });
-    expect(store.reads.at(-1)).not.toBe(LEGACY_DATA_PATH);
+    expect(store.reads).not.toContain(LEGACY_DATA_PATH);
   });
 
-  it('rejects replay, unknown v3 state, changed double reads and invalid legacy state without overwrite', async () => {
-    const complete = await admitted();
-    await expect(admitLegacySource(complete.store, SOURCE_EPOCH, release, hash(complete.legacy))).rejects.toMatchObject({ code: 'admission_replayed' });
+  it('removes the one-time admission capability and fails closed on unknown v3 state', async () => {
+    expect(existsSync(join(process.cwd(), 'app/api/internal/override-admission/route.ts'))).toBe(false);
+    expect(existsSync(join(process.cwd(), 'app/api/internal/override-capture/route.ts'))).toBe(false);
+    const source = readFileSync(join(process.cwd(), 'lib/override-source-store.ts'), 'utf8');
+    expect(source).not.toContain('admitLegacySource');
+    expect(source).not.toContain(LEGACY_DATA_PATH);
 
     const unknown = new MemoryStore();
-    const legacy = encode([]); unknown.seed(LEGACY_DATA_PATH, legacy); unknown.seed(SOURCE_REVISION_PATH, encode({ unknown: true }));
-    await expect(admitLegacySource(unknown, SOURCE_EPOCH, release, hash(legacy))).rejects.toMatchObject({ code: 'admission_unknown' });
+    unknown.seed(SOURCE_REVISION_PATH, encode({ unknown: true }));
+    await expect(readFencedSource(unknown, SOURCE_EPOCH)).rejects.toMatchObject({ code: 'admission_unknown' });
     expect(unknown.writes).toEqual([SOURCE_LOCK_PATH]);
-
-    const moving = new MemoryStore(); moving.seed(LEGACY_DATA_PATH, legacy); moving.mutateLegacyAfterFirstRead = encode([entry]);
-    await expect(admitLegacySource(moving, SOURCE_EPOCH, release, hash(legacy))).rejects.toMatchObject({ code: 'source_changed' });
-    expect(moving.files.has(AUTHORITY_DATA_PATH)).toBe(false);
-
-    for (const bytes of [Buffer.from('{'), encode({ entries: [] })]) {
-      const invalid = new MemoryStore(); invalid.seed(LEGACY_DATA_PATH, bytes);
-      await expect(admitLegacySource(invalid, SOURCE_EPOCH, release, hash(bytes))).rejects.toMatchObject({ code: expect.stringMatching(/corrupt|invalid_snapshot/) });
-      expect(invalid.files.has(AUTHORITY_DATA_PATH)).toBe(false);
-    }
+    expect(unknown.reads).not.toContain(LEGACY_DATA_PATH);
   });
 
   it('fails closed on missing, malformed or mismatched admission state without legacy fallback', async () => {
@@ -118,13 +116,15 @@ describe('Stage A namespace isolation', () => {
     store.files.delete(ADMISSION_PATH);
     store.seed(LEGACY_DATA_PATH, encode([entry]));
     await expect(readFencedSource(store, SOURCE_EPOCH)).rejects.toMatchObject({ code: 'admission_unknown' });
-    expect(store.reads.at(-1)).not.toBe(LEGACY_DATA_PATH);
+    expect(store.reads).not.toContain(LEGACY_DATA_PATH);
 
     store.seed(ADMISSION_PATH, encode({ unknown: true }));
     await expect(readFencedSource(store, SOURCE_EPOCH)).rejects.toMatchObject({ code: 'admission_unknown' });
 
-    await expect(admitLegacySource(new MemoryStore(), 'caller-selected', release, '0'.repeat(64)))
-      .rejects.toMatchObject({ code: 'wrong_epoch' });
+    const mismatch = await admitted([]);
+    mismatch.store.seed(AUTHORITY_DATA_PATH, encode([entry]));
+    await expect(readFencedSource(mismatch.store, SOURCE_EPOCH)).rejects.toMatchObject({ code: 'admission_unknown' });
+    expect(mismatch.store.reads).not.toContain(LEGACY_DATA_PATH);
   });
 
   it('proves exact legacy bytecode has no primitive or parameter for the v3 namespace', () => {

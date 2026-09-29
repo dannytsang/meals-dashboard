@@ -21,6 +21,6 @@ describe('runtime identity route', () => {
     const response = await GET();
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toContain('no-store');
-    expect(await response.json()).toEqual({ commit, namespace: SOURCE_NAMESPACE, admissionSchema: 1 });
+    expect(await response.json()).toEqual({ commit, namespace: SOURCE_NAMESPACE, admissionSchema: 1, admissionRoute: 'removed' });
   });
 });
