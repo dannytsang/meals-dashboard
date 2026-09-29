@@ -89,7 +89,7 @@ export async function POST(request: Request): Promise<Response> {
         const response = await fetch(`${config.localOrigin}/api/internal/stage-b-cutover`, {
           method: 'POST', redirect: 'error', signal: controller.signal,
           headers: { 'content-type': 'application/json', 'x-stage-b-operator-secret': config.secret },
-          body: JSON.stringify({ snapshot, activationEpoch }),
+          body: JSON.stringify({ action: 'promote', snapshot, activationEpoch }),
         });
         const result: unknown = await response.json().catch(() => null);
         if (!response.ok || !sameIdentity(result, { ...snapshot, epoch: activationEpoch })) {

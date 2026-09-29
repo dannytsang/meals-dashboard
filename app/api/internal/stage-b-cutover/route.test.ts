@@ -72,7 +72,7 @@ describe('temporary Stage B source operator', () => {
     const snapshot = seed();
     vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
       const body = JSON.parse(String(init.body));
-      expect(body).toEqual({ snapshot, activationEpoch: localEpoch });
+      expect(body).toEqual({ action: 'promote', snapshot, activationEpoch: localEpoch });
       return Response.json({ epoch: localEpoch, revision: snapshot.revision, hash: snapshot.hash, committedAt: snapshot.committedAt });
     }));
     const response = await POST(request('promote'));
