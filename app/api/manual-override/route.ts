@@ -1,5 +1,5 @@
-/** Legacy subprocess override endpoint. Disabled in the offline fenced-source candidate;
- * user edits use /api/overrides and installed production is unchanged. */
+/** Legacy subprocess override endpoint. Disabled throughout Stage A; all accepted
+ * source operations are isolated to the v3 authority namespace. */
 import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -14,7 +14,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // This legacy subprocess writes outside the fenced Vercel source transaction.
-  // Disable in the offline candidate; the installed deployment is unchanged.
+  // This legacy subprocess writes outside the v3 authority transaction and stays disabled.
   return NextResponse.json({ error: 'Legacy override writer disabled' }, { status: 403 });
 }
