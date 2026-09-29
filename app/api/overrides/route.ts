@@ -43,7 +43,7 @@ function isUpsertRequestBody(value: unknown): value is UpsertRequestBody {
 function source() { return configuredSource(); }
 function storageFailure(err: unknown): NextResponse {
   const code = err instanceof OverrideFailure ? err.code : 'storage_error';
-  return NextResponse.json({ error: code }, { status: code === 'missing' ? 404 : ['source_busy', 'unfenced_source', 'inconsistent_source', 'wrong_epoch'].includes(code) ? 409 : 503 });
+  return NextResponse.json({ error: code }, { status: code === 'missing' ? 404 : ['source_busy', 'unfenced_source', 'inconsistent_source', 'wrong_epoch', 'authority_fenced', 'authority_unknown'].includes(code) ? 409 : 503 });
 }
 
 function applyUpsert(entries: ManualOverrideEntry[], body: UpsertRequestBody): ManualOverrideEntry[] {
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // A failed response after a Blob write/release can be ambiguous. Never
     // instruct the caller to repeat an edit whose primary commit may exist.
     const code = err instanceof OverrideFailure ? err.code : 'storage_error';
-    if (['missing', 'source_busy', 'unfenced_source', 'inconsistent_source', 'wrong_epoch', 'invalid_snapshot', 'duplicate_identity', 'too_large', 'revision_exhausted'].includes(code)) {
+    if (['missing', 'source_busy', 'unfenced_source', 'inconsistent_source', 'wrong_epoch', 'authority_fenced', 'authority_unknown', 'invalid_snapshot', 'duplicate_identity', 'too_large', 'revision_exhausted'].includes(code)) {
       const response = storageFailure(err);
       return response;
     }

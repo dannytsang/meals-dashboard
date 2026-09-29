@@ -10,6 +10,9 @@ const DASHBOARD_DATA_SECRET = process.env.MEALS_DASHBOARD_DATA_SECRET;
 const PRODUCT_BLOB_PATH_RE = /^products\/\d+\.json$/;
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  if (process.env.MEALS_DASHBOARD_PUBLICATION_MODE === 'local') {
+    return NextResponse.json({ error: 'Vercel dashboard publication disabled' }, { status: 403 });
+  }
   if (!DASHBOARD_DATA_SECRET) {
     return NextResponse.json({ error: 'Server not configured' }, { status: 500 });
   }

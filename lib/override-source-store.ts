@@ -6,6 +6,23 @@ import { makeSnapshot, OverrideFailure, OVERRIDE_LIMITS, snapshotBytes, validCom
 const DATA = 'overrides/manual.json';
 const REVISION = 'overrides/source-revision.json';
 const LOCK = 'overrides/source-lock.json';
+const AUTHORITY = 'overrides/authority-routing.json';
+type Authority = { version: 1; sourceEpoch: string; activationEpoch: string; state: 'frozen' | 'local'; revision: number; hash: string; committedAt: string };
+function authorityIdentity(a: Authority, s: OverrideSnapshot): boolean {
+  return a.sourceEpoch === s.epoch && a.revision === s.revision && a.hash === s.hash && a.committedAt === s.committedAt;
+}
+async function readAuthority(store: OverrideStore): Promise<Authority | null> {
+  const bytes = await store.read(AUTHORITY, 1024);
+  if (!bytes) return null;
+  const a = decode(bytes) as Authority;
+  if (!a || Object.keys(a).sort().join(',') !== 'activationEpoch,committedAt,hash,revision,sourceEpoch,state,version' ||
+      a.version !== 1 || !['frozen', 'local'].includes(a.state) ||
+      ![a.sourceEpoch, a.activationEpoch].every(x => typeof x === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(x)) ||
+      !Number.isSafeInteger(a.revision) || a.revision < 1 || !/^[a-f0-9]{64}$/.test(a.hash) || !validCommittedAt(a.committedAt)) {
+    throw new OverrideFailure('authority_unknown');
+  }
+  return a;
+}
 const digest = (bytes: Uint8Array | string) => createHash('sha256').update(bytes).digest('hex');
 export type SourceRevision = { epoch: string; revision: number; rawHash: string; committedAt: string; version: 2 };
 
@@ -92,12 +109,14 @@ async function current(store: OverrideStore, epoch: string): Promise<{ bytes: Ui
 }
 export async function readFencedSource(store: OverrideStore, epoch: string): Promise<OverrideSnapshot> {
   return locked(store, async () => {
+    if (await readAuthority(store)) throw new OverrideFailure('authority_fenced');
     const { entries, meta } = await current(store, epoch);
     return makeSnapshot(meta.epoch, meta.revision, entries, meta.committedAt);
   });
 }
 export async function editFencedSource(store: OverrideStore, epoch: string, edit: (entries: OverrideEntry[]) => OverrideEntry[]): Promise<OverrideSnapshot> {
   return locked(store, async () => {
+    if (await readAuthority(store)) throw new OverrideFailure('authority_fenced');
     const { entries, meta } = await current(store, epoch);
     if (meta.revision === Number.MAX_SAFE_INTEGER) throw new OverrideFailure('revision_exhausted');
     const next = validateEntries(edit(structuredClone(entries)));
@@ -122,6 +141,7 @@ export async function editFencedSource(store: OverrideStore, epoch: string, edit
 export async function bootstrapFencedSource(store: OverrideStore, epoch: string): Promise<OverrideSnapshot> {
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(epoch)) throw new OverrideFailure('wrong_epoch');
   return locked(store, async () => {
+    if (await readAuthority(store)) throw new OverrideFailure('authority_fenced');
     if (await store.read(REVISION, 4096)) throw new OverrideFailure('already_initialized');
     const bytes = await store.read(DATA, OVERRIDE_LIMITS.bytes);
     if (!bytes) throw new OverrideFailure('missing');
@@ -132,6 +152,35 @@ export async function bootstrapFencedSource(store: OverrideStore, epoch: string)
     if (digest(checked.bytes) !== digest(bytes) || checked.meta.committedAt !== committedAt) throw new OverrideFailure('inconsistent_source');
     return makeSnapshot(epoch, 1, entries, committedAt);
   });
+}
+/** Non-HTTP operator transaction. Operators must drain old deployments and hold
+ * the external all-writer/producer fence throughout. A crash leaves the durable
+ * source in frozen, never source-writable. Rerun only with fresh local proof. */
+export async function promoteFencedSource(
+  store: OverrideStore, sourceEpoch: string, activationEpoch: string,
+  confirmLocal: (snapshot: OverrideSnapshot, activationEpoch: string) => Promise<void>,
+): Promise<void> {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(activationEpoch) || activationEpoch === sourceEpoch) throw new OverrideFailure('wrong_epoch');
+  await locked(store, async () => {
+    const { entries, meta } = await current(store, sourceEpoch);
+    const snapshot = makeSnapshot(meta.epoch, meta.revision, entries, meta.committedAt);
+    const existing = await readAuthority(store);
+    if (existing?.state === 'local') throw new OverrideFailure('already_promoted');
+    if (existing && (existing.activationEpoch !== activationEpoch || !authorityIdentity(existing, snapshot))) throw new OverrideFailure('authority_unknown');
+    const record: Authority = { version: 1, state: 'frozen', sourceEpoch, activationEpoch,
+      revision: snapshot.revision, hash: snapshot.hash, committedAt: snapshot.committedAt };
+    if (!existing) await store.write(AUTHORITY, encode(record), false);
+    const frozen = await readAuthority(store);
+    if (!frozen || frozen.state !== 'frozen' || !authorityIdentity(frozen, snapshot)) throw new OverrideFailure('authority_unknown');
+    await confirmLocal(snapshot, activationEpoch);
+    await store.write(AUTHORITY, encode({ ...record, state: 'local' }), true);
+    const final = await readAuthority(store);
+    if (!final || final.state !== 'local' || !authorityIdentity(final, snapshot)) throw new OverrideFailure('authority_unknown');
+  });
+}
+
+export async function sourceAuthorityState(store: OverrideStore): Promise<Authority | null> {
+  return readAuthority(store);
 }
 export function configuredSource(): { store: OverrideStore; epoch: string } {
   const epoch = process.env.MEALS_OVERRIDE_FENCE_EPOCH;

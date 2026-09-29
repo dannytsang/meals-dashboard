@@ -20,7 +20,7 @@ vi.mock('@vercel/blob', () => ({
     fake.files.delete(path);
   }),
 }));
-import { BlobOverrideStore, bootstrapFencedSource, editFencedSource, readFencedSource } from '@/lib/override-source-store';
+import { BlobOverrideStore, bootstrapFencedSource, editFencedSource, readFencedSource, promoteFencedSource, sourceAuthorityState } from '@/lib/override-source-store';
 import { POST as capture, GET as disabledGet } from './route';
 import { POST as edit, GET as read } from '../../overrides/route';
 import { POST as legacy } from '../../manual-override/route';
@@ -177,5 +177,26 @@ describe('real source adapter and routes', () => {
     expect((await ambiguous.json()).outcome).toBe('primary_unknown');
     fake.fail = '';
     expect((await result()).body.error).toBe('inconsistent_source');
+  });
+  it('fences source edits/reads before local promotion and resumes only exact frozen identity', async () => {
+    seed('overrides/manual.json', [entry]);
+    const original = await bootstrapFencedSource(store, 'fixture');
+    await expect(promoteFencedSource(store, 'fixture', 'local-epoch', async snapshot => {
+      expect(snapshot).toEqual(original);
+      throw new Error('synthetic local timeout');
+    })).rejects.toThrow('synthetic local timeout');
+    expect((await sourceAuthorityState(store))?.state).toBe('frozen');
+    expect((await edit(editRequest({ meal_date: 'd', meal_name: 'm', item_name: 'i' }))).status).toBe(409);
+    expect((await result()).body.error).toBe('authority_fenced');
+    await expect(promoteFencedSource(store, 'fixture', 'other-epoch', async () => {})).rejects.toMatchObject({ code: 'authority_unknown' });
+    let confirmations = 0;
+    await promoteFencedSource(store, 'fixture', 'local-epoch', async snapshot => {
+      confirmations++;
+      expect(snapshot.hash).toBe(original.hash);
+    });
+    expect(confirmations).toBe(1);
+    expect((await sourceAuthorityState(store))?.state).toBe('local');
+    await expect(promoteFencedSource(store, 'fixture', 'local-epoch', async () => {})).rejects.toMatchObject({ code: 'already_promoted' });
+    expect(fake.writes.filter(path => path === 'overrides/manual.json')).toEqual([]);
   });
 });

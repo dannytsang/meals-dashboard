@@ -48,6 +48,9 @@ const COVERAGE_BLOB_PATH_RE = /^coverage\/\d{4}-\d{2}-\d{2}\.json$/;
  *   500 { "error": "Server not configured" | "Failed to store data" }
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  if (process.env.MEALS_DASHBOARD_PUBLICATION_MODE === 'local') {
+    return NextResponse.json({ error: 'Vercel dashboard publication disabled' }, { status: 403 });
+  }
   if (!DASHBOARD_DATA_SECRET) {
     return NextResponse.json({ error: 'Server not configured' }, { status: 500 });
   }
