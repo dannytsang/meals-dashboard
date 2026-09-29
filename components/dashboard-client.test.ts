@@ -223,28 +223,22 @@ describe('Durable manual override route (/api/overrides)', () => {
     expect(routeSrc).toContain('MEALS_DASHBOARD_DATA_SECRET');
   });
 
-  it('writes to a blob at overrides/manual.json (durable Vercel blob, not ephemeral disk)', () => {
-    expect(routeSrc).toContain('overrides/manual.json');
-    expect(routeSrc).toContain("editFencedSource");
-    expect(readFileSync(join(process.cwd(), 'lib/override-source-store.ts'), 'utf8')).toContain("import { del, get, put } from '@vercel/blob'");
-    // The route must NOT actually call spawn() (that's the bug we're
-    // fixing). We match `spawn(` to exclude the docstring mentions.
+  it('reads the fixed v3 authority through the fenced source store', () => {
+    const storeSrc = readFileSync(join(process.cwd(), 'lib/override-source-store.ts'), 'utf8');
+    expect(routeSrc).toContain('readFencedSource');
+    expect(storeSrc).toContain("export const SOURCE_NAMESPACE = 'override-authority/v3'");
+    expect(storeSrc).toContain("import { del, get, put } from '@vercel/blob'");
     expect(routeSrc).not.toMatch(/\bspawn\s*\(/);
   });
 
-  it('validates meal_date, meal_name, item_name are required on POST', () => {
-    expect(routeSrc).toContain('isUpsertRequestBody');
-    expect(routeSrc).toContain('meal_date, meal_name, item_name are required');
+  it('maintenance-fences POST throughout Stage A', () => {
+    expect(routeSrc).toContain("error: 'stage_a_maintenance'");
+    expect(routeSrc).not.toContain('editFencedSource');
+    expect(routeSrc).not.toContain('isUpsertRequestBody');
   });
 
-  it('uses a 3-tuple for the (meal_date, meal_name, item_name) key, not the comma operator', () => {
-    // Regression: the previous code used
-    //   const triple = (body.meal_date, body.meal_name, body.item_name);
-    // which is the JavaScript comma operator — it returns ONLY the
-    // last value, so triple[0] / triple[1] were undefined or the first
-    // character of one of the strings. The fix wraps the three values
-    // in an array literal.
-    expect(routeSrc).toMatch(/\[body\.meal_date\s*,\s*body\.meal_name\s*,\s*body\.item_name\s*\]/);
+  it('contains no direct legacy storage path or tuple mutation implementation', () => {
+    expect(routeSrc).not.toContain('overrides/manual.json');
     expect(routeSrc).not.toMatch(/triple\s*=\s*\(body\.meal_date\s*,\s*body\.meal_name\s*,\s*body\.item_name\)/);
   });
 });

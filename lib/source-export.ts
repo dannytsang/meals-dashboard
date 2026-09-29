@@ -1,12 +1,13 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
+import { ADMISSION_PATH, AUTHORITY_DATA_PATH, SOURCE_REVISION_PATH, validateAdmittedSnapshot } from './override-source-store';
 import { parseExportJson } from './source-export-json';
 import { ExportFailure, atStage, atStageAsync, verifyExport, verifyPointer, type DiagnosticCategory } from './source-export-diagnostic';
 export { ExportFailure } from './source-export-diagnostic';
 
 export const EXPORT_LIMITS = Object.freeze({ records: 1000, objectBytes: 1048576, totalBytes: 4194304, responseBytes: 3670016, milliseconds: 25000, requestBytes: 256 });
 export const POINTER = 'pointers/latest.json';
-export const OVERRIDES = 'overrides/manual.json';
+export const OVERRIDES = AUTHORITY_DATA_PATH;
 export const hashBytes = (bytes: Uint8Array | string): string => createHash('sha256').update(bytes).digest('hex');
 function check(ok: unknown): asserts ok { if (!ok) throw new ExportFailure('incomplete'); }
 export const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -18,7 +19,7 @@ const strings = (v: unknown) => Array.isArray(v) && v.every(x => typeof x === 's
 export function category(p: string): DiagnosticCategory | null {
   if (p.length > 200) return null;
   if (p === POINTER) return 'pointer';
-  if (p === OVERRIDES) return 'overrides';
+  if ([OVERRIDES, ADMISSION_PATH, SOURCE_REVISION_PATH].includes(p)) return 'overrides';
   for (const [name, re] of [
     ['dashboardManifest', /^meta\/manifest-[a-f0-9]{64}\.json$/],
     ['productsManifest', /^meta\/products-manifest-[a-f0-9]{64}\.json$/],
@@ -127,7 +128,15 @@ export async function exportSource(read: ExportReader, signal: AbortSignal): Pro
       productPaths.add(pp as string); await add(pp as string);
     }
   }
-  await add(OVERRIDES);
+  const overrideValue = await add(OVERRIDES);
+  const controls = new Map<string, Uint8Array>();
+  for (const path of [ADMISSION_PATH, SOURCE_REVISION_PATH]) controls.set(path, await load(path));
+  atStage('record_schema', 'overrides', () => validateAdmittedSnapshot(
+    controls.get(ADMISSION_PATH)!,
+    controls.get(SOURCE_REVISION_PATH)!,
+    records.get(OVERRIDES)!.bytes,
+  ));
+  verifyExport(Array.isArray(overrideValue), 'record_schema', 'overrides');
   verifyExport([...records.keys()].filter(p => category(p) === 'summary').length === 1, 'graph_schema', 'summary');
   const identities = new Set<string>();
   const unique = (id: string, cat: DiagnosticCategory) => { verifyExport(!identities.has(id), 'references', cat); identities.add(id); };
@@ -144,6 +153,9 @@ export async function exportSource(read: ExportReader, signal: AbortSignal): Pro
   }
   // Exact-byte rereads include independent products and authoritative overrides.
   // Finish with pointer again; this detects movement, not ABA or atomic whole-store state.
+  for (const path of [...controls.keys()].sort()) {
+    if (hashBytes(await load(path, true)) !== hashBytes(controls.get(path)!)) throw new ExportFailure('inconclusive', 'consistency', 'overrides');
+  }
   for (const path of [...records.keys()].filter(p => p !== POINTER).sort().concat(POINTER)) {
     if (hashBytes(await load(path, true)) !== hashBytes(records.get(path)!.bytes)) throw new ExportFailure('inconclusive', 'consistency', category(path)!);
   }

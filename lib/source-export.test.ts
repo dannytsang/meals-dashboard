@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EXPORT_LIMITS, exportSource, hashBytes, POINTER, OVERRIDES, boundedBytes, category } from './source-export';
+import { ADMISSION_PATH, SOURCE_EPOCH, SOURCE_NAMESPACE, SOURCE_REVISION_PATH } from './override-source-store';
+import { makeSnapshot } from './override-snapshot';
 import { parseExportJson } from './source-export-json';
 import { createSourceExportReader } from './source-export-reader';
 import * as route from '../app/api/internal/source-export/route';
@@ -10,6 +12,17 @@ import { diagnosticFailure, ExportFailure, DIAGNOSTIC_STAGES, DIAGNOSTIC_CATEGOR
 const sdk = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn(), del: vi.fn(), list: vi.fn(), head: vi.fn(), copy: vi.fn() }));
 vi.mock('@vercel/blob', () => sdk);
 const encode = (v: unknown) => Buffer.from(JSON.stringify(v));
+const committedAt = '2030-01-01T00:00:00.000Z';
+function setAdmittedOverrides(records: Map<string, Buffer>, bytes: Buffer): void {
+  records.set(OVERRIDES, bytes);
+  const entries = JSON.parse(bytes.toString()) as never[];
+  const rawHash = hashBytes(bytes);
+  let snapshotHash = '0'.repeat(64);
+  try { snapshotHash = makeSnapshot(SOURCE_EPOCH, 1, entries, committedAt).hash; } catch { /* malformed fixture is rejected by the route */ }
+  records.set(SOURCE_REVISION_PATH, encode({ version: 2, epoch: SOURCE_EPOCH, revision: 1, rawHash, committedAt }));
+  records.set(ADMISSION_PATH, encode({ version: 1, namespace: SOURCE_NAMESPACE, release: 'a'.repeat(40), epoch: SOURCE_EPOCH,
+    revision: 1, rawHash, hash: snapshotHash, count: entries.length, present: true, committedAt }));
+}
 const secret = 'ab'.repeat(32); // synthetic only
 const product = (id: string) => ({ tpnc: id, gtin: null, tpnb: null, ...Object.fromEntries(['title', 'description', 'storage', 'preparation', 'ingredients', 'allergens', 'nutrition', 'brand', 'category', 'imageUrl', 'productUrl', 'source', 'lastFetched'].map(k => [k, ''])) });
 export function fixture(options: { empty?: boolean; mutate?: (data: Record<string, unknown>) => void; independent?: boolean } = {}) {
@@ -28,13 +41,13 @@ export function fixture(options: { empty?: boolean; mutate?: (data: Record<strin
   const productManifestPath = `meta/products-manifest-${hashBytes(pm)}.json`; records.set(productManifestPath, pm);
   if (!options.independent) manifest[productManifestPath] = hashBytes(pm);
   const m = encode(manifest), manifestPath = `meta/manifest-${hashBytes(m)}.json`; records.set(manifestPath, m);
-  records.set(POINTER, encode({ manifestPath, productsManifestPath: productManifestPath })); records.set(OVERRIDES, Buffer.from('[ ]\n'));
+  records.set(POINTER, encode({ manifestPath, productsManifestPath: productManifestPath })); setAdmittedOverrides(records, Buffer.from('[ ]\n'));
   return { records, manifestPath, summaryPath, productManifestPath };
 }
 type ScalarField = 'overrideStatus' | 'coverageStatus' | 'orderStatus' | 'tpnc' | 'sourceOrderBlobPath' | 'orderNumber' | 'mealId';
 function scalarFixture(field: ScalarField, value: unknown) {
   const entry: Record<string, unknown> = { meal: { id: 'synthetic-meal', content: '', date: '2030-01-01', labels: [], section: '' }, status: 'covered', coverageScore: 1, matchedItems: [], missingItems: [] };
-  const overrides = [{ meal_date: '2030-01-01', meal_name: 'Synthetic', item_name: 'Synthetic', quantity: 1, reason: '', status: field === 'overrideStatus' ? value : 'covered', created_at: '', updated_at: '' }];
+  const overrides = [{ meal_date: '2030-01-01', meal_name: 'Synthetic', item_name: 'Synthetic', quantity: 1, reason: 'synthetic', status: field === 'overrideStatus' ? value : 'covered', created_at: '2030-01-01T00:00:00Z', updated_at: '2030-01-01T00:00:00Z' }];
   const result = fixture({ mutate: data => {
     const order = data['orders/2030-01-01/synthetic-2030-01-01.json'] as Record<string, unknown>;
     const coverage = data['coverage/2030-01-01.json'] as Record<string, unknown>;
@@ -49,7 +62,7 @@ function scalarFixture(field: ScalarField, value: unknown) {
       if (value === '00100') data['products/00100.json'] = product('00100');
     }
   } });
-  result.records.set(OVERRIDES, encode(overrides)); return result;
+  setAdmittedOverrides(result.records, encode(overrides)); return result;
 }
 const invalidScalars: [ScalarField, unknown][] = [
   ['overrideStatus', ['covered']], ['coverageStatus', ['covered']], ['orderStatus', ['active']], ['tpnc', ['100']],
@@ -120,8 +133,8 @@ describe('export route authorization, privacy and nonmutation', () => {
     expect(a.status).toBe(200); expect(await b.text()).toBe(text);
     expect(a.headers.get('content-type')).toContain('application/json'); expect(a.headers.get('cache-control')).toContain('no-store'); expect(a.headers.get('content-disposition')).toContain('attachment');
     expect(text).not.toContain('synthetic-blob-token'); expect(text).not.toContain(secret); expect(text).not.toContain('downloadUrl');
-    const archive = JSON.parse(text); expect(archive.atomicSnapshot).toBe(false); expect(archive.records).toHaveLength(f.records.size);
-    const paths = archive.records.map((r: { path: string }) => r.path); expect(paths).toEqual([...f.records.keys()].sort());
+    const archive = JSON.parse(text); expect(archive.atomicSnapshot).toBe(false); expect(archive.records).toHaveLength(f.records.size - 2);
+    const paths = archive.records.map((r: { path: string }) => r.path); expect(paths).toEqual([...f.records.keys()].filter(p => ![ADMISSION_PATH, SOURCE_REVISION_PATH].includes(p)).sort());
     expect(paths.filter((p: string) => p.startsWith('orders/'))).toHaveLength(2);
     for (const r of archive.records) { expect(Buffer.from(r.base64, 'base64')).toEqual(f.records.get(r.path)); expect(r.sha256).toBe(hashBytes(f.records.get(r.path)!)); expect(r.identity).toBe(hashBytes(r.path)); expect(r.bytes).toBe(f.records.get(r.path)!.length); }
     expect([...f.records].map(([p, b]) => [p, hashBytes(b)])).toEqual(before);
@@ -202,7 +215,7 @@ describe.each([1, 2] as const)('closed diagnostic mode v%s', version => {
     expect(sdk.get.mock.calls.some(([p]) => p.startsWith('../'))).toBe(false);
   });
   it('attributes missing summary cardinality without blaming overrides', async () => {
-    replaceManifest({}); await diagnostic('graph_schema', 'summary'); expect(sdk.get.mock.calls.at(-1)?.[0]).toBe(OVERRIDES);
+    replaceManifest({}); await diagnostic('graph_schema', 'summary'); expect(sdk.get.mock.calls.map(call => call[0])).toContain(OVERRIDES);
   });
   it('attributes a missing product reference to the order', async () => {
     f = fixture({ mutate: d => { ((d['orders/2030-01-01/synthetic-2030-01-01.json'] as Record<string, unknown>).items as Record<string, unknown>[])[0].tpnc = '999'; } });
@@ -377,7 +390,7 @@ describe.each([1, 2] as const)('closed diagnostic mode v%s', version => {
   it('attributes references to coverage even after reading overrides', async () => {
     f = fixture({ mutate: d => { (d['coverage/2030-01-01.json'] as Record<string, unknown>).sourceOrderBlobPath = 'orders/2030-01-01/missing.json'; } });
     const r = await route.POST(request(body)); expect(r.status).toBe(422);
-    expect(sdk.get.mock.calls.at(-1)?.[0]).toBe(OVERRIDES);
+    expect(sdk.get.mock.calls.map(call => call[0])).toContain(OVERRIDES);
     expect(await r.json()).toEqual(envelope('incomplete', 'references', 'coverage'));
   });
 });
@@ -403,6 +416,14 @@ describe('graph completeness, strict data and bounded fresh reads', () => {
   });
   it.each([POINTER, 'manifest', 'summary', 'productsManifest', 'products/100.json', OVERRIDES, 'coverage/2030-01-01.json', 'orders/2030-01-01/synthetic-2030-01-01.json'])('missing %s cannot become empty/success', async path => {
     f.records.delete(path === 'manifest' ? f.manifestPath : path === 'summary' ? f.summaryPath : path === 'productsManifest' ? f.productManifestPath : path);
+    const r = await route.POST(request()); expect(r.status).toBe(422); expect(await r.json()).toEqual({ error: 'incomplete' });
+  });
+  it.each([ADMISSION_PATH, SOURCE_REVISION_PATH])('fails closed when v3 control object %s is missing', async path => {
+    f.records.delete(path);
+    const r = await route.POST(request()); expect(r.status).toBe(422); expect(await r.json()).toEqual({ error: 'incomplete' });
+  });
+  it('fails closed when the v3 admission marker does not bind current authority bytes', async () => {
+    f.records.set(ADMISSION_PATH, encode({ unknown: true }));
     const r = await route.POST(request()); expect(r.status).toBe(422); expect(await r.json()).toEqual({ error: 'incomplete' });
   });
   it.each([undefined, null, 'https://synthetic.invalid/private'])('requires explicit valid independent product manifest %s', async value => {
