@@ -62,6 +62,31 @@ def test_manifest_rejects_empty_directory_loss(tmp_path):
     p = tmp_path / "manifest.json"; p.write_text(json.dumps(m))
     assert verify(p).returncode != 0
 
+def test_manifest_rejects_duplicate_entry_path_and_id(tmp_path):
+    original = json.loads((ROOT / ".specify/migration-manifest.json").read_text())
+    mutations = (lambda m: m["entries"].append(dict(m["entries"][1])),
+                 lambda m: m["features"].append(m["features"][0]))
+    for number, mutation in enumerate(mutations):
+        m = json.loads(json.dumps(original)); mutation(m)
+        p = tmp_path / f"duplicate-{number}.json"; p.write_text(json.dumps(m))
+        assert verify(p).returncode != 0
+
+def test_manifest_rejects_actual_byte_drift():
+    source = ROOT / ".specify/specs/004-dashboard-sync/spec.md"
+    original = source.read_bytes(); source.write_bytes(original + b"\nbyte drift fixture\n")
+    try:
+        assert verify(ROOT / ".specify/migration-manifest.json").returncode != 0
+    finally:
+        source.write_bytes(original)
+
+def test_manifest_rejects_executable_mode_drift():
+    source = ROOT / ".specify/specs/004-dashboard-sync/spec.md"
+    original = source.stat().st_mode; source.chmod(original | stat.S_IXUSR)
+    try:
+        assert verify(ROOT / ".specify/migration-manifest.json").returncode != 0
+    finally:
+        source.chmod(original)
+
 def test_manifest_rejects_symlink_target_drift(tmp_path):
     m = json.loads((ROOT / ".specify/migration-manifest.json").read_text())
     symlinks = [e for e in m["entries"] if e["type"] == "symlink"]
@@ -93,6 +118,17 @@ def test_ownership_rejects_unresolved_repository():
             "--expected-meal-planner-commit", "134d2099fcd4fa7d3e67b816b38573986b8eb61f", "--json")
     assert r.returncode != 0
 
+def test_ownership_rejects_wrong_link_at_expected_head(tmp_path):
+    hermes = tmp_path / "Hermes-Skills"; meal_planner = tmp_path / "meal-planner"
+    shutil.copytree(SRC, hermes, ignore=shutil.ignore_patterns('.git'))
+    shutil.copytree('/home/hermes/workspace/meal-planner', meal_planner, ignore=shutil.ignore_patterns('.git'))
+    pointer = hermes / 'data-science/meals-check/MEAL-PLANNER-OWNERSHIP.md'
+    pointer.write_text(pointer.read_text().replace('meals-dashboard', 'obsolete-dashboard'))
+    r = run(ROOT / ".specify/scripts/verify_ownership_links.py", "--hermes-repo", hermes,
+            "--meal-planner-repo", meal_planner, "--expected-source-commit", COMMIT,
+            "--expected-meal-planner-commit", "134d2099fcd4fa7d3e67b816b38573986b8eb61f", "--json")
+    assert r.returncode != 0
+
 def test_staged_scope_rejects_outside_and_accepts_governance(tmp_path):
     scanner = "/home/hermes/.hermes/cache/scratch/scan_staged_diff_v1.py"
     repo = tmp_path / "repo"; repo.mkdir()
@@ -102,5 +138,17 @@ def test_staged_scope_rejects_outside_and_accepts_governance(tmp_path):
     good = run(scanner, "--repo", repo, "--allow-prefix", ".specify")
     assert good.returncode == 0
     (repo / "package.json").write_text("{}"); subprocess.run(["git", "-C", str(repo), "add", "package.json"], check=True)
+    bad = run(scanner, "--repo", repo, "--allow-prefix", ".specify")
+    assert bad.returncode != 0
+
+
+@pytest.mark.parametrize("bad_path", ["app/page.tsx", "requirements.txt", ".github/workflows/deploy.yml"])
+def test_staged_scope_rejects_runtime_dependency_and_deployment_paths(tmp_path, bad_path):
+    scanner = "/home/hermes/.hermes/cache/scratch/scan_staged_diff_v1.py"
+    repo = tmp_path / "repo"; repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    (repo / ".specify").mkdir(); (repo / ".specify/ok.md").write_text("governance")
+    target = repo / bad_path; target.parent.mkdir(parents=True, exist_ok=True); target.write_text("fixture")
+    subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
     bad = run(scanner, "--repo", repo, "--allow-prefix", ".specify")
     assert bad.returncode != 0

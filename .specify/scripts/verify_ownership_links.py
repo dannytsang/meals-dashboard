@@ -13,6 +13,26 @@ def main():
    try: actual=subprocess.check_output(['git','-C',str(repo),'rev-parse','HEAD'],text=True,stderr=subprocess.STDOUT).strip()
    except subprocess.CalledProcessError: actual=''
    if actual != expected: errors.append(f'{label} HEAD mismatch: {actual}')
+   # Resolve reciprocal pointers from repository content, not destination
+   # substring checks. A stale checkout at the expected HEAD must fail.
+   if label == 'Hermes-Skills':
+    pointer = repo/'data-science/meals-check/MEAL-PLANNER-OWNERSHIP.md'
+    skill = repo/'data-science/meals-check/SKILL.md'
+    if not pointer.exists() or not skill.exists():
+     errors.append('Hermes-Skills reciprocal ownership files missing')
+    else:
+     text = pointer.read_text() + '\n' + skill.read_text()
+     if 'meal-planner.git' not in text or 'meals-dashboard' not in text:
+      errors.append('Hermes-Skills reciprocal ownership target missing')
+   else:
+    readme = repo/'README.md'
+    index = repo/'.specify/specs/index.yaml'
+    if not readme.exists() or not index.exists():
+     errors.append('meal-planner reciprocal ownership files missing')
+    else:
+     text = readme.read_text() + '\n' + index.read_text()
+     if 'Dashboard Repo (meals-dashboard)' not in text or '.specify/specs/index.yaml' not in text:
+      errors.append('meal-planner reciprocal dashboard pointer missing')
  for needle in ['Hermes-Skills','meal-planner',a.expected_source_commit,a.expected_meal_planner_commit,'meals-dashboard']:
   if needle not in own+idx: errors.append('missing ownership pointer: '+needle)
  if (root/'hermes-integration').exists(): stale.append('.specify/hermes-integration')
