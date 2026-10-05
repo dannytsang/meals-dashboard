@@ -120,14 +120,48 @@ def test_ownership_rejects_unresolved_repository():
 
 def test_ownership_rejects_wrong_link_at_expected_head(tmp_path):
     hermes = tmp_path / "Hermes-Skills"; meal_planner = tmp_path / "meal-planner"
-    shutil.copytree(SRC, hermes, ignore=shutil.ignore_patterns('.git'))
-    shutil.copytree('/home/hermes/workspace/meal-planner', meal_planner, ignore=shutil.ignore_patterns('.git'))
-    pointer = hermes / 'data-science/meals-check/MEAL-PLANNER-OWNERSHIP.md'
-    pointer.write_text(pointer.read_text().replace('meals-dashboard', 'obsolete-dashboard'))
-    r = run(ROOT / ".specify/scripts/verify_ownership_links.py", "--hermes-repo", hermes,
-            "--meal-planner-repo", meal_planner, "--expected-source-commit", COMMIT,
-            "--expected-meal-planner-commit", "134d2099fcd4fa7d3e67b816b38573986b8eb61f", "--json")
+    # Build real, independent repositories rather than copying a worktree's
+    # .git file.  The expected HEADs are discovered from the commits created
+    # here, so the fixture reaches reciprocal-content validation before the
+    # wrong-link mutation is checked.
+    hermes_pointer = hermes / 'data-science/meals-check/MEAL-PLANNER-OWNERSHIP.md'
+    hermes_skill = hermes / 'data-science/meals-check/SKILL.md'
+    hermes_pointer.parent.mkdir(parents=True)
+    hermes_pointer.write_text('Current meal-planner repository: meal-planner.git\nDashboard Repo (meals-dashboard)\n')
+    hermes_skill.write_text('Current dashboard repository: meals-dashboard\n')
+    meal_readme = meal_planner / 'README.md'
+    meal_index = meal_planner / '.specify/specs/index.yaml'
+    meal_index.parent.mkdir(parents=True)
+    meal_readme.write_text('Dashboard Repo (meals-dashboard)\n.specify/specs/index.yaml\n')
+    meal_index.write_text('dashboard pointer: .specify/specs/index.yaml\n')
+    for repo in (hermes, meal_planner):
+        subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+        subprocess.run(['git', '-C', str(repo), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(repo), '-c', 'user.name=fixture',
+                        '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
+    hermes_commit = subprocess.check_output(['git', '-C', str(hermes), 'rev-parse', 'HEAD'], text=True).strip()
+    meal_commit = subprocess.check_output(['git', '-C', str(meal_planner), 'rev-parse', 'HEAD'], text=True).strip()
+    # Mutate only the meal-planner reciprocal pointer after its commit, while
+    # retaining valid .git metadata and both expected HEADs.
+    meal_readme.write_text(meal_readme.read_text().replace(
+        'Dashboard Repo (meals-dashboard)', 'Dashboard Repo (obsolete-dashboard)'))
+    # The destination pointers must agree with the fixture's exact commits so
+    # the repository-content assertion is reached, then are restored even if
+    # the subprocess or assertion fails.
+    own = ROOT / '.specify/OWNERSHIP.md'; index = ROOT / '.specify/specs/index.yaml'
+    own_original, index_original = own.read_text(), index.read_text()
+    own.write_text(own_original.replace(COMMIT, hermes_commit).replace(
+        '134d2099fcd4fa7d3e67b816b38573986b8eb61f', meal_commit))
+    index.write_text(index_original.replace(COMMIT, hermes_commit).replace(
+        '134d2099fcd4fa7d3e67b816b38573986b8eb61f', meal_commit))
+    try:
+        r = run(ROOT / ".specify/scripts/verify_ownership_links.py", "--hermes-repo", hermes,
+                "--meal-planner-repo", meal_planner, "--expected-source-commit", hermes_commit,
+                "--expected-meal-planner-commit", meal_commit, "--json")
+    finally:
+        own.write_text(own_original); index.write_text(index_original)
     assert r.returncode != 0
+    assert 'reciprocal dashboard pointer missing' in r.stdout
 
 def test_staged_scope_rejects_outside_and_accepts_governance(tmp_path):
     scanner = "/home/hermes/.hermes/cache/scratch/scan_staged_diff_v1.py"
