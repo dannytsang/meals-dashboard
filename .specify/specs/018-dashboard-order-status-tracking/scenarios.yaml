@@ -1,0 +1,65 @@
+feature_id: 018-dashboard-order-status-tracking
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-005]
+    expected: "A Tesco 'order cancelled' email is detected (email_type = 'cancelled'), the order blob is written with status 'cancelled', and that order is excluded from meal coverage calculations."
+    verification:
+      automated:
+        - python3 -m unittest test_tesco_email_parser.CancellationPatternTests
+        - python3 -m unittest test_tesco_order_status.EmailTypeToStatusTests
+      manual: null
+      rationale: null
+    integration_isolation: unittest only; no live Gmail/Blob calls
+  AS-002:
+    type: positive
+    requirements: [FR-001, FR-003, FR-005]
+    expected: "A moved order (same order_number, new delivery_date) is detected: the old blob status is set to 'superseded' (with a superseded_key linking to the new pair), the new blob is written with status 'active', and the new blob drives meal coverage."
+    verification:
+      automated:
+        - python3 -m unittest test_tesco_order_status.MovedOrderDetectionTests
+      manual: null
+      rationale: null
+    integration_isolation: unittest only; fixtures use synthetic (order_number, delivery_date) pairs
+  AS-003:
+    type: positive
+    requirements: [FR-001, FR-004, FR-005]
+    expected: "A refund email is detected (email_type = 'refund'), the existing order blob is updated to status 'refunded', the item list is reduced by apply_refund_to_items, and the receipt refund_amount is set."
+    verification:
+      automated:
+        - python3 -m unittest test_tesco_email_parser.RefundPatternTests
+        - python3 -m unittest test_tesco_order_status.ApplyRefundTests
+      manual: null
+      rationale: null
+    integration_isolation: unittest only; fixtures use synthetic item lists
+  AS-004:
+    type: positive
+    requirements: [FR-006]
+    expected: "The dashboard renders cancelled/moved/refunded badges beneath the Order Total card for non-active orders. Active orders have no badge."
+    verification:
+      automated:
+        - npx vitest run components/order-status-badge.test.tsx
+        - npx vitest run components/dashboard-client.test.ts
+      manual: null
+      rationale: null
+    integration_isolation: vitest only; component is rendered with synthetic receipt props (no live Blob)
+  AS-005:
+    type: positive
+    requirements: [FR-007]
+    expected: "Every order status change appends one JSON line to ~/.hermes/scripts/data/audit.jsonl with the documented fields. One line per status change; no duplicates from a single sync."
+    verification:
+      automated:
+        - python3 -m unittest test_tesco_order_status.AuditLogTests
+      manual: tail -1 ~/.hermes/scripts/data/audit.jsonl should show one order_status_change line per recent sync run
+      rationale: "Live audit log inspection confirms the write path on the running pipeline, not just the unit-tested helper."
+    integration_isolation: unittest exercises write_audit_log with a tmp file; manual probe exercises the live audit log on the chef profile
+  AS-006:
+    type: negative
+    requirements: [FR-003]
+    expected: "Duplicate (order_number, delivery_date) entries in the valid email list do not cause status to flap between active and superseded on repeated syncs. The dedup happens before status mapping; the resulting state is stable."
+    verification:
+      automated:
+        - python3 -m unittest test_tesco_order_status.MovedOrderDetectionTests.test_duplicate_delivery_dates_dedup
+      manual: null
+      rationale: "This regression was caught during the 2026-06-15 implementation: the live pipeline observed ~10 duplicate amendments for the same (5421-8594-00, Tuesday 16 June 2026) pair, and the naive sort by raw delivery-date string caused the active status to be repeatedly overwritten by superseded. The fix is to sort by parsed-ISO date and dedup by delivery_date."
+    integration_isolation: unittest only; regression test is the guard

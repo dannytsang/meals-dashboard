@@ -1,0 +1,224 @@
+feature_id: 008-dashboard-order-items
+requirements:
+  FR-001:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-001
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-002:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-002
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-003:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-003
+    tasks:
+    - T001
+    - T010
+    - T020
+    - T030
+    - T031
+    - T032
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-004:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-004
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-005:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-005
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-006:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-006
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-007:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-007
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-008:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-008
+    tasks:
+    - T040
+    - T043
+    - T044
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-009:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-009
+    tasks:
+    - T041
+    - T043
+    - T044
+    - T050
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-010:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-010
+    tasks:
+    - T050
+    - T052
+    - T053
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-011:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-011
+    tasks:
+    - T051
+    - T052
+    - T053
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-012:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-012
+    tasks:
+    - T060
+    - T063
+    - T064
+    checks:
+    - npm test -- --run
+    - npm run build
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-013:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-013
+    tasks:
+    - T061
+    - T063
+    - T064
+    checks:
+    - npm test -- --run
+    - npm run build
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-014:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-014
+    tasks:
+    - T062
+    - T063
+    - T064
+    checks:
+    - npm test -- --run
+    - npm run build
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-015:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-015
+    tasks:
+    - T065
+    - T066
+    - T067
+    checks:
+    - npm test -- --run
+    - npm run build
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null

@@ -1,0 +1,56 @@
+feature_id: 016-dashboard-blob-storage-layout
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-009, FR-010]
+    expected: A new Tesco order is written to orders/{delivery_date}/{order_number}.json and survives subsequent syncs that do not target that date.
+    verification:
+      automated: lib/dashboard-sync.test.ts::syncDashboardLayout — first sync writes all blobs, manifest, pointer
+      manual: null
+      rationale: null
+    integration_isolation: in-memory Blob client; no live Vercel Blob calls
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-003]
+    expected: Per-meal coverage blobs are written to coverage/{date}.json. Unchanged blobs are skipped on subsequent syncs; changed blobs are overwritten in-place.
+    verification:
+      automated: lib/dashboard-sync.test.ts::syncDashboardLayout — partial change scenario
+      manual: null
+      rationale: null
+    integration_isolation: in-memory Blob client; no live Vercel Blob calls
+  AS-003:
+    type: positive
+    requirements: [FR-003, FR-004, FR-005, FR-006]
+    expected: A sync with no data changes writes exactly 2 blob operations (manifest + pointer); all data blobs are skipped via hash dedup.
+    verification:
+      automated: lib/dashboard-sync.test.ts::syncDashboardLayout — unchanged sync scenario
+      manual: lib/blob-storage.test.ts::writeManifest — determinism + key-order independence
+      rationale: null
+    integration_isolation: in-memory Blob client; no live Vercel Blob calls
+  AS-004:
+    type: negative
+    requirements: [FR-007, FR-008]
+    expected: A mid-write failure (manifest or pointer) leaves the previous manifest + pointer valid. The next sync retries the missing write without duplicating data.
+    verification:
+      automated: lib/dashboard-sync.test.ts::syncDashboardLayout — manifest write failure + pointer write failure
+      manual: null
+      rationale: null
+    integration_isolation: in-memory Blob client with sabotaged write methods
+  AS-005:
+    type: integration-isolated
+    requirements: [FR-012]
+    expected: Every blob write event produces an audit log entry at ~/.hermes/scripts/data/audit.jsonl with date, blob path, content hash, timestamp, and event type.
+    verification:
+      automated: null
+      manual: spec FR-012 contract review; audit-log write is the meals-check Python sync's responsibility (out of scope for the 016-API slice)
+      rationale: The Python sync is the writer; the new API route accepts a split-layout payload and writes blobs but does not yet emit audit log lines. Audit-log wire-up is a follow-up workstream.
+    integration_isolation: python sync (out-of-scope for this slice)
+  AS-006:
+    type: positive
+    requirements: [FR-013]
+    expected: The summary blob at meta/summary-{hash}.json is content-addressable, tracked in the manifest, and skipped on unchanged syncs.
+    verification:
+      automated: lib/dashboard-sync.test.ts::syncDashboardLayout — summary content-addressable
+      manual: null
+      rationale: null
+    integration_isolation: in-memory Blob client; no live Vercel Blob calls

@@ -1,0 +1,164 @@
+# Machine-readable scenario coverage for 033-dashboard-matcher-snack-and-doughnut-false-positives.
+feature_id: 033-dashboard-matcher-snack-and-doughnut-false-positives
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-005]
+    expected: |
+      Given the meal "Cheesy mash potato (Ashlee)" and items
+      [Tesco Spicy Potato Wedges 750G, Popchips Sour Cream & Onion Multipack Crisps,
+       Tesco Mango 450G],
+      When the matcher evaluates each item,
+      Then Tesco Spicy Potato Wedges 750G matches the potato/mash component and
+           Popchips Sour Cream & Onion Multipack Crisps does NOT match.
+    verification:
+      automated: python3 -m unittest test_tesco_matcher.TescoMatcherRegressionTests.test_cheesy_mash_potato_excludes_popchips -v
+      manual: |
+        Run the matcher in isolation:
+          cd /home/hermes/.hermes/scripts && python3 -c "from tesco_matcher import fuzzy_match_items_to_meals; ..."
+        Confirm matched_items == ["Tesco Spicy Potato Wedges 750G"] and status == "partial".
+      rationale: |
+        Cheesy mash potato is the primary exemplar Danny flagged on 2026-06-29.
+        Popchips must not match because crisp/crisps is now a stem-matched snack
+        marker; mango is irrelevant.
+    integration_isolation: matcher unit test, no external services required
+  AS-002:
+    type: positive
+    requirements: [FR-001, FR-002, FR-005]
+    expected: |
+      Given the meal "Sea bass, onion rings, wedges" and items
+      [Tesco Spicy Potato Wedges 750G, Tesco Beer Battered Onion Rings 300G,
+       Popchips Sour Cream & Onion Multipack Crisps,
+       Pringles Sour Cream & Onion Sharing Crisps,
+       Tesco White Iced Ring Doughnuts 4 Pack,
+       Tesco Sea Bass Fillets 200G],
+      When the matcher evaluates each item,
+      Then wedges, onion rings and sea bass match;
+           Popchips, Pringles and Iced Ring Doughnuts do NOT match.
+    verification:
+      automated: python3 -m unittest test_tesco_matcher.TescoMatcherRegressionTests.test_sea_bass_onion_rings_wedges_excludes_snacks_and_confectionery -v
+      manual: |
+        Inspect matched_items; expected
+        [Tesco Spicy Potato Wedges 750G, Tesco Beer Battered Onion Rings 300G, Tesco Sea Bass Fillets 200G]
+        and Popchips/Pringles/Doughnuts absent.
+      rationale: |
+        Exercises FR-001 (plural stem match catches crisps and pringles),
+        FR-002 (doughnut/icing markers catch Iced Ring Doughnuts), and the
+        substring gate FR-004 (doughnut "rings" does not satisfy onion rings).
+    integration_isolation: matcher unit test, no external services required
+  AS-003:
+    type: positive
+    requirements: [FR-003, FR-005]
+    expected: |
+      Given the meal "Jacket potato / garlic bread",
+      When the matcher evaluates "Popchips Sour Cream & Onion Multipack Crisps",
+      Then the crisp does NOT match even though the meal has a potato component.
+    verification:
+      automated: python3 -m unittest test_tesco_matcher.TescoMatcherRegressionTests.test_jacket_potato_garlic_bread_excludes_popchips -v
+      manual: |
+        Inspect matched_items; expected only Potato Wedges (if present) plus a
+        garlic-bread item. Popchips absent.
+      rationale: |
+        Direct exercise of FR-003: the protein-bonus gate must not award
+        PROTEIN_MATCH_BONUS to a crisp against a potato-type meal. Without
+        this gate, the crisp would pass through Tier 2 because both item and
+        meal have protein_type == "potato" (the default fallback).
+    integration_isolation: matcher unit test, no external services required
+  AS-004:
+    type: positive
+    requirements: [FR-006]
+    expected: |
+      Given the corrected matcher,
+      When tesco_meal_check.py regenerates dashboard_cache.json for the
+      2026-07-01 delivery,
+      Then Cheesy mash potato (Ashlee) is "partial" with only wedges matched
+           and crisps excluded; Sea bass / onion rings / wedges is "partial"
+           with sea bass + onion rings + wedges matched but doughnuts/crisps
+           excluded; Jacket potato / garlic bread is "partial" with only
+           wedges matched.
+    verification:
+      automated: python3 -m unittest test_tesco_meal_check_windows -v
+      manual: |
+        Run python3 tesco_meal_check.py --days 30 --output both from
+        /home/hermes/.hermes/scripts and inspect the four meals in the
+        regenerated dashboard_cache.json. Confirm status and matched_items.
+      rationale: |
+        End-to-end pipeline verification; proves the matcher fix flows through
+        the cache that the Vercel dashboard consumes.
+    integration_isolation: requires live pipeline credentials (Gmail + Calendar)
+  AS-005:
+    type: negative
+    requirements: [FR-001]
+    expected: |
+      Given plural snack product names,
+      When is_drink_snack evaluates "Tesco Popchips Sour Cream Onion Crisps"
+      / "Pringles Salt Vinegar" / "Tesco Bourbon Biscuits 200G" /
+      "Tesco Chocolate Chip Cookies 200G" / "Cadbury Chocolate Wafers",
+      Then is_drink_snack returns True for every one.
+    verification:
+      automated: python3 -m unittest test_tesco_matcher.TescoMatcherRegressionTests.test_snack_predicate_stem_match_plural_forms -v
+      manual: |
+        python3 -c "from tesco_matcher import is_drink_snack; print(is_drink_snack('Tesco Popchips Sour Cream Onion Crisps'))"
+        and confirm True.
+      rationale: |
+        Negative test isolating FR-001 from the rest of the matcher; proves
+        the stem-match helper covers all _DRINK_SNACK_MARKER_WORDS entries.
+    integration_isolation: matcher unit test
+  AS-006:
+    type: negative
+    requirements: [FR-002]
+    expected: |
+      Given confectionery product names not previously in the marker set,
+      When is_drink_snack evaluates
+      "Tesco White Iced Ring Doughnuts 4 Pack" /
+      "Haribo Starmix" / "Cadbury Dairy Milk" / "Oreo Cookies 154G",
+      Then is_drink_snack returns True for every one.
+    verification:
+      automated: python3 -m unittest test_tesco_matcher.TescoMatcherRegressionTests.test_drink_snack_predicate_includes_confectionery_markers -v
+      manual: |
+        python3 -c "from tesco_matcher import is_drink_snack; print(is_drink_snack('Tesco White Iced Ring Doughnuts 4 Pack'))"
+        and confirm True.
+      rationale: |
+        Negative test isolating FR-002; proves the marker-set extension covers
+        the confectionery class (doughnuts, jellies, gummies, cookies, etc.).
+    integration_isolation: matcher unit test
+  AS-007:
+    type: boundary
+    requirements: [FR-001, FR-002]
+    expected: |
+      Given a legitimate dessert-component meal "Cookies and cream",
+      When the matcher evaluates "Tesco Chocolate Chip Cookies 200G",
+      Then the cookies MAY still match the cookies component (negative
+      assertion on over-blocking).
+    verification:
+      automated: python3 -m unittest test_tesco_matcher.TescoMatcherRegressionTests.test_cookie_dessert_meal_still_matches -v
+      manual: |
+        Run the matcher with items=[{name:"Tesco Chocolate Chip Cookies 200G"}]
+        and meals=[{content:"Cookies and cream"}]; confirm matched_items
+        contains the cookies product.
+      rationale: |
+        Boundary check; the snack guard must be format-aware (catch crisps
+        in mash context) but not blanket-deny (allow cookies in cookies-and-
+        cream context). FR-001 / FR-002 are about stem matching, not blanket
+        denial of snack products.
+    integration_isolation: matcher unit test
+  AS-008:
+    type: manual
+    requirements: [FR-005, FR-006]
+    expected: |
+      Given the corrected matcher and a regression bundle of the four exemplar
+      meals plus the existing roast-dinner regressions (Roast pork, Roast beef
+      + broccoli) and the salmon/frozen-veg generic-expected-components case,
+      When the matcher runs over the bundle,
+      Then every meal produces the expected status and matched_items list and
+           no existing acceptance scenario regresses.
+    verification:
+      automated: python3 -m unittest test_tesco_matcher -v
+      manual: |
+        Confirm 9 tests pass (5 from spec 011 + 4 new from this spec) plus
+        the existing roast-dinner regression coverage.
+      rationale: |
+        Catch any matcher change that fixes the crisp/doughnut case but
+        regresses spec 011's roast-dinner or spec 011's generic-expected-
+        components work. Run the full test_tesco_matcher suite.
+    integration_isolation: matcher unit test suite

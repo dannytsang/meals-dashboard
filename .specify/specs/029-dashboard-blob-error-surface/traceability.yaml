@@ -1,0 +1,85 @@
+# Machine-readable requirement traceability for 029-dashboard-blob-error-surface.
+feature_id: 029-dashboard-blob-error-surface
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-009]
+    tasks: [T003, T006, T007, T015, T016]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-002:
+    user_stories: [US1, US3]
+    scenarios: [AS-001, AS-002, AS-006]
+    tasks: [T010, T011, T012]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-003]
+    tasks: [T004, T014]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-004:
+    user_stories: [US1, US3]
+    scenarios: [AS-001, AS-002, AS-003, AS-006]
+    tasks: [T004, T012]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-005:
+    user_stories: [US2]
+    scenarios: [AS-004]
+    tasks: [T008, T017]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-006:
+    user_stories: [US2]
+    scenarios: [AS-004, AS-005]
+    tasks: [T008, T017]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-007:
+    user_stories: [US1]
+    scenarios: [AS-003, AS-008]
+    tasks: [T005, T014, T024]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-008:
+    user_stories: [US1, US3]
+    scenarios: [AS-001, AS-002, AS-007]
+    tasks: [T006, T009, T019, T020, T022]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-009:
+    user_stories: [US1, US3]
+    scenarios: [AS-001, AS-006, AS-007]
+    tasks: [T009, T010, T013, T018]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-010:
+    user_stories: [US1, US2, US3]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-006, AS-008, AS-009]
+    tasks: [T014, T015, T016, T017, T018, T019, T020, T021]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  # Non-functional requirements are tracked in spec.md text + tasks.md +
+  # scenarios.yaml rationale blocks. The validator only permits FR-NNN keys.

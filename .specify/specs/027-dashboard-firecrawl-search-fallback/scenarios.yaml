@@ -1,0 +1,301 @@
+# Machine-readable scenario coverage for 027-dashboard-firecrawl-search-fallback (Rev 2: sync-time).
+feature_id: 027-dashboard-firecrawl-search-fallback
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-010, FR-011, FR-014]
+    expected: |
+      Given an order item whose Apollo cache extraction returns empty `description`
+      AND no curated-static match exists with populated `description`,
+      AND MEALS_FIRECRAWL_FALLBACK=1, AND FIRECRAWL_API_KEY is set:
+      When the meals-check sync runs,
+      Then `enrich_order_items_with_product_metadata` calls `_fetch_firecrawl_search_snippet(clean_name)`,
+      which POSTs to `https://api.firecrawl.dev/v1/search` with body
+      `{"query": "<cleanName> site:tesco.com", "limit": 1}`,
+      receives a 200 response with `data[0].description = "<real snippet>"`,
+      returns the snippet, and the sync writes `products/{tpnc}.json` with
+      `firecrawl: { snippet: "<snippet>", lastFetched: <iso> }`.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/test_firecrawl_search.py
+      manual: |
+        Run the sync against a fixture order with MEALS_FIRECRAWL_FALLBACK=1
+        and FIRECRAWL_API_KEY set. Inspect the written products/{tpnc}.json
+        blobs. Confirm the `firecrawl` sub-object is present and contains
+        `snippet` (real text) and `lastFetched` (ISO 8601 timestamp).
+      rationale: Headline use case — sync-time Firecrawl fills the missing
+        description and writes it to the blob for the dashboard to read.
+    integration_isolation: Python sync only; no dashboard code path
+      exercised at sync time.
+  AS-002:
+    type: negative
+    requirements: [FR-004, FR-009, NFR-002]
+    expected: |
+      Given an order item with empty Apollo description and no curated-static
+      match, AND MEALS_FIRECRAWL_FALLBACK=1:
+      When the Firecrawl /v1/search response is 200 with `{success: true, data: []}`,
+      Then `_fetch_firecrawl_search_snippet` returns None,
+      and the sync writes `products/{tpnc}.json` with
+      `firecrawl: { snippet: null, lastFetched: <now>, status: "not_found" }`
+      (per Open Question 5 — write the not_found status to prevent re-burning
+      credits on every subsequent sync for items Firecrawl has no data for).
+      No exception is raised. The sync continues normally.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/test_firecrawl_search.py
+      manual: |
+        Pick an item whose clean name returns no Google hits for "site:tesco.com"
+        (e.g. a deliberately bad name in a test env). Run sync. Confirm the
+        product blob has `firecrawl.status = "not_found"` and `snippet = null`.
+      rationale: Zero-hits fall-through — graceful degradation with explicit
+        status "not_found" so subsequent syncs don't re-burn credits.
+    integration_isolation: mocked urllib in unit tests.
+  AS-003:
+    type: negative
+    requirements: [FR-009, NFR-002]
+    expected: |
+      Given an order item with empty Apollo description and no curated-static
+      match, AND MEALS_FIRECRAWL_FALLBACK=1:
+      When the Firecrawl /v1/search returns 401, 403, 429, or 5xx,
+      Then `_fetch_firecrawl_search_snippet` logs a warning with the HTTP
+      status code and item name, returns None, and the sync writes
+      `products/{tpnc}.json` WITHOUT a `firecrawl` key (no record of the
+      failed attempt — Open Question 6). No exception propagates.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/test_firecrawl_search.py
+      manual: |
+        Temporarily set FIRECRAWL_API_KEY to an invalid value. Run sync.
+        Confirm the product blob has NO `firecrawl` key and the sync log
+        contains the 401 warning. Restore the real key.
+      rationale: HTTP error fall-through — Firecrawl failures must not
+        break the sync, and absent key prevents the dashboard from
+        showing a misleading "this is what Firecrawl thinks" state.
+    integration_isolation: mocked urllib in unit tests.
+  AS-004:
+    type: positive
+    requirements: [FR-001, FR-014, FR-017]
+    expected: |
+      Given an order item whose Apollo extraction returns populated `description`,
+      When the meals-check sync runs,
+      Then `_fetch_firecrawl_search_snippet` is NOT called.
+      The product blob is written with `description` from Apollo and
+      NO `firecrawl` key (or a `firecrawl` key only if Apollo was a partial
+      success where SOME fields came from Apollo but description was not
+      among them — extremely unlikely but not explicitly forbidden).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/test_firecrawl_search.py
+      manual: |
+        Run sync against a fixture order containing an item with populated
+        Apollo description. Mock urllib to count calls. Confirm zero calls
+        to /v1/search for that item. Confirm product blob has populated
+        `description` and no `firecrawl` key (or the `firecrawl` key's
+        snippet matches Apollo's description, indicating no Firecrawl call
+        was made and the existing snippet is preserved).
+      rationale: Apollo partial success — Firecrawl must not fire when
+        Apollo already covered description. Per-field fallback principle
+        from spec 025.
+    integration_isolation: mocked urllib in unit tests.
+  AS-005:
+    type: positive
+    requirements: [FR-001, FR-014, FR-017]
+    expected: |
+      Given an order item whose Apollo extraction returns a populated
+      description,
+      When the meals-check sync runs,
+      Then `_fetch_firecrawl_search_snippet` is NOT called.
+      The product blob may have a `firecrawl` key if Apollo populated
+      other fields, but the snippet field is NEVER populated for this
+      item. The dashboard's `resolveProductInfoForItem` returns the
+      Apollo description and never consults `firecrawl.snippet`.
+      *(Spec 010 Rev 4, 2026-06-22: the prior "curated-static match in
+      lib/product-database.ts has populated description" wording is
+      removed because the static DB is gone. The chain is now Apollo
+      → Firecrawl → placeholder, with no curated-static tier.)*
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/test_firecrawl_search.py
+      manual: |
+        Run sync against a fixture order containing an item with a
+        populated Apollo description. Confirm zero /v1/search calls
+        in the sync log. Open the dashboard modal for that item;
+        confirm the description is the Apollo-sourced text.
+      rationale: Apollo priority — Apollo is the primary source; Firecrawl
+        is a per-field fallback for missing/empty `description` only.
+    integration_isolation: mocked urllib in unit tests.
+  AS-006:
+    type: positive
+    requirements: [FR-006, FR-014]
+    expected: |
+      Given a `products/{tpnc}.json` blob with `firecrawl.snippet` populated
+      AND `firecrawl.lastFetched` within the last `MEALS_PRODUCT_ENRICHMENT_MAX_AGE_DAYS`
+      (default 21),
+      When the meals-check sync runs against an order containing that item,
+      Then `_fetch_firecrawl_search_snippet` is NOT called.
+      The existing snippet is preserved in the rewritten blob
+      (same snippet text, updated `lastFetched` timestamp if the blob is
+      being rewritten for other Apollo field updates).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/test_firecrawl_search.py
+      manual: |
+        Manually write a fixture blob with `firecrawl.lastFetched` set to
+        today minus 5 days. Add the item to a test order. Run sync with
+        MEALS_FIRECRAWL_FALLBACK=1. Confirm zero /v1/search calls and the
+        snippet text is preserved in the rewritten blob.
+      rationale: TTL honoured — the sync doesn't re-burn credits on items
+        that have a fresh snippet.
+    integration_isolation: mocked urllib in unit tests.
+  AS-007:
+    type: positive
+    requirements: [FR-006, FR-014]
+    expected: |
+      Given a `products/{tpnc}.json` blob with `firecrawl.snippet` populated
+      AND `firecrawl.lastFetched` older than `MEALS_PRODUCT_ENRICHMENT_MAX_AGE_DAYS`
+      (default 21, e.g. 25 days ago),
+      When the meals-check sync runs against an order containing that item,
+      Then `_fetch_firecrawl_search_snippet` IS called.
+      The new snippet replaces the old one (or both are written, with the
+      new one taking precedence — implementation detail of the rewrite).
+      `lastFetched` is updated to the current ISO timestamp.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/test_firecrawl_search.py
+      manual: |
+        Manually write a fixture blob with `firecrawl.lastFetched` set to
+        today minus 25 days. Add the item to a test order. Run sync with
+        MEALS_FIRECRAWL_FALLBACK=1. Confirm one /v1/search call. Confirm
+        the rewritten blob has a fresh `lastFetched` and a new snippet.
+      rationale: TTL expiry triggers re-fetch — old snippets are replaced
+        so the dashboard reflects current Tesco data.
+    integration_isolation: mocked urllib in unit tests.
+  AS-008:
+    type: negative
+    requirements: [FR-005, FR-018]
+    expected: |
+      Given MEALS_FIRECRAWL_FALLBACK is unset or set to '0',
+      When the meals-check sync runs against any order,
+      Then `_fetch_firecrawl_search_snippet` is NEVER called.
+      The `firecrawl` key is absent from all product blobs written during
+      the sync. The existing Apollo + curated-static fallback chain runs
+      unchanged.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/test_firecrawl_search.py
+      manual: |
+        Deploy to production with MEALS_FIRECRAWL_FALLBACK unset. Run sync
+        against a real order. Confirm zero /v1/search calls in the sync
+        log. Confirm zero `firecrawl` keys in any written product blob.
+      rationale: Default-off behaviour — the feature is opt-in. Cost
+        guardrail against accidental credit spend.
+    integration_isolation: mocked urllib in unit tests.
+  AS-009:
+    type: negative
+    requirements: [FR-007, NFR-002]
+    expected: |
+      Given MEALS_FIRECRAWL_FALLBACK=1 but FIRECRAWL_API_KEY is missing
+      or empty in the sync process environment,
+      When the sync runs,
+      Then a one-time warning is logged at sync start (not per item),
+      and the sync behaves as if MEALS_FIRECRAWL_FALLBACK=0
+      (no Firecrawl calls, no `firecrawl` keys in product blobs).
+      No runtime exception is raised.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/test_firecrawl_search.py
+      manual: |
+        Temporarily unset FIRECRAWL_API_KEY. Run sync. Confirm the
+        warning is logged exactly once (not per item) and zero /v1/search
+        calls are made. Restore the key.
+      rationale: Missing-key graceful degradation — Firecrawl key rotation
+        or missing-config must not break the sync.
+    integration_isolation: mocked urllib in unit tests.
+  AS-010:
+    type: positive
+    requirements: [FR-014, FR-015, FR-017]
+    expected: |
+      Given a `products/{tpnc}.json` blob with empty `description` AND a
+      populated `firecrawl.snippet` AND no curated-static match,
+      When the dashboard renders the Product Detail modal for that item,
+      Then `resolveProductInfoForItem` returns the `firecrawl.snippet` as
+      the `description` field. The modal renders the snippet verbatim.
+      The placeholder string is NOT rendered.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/dashboard-ui-utils.test.ts -v
+      manual: |
+        Manually write a fixture blob at products/{tpnc}.json with empty
+        `description` and a populated `firecrawl.snippet`. Open the
+        dashboard. Open the modal for that item. Confirm the snippet
+        text renders.
+      rationale: Dashboard read path composes the Firecrawl snippet as
+        the third tier of the description fallback chain.
+    integration_isolation: vitest with mocked grocery items.
+  AS-011:
+    type: positive
+    requirements: [FR-015, FR-017]
+    expected: |
+      Given a `products/{tpnc}.json` blob without a `firecrawl` key
+      (written before spec 027 Rev 2 was implemented),
+      When the dashboard renders the Product Detail modal for that item,
+      Then `resolveProductInfoForItem` treats `firecrawl.snippet` as
+      undefined and falls through to the placeholder (or Apollo /
+      curated-static, depending on what other fields are populated).
+      No exception is raised. The dashboard renders exactly as it did
+      before spec 027 Rev 2.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/dashboard-ui-utils.test.ts -v
+      manual: |
+        Manually write a fixture blob without a `firecrawl` key.
+        Open the dashboard. Open the modal. Confirm the modal renders
+        the existing fields without error.
+      rationale: Backward compatibility — existing product blobs without
+        the `firecrawl` key continue to work unchanged.
+    integration_isolation: vitest with mocked grocery items.
+  AS-012:
+    type: positive
+    requirements: [FR-002]
+    expected: |
+      After implementation, grepping the meals-dashboard source tree
+      (including scripts/) for `firecrawl.dev/v1/scrape` returns zero
+      matches. The Firecrawl scrape endpoint is not called anywhere.
+      Only the search endpoint (`firecrawl.dev/v1/search`) is referenced.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && bash -c 'grep -rn "v1/scrape" lib/ components/ app/ scripts/ 2>/dev/null | wc -l' # expect 0
+      manual: |
+        Run the grep command above. Confirm output is 0. Also grep for
+        `formats.*markdown` (a scrape-only parameter) and `proxy.*stealth`
+        (a scrape-only proxy mode) and assert zero matches across all
+        Python and TypeScript source files.
+      rationale: Scope enforcement — the scrape endpoint was disqualified
+        by the 3-product test. Implementing it here would invite the same
+        flakiness into the sync pipeline.
+    integration_isolation: no external services required.
+  AS-013:
+    type: positive
+    requirements: [FR-014, FR-018]
+    expected: |
+      After implementation, `git diff main` shows:
+      - `scripts/sync-dashboard-data.py` has additive changes (new
+        `_fetch_firecrawl_search_snippet` function + integration into
+        `enrich_order_items_with_product_metadata`, no removed logic).
+      - `lib/dashboard-ui-utils.ts` has one new fallback tier in
+        `resolveProductInfoForItem`.
+      - `lib/dashboard-sync.ts` has one new optional field on
+        `ProductBlob` (the `firecrawl` sub-object).
+      - One new file: `scripts/test_firecrawl_search.py`.
+      - `lib/dashboard-ui-utils.test.ts` has 4 new test cases.
+      - `ProductBlob` schema gains ONLY the new optional field — no
+        existing field is removed, renamed, or has its type changed.
+      - No new Vercel Blob namespaces — the `firecrawl` sub-object lives
+        inside the existing `products/{tpnc}.json` blob.
+      - `lib/blob-storage.ts`, `lib/dashboard-data.ts`,
+        `components/dashboard-client.tsx`, `app/page.tsx`, `app/layout.tsx`
+        are UNCHANGED (unless `lib/dashboard-data.ts` re-exports `ProductBlob`,
+        in which case only the re-export changes).
+      - *(Spec 010 Rev 4, 2026-06-22: `lib/product-database.ts` is no longer in the
+        "UNCHANGED" list — it is being deleted in spec 010 Rev 4. The coder profile
+        removes the static DB as part of spec 010 Rev 4 Phase 8 T070; spec 027's
+        implementation does not need to touch it.)*
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && bash -c 'git diff --stat main -- lib/blob-storage.ts lib/dashboard-data.ts components/dashboard-client.tsx app/page.tsx app/layout.tsx'
+      manual: |
+        After implementation lands on preview, run the git diff command
+        above. Each file must show zero lines changed (or only the
+        ProductBlob re-export in lib/dashboard-data.ts, if applicable).
+        Then grep the source tree for any new blob namespace outside
+        `products/{tpnc}.json` and assert zero matches.
+      rationale: Spec 021 (Apollo) and other existing modules are
+        unaffected. The sync pipeline extends additively.
+    integration_isolation: no external services required.

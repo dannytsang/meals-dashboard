@@ -1,0 +1,99 @@
+# Machine-readable requirement traceability for 020-dashboard-grocy-pantry-coverage.
+feature_id: 020-dashboard-grocy-pantry-coverage
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003]
+    tasks: [T010, T011, T012]
+    checks:
+      - python3 -m pytest ~/.hermes/scripts/test_tesco_matcher.py -k grocy -v
+      - python3 -m pytest ~/.hermes/scripts/test_tesco_meal_check_windows.py -v
+    verification:
+      status: passed
+      evidence: |
+        tesco_matcher.py Tier 3 adds "source": "grocy" to matched items.
+        tesco_meal_check.py _normalise_dashboard_item() forwards source field.
+        meal-list.tsx renders 🏠 badge for matchedItem.source === 'grocy'.
+        Fail-soft Grocy unavailable path: try/except around grocy_get_stock().
+        All 64 focused matcher/client/window/report/scheduled/completed-meal tests pass; no live Grocy access was required.
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003]
+    tasks: [T010, T011, T012]
+    checks:
+      - 'grep -n "source.*order" ~/.hermes/scripts/tesco_matcher.py'
+    verification:
+      status: passed
+      evidence: |
+        Tier 1 (line 649): "source": "order" added to matched.append().
+        Tier 2 (line 716): "source": "order" added to matched.append().
+        Tier 3 (line 763): "source": "grocy" added to matched.append().
+        _normalise_dashboard_item() forwards source to matched_item dict.
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-004]
+    tasks: [T010, T011, T012]
+    checks:
+      - grep -n "source.*grocy" /home/hermes/workspace/meals-dashboard/components/meal-list.tsx
+    verification:
+      status: passed
+      evidence: |
+        meal-list.tsx renders 🏠 span when matchedItem.source === 'grocy'.
+  FR-004:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T010, T011, T012]
+    checks:
+      - grep -n get_products_in_stock ~/.hermes/scripts/tesco_meal_check.py
+    verification:
+      status: passed
+      evidence: |
+        tesco_meal_check.py lines 1486-1492: grocy_get_stock() called with
+        try/except around it; warning logged on failure; grocy_stock=None continues.
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-005]
+    tasks: [T010, T011, T012]
+    checks:
+      - grep -n use_by_warning ~/.hermes/scripts/tesco_meal_check.py
+    verification:
+      status: passed
+      evidence: |
+        tesco_meal_check.py: use_by_warning only set when match.get("source") != "grocy".
+        Grocy items never receive use_by_warning per spec requirement.
+  FR-006:
+    user_stories: [US1]
+    scenarios: [AS-002, AS-003]
+    tasks: [T010, T011, T012]
+    checks:
+      - grep -n "Tier 3" ~/.hermes/scripts/tesco_matcher.py
+    verification:
+      status: passed
+      evidence: |
+        Tier 3 Grocy matching runs after all Tesco items processed (lines 720-763).
+        Order items already consumed before Grocy pass is consulted.
+        grocy_stock=None path handled gracefully.
+  FR-007:
+    user_stories: [US1]
+    scenarios: [AS-007]
+    tasks: [T010, T011, T012]
+    checks:
+      - grep -n "Grocy stock unavailable" ~/.hermes/scripts/tesco_meal_check.py
+    verification:
+      status: passed
+      evidence: |
+        tesco_meal_check.py lines 1491-1492: except block logs warning
+        "Grocy stock unavailable, continuing without it"; grocy_stock=None.
+        Sync continues without Grocy - fail soft confirmed.
+  FR-008:
+    user_stories: [US1]
+    scenarios: [AS-006]
+    tasks: [T010, T011, T012]
+    checks:
+      - python3 -c "from tesco_matcher import fuzzy_match_items_to_meals; print('ok')"
+    verification:
+      status: passed
+      evidence: |
+        Fuzzy matching with grocy_stock parameter: name substring and SequenceMatcher
+        ratio against meal components. is_drink_snack() excludes irrelevant items.
+        grocy_stock=None gracefully skips Grocy pass entirely.

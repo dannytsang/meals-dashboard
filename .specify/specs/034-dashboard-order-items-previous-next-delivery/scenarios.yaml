@@ -1,0 +1,328 @@
+feature_id: 034-dashboard-order-items-previous-next-delivery
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002]
+    expected: |
+      Given the dashboard has loaded at least one order with deliveryDate < today,
+      When the Order Items by Category section renders in its default state (filter = next),
+      Then the previous-order items are NOT shown and the section displays only the
+      next-order items (or the pending-next placeholder if no next-order blob exists).
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="default_render_hides_previous_orders"
+      manual: |
+        Render the dashboard against a fixture containing one previous order (7 days ago)
+        and one next order (+2 days). Verify the Order Items by Category section shows
+        only the next order's items on first load; the previous order's items are absent.
+      rationale: |
+        The default filter is "next" per FR-002. The previous-delivery items must NOT
+        appear in the default view; they only appear when the user clicks Previous or All.
+        This is the single most important behavioural assertion of the feature.
+    integration_isolation: component render test, no external services required
+  AS-002:
+    type: positive
+    requirements: [FR-001, FR-004]
+    expected: |
+      Given the dashboard has loaded at least one order with deliveryDate >= today,
+      When the Order Items by Category section renders in its default state,
+      Then each visible item row carries a "Next · {DD MMM}" badge on the right-hand
+      side of the row, immediately to the LEFT of the price column, with the
+      --accent-blue background colour and a down-arrow icon.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="next_items_carry_next_badge"
+      manual: |
+        Render against a fixture with a next order (+2 days). Verify each item in the
+        Order Items by Category section shows a small pill to the left of the price,
+        reading "Next · 02 Jul" (or the equivalent for the fixture's date), coloured
+        blue with a down-arrow icon.
+      rationale: |
+        The Next badge is the visual answer to Danny's "indicator" requirement. It must
+        be unambiguous, screen-reader-friendly (aria-label per FR-004), and visually
+        consistent with the existing Delivery chip on the Week Meals grid.
+    integration_isolation: component render test, no external services required
+  AS-003:
+    type: positive
+    requirements: [FR-002, FR-004]
+    expected: |
+      Given the user clicks the Previous filter chip,
+      When the section re-renders,
+      Then only items from orders where deliveryDate < today are shown, the Next badge
+      disappears, and a "Prev · {DD MMM}" badge replaces it on each item, using the
+      --accent-emerald background colour and a checkmark icon.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="previous_filter_renders_previous_only"
+      manual: |
+        Click the Previous chip on a fixture with a previous order. Verify the section
+        shows only the previous order's items, each with a green "Prev · 25 Jun" badge
+        (or equivalent) and a checkmark icon.
+      rationale: |
+        The Previous filter is the symmetric counterpart of the Next filter. The badge
+        colour (emerald, "delivered/done" semantics) signals that the groceries are
+        already in the kitchen.
+    integration_isolation: component render test, no external services required
+  AS-004:
+    type: positive
+    requirements: [FR-002, FR-005]
+    expected: |
+      Given the user clicks the All filter chip,
+      When the section re-renders,
+      Then items from BOTH previous and next orders are shown, grouped by delivery with
+      a small section header per delivery date ("Delivery {date} · {slot}" rendered
+      as a sub-heading above its items), and each item carries the appropriate badge.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="all_filter_renders_grouped_subheadings"
+      manual: |
+        Click the All chip on a fixture with a previous + next order. Verify the section
+        shows both deliveries grouped under sub-headings, with each item carrying its
+        corresponding badge (Prev for the previous order's items, Next for the next
+        order's items).
+      rationale: |
+        The All filter is the "compare both deliveries" view. Sub-headings keep the
+        two groups visually distinct without introducing a separate card or panel.
+    integration_isolation: component render test, no external services required
+  AS-005:
+    type: positive
+    requirements: [FR-002, FR-006]
+    expected: |
+      Given the user clicks the Next filter chip,
+      When the section re-renders,
+      Then only items from orders where deliveryDate >= today are shown, each item
+      carries the Next badge, and orders without any items (the Pending Next case)
+      render a single placeholder row with text "Pending next delivery — no order
+      email received yet" and the Pending badge (amber, clock icon).
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="pending_next_placeholder_renders_when_no_future_blob"
+      manual: |
+        Render against a fixture with only a previous order (no future order blob).
+        Verify the Next filter shows a single placeholder row reading "Pending next
+        delivery — no order email received yet" with the amber Pending badge.
+      rationale: |
+        The placeholder handles the gap Danny flagged. It is truthful (no email = no
+        items yet) and updates to actual items the moment the next cron syncs.
+    integration_isolation: component render test, no external services required
+  AS-006:
+    type: positive
+    requirements: [FR-001, FR-007]
+    expected: |
+      Given the order list contains TWO future orders (e.g. an in-flight next order
+      with a confirmed email + a further-future order that only exists in the
+      meals-check summary windows),
+      When the Next filter is active,
+      Then items from BOTH future orders are shown, each grouped under its own
+      delivery date sub-heading, with a Next badge carrying that order's specific
+      deliveryDate.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="next_filter_handles_multiple_future_orders"
+      manual: |
+        Render against a fixture with two future order blobs (one +2 days, one +9 days)
+        plus the matching summary windows. Verify the Next filter shows both groups,
+        each with its own sub-heading and the correct per-order badge dates.
+      rationale: |
+        The meals-check pipeline sometimes schedules two future deliveries (a confirmed
+        next + a tentative next+1). The UI must surface both under Next, not collapse
+        them or hide one.
+    integration_isolation: component render test, no external services required
+  AS-007:
+    type: positive
+    requirements: [FR-001, FR-009]
+    expected: |
+      Given the dashboard renders at a `today` value of T+1 (one day after the only
+      next order's deliveryDate),
+      When the Order Items by Category section renders in its default state,
+      Then the items that were "Next" at T are now classified as "Previous" and are
+      hidden by default; the dashboard does NOT need a data sync or refresh to perform
+      this reclassification.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="time_machine_reclassifies_next_to_previous"
+      manual: |
+        Render against the live dashboard. With debug mode ON and ?delivery_date_offset=1
+        appended, verify the items previously classified as Next (e.g. "Next · 02 Jul"
+        when today is 02 Jul) are now classified as Previous ("Prev · 02 Jul") and the
+        default filter (Next) shows an empty list or the pending-next placeholder.
+      rationale: |
+        This is Danny's "auto-flip" requirement. The test proves that the
+        reclassification happens at render time without any pipeline write or sync.
+    integration_isolation: component render test + debug-mode smoke test
+  AS-008:
+    type: positive
+    requirements: [FR-002, FR-006, FR-009]
+    expected: |
+      Given the dashboard renders at a `today` value with NO order blob having
+      deliveryDate >= today,
+      When the section renders in its default state,
+      Then the section shows a single placeholder row "Pending next delivery — no
+      order email received yet" and the All / Previous / Next filter chips remain
+      functional (Previous shows items, All shows items + the placeholder).
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="no_future_blob_renders_placeholder_by_default"
+      manual: |
+        Render against a fixture with only a previous order (no future blob). Verify
+        the section's default state shows the placeholder row. Click Previous — verify
+        the previous order's items appear. Click All — verify both the placeholder and
+        the previous items appear together.
+      rationale: |
+        The placeholder is not a dead-end; the filter chips still work and the user can
+        always fall back to Previous or All to inspect what they have.
+    integration_isolation: component render test, no external services required
+  AS-009:
+    type: positive
+    requirements: [FR-008]
+    expected: |
+      Given the section's delivery filter is set to Previous, Next, or All,
+      When the user changes the section's existing controls (search query, category
+      chips, match filter, sort),
+      Then the new filter composes with those controls exactly as the existing
+      pipeline specifies in spec 008 FR-013 — the new filter is the FIRST stage of
+      the pipeline, before category / match / search / sort.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="delivery_filter_composes_with_existing_pipeline"
+      manual: |
+        Set the delivery filter to Next. Type "milk" in the search box. Verify the
+        section narrows to next-delivery items matching "milk". Switch the filter to
+        Previous. Verify the search query persists but applies to the previous-order
+        items. Switch to All. Verify the search query applies to both groups.
+      rationale: |
+        The new filter must not break the existing pipeline. Spec 008 FR-013's invariant
+        (search composes with category / match / sort) extends to the delivery filter
+        as the new first stage.
+    integration_isolation: component render test, no external services required
+  AS-010:
+    type: positive
+    requirements: [FR-002, FR-008]
+    expected: |
+      Given a previous delivery contains items that should not appear in the active
+      Next view,
+      When the user switches from Previous to Next,
+      Then the items disappear and the visible count changes accordingly; switching
+      back to Previous restores them. The category / search / match / sort state
+      survives the filter switch (per spec 008 FR-013 invariant).
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="filter_switch_preserves_secondary_state"
+      manual: |
+        Set the filter to Previous, type "milk" in search, verify results. Switch to
+        Next. Verify search text remains "milk" but the visible items changed. Switch
+        back to Previous. Verify the previous items matching "milk" reappear.
+      rationale: |
+        A user mid-investigation must not lose their search/category/sort state when
+        they briefly switch filters. The state preservation invariant from spec 008
+        FR-013 extends to the new filter.
+    integration_isolation: component render test, no external services required
+  AS-011:
+    type: boundary
+    requirements: [FR-001]
+    expected: |
+      Given an item has no associated order blob (defensive case — should not occur
+      in practice but the dashboard should not crash),
+      When the section renders,
+      Then the item is omitted from both Previous and Next views and a single debug
+      chip in the dashboard's debug-mode panel reports `items_without_order_blob: N`
+      for visibility.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="defensive_no_order_blob_excludes_item"
+      manual: |
+        Render against a fixture with an item that has no order blob (manual fixture
+        construction). Verify the item does not appear in the section and the debug
+        chip reports the count.
+      rationale: |
+        Defensive programming. The loader should never produce this state, but a bug
+        in the loader (or a manually-edited cache) should not crash the dashboard.
+        The debug chip surfaces the anomaly for the operator.
+    integration_isolation: component render test, no external services required
+  AS-012:
+    type: positive
+    requirements: [FR-005, FR-018]
+    expected: |
+      Given the order has a status of cancelled / superseded / refunded (per spec 018),
+      When the section renders,
+      Then the items from that order are still shown under whichever filter applies,
+      but the section sub-heading for that delivery reads "Delivery {date}
+      (cancelled)" / "(superseded)" / "(refunded)" so the user can see at a glance
+      the order is no longer active.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="non_active_order_status_renders_in_subheading"
+      manual: |
+        Render against a fixture with a previous order whose status is "refunded".
+        Verify the All filter shows the refunded order's items under a sub-heading
+        reading "Delivery 25 Jun 2026 · 20:00-21:00 (refunded)".
+      rationale: |
+        Refunded / cancelled orders still have items the user might want to inspect
+        (e.g. to check what was substituted, or to verify the refund). The sub-heading
+        parenthetical makes the non-active status visible without hiding the items.
+    integration_isolation: component render test, no external services required
+  AS-013:
+    type: positive
+    requirements: [FR-005]
+    expected: |
+      Given the order has a deliverySlot field (e.g. "20:00-21:00"),
+      When the section renders an order sub-heading under the All filter,
+      Then the sub-heading reads "Delivery {date} · {slot}" so the slot window is
+      visible alongside the date.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="subheading_includes_delivery_slot"
+      manual: |
+        Render against a fixture with an order whose deliverySlot is "20:00-21:00".
+        Verify the All filter's sub-heading reads "Delivery 02 Jul 2026 · 20:00-21:00".
+      rationale: |
+        The slot window is useful context. Danny's orders come in specific windows
+        (morning, evening, named slots) and seeing the slot next to the date answers
+        "when exactly is this arriving?".
+    integration_isolation: component render test, no external services required
+  AS-014:
+    type: positive
+    requirements: [FR-006]
+    expected: |
+      Given the Next filter is active and no order blob exists for any
+      deliveryDate >= today AND mealsCheckSummary.windows.next_delivery is present
+      and is >= today,
+      When the section renders the Pending next delivery placeholder,
+      Then the placeholder text reads exactly
+      "Pending next delivery — no order email received yet (expected {DD MMM})"
+      with the {DD MMM} derived from mealsCheckSummary.windows.next_delivery.
+      When mealsCheckSummary.windows.next_delivery is absent or in the past,
+      the placeholder reads exactly
+      "Pending next delivery — no order email received yet" with no parenthetical.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="placeholder_includes_expected_date_when_available"
+      manual: |
+        Render against a fixture with no future order blob but
+        mealsCheckSummary.windows.next_delivery == today + 3. Verify the placeholder
+        text reads "Pending next delivery — no order email received yet (expected 05 Jul)".
+        Then render against a fixture with no future order blob and NO
+        mealsCheckSummary.windows.next_delivery. Verify the placeholder has no
+        parenthetical.
+      rationale: |
+        Q3 resolution (2026-06-30): the placeholder MUST surface the expected
+        next-delivery date when the meals-check summary knows it, so the user sees
+        "the next order is expected on the 5th" rather than a generic "soon". When
+        the summary doesn't know (or the date is in the past), the placeholder
+        falls back to the no-parenthetical form to avoid misleading the user.
+    integration_isolation: component render test, no external services required
+  AS-015:
+    type: boundary
+    requirements: [FR-004, FR-005]
+    expected: |
+      Given an order with deliverySlot "20:00-21:00" AND deliveryDate "2026-07-02",
+      When the section renders the per-item badge for an item from that order,
+      Then the badge reads "Next · 02 Jul" exactly (date only, NO slot, NO time).
+      When the section renders the sub-heading under the All filter,
+      Then the sub-heading reads "Delivery 02 Jul 2026 · 20:00-21:00" (date + slot).
+      When the All filter is active and the sub-heading is rendered,
+      Then the sub-heading is a plain div (NOT a button, NOT an accordion); clicking
+      the sub-heading does NOT collapse or expand its items. The only expand/collapse
+      affordance in the section is the existing Show all / Collapse button.
+    verification:
+      automated: npm run test -- dashboard-client --testNamePattern="badge_is_date_only_and_subheading_is_not_collapsible"
+      manual: |
+        Render against a fixture with one next order whose slot is "20:00-21:00".
+        Verify the per-item badges read "Next · 02 Jul" (or equivalent fixture date)
+        with no time component. Switch to All filter. Verify the sub-heading shows
+        "Delivery 02 Jul 2026 · 20:00-21:00" with the slot. Click the sub-heading —
+        verify nothing collapses; the items remain visible. Click the existing
+        Show all / Collapse button — verify it works as before.
+      rationale: |
+        Q1 + Q2 resolutions (2026-06-30): sub-headings are NOT collapsible (single
+        Show all/Collapse button covers the whole section) and per-item badges are
+        date-only (slot appears on the sub-heading). This locks both decisions into
+        the acceptance criteria so the implementation cannot drift back to inline
+        slot on the badge or per-delivery collapse on the sub-heading.
+    integration_isolation: component render test, no external services required

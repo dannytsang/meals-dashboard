@@ -1,0 +1,38 @@
+feature_id: 019-dashboard-coverage-invalidation-refunds-perishables
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002]
+    expected: 'Amendment emails (add/remove items), refunds, and order cancellations/supersedions trigger coverage recalculation for all affected meal dates; affected blobs are transiently marked stale:true before fresh blobs are written with stale:false; audit log receives one entry per invalidation event; the dashboard shows a stale coverage indicator during the transient window.'
+    verification:
+      automated: '4 trigger-reason cases in test_tesco_pipeline_wiring.py (order_updated/cancelled/superseded/refunded); 5 Spec 019 vitest cases in lib/dashboard-sync.test.ts'
+      manual: 'T078 amendment smoke — verified with real amendment emails; CHANGELOG 2026-06-15 Phase 3+4+5 live run confirms coverage recalculation triggered'
+      rationale: null
+    integration_isolation: 'invalidation trigger runs within the existing dashboard-sync pipeline; no external services required for unit tests; live pipeline exercises real order blob reads and manifest writes'
+  AS-002:
+    type: positive
+    requirements: [FR-006, FR-008]
+    expected: 'Refund emails cause meals whose sole coverage was a refunded item to transition from covered to partial; the meal detail card displays refunded items in a distinct refunded section with full item details and a £X refunded badge; refunded items are visually separated from order-matched items.'
+    verification:
+      automated: '6 refund processing cases in test_tesco_refund_processing.py; 5 pipeline wiring cases covering refund_amount and refunded_items fields; 4 dashboard-client.test.ts Spec 019 cases covering distinct refunded section rendering and badge'
+      manual: 'T079 refund smoke — 4 real refund emails processed in 30-day live run, each correctly captured with refunded_items/refund_amount/meals_affected; CHANGELOG 2026-06-15 Phase 4+5'
+      rationale: null
+    integration_isolation: 'process_refund is a pure function tested in isolation; wired into write_dashboard_cache via pipeline test; dashboard rendering tested in vitest with mocked data'
+  AS-003:
+    type: positive
+    requirements: [FR-003, FR-004, FR-005]
+    expected: 'Items with shelf_life_days <= 1 are matched to same-day or next-day meals first; items with shelf_life_days == 2 are matched to meals within 2 days before later dates; the meal detail card shows use_by_warning items in a "Use today" section at the top with a use-by date badge; the meal summary card displays a perishable badge when any matched item has use_by_warning true.'
+    verification:
+      automated: '5 shelf-life cases in test_tesco_shelf_life.py covering 1-day/2-day/no shelf life and greedy-matching starvation; 5 pipeline wiring cases covering annotate_shelf_life wired into write_dashboard_cache; 4 dashboard-client.test.ts Spec 019 cases covering "Use today" section and perishable badge rendering'
+      manual: 'T080 perishable smoke — SHELF_LIFE_BY_ITEM 14-entry seed table drives annotation for real deliveries; CHANGELOG 2026-06-15 Phase 4+5 confirms use_by_warning true on matched items in live cache'
+      rationale: null
+    integration_isolation: 'annotate_shelf_life is a pure function tested in isolation; wired into pipeline via test_tesco_pipeline_wiring.py; dashboard rendering tested in vitest'
+  AS-004:
+    type: positive
+    requirements: [FR-007, FR-008, FR-009]
+    expected: 'Danny marks a missing item as "I have this" via the dashboard button; manual_overrides.json is updated with the triple key (meal_date, meal_name, item_name) and override_found/override_source/override_timestamp; re-applying the same triple updates rather than duplicates; audit log receives one entry; override persists across sync runs; meal detail card shows "✓ We have it" badge; meal status is not auto-upgraded from partial to covered.'
+    verification:
+      automated: '7 manual override persistence cases in test_tesco_manual_override_persistence.py (persistence across sync, no auto-upgrade, triple key dedup, updated vs created); 5 pipeline wiring cases covering override merge; 4 dashboard-client.test.ts Spec 019 cases covering "We have it" badge rendering and button visibility'
+      manual: 'T081 manual override smoke — durable Vercel blob persistence confirmed (35b3d7d); defensive guard shipped (98db6e0); override persists across re-sync; CHANGELOG 2026-06-15 Phase 6'
+      rationale: null
+    integration_isolation: 'override persistence functions are pure Python tested in isolation; wired into dashboard via server action tested with mocked network; live override verified via T081 smoke test'

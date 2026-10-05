@@ -1,0 +1,188 @@
+# Machine-readable scenario coverage for 023-dashboard-logged-in-user-chip.
+feature_id: 023-dashboard-logged-in-user-chip
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-009, FR-013, FR-014]
+    expected: |
+      Given an authenticated NextAuth session with session.user.name
+      populated (e.g. "Danny Tsang"), the dashboard header renders a
+      <span class="session-user"> containing exactly "👤 Welcome,
+      Danny Tsang" — emoji + space + literal "Welcome, " + name. The
+      chip carries data-testid="user-chip" and
+      data-user-chip-display="Danny Tsang". The chip is positioned as
+      the first child of the existing top-right flex container, before
+      <ThemeToggle />.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-chip.test.tsx lib/user-chip.test.ts -v
+      manual: |
+        Sign in to the dashboard with an Authentik account whose name is
+        populated; confirm the chip shows "👤 Welcome, Danny Tsang";
+        confirm chip position in header; confirm data-testid and
+        className in DevTools.
+      rationale: Display derivation + wording parity with trips-dashboard
+        is the spec's headline behaviour.
+    integration_isolation: uses mocked session; no live Authentik
+      required.
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-010, FR-014]
+    expected: |
+      Given session.user.name is empty/null and session.user.email is
+      populated (e.g. "danny@example.com"), the chip renders "👤
+      Welcome, danny@example.com" — email used in place of name; the
+      emoji + "Welcome, " prefix is preserved.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-chip.test.tsx lib/user-chip.test.ts -v
+      manual: null
+      rationale: Pure-function test plus component test.
+    integration_isolation: mocked session; no live Authentik required.
+  AS-003:
+    type: boundary
+    requirements: [FR-002, FR-010, FR-014]
+    expected: |
+      Given session.user.name AND session.user.email are both
+      empty/null/whitespace, the chip renders "👤 Welcome, authorised
+      traveller" — using the same hard-coded fallback string the trips
+      dashboard uses. The placeholder is a module-level constant
+      USER_NAME_FALLBACK = 'authorised traveller'. The chip MUST NOT
+      render undefined, null, "[object Object]", or an empty element.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-chip.test.tsx lib/user-chip.test.ts -v
+      manual: null
+      rationale: Cross-dashboard wording parity requires the exact
+        fallback string; unit + component tests assert this.
+    integration_isolation: mocked session; no live Authentik required.
+  AS-004:
+    type: positive
+    requirements: [FR-014, FR-008, US2]
+    expected: |
+      The chip text content matches the trips-dashboard format exactly:
+      👤 Welcome, <name|email|fallback>. The 👤 emoji is U+1F464 BUST IN
+      SILHOUETTE. The word "Welcome" is present. The comma + space
+      separator is present. The chip carries className="session-user"
+      (matching trips-dashboard). The chip uses CSS variable
+      var(--text-secondary) for text colour (matching trips-dashboard).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-chip.test.tsx -v
+      manual: |
+        Open the trips dashboard and the meals dashboard side-by-side;
+        compare chip text; confirm emoji, word "Welcome", and comma +
+        space all present.
+      rationale: Wording parity is the spec's central design goal;
+        cross-dashboard manual comparison is the canonical check.
+    integration_isolation: no external services required.
+  AS-005:
+    type: negative
+    requirements: [FR-006, FR-007, FR-017, FR-018]
+    expected: |
+      The chip does not include session.sub, session.iss, session.aud,
+      session.accessToken, session.idToken, session.picture,
+      session.email_verified, or any other session claim beyond name
+      and email. The chip does not include <img>, <a>, fetch, useEffect,
+      Gravatar URL, or any other network resource.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-chip.test.tsx -v
+      manual: |
+        Build the dashboard; grep production JS bundle for
+        session.accessToken, session.sub, gravatar.com, session.idToken
+        in chip-related code; assert no hits. Inspect DevTools network
+        panel during chip render; assert no new requests.
+      rationale: Privacy boundary requires both unit assertions and
+        manual bundle inspection.
+    integration_isolation: no external services required.
+  AS-006:
+    type: positive
+    requirements: [FR-003, FR-004, FR-013, NFR-003]
+    expected: |
+      The chip is rendered as a non-interactive <span>, NOT as a
+      <button>. It is NOT focusable. It carries className="session-user",
+      data-testid="user-chip", data-user-chip-display, and
+      aria-label="Signed in as <userName>". The emoji span inside the
+      chip is aria-hidden="true" so screen readers do not announce
+      "bust in silhouette" — the aria-label carries the semantic
+      meaning. The chip is rendered server-side and present in the
+      initial HTML payload (no client-side fetch).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-chip.test.tsx -v
+      manual: |
+        Inspect rendered HTML; confirm chip element type; confirm
+        className, data-testid, aria-label; confirm emoji span has
+        aria-hidden="true"; confirm tabIndex absent or -1.
+      rationale: Element type + server-render contract + accessibility
+        are component test concerns.
+    integration_isolation: no external services required.
+  AS-007:
+    type: boundary
+    requirements: [FR-005]
+    expected: |
+      With MEALS_DEBUG_MODE unset (debug off), the chip is rendered on
+      the dashboard. With MEALS_DEBUG_MODE=1 (debug on), the chip is
+      still rendered on / AND any debug chips from spec 022 (when
+      ?debug=inject is set) do not displace the user chip.
+      Additionally: with MEALS_DEBUG_MODE=1, navigating to /debug does
+      NOT render the user chip inside the debug shell.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client.test.ts -v
+      manual: |
+        Deploy twice (debug off, debug on). Confirm chip present on /
+        in both deployments. With debug on, navigate to /debug and
+        confirm the debug shell does not include the user chip.
+      rationale: Independence from debug mode is the architectural
+        separation this spec defends.
+    integration_isolation: requires a populated dashboard with the spec
+      022 implementation for the debug-shell exclusion check; otherwise
+      the /debug route returns 404.
+  AS-008:
+    type: boundary
+    requirements: [FR-012]
+    expected: |
+      A display value longer than the chip's max-width truncates with
+      ellipsis (text-overflow: ellipsis; overflow: hidden; white-space:
+      nowrap) and the title attribute carries the full untruncated
+      value so hover reveals it. The chip MUST NOT wrap to multiple
+      lines or push other header elements off-screen.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-chip.test.tsx -v
+      manual: |
+        Sign in with a user whose name or email is longer than the
+        chip's max-width (e.g. a long email); confirm ellipsis
+        truncation; confirm title attribute carries the full value;
+        hover to reveal.
+      rationale: Truncation behaviour is a component test concern.
+    integration_isolation: mocked session; no live Authentik required.
+  AS-009:
+    type: negative
+    requirements: [FR-011]
+    expected: |
+      The chip is NOT rendered on the /auth/signin page. The sign-in
+      page is owned by spec 015 and is rendered before any session
+      check; the chip is naturally absent there. The implementation
+      MUST NOT add the chip to components/auth-signin-page.tsx.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run -v
+      manual: |
+        Sign out; navigate to /; confirm redirect to /auth/signin;
+        confirm chip is NOT present on the sign-in page.
+      rationale: Sign-in exclusion is the spec's privacy boundary.
+    integration_isolation: no external services required.
+  AS-010:
+    type: positive
+    requirements: [FR-020, US2]
+    expected: |
+      The existing <ThemeToggle /> and <SignOutButton /> ordering and
+      styling are unchanged. The chip is added to the flex row; the
+      existing elements are not moved, restyled, or wrapped. Final
+      order: <UserChip /> <ThemeToggle /> <SignOutButton />. The
+      meals-dashboard chip styling MAY diverge from the trips pill
+      style (rounded-rect matching <SignOutButton />); the spec
+      permits both.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client.test.ts -v
+      manual: |
+        Visual diff against pre-chip screenshots; confirm theme
+        toggle and sign-out styling unchanged; confirm order is
+        UserChip | ThemeToggle | SignOut.
+      rationale: Non-regression of existing UI is part of the
+        acceptance criteria.
+    integration_isolation: no external services required.

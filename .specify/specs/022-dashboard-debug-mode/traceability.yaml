@@ -1,0 +1,190 @@
+# Machine-readable requirement traceability for 022-dashboard-debug-mode (Rev 3).
+feature_id: 022-dashboard-debug-mode
+requirements:
+  FR-001:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-002, AS-005, AS-010]
+    tasks: [T020, T022, T050, T051, T052, T060]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "Production 2026-06-17 (deployment dpl_FN7HxzZybn1SWfJv1rViJ1bPnbGt, alias meals-dashboard.vercel.app): verifyDebugCookie rejects tampered cookies, /debug returns 404 with cookie unset, /debug returns 200 with valid signed cookie. See spec.md Promotion Criteria for Final."
+  FR-002:
+    user_stories: [US1, US4]
+    scenarios: [AS-001, AS-008]
+    tasks: [T020, T022, T030, T031, T032, T040, T041, T060, T061]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "Production 2026-06-17: main bundle grep-clean for debug strings, /debug and /api/debug/* return 307 (OIDC) → 404 for authenticated users with cookie unset."
+  FR-003:
+    user_stories: [US1, US3, US4]
+    scenarios: [AS-002, AS-004]
+    tasks: [T030, T040, T060, T061]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "Production 2026-06-17: operator-confirmed — click toggle, /debug returns 200 with items-by-category panel; click toggle off, /debug returns 404."
+  FR-004:
+    user_stories: [US3]
+    scenarios: [AS-002, AS-006]
+    tasks: [T030, T031, T032]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "Production 2026-06-17: /api/debug/items-by-category returns 200 with FR-004 JSON shape (all 14 fields) when cookie is set; route.test.ts covers the contract (7 tests)."
+  FR-005:
+    user_stories: [US3, US4]
+    scenarios: [AS-002, AS-003]
+    tasks: [T041]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "components/items-by-category-debug-panel.tsx implements collapsible card with type indicator, value, and Copy-as-JSON button. Visual contract verified manually in production 2026-06-17."
+  FR-006:
+    user_stories: [US3]
+    scenarios: [AS-002]
+    tasks: [T041]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "components/debug-shell.tsx implements global refresh button that re-fetches all visible panels in parallel via Promise.all."
+  FR-007:
+    user_stories: [US3, US5]
+    scenarios: [AS-002]
+    tasks: [T040, T041]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "components/debug-shell.tsx footer shows cookie value + VERCEL_DEPLOYMENT_ID + curl example. (Rev 3: the env-var row was removed; deployment ID is read via prop from the server component.)"
+  FR-008:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-002, AS-004, AS-010]
+    tasks: [T030, T040, T050, T051, T052, T060, T061]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "All seven new routes/components exist: app/debug/page.tsx, app/api/debug/items-by-category/route.ts, app/api/debug/toggle/route.ts, components/debug-shell.tsx, components/items-by-category-debug-panel.tsx, components/dashboard-debug-chips.tsx, components/debug-toggle.tsx. Tests in route.test.ts and component test files cover the contracts."
+  FR-009:
+    user_stories: [US4]
+    scenarios: [AS-004, AS-010]
+    tasks: [T052, T060, T061, T062]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "components/dashboard-debug-chips.tsx renders next to Order Items by Category heading with 'displayItems: <N>' label; opens the same panel as /debug on click. ?debug=inject URL flag is removed (Rev 2); env-var is removed (Rev 3). Cookie is the only per-user switch."
+  FR-010:
+    user_stories: [US4]
+    scenarios: [AS-004]
+    tasks: [T060, T061, T062]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "lib/dashboard-ui-utils.ts (or equivalent) defines the DebugPanel discriminated union. items-by-category is the first member; future surfaces extend the union."
+  FR-011:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-001, AS-002]
+    tasks: [T020, T022, T030, T031, T050, T051, T060, T061]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "lib/debug-mode.ts exports effectiveDebugMode(cookieRaw) — cookie-only check, no process.env reads (Rev 3). All server-side code that decides whether to render debug UI goes through this helper. Verified by grep: zero hits for 'MEALS_DEBUG_MODE' or 'isDebugModeEnabled' anywhere in source."
+  FR-012:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-002, AS-005]
+    tasks: [T010, T011, T012, T050, T051]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "lib/debug-cookie.ts exports signDebugCookie, verifyDebugCookie, isDebugCookieOn; HMAC-SHA-256 keyed on NEXTAUTH_SECRET; timingSafeEqual for verification. lib/debug-cookie.test.ts has 25 tests covering round-trip, tampering, malformed, unset, secret rotation."
+  FR-013:
+    user_stories: [US1]
+    scenarios: [AS-008]
+    tasks: [T090, T091]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "npx tsc --noEmit clean; npx next build clean. (Rev 3: the env-var-set build is no longer required because the env-var is gone.)"
+  FR-014:
+    user_stories: [US1, US2]
+    scenarios: [AS-005, AS-009]
+    tasks: [T012, T022]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "lib/debug-mode.test.ts has 7 tests covering the effectiveDebugMode contract (Rev 3: combined env+cookie test replaced with cookie-only test)."
+  FR-015:
+    user_stories: [US1, US2]
+    scenarios: [AS-009]
+    tasks: [T012]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "lib/debug-cookie.test.ts has 25 tests covering round-trip, tampering, malformed, unset, secret rotation, weird inputs, 30-day Max-Age export, canonical name export."
+  FR-016:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-002, AS-009]
+    tasks: [T030, T031, T050, T051, T060, T061]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "Integration tests in app/api/debug/items-by-category/route.test.ts (7 tests) and app/api/debug/toggle/route.test.ts (11 tests) cover both the unset and the set-cookie paths."
+  FR-017:
+    user_stories: [US1, US3]
+    scenarios: [AS-001, AS-007]
+    tasks: [T010, T050]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "lib/debug-mode-no-persistence.test.ts asserts no writes to localStorage, sessionStorage, IndexedDB, service-worker cache, or Vercel Blob. The only debug-related persistence is the meals_debug_mode cookie (FR-012)."
+  FR-018:
+    user_stories: [US5]
+    scenarios: [AS-002]
+    tasks: [T080]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "references/dashboard-debug-mode.md captures the enable/disable steps, the cookie contract, the toggle UI flow, the panel-extension pattern, the security boundary, and a troubleshooting checklist. (Rev 3: the env-var section is removed; the matrix is cookie-only.)"
+  FR-019:
+    user_stories: [US1, US2, US3, US4, US5]
+    scenarios: [AS-002, AS-008, AS-009]
+    tasks: [T095]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: "skill.spec.yaml expected_artifacts: updated to include the new spec directory and source files."
+  FR-020:
+    user_stories: [US5]
+    scenarios: [AS-024]
+    tasks: [T114, T115, T120]
+    checks: []
+    verification:
+      status: in_progress
+      evidence: |
+        Spec-dir references doc reconciled in this Rev 4 commit (T114
+        chef profile). The code-repo references doc and stale comments
+        are picked up in Phase 12 (T120..T126) by the coder profile
+        on the meals-dashboard preview branch. AS-024 captures the
+        full contract — the spec audit command
+        `grep -rn 'MEALS_DEBUG_MODE|isDebugModeEnabled|envEnabled|two-level switch|deployment gate|kill switch|env dominates' meals-dashboard/references/ spec-dir/references/`
+        must return zero matches. The 2026-06-22 audit was the seed
+        for this FR; the next audit must be caught by AS-024.
+  FR-021:
+    user_stories: [US2]
+    scenarios: [AS-025]
+    tasks: [T060, T061]
+    checks: []
+    verification:
+      status: satisfied
+      evidence: |
+        The implementation in components/dashboard-client.tsx and
+        components/user-menu.tsx renders the Debug toggle (or row)
+        unconditionally for authenticated users. The toggle's visual
+        state (off/on) reflects the cookie via `debugOn`; the
+        toggle's *visibility* does not depend on `debugOn`. AS-025's
+        manual verification is the operator's
+        "delete the cookie, open the user menu, click Debug, see the
+        chip appear" smoke test. The Rev 4 audit confirmed this
+        contract was already met by the existing implementation; the
+        spec wording now makes it a contract rather than an
+        emergent property.

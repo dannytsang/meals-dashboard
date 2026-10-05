@@ -1,0 +1,194 @@
+# Machine-readable scenario coverage for 037-dashboard-order-items-delivery-filter-empty-state-fallback.
+feature_id: 037-dashboard-order-items-delivery-filter-empty-state-fallback
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-003]
+    expected: |
+      Given sessionStorage holds meals-dashboard:order-items-delivery-filter = previous
+      AND the persisted previous filter yields zero items,
+      When the Order Items by Category section renders,
+      Then the panel renders with the next filter (which has 15 items for the 7 Jul delivery),
+      AND a data-testid delivery-filter-fallback-notice div appears above the first item row
+      with text Previous filter had no items - showing Next delivery (07 Jul).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "previous_with_zero_items_falls_back_to_next"
+      manual: |
+        Load the dashboard with sessionStorage pre-seeded to previous via DevTools,
+        reload, verify the swap explanation appears and the 7 Jul items render.
+      rationale: |
+        The exact symptom Danny reported on 2026-07-05: persisted previous filter
+        hides the upcoming 15-item order. The fallback is the primary user-facing
+        deliverable.
+    integration_isolation: |
+      no live Blob read required; uses the fixture from lib/fixtures/dashboard-fixture.json
+      with sessionStorage stub.
+  AS-002:
+    type: positive
+    requirements: [FR-001, FR-002, FR-003]
+    expected: |
+      Given sessionStorage holds next
+      AND the next filter yields zero items (no future order blob exists yet),
+      When the section renders,
+      Then the panel renders with the all filter (so previously-delivered items still appear),
+      AND the swap explanation reads Next filter had no items - showing All deliveries.
+      The existing spec 034 FR-006 Pending next delivery placeholder MAY render
+      underneath; the fallback does not suppress it.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "next_with_zero_items_falls_back_to_all"
+      manual: |
+        Load with a fixture that has previous items but no next order blob,
+        set sessionStorage to next, verify the swap explanation + All filter render.
+      rationale: |
+        The next-empty case is reachable when the upcoming delivery has not yet
+        published an order blob. The fallback should show the previous items rather
+        than leave the panel looking broken.
+    integration_isolation: no live Blob read required.
+  AS-003:
+    type: positive
+    requirements: [FR-001]
+    expected: |
+      Given sessionStorage holds all
+      AND the all filter yields zero items (no order blobs in the visible window),
+      When the section renders,
+      Then the panel renders the existing spec 008 FR-005 empty state;
+      no swap explanation is shown because no fallback exists above all.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "all_with_zero_items_renders_spec_008_empty_state"
+      manual: |
+        Load with an empty fixture, verify spec 008 empty state renders without the swap notice.
+      rationale: |
+        All has no fallback; the empty state from spec 008 is the canonical rendering.
+        The fallback chain terminates at all by design.
+    integration_isolation: no live Blob read required.
+  AS-004:
+    type: positive
+    requirements: [FR-001]
+    expected: |
+      Given sessionStorage holds previous
+      AND the persisted filter yields one or more items,
+      When the section renders,
+      Then the panel renders with previous unchanged
+      AND no swap explanation appears.
+      The fallback is silent on the happy path.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "previous_with_items_renders_unchanged_no_explanation"
+      manual: |
+        Load a fixture where previous has at least 3 items; verify no swap explanation.
+      rationale: |
+        The fallback MUST NOT fire when the persisted filter has data to show.
+        This is the happy path and the explanation must stay silent.
+    integration_isolation: no live Blob read required.
+  AS-005:
+    type: positive
+    requirements: [FR-003]
+    expected: |
+      Given the panel auto-fell-back from previous to next in the previous render,
+      When the user reloads the page within the same browser session,
+      Then the section renders with next (the new choice was persisted to sessionStorage per FR-003)
+      AND no swap explanation appears on this render (the explanation is one-shot).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "fallback_persists_across_reload_without_reswowing_explanation"
+      manual: |
+        Load with previous in sessionStorage; reload once (swap explanation appears);
+        reload again (no swap explanation; renders with next).
+      rationale: |
+        The persistence contract: fallback choice is sticky for the session,
+        and the explanation is one-shot so users do not see a banner on every reload.
+    integration_isolation: no live Blob read required.
+  AS-006:
+    type: positive
+    requirements: [FR-004, FR-007]
+    expected: |
+      Given the panel auto-fell-back from previous to next,
+      When the user clicks the previous filter chip explicitly,
+      Then the panel re-renders with previous (the explicit click overrides the persisted fallback choice),
+      AND previous is re-persisted to sessionStorage,
+      AND no swap explanation appears on this render.
+      The hasFallbackRunRef is reset to false on the explicit click so a future
+      empty-state trigger can still fire the explanation if conditions re-occur.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "explicit_click_overrides_fallback_without_reswowing_explanation"
+      manual: |
+        After AS-001 fires, click the previous chip; verify it shows previous (empty panel)
+        AND no swap explanation appears.
+      rationale: |
+        The explicit user action is the source of truth; the fallback is a render-time
+        helper, not a state flag. After an explicit click the user has acknowledged
+        the empty state and the explanation must not re-fire.
+    integration_isolation: no live Blob read required.
+  AS-007:
+    type: positive
+    requirements: [FR-008]
+    expected: |
+      Given the panel auto-fell-back from previous to next,
+      When the dashboard's debug-mode deliveryFilterState chip renders (spec 034 FR-010),
+      Then the chip payload includes the new field fallbackApplied: { from: previous, to: next, reason: zero_items }
+      so an operator can verify the fallback fired and why.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "fallback_applied_field_present_in_debug_chip_after_fallback"
+      manual: |
+        Enable debug mode via the user menu Debug row, reload with previous in sessionStorage,
+        open the ItemsByCategoryDebug panel, verify fallbackApplied: { from: previous, to: next, reason: zero_items }.
+      rationale: |
+        The debug chip is the operator-facing verification surface for the spec 022 read-only rule.
+        The new field makes the fallback auditable without operator DevTools spelunking.
+    integration_isolation: no live Blob read required.
+  AS-008:
+    type: boundary
+    requirements: [FR-006]
+    expected: |
+      Given the dashboard is in demo mode (isDemoMode() returns true per spec 024),
+      AND sessionStorage holds previous,
+      When the section renders,
+      Then the fallback does NOT fire (the fixture data is intentional emptiness),
+      AND the panel renders the spec 008 empty state per the fixture.
+      The skip is a single isDemoMode() guard at the top of the fallback logic.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "fallback_skipped_in_demo_mode"
+      manual: |
+        Run with MEALS_FIXTURE_MODE=1; set sessionStorage to previous; verify no swap
+        explanation appears and the fixture's intentional emptiness is preserved.
+      rationale: |
+        Fixture data is intentional; an empty filter result in fixture mode is a test
+        scenario, not a real-world signal. The skip preserves the existing test surface.
+    integration_isolation: requires MEALS_FIXTURE_MODE=1 environment.
+  AS-009:
+    type: boundary
+    requirements: [FR-001, FR-005]
+    expected: |
+      Given the panel has items but they are all status: refunded (per spec 018 / spec 019),
+      AND sessionStorage holds previous,
+      When the section renders,
+      Then the panel does NOT treat refunded-with-items as empty;
+      the refunded items still render under the badge (spec 034 FR-005 status parenthetical).
+      The fallback fires only when the post-filter item count is exactly zero,
+      not when all items happen to be refunded.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "refunded_items_count_as_items_not_zero"
+      manual: |
+        Load a fixture where the only previous order has 2 items both with status refunded;
+        verify no fallback fires and the items render with the refunded parenthetical.
+      rationale: |
+        Spec 019 reconciliation may legitimately leave items in a refunded order.
+        The fallback should not mistake non-empty refunded state for empty state.
+    integration_isolation: no live Blob read required.
+  AS-010:
+    type: boundary
+    requirements: [FR-007]
+    expected: |
+      Given the dashboard re-renders due to a state change (e.g. coverage update, today
+      prop change, deliveryWindows prop change),
+      When the panel re-renders with the persisted filter still yielding zero items,
+      Then the fallback does NOT re-fire (the hasFallbackRunRef is already true);
+      only the first render after hydration triggers the fallback and explanation.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "fallback_does_not_refire_on_state_change_rerender"
+      manual: |
+        Trigger a coverage update (open the meal modal then close it) with previous in
+        sessionStorage; verify the swap explanation does not appear a second time.
+      rationale: |
+        The useRef guard is critical: without it, every re-render after the first
+        fallback would re-evaluate the empty filter and re-show the explanation,
+        producing a banner-flicker UX bug.
+    integration_isolation: no live Blob read required.

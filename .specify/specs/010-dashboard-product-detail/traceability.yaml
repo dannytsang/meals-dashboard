@@ -1,0 +1,220 @@
+feature_id: 010-dashboard-product-detail
+requirements:
+  FR-001:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-001
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-002:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-002
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-003:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-024
+    tasks:
+    - T060
+    - T061
+    - T070
+    - T071
+    - T072
+    - T073
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: in_progress
+      evidence: |
+        Rev 4 (2026-06-22) — spec amendment, runtime contract
+        change. The static `lib/product-database.ts` substring-
+        match fallback is removed. The modal MUST show the
+        truthful placeholder text when generated pre-enriched
+        Tesco product metadata is unavailable. AS-024 captures
+        the contract: bundle grep for `productDatabase|
+        findProductInfo` outside the deleted/stubbed
+        `lib/product-database.ts` returns zero matches;
+        placeholder text "Product information not available in
+        generated data" is present in the modal's render path.
+        The implementation lands on the meals-dashboard `preview`
+        branch (T070..T076); evidence captured in CHANGELOG.md
+        with the coder-profile commit SHA + deploy ID, then
+        status flips back to `satisfied`.
+  FR-004:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-004
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-005:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-005
+    tasks:
+    - T001
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-006:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-006
+    tasks:
+    - T040
+    - T041
+    - T042
+    - T043
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-007:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-007
+    tasks:
+    - T041
+    - T042
+    - T043
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-008:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-008
+    tasks:
+    - T050
+    - T051
+    - T052
+    - T053
+    - T054
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-009:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-009
+    tasks:
+    - T052
+    - T053
+    - T054
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: null
+  FR-010:
+    user_stories:
+    - US2
+    scenarios:
+    - AS-025
+    tasks:
+    - T080
+    - T081
+    - T082
+    - T083
+    - T084
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: in_progress
+      evidence: |
+        Rev 5 (2026-06-23) — additive spec amendment. When spec
+        022's signed `meals_debug_mode` cookie is effectively
+        verified-on, the Product Detail Modal MUST surface a
+        debug chip that exposes the product-resolution chain
+        (tpnc, productBlobPath, winning source per field,
+        freshness). The chip MUST inherit the spec-022 OIDC +
+        signed-cookie gate; when debug mode is off, the chip
+        MUST NOT render in the DOM. The data source is the spec
+        031 product-resolution panel payload (spec 031 FR-005 /
+        FR-006). AS-025 captures the four acceptance scenarios
+        (Apollo / Firecrawl / placeholder / chip-absent).
+        Implementation lands on the meals-dashboard `preview`
+        branch (T080..T084); evidence captured in CHANGELOG.md
+        with the coder-profile commit SHA + deploy ID, then
+        status flips back to `satisfied`. Bundle grep invariant:
+        `grep -rn "DebugProductResolutionChip|product-
+        resolution-chip|ProductResolutionDebug" /home/hermes/
+        workspace/meals-dashboard --include='*.ts' --include=
+        '*.tsx'` returns matches only inside spec-022-gated
+        code paths.
+  FR-011:
+    user_stories:
+    - US2
+    scenarios:
+    - AS-026
+    tasks:
+    - T090
+    - T091
+    - T092
+    - T093
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: in_progress
+      evidence: |
+        Rev 5.1 (2026-06-23) — additive on top of Rev 5. The
+        debug chip MUST additionally surface `expectedProductBlobPath`
+        (derived from the item's tpnc per the spec 021 Key
+        Entities convention `products/{tpnc}.json` — `null`
+        when tpnc is unknown) and `productBlobPathMatch:
+        true | false | null` (boolean comparing
+        `expectedProductBlobPath` to `productBlobPath`; `null`
+        when either side is absent). The matcher is sourced
+        from spec 031 Rev 3 (FR-005 / FR-006 as amended); the
+        chip MUST NOT hardcode the convention. AS-026 captures
+        the two acceptance scenarios (match / mismatch / tpnc-
+        unknown). Implementation lands on the meals-dashboard
+        `preview` branch (T090..T093); evidence captured in
+        CHANGELOG.md with the coder-profile commit SHA + deploy
+        ID, then status flips from `in_progress` to `satisfied`
+        once production is verified. Bundle grep invariant: the
+        chip's matcher helper MUST import the spec-031 matcher;
+        `grep -rn "products/{tpnc}.json|products/${{tpnc}}.json"
+        /home/hermes/workspace/meals-dashboard --include='*.ts'
+        --include='*.tsx'` returns matches only in the spec-031
+        matcher helper itself (NOT in the chip's render code).

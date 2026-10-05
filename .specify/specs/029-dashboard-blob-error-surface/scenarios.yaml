@@ -1,0 +1,140 @@
+# Machine-readable scenario coverage for 029-dashboard-blob-error-surface.
+feature_id: 029-dashboard-blob-error-surface
+scenarios:
+  AS-001:
+    type: negative
+    requirements: [FR-001, FR-002, FR-003, FR-004, FR-008, FR-009]
+    expected: |
+      Given live mode is active and the pointer read throws a 403 credential error,
+      When the dashboard page is requested,
+      Then the response is HTTP 200 and includes a dashboard-unavailable alert
+      with the Blob reason and 403 status.
+    verification:
+      automated: Mock `readPointer()` to throw a 403-style error and assert the page/component renders the alert text.
+      manual: Load a safe simulated failure environment and inspect the rendered page.
+      rationale: |
+        The pointer read is the critical dependency; if credentials fail there,
+        Danny needs an explicit operator error rather than an empty dashboard.
+    integration_isolation: mocked dashboard reader / Blob client; no real Vercel Blob calls.
+
+  AS-002:
+    type: negative
+    requirements: [FR-001, FR-002, FR-003, FR-004, FR-008]
+    expected: |
+      Given live mode is active and the pointer/manifest succeeds, but an order,
+      coverage, summary, or product blob read throws,
+      When the dashboard page is requested,
+      Then the dashboard renders the same operator error panel and does not crash.
+    verification:
+      automated: Mock a downstream `readJsonBlob()` failure and assert the error panel renders.
+      manual: Exercise a controlled failing blob path in preview if needed.
+      rationale: |
+        The read path has multiple Blob dependencies; credential, binding, and
+        network failures at any live-mode read should be visible.
+    integration_isolation: mocked dashboard reader / Blob client; no real Vercel Blob calls.
+
+  AS-003:
+    type: positive
+    requirements: [FR-003, FR-004, FR-007]
+    expected: |
+      Given a Blob error contains status code 403 and status text Forbidden,
+      When the error is formatted for the panel,
+      Then the message contains `403 Forbidden` and no credential material.
+    verification:
+      automated: Unit-test the formatter against status-bearing errors and token-like strings.
+      manual: Inspect rendered copy for status code and absence of secrets.
+      rationale: |
+        The screenshot example includes the useful status; retaining it makes
+        the alert actionable without making it unsafe.
+    integration_isolation: pure unit test; no external services required.
+
+  AS-004:
+    type: positive
+    requirements: [FR-005, FR-006]
+    expected: |
+      Given one or both Blob credentials are missing,
+      When the dashboard page is requested,
+      Then demo fixture data renders with the demo banner/chip and no Blob error panel.
+    verification:
+      automated: Test runtime-mode absent-credential path and assert no error-panel test id/text exists.
+      manual: Open the demo/preview deployment and verify fixture data appears without the error panel.
+      rationale: |
+        Demo mode exists specifically to avoid Blob reads; surfacing Blob errors
+        there would contradict spec 024.
+    integration_isolation: mocked env/runtime mode; fixture reader only.
+
+  AS-005:
+    type: negative
+    requirements: [FR-006]
+    expected: |
+      Given demo mode is active and the fixture file is missing or malformed,
+      When the dashboard page is requested,
+      Then the existing demo/empty-state behaviour applies and the live Blob error panel is absent.
+    verification:
+      automated: Mock fixture-reader failure and assert the live Blob error panel is not used.
+      manual: Not required unless fixture failure handling changes.
+      rationale: |
+        Fixture failures are not live Blob failures and should remain in the
+        demo-mode contract.
+    integration_isolation: mocked fixture reader; no Vercel Blob calls.
+
+  AS-006:
+    type: positive
+    requirements: [FR-002, FR-004, FR-009]
+    expected: |
+      Given a live-mode Blob read fails,
+      When the alert renders,
+      Then it appears below the header as a pale bordered card with bold
+      meals-specific unavailable title and direct remediation text.
+    verification:
+      automated: Component snapshot/DOM test for title, body, role, and placement hook.
+      manual: Compare visually against Danny's provided Travel dashboard screenshot.
+      rationale: |
+        Danny explicitly asked to replicate the attached example, adapted to
+        meals vocabulary.
+    integration_isolation: local component render only.
+
+  AS-007:
+    type: positive
+    requirements: [FR-008, FR-009]
+    expected: |
+      Given a live-mode Blob read fails,
+      When the HTML is inspected before client hydration,
+      Then the alert text and `role="alert"` semantics are present in server-rendered markup.
+    verification:
+      automated: Render the server/page component and assert alert role/text without running client effects.
+      manual: View page source or disable JavaScript for the failure fixture.
+      rationale: |
+        Data-load failures happen server-side; the diagnostic must not depend
+        on client JavaScript.
+    integration_isolation: server/page render in local test harness.
+
+  AS-008:
+    type: negative
+    requirements: [FR-007]
+    expected: |
+      Given a thrown error message or object includes token-like text, bearer headers,
+      cookies, or signed URLs,
+      When the error is formatted,
+      Then the rendered panel excludes the secret material while retaining safe status/resource context.
+    verification:
+      automated: Unit-test formatter redaction for representative secret-like inputs.
+      manual: Grep rendered output/test snapshots for known token prefixes if available.
+      rationale: |
+        The panel is useful only if it is safe to display in the dashboard UI.
+    integration_isolation: pure unit test; no external services required.
+
+  AS-009:
+    type: positive
+    requirements: [FR-001]
+    expected: |
+      Given live mode is active and the pointer or optional blob is legitimately
+      absent without a thrown credential/binding failure,
+      When the dashboard page is requested,
+      Then existing null/empty-state semantics from spec 017 are preserved and the error panel does not render.
+    verification:
+      automated: Test null-on-miss path separately from thrown-error path.
+      manual: Not required unless the initial-sync empty-state behaviour changes.
+      rationale: |
+        This spec refines thrown errors, not every possible missing-data state.
+    integration_isolation: mocked dashboard reader returning null/empty values.

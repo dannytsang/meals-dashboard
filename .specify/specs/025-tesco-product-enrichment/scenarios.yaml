@@ -1,0 +1,237 @@
+# Machine-readable scenario coverage for 025-tesco-product-enrichment.
+feature_id: 025-tesco-product-enrichment
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-009, FR-010, NFR-003]
+    expected: |
+      Given the existing 021 pipeline and 6 months of order blobs, when
+      scripts/diagnose_product_enrichment_gaps.py runs, it produces a
+      counts-by-mode report (G1a/G1b/G1c/G1d/G2a/G2b/G2c/G2d/G3a/G3b/G3c/G4)
+      covering all GroceryItems without productBlobPath in the orders blob
+      set, plus a sample-of-five names per mode for manual review. The script
+      reads blob contents and the sync log only; it does NOT re-fetch product
+      pages (NFR-003: completes in under 60 seconds for a 6-month history of
+      ~30 orders / ~500 items).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && python3 scripts/diagnose_product_enrichment_gaps.py --output reports/diagnose-2026-06-17.md
+      manual: |
+        Open the generated report; verify it covers every item in the last
+        6 months of orders; verify the counts sum to the total fall-through
+        count; spot-check a sample-of-five per mode against the actual sync
+        log and the actual product blob contents.
+    rationale: |
+      The diagnostic script is the gate. Without measurement, no
+      implementation decision is defensible.
+    integration_isolation: no external services; reads Vercel Blob only.
+  AS-002:
+    type: boundary
+    requirements: [FR-001]
+    expected: |
+      The existing Apollo cache extraction path (spec 021) is NOT modified
+      by any work done under this spec. The primary product data source
+      remains the embedded ProductType:<tpnc> entity in
+      https://www.tesco.com/groceries/en-GB/products/{tpnc} HTML. Any
+      follow-up spec that touches the Apollo path must be its own spec
+      with its own ID (e.g. 027-tesco-apollo-parser-fixes) and must
+      re-open this spec to update the architecture diagram.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && git diff scripts/sync-dashboard-data.py | head -200
+      manual: |
+        Confirm scripts/sync-dashboard-data.py _fetch_tesco_apollo_cache
+        is unchanged from the spec 021 implementation. Confirm no new
+        code path attempts to "fix" the existing parser.
+    rationale: |
+      Codifies the "do not touch the existing Apollo path" boundary.
+      The boundary exists because the Apollo path works for the cases
+      it works for; touching it risks regressing the cases that work.
+    integration_isolation: no external services required.
+  AS-003:
+    type: positive
+    requirements: [FR-002, FR-011, US2]
+    expected: |
+      Given lib/product-database.ts contains an entry whose normalized
+      name fuzzy-matches an order item, when the dashboard renders, then
+      resolveProductInfoForItem returns the curated description, storage,
+      preparation, nutrition and the modal renders them in the
+      corresponding sections (matching the existing ProductInfo interface
+      from lib/product-database.ts). When the database has no matching
+      entry, the modal falls through to the placeholder string with no
+      error.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/dashboard-ui-utils.test.ts -v
+      manual: |
+        Add a curated entry for "Tesco Semi-Skimmed Milk 4 Pints"; trigger
+        a sync; open the dashboard; click the milk item in the Order
+        Items by Category list; confirm the modal shows the curated
+        storage string ("Keep refrigerated between +1°C and +6°C. Use by:
+        see cap. Once opened, consume within 3 days.") instead of the
+        placeholder.
+    rationale: |
+      Curated static is the cheapest fallback. The interface and the
+      matching algorithm are already in place from spec 010 + spec 021;
+      no new code is needed, only more entries.
+    integration_isolation: no external services required.
+  AS-004:
+    type: positive
+    requirements: [FR-003, FR-004, FR-005, FR-007, FR-008, NFR-001, NFR-002, US3]
+    expected: |
+      Given a product blob with gtin and empty ingredients/allergens and
+      no off field or off.lastFetched older than 30 days, when the
+      dashboard renders, then the read path fetches OFF via
+      https://world.openfoodfacts.org/api/v2/product/{gtin}.json in
+      parallel with the existing Apollo blob read, merges the OFF
+      ingredients_text / allergens into productMetadata, and writes the
+      OFF fields back to the product blob under off: { ingredients,
+      allergens, imageUrl, lastFetched }. The User-Agent header is set to
+      "MealsDashboard/<version> (<contact>)" per OFF's request (FR-007).
+      The OFF fetch does NOT block the read path (FR-008).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/off-client.test.ts lib/dashboard-data.test.ts -v
+      manual: |
+        Deploy to preview; open the dashboard; click an item with an
+        Apollo partial blob (image + description present, ingredients
+        empty); confirm the modal shows OFF-fetched ingredients and
+        allergens; confirm a 200 OK from OFF is in the network panel;
+        confirm the User-Agent header is set per FR-007; confirm the
+        read path latency is unchanged within 100ms (OFF fetch is
+        parallel; FR-008 / NFR-001).
+    rationale: |
+      OFF integration is the headline follow-up if Phase 2 shows G3
+      dominates. The integration is non-trivial (30-day TTL stored in
+      product blob, parallel fetch, env var knobs) so it earns its own
+      spec when cut.
+    integration_isolation: requires network access to OFF's public API.
+  AS-005:
+    type: negative
+    requirements: [FR-005, FR-008, US3]
+    expected: |
+      Given a product blob with off.lastFetched within 30 days, when the
+      dashboard renders, then OFF is NOT fetched; the cached off field is
+      used as-is. Given OFF returns 404 for the gtin (product not in OFF),
+      when the dashboard renders, then off is set to { status:
+      "not_found", lastFetched: <now> } and the placeholder is used. No
+      OFF fetch for the next 30 days. Given OFF returns 5xx or a network
+      timeout, when the dashboard renders, then the read path logs a
+      warning, does not crash, and the modal shows the placeholder. The
+      off field is NOT updated; the next render retries.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/off-client.test.ts -v -- --testNamePattern="TTL|404|5xx"
+      manual: |
+        Mock OFF returning 404; reload the dashboard; confirm no second
+        fetch for 30 days. Mock OFF returning 500; reload; confirm the
+        modal still renders (with placeholder for ingredients); confirm
+        the warning is in the server log.
+    rationale: |
+      OFF is a fill layer, not a hard dependency. The negative paths
+      must be tested before any follow-up spec is promoted to Final.
+    integration_isolation: OFF is mocked; no real API calls in unit tests.
+  AS-006:
+    type: negative
+    requirements: [FR-003, US3]
+    expected: |
+      Given a product blob with NO gtin (Apollo failed to resolve gtin),
+      when the dashboard renders, then OFF is NOT consulted (OFF requires
+      gtin). The modal falls through to curated static then to
+      placeholder. OFF cannot rescue an item that has no gtin.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/off-client.test.ts -v -- --testNamePattern="no.gtin"
+      manual: |
+        Construct a fixture with productMetadata.gtin = null; render the
+        modal; confirm no OFF request is made; confirm the placeholder
+        is shown for ingredients.
+    rationale: |
+      OFF is keyed on gtin; this is a hard constraint of the OFF API.
+    integration_isolation: no external services; mocked.
+  AS-007:
+    type: positive
+    requirements: [FR-006, FR-013, US4]
+    expected: |
+      The MEALS_OFF_ENRICHMENT=0 env var is honoured as a kill switch
+      (skip all OFF fetches). MEALS_OFF_ENRICHMENT_DELAY_SECONDS is
+      honoured as a rate-limit knob (default 0.5s between fetches in
+      backfill contexts). The architecture diagram in spec.md Background
+      does NOT include any paid aggregator layer (Piloterr, Unwrangle,
+      Apify, ScrapingBee). Edamam (S5), USDA FDC API key (S6), Tesco
+      Developer API (S4) are all explicitly out of scope (FR-013).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/off-client.test.ts -v -- --testNamePattern="kill.switch|delay"
+      manual: |
+        Set MEALS_OFF_ENRICHMENT=0 in preview; deploy; confirm no OFF
+        requests in the network panel; confirm the modal still renders
+        with the existing Apollo + placeholder fallback. Grep
+        references/tesco-product-enrichment-sources.md and spec.md for
+        any mention of paid APIs or aggregators; assert no implementation
+        contract exists.
+    rationale: |
+      Codifies the "no" decisions so they do not need to be re-litigated.
+    integration_isolation: no external services required.
+  AS-008:
+    type: manual
+    requirements: [FR-012, US1, US2, US3, US4, NFR-001, NFR-005]
+    expected: |
+      The architecture diagram in spec.md Background accurately
+      describes the production fallback chain: Apollo primary → Tesco
+      search-page HTML (name→tpnc) → Apollo re-fetch → OFF (per-field
+      fallback for ingredients/allergens/partial nutrition/image only) →
+      curated static (lib/product-database.ts) → placeholder string. No
+      paid aggregator. No USDA. No Edamam. The diagram matches what the
+      code actually does in lib/dashboard-data.ts, lib/dashboard-ui-utils.ts,
+      and scripts/sync-dashboard-data.py.
+    verification:
+      automated: null
+      manual: |
+        Walk through the architecture diagram in spec.md Background.
+        For each layer, point to the corresponding source file. Confirm:
+        Apollo primary → scripts/sync-dashboard-data.py
+        _fetch_tesco_apollo_cache; Tesco search-page HTML → the existing
+        _extract_from_tesco_search_html helper; OFF → lib/off-client.ts
+        (or absent if Phase 4 has not been implemented); curated static
+        → lib/product-database.ts + lib/dashboard-ui-utils.ts findProductInfo;
+        placeholder → the literal strings in resolveProductInfoForItem.
+      rationale: |
+        The diagram is the canonical reference. If the diagram drifts from
+        the code, future specs will propose layers the diagram does not
+        support and vice versa.
+    integration_isolation: no external services required.
+  AS-009:
+    type: boundary
+    requirements: [FR-014, NFR-005]
+    expected: |
+      tasks.md lists "no implementation tasks" beyond the diagnostic
+      script (Phase 2), the curated static extension (Phase 3, deferred
+      to Phase 2 decision), the OFF integration (Phase 4, deferred to
+      Phase 2 decision), and the follow-up specs (Phase 7, owned by
+      separate IDs). No new Python or Node dependencies are added by
+      this spec (NFR-005); the existing urllib, re, json, requests
+      cover all sources in scope.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && grep -E "^(requests|httpx|aiohttp)" requirements.txt pyproject.toml 2>/dev/null | head -10
+      manual: |
+        Read tasks.md; confirm Phase 5 is "(no tasks; this is a non-feature)"
+        and Phase 7 are placeholder follow-up specs. Confirm no
+        implementation is committed under this spec's ID.
+    rationale: |
+      This is a Draft. Implementation is downstream.
+    integration_isolation: no external services required.
+  AS-010:
+    type: positive
+    requirements: [FR-013, US4, S7]
+    expected: |
+      Given the candidate source matrix in spec.md Background lists
+      aggregator services (Piloterr, Unwrangle, Apify, ScrapingBee) as
+      S7 with a "Not recommended" verdict, when Danny reviews the spec,
+      then he confirms: (1) the architecture diagram does not include
+      any aggregator layer; (2) no follow-up spec is cut under this
+      Draft's authority that adds an aggregator; (3) if a future spec
+      is proposed that adds an aggregator, this spec must be re-opened
+      and references/tesco-product-enrichment-sources.md re-reviewed.
+    verification:
+      automated: cd /home/hermes/workspace/meals-Skills && grep -rni "piloterr\|unwrangle\|scrapingbee\|apify" data-science/meals-check/.specify/specs/025-tesco-product-enrichment/
+      manual: |
+        Confirm only references/tesco-product-enrichment-sources.md
+        mentions these services, and only as "Not recommended".
+    rationale: |
+      Codifies the aggregator exclusion so the next spec author cannot
+      accidentally add one.
+    integration_isolation: no external services required.

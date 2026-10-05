@@ -1,0 +1,189 @@
+feature_id: 011-dashboard-meal-card-matcher-accuracy
+requirements:
+  FR-001:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-001
+    tasks:
+    - T010
+    - T021
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-002:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-002
+    tasks:
+    - T010
+    - T022
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-003:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-003
+    tasks:
+    - T010
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-004:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-004
+    tasks:
+    - T010
+    - T023
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-005:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-005
+    tasks:
+    - T010
+    - T030
+    - T031
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-006:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-006
+    tasks:
+    - T050
+    - T051
+    - T053
+    - T054
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-007:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-007
+    tasks:
+    - T050
+    - T052
+    - T053
+    - T054
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-008:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-008
+    tasks:
+    - T051
+    - T053
+    - T054
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-009:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-009
+    tasks:
+    - T053
+    - T054
+    - T056
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-010:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-010
+    tasks:
+    - T053
+    - T054
+    - T057
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-011:
+    user_stories:
+    - US2
+    scenarios:
+    - AS-013
+    - AS-014
+    - AS-015
+    tasks:
+    - T060
+    - T061
+    - T062
+    - T063
+    - T064
+    checks:
+    - python3 -m unittest test_tesco_matcher -v
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 generic expected-components verification evidence.
+  FR-012:
+    user_stories:
+    - US2
+    scenarios:
+    - AS-013
+    - AS-014
+    - AS-015
+    tasks:
+    - T060
+    - T061
+    - T062
+    - T063
+    - T064
+    checks:
+    - python3 -m unittest test_tesco_matcher -v
+    - python3 tesco_meal_check.py --days 30 --output both
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 generic expected-components verification evidence.

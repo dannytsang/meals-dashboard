@@ -1,0 +1,150 @@
+feature_id: 036-dashboard-delivery-day-last-receipt-publication
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T040, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_publish_extra_order.py -v -k "appends_to_orders_array"
+      - grep -rn "extra-order\|extra_order_blob" scripts/sync-dashboard-data.py
+    verification:
+      status: final
+      evidence: 2026-07-01 production deploy; 8/8 pytest green; tester PASS_WITH_NOTES (deleg_116f6156); merge commit 6b31a55
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: [T030, T031, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_last_email_to_order_blob.py -v
+      - grep -rn "pending_last_order" scripts/tesco_meal_check.py
+    verification:
+      status: final
+      evidence: 2026-07-01; 7/7 pytest green; merge commit 7dbd302. Sidecar path is <cache_dir>/orders/pending/pending_last_order.json (spec-text drift to sibling-of-DASHBOARD_CACHE_FILE layout, consistent with spec 035; flagged PASS-with-note).
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-003]
+    tasks: [T010, T020, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_last_email_to_order_blob.py -v
+    verification:
+      status: final
+      evidence: 2026-07-01; test_none_input_returns_none + test_missing_order_id_returns_none + test_missing_delivery_date_returns_none all green; merge commit 7dbd302.
+  FR-004:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002]
+    tasks: [T030, T031, T070]
+    checks:
+      - grep -rn "orders/<deliveryDate>/<orderId>" scripts/tesco_meal_check.py scripts/sync-dashboard-data.py
+    verification:
+      status: final
+      evidence: 2026-07-01; canonical path enforced on both sides (helper builds f"orders/{deliveryDate}/{orderId}.json"; publisher validates and refuses mismatched paths); test_writes_canonical_blob_path green; merge commits 7dbd302 + 6b31a55.
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002]
+    tasks: [T040, T041, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_publish_extra_order.py -v
+      - grep -rn "OrderBlob" lib/dashboard-sync.ts
+    verification:
+      status: final
+      evidence: 2026-07-01; OrderBlob dict shape preserved through merge block (orderId/orderNumber/deliveryDate/deliverySlot/orderTotal/items/substitutions/unavailable/shortLifeItems/status/orderBlobPath); 8/8 pytest green; merge commit 6b31a55. Frontend untouched at production HEAD.
+  FR-006:
+    user_stories: [US1]
+    scenarios: [AS-006]
+    tasks: [T041, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_publish_extra_order.py -v -k "sidecar"
+    verification:
+      status: final
+      evidence: 2026-07-01; test_participates_in_sidecar green; extra appended to in-memory orders[] then handed to spec 035 sidecar persist step; merge commit 6b31a55.
+  FR-007:
+    user_stories: [US1]
+    scenarios: [AS-005]
+    tasks: [T042, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_publish_extra_order.py -v
+    verification:
+      status: final
+      evidence: 2026-07-01; idempotency delegated to Vercel Blob server-side no-op suppression (spec 030) via publish_split_dashboard_payload. Client-side test is test_most_recent_wins_on_orderId_collision (orderId-collision dedup, spec-text drift to "most-recent-wins" test name, property still delivered via server-side dedup). Flagged PASS-with-note.
+  FR-008:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: [T030, T070]
+    checks:
+      - grep -rn "extra-order published" scripts/tesco_meal_check.py scripts/sync-dashboard-data.py
+    verification:
+      status: final
+      evidence: "2026-07-01; both sides emit exact 'extra-order published: <orderId> (<deliveryDate>)'; commit cb19ad9 dropped the extra 'source' word on matcher side per tester's PARTIAL note."
+  FR-009:
+    user_stories: [US1]
+    scenarios: [AS-004]
+    tasks: [T040, T070]
+    checks:
+      - python3 scripts/sync-dashboard-data.py --extra-order /tmp/missing.json
+    verification:
+      status: final
+      evidence: 2026-07-01; test_with_malformed_json_warns_and_continues + test_missing_file_logs_warning_and_keeps_main_write both green; FileNotFoundError/json.JSONDecodeError/OSError handled, main write proceeds; merge commit 6b31a55.
+  FR-010:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-006]
+    tasks: [T050, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_publish_extra_order.py --collect-only
+    verification:
+      status: final
+      evidence: 2026-07-01; 8 pytest cases delivered (spec required 6+).
+non_functional:
+  NFR-001:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - time python3 scripts/sync-dashboard-data.py --skip-fetch --dry-run
+    verification:
+      status: final
+      evidence: 2026-07-01; extra-order merge adds <50ms to dry-run; no perceptible latency change observed during tester verification.
+  NFR-002:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - diff env-prefix assumption scan
+    verification:
+      status: final
+      evidence: 2026-07-01; no new env vars introduced; reuses existing BLOB_READ_WRITE_TOKEN / MEALS_DASHBOARD_DATA_SECRET access patterns; merge commits 7dbd302 + 6b31a55 confirmed clean.
+  NFR-003:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T010, T020, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_last_email_to_order_blob.py -v
+    verification:
+      status: final
+      evidence: 2026-07-01; last_email_to_order_blob() is pure (no I/O, no logging, no clock reads); 7/7 unit tests green.
+  NFR-004:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - manual payload size inspection
+    verification:
+      status: final
+      evidence: 2026-07-01; sidecar JSON bounded by OrderBlob size; no payload-size regression observed.
+  NFR-005:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - cd /home/hermes/workspace/meals-dashboard && npx tsc --noEmit && npx vitest run
+    verification:
+      status: final
+      evidence: 2026-07-01; npx tsc --noEmit = 0 errors; npx vitest run = 410/410 green; frontend untouched (lib/, components/, app/, package.json all unchanged vs e02415c).
+  NFR-006:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T041, T070]
+    checks:
+      - python3 -m pytest scripts/test_sync_dashboard_history.py -v
+    verification:
+      status: final
+      evidence: 2026-07-01; spec 035 retention behaviour preserved; extra-order flows through existing sidecar append path without modification.

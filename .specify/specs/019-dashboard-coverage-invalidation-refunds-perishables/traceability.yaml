@@ -1,0 +1,119 @@
+feature_id: 019-dashboard-coverage-invalidation-refunds-perishables
+requirements:
+  FR-001:
+    description: Coverage invalidation on any order content change
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T020, T021]
+    checks:
+      - python3 -m unittest test_tesco_pipeline_wiring -v -t "invalidation"
+      - python3 -m unittest test_tesco_refund_processing -v
+      - vitest run lib/dashboard-sync.test.ts -t "Spec 019"
+    verification:
+      evidence: 'Coverage blobs written with stale:true transiently and stale:false on recalculation; 4 trigger-reason cases (order_updated/cancelled/superseded/refunded) in test_tesco_pipeline_wiring.py; audit.jsonl entries appended for each invalidation; CHANGELOG 2026-06-15 Phase 3 ships invalidateCoverageForOrder in meals-dashboard e9b096e.'
+  FR-002:
+    description: Coverage blob stale field and transient race-condition safety
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T010, T022]
+    checks:
+      - python3 -m unittest test_tesco_pipeline_wiring -v -t "stale"
+      - vitest run lib/dashboard-sync.test.ts -t "Spec 019"
+    verification:
+      evidence: 'normaliseSplitLayoutPayload in lib/dashboard-sync.ts enforces stale:false / staleReason:null defaults on every write; 5 Spec 019 vitest cases pass; CHANGELOG 2026-06-15 Phase 2 ships the schema defaults.'
+  FR-003:
+    description: Shelf-life-aware coverage matching
+    user_stories: [US3]
+    scenarios: [AS-003]
+    tasks: [T040, T041]
+    checks:
+      - python3 -m unittest test_tesco_shelf_life -v
+      - python3 -m unittest test_tesco_pipeline_wiring -v -t "shelf.life"
+    verification:
+      evidence: 'annotate_shelf_life in tesco_matcher.py (pure annotation pass); 5 shelf-life cases in test_tesco_shelf_life.py all green; _annotate_matched_results_with_shelf_life wired into write_dashboard_cache with 14-entry SHELF_LIFE_BY_ITEM seed table; CHANGELOG 2026-06-15 Phase 4+5 ships both chunks.'
+  FR-004:
+    description: Matched items schema with shelf-life and source fields
+    user_stories: [US3]
+    scenarios: [AS-003]
+    tasks: [T011, T012, T040]
+    checks:
+      - vitest run lib/dashboard-sync.test.ts -t "Spec 019"
+      - python3 -m unittest test_tesco_pipeline_wiring -v
+    verification:
+      evidence: 'MatchedItem type in TypeScript extended with optional source/shelf_life_days/use_by_warning/use_by_date fields; normaliseSplitLayoutPayload enforces defaults on write; 5 Spec 019 vitest cases pass; 5 pipeline wiring cases in test_tesco_pipeline_wiring.py cover the wired path.'
+  FR-005:
+    description: Dashboard perishable display — "Use today" section and summary badge
+    user_stories: [US3]
+    scenarios: [AS-003]
+    tasks: [T060, T063]
+    checks:
+      - vitest run components/dashboard-client.test.ts -t "Spec 019"
+      - vitest run lib/dashboard-sync.test.ts -t "Spec 019"
+    verification:
+      evidence: 'Meal detail card in dashboard-client.tsx renders "Use today" section at top when use_by_warning:true; perishable badge on summary card; 4 Spec 019 dashboard-client.test.ts cases pass; shipped in 226a104, refined fe15f17.'
+  FR-006:
+    description: Refund processing — meal status transition and refunded item display
+    user_stories: [US2]
+    scenarios: [AS-002]
+    tasks: [T030, T031, T031b, T060]
+    checks:
+      - python3 -m unittest test_tesco_refund_processing -v
+      - python3 -m unittest test_tesco_pipeline_wiring -v -t "refund"
+      - vitest run components/dashboard-client.test.ts -t "Spec 019"
+    verification:
+      evidence: 'process_refund in tesco_meal_check.py (6 cases in test_tesco_refund_processing.py); wired into write_dashboard_cache with refund_amount and refunded_items fields (5 pipeline wiring cases); meal detail card shows distinct "refunded" section with £X refunded badge; 4 dashboard-client.test.ts Spec 019 cases pass; CHANGELOG 2026-06-15 Phase 4+5 ships both chunks.'
+  FR-007:
+    description: Manual override — persistence, audit log, and status non-upgrade
+    user_stories: [US4]
+    scenarios: [AS-004]
+    tasks: [T050, T051, T052, T053]
+    checks:
+      - python3 -m unittest test_tesco_manual_override_persistence -v
+      - python3 -m unittest test_tesco_pipeline_wiring -v -t "override"
+    verification:
+      evidence: 'apply_manual_override and load_dashboard_overrides in tesco_meal_check.py; applyManualOverrideForItem in dashboard-client.tsx; submitManualOverrideAction server action; 7 cases in test_tesco_manual_override_persistence.py all green; durable Vercel blob persistence in 35b3d7d; CHANGELOG 2026-06-15 Phase 6 ships the full chunk.'
+  FR-008:
+    description: Four item states — not found, manual override, refunded, order-matched
+    user_stories: [US4, US2]
+    scenarios: [AS-002, AS-004]
+    tasks: [T060, T063]
+    checks:
+      - vitest run components/dashboard-client.test.ts -t "Spec 019"
+    verification:
+      evidence: 'dashboard-client.tsx renders all four states distinctly (no badge vs green checkmark vs red £ vs normal); 4 Spec 019 cases in dashboard-client.test.ts pass; shipped in 226a104.'
+  FR-009:
+    description: Manual override local state file keyed by meal date, meal name, item name
+    user_stories: [US4]
+    scenarios: [AS-004]
+    tasks: [T050, T051]
+    checks:
+      - python3 -m unittest test_tesco_manual_override_persistence -v
+      - python3 -m unittest test_tesco_pipeline_wiring -v -t "override"
+    verification:
+      evidence: '~/.hermes/scripts/data/manual_overrides.json with triple key; apply_manual_override with upsert logic; load_dashboard_overrides reads active entries; pipeline.dashboard_overrides_file config in tesco_config.yaml; 7 persistence cases all green; CHANGELOG 2026-06-15 Phase 6.'
+success_criteria:
+  SC-001:
+    description: Amendment email that adds 1 new item triggers coverage recalculation
+    requirements: [FR-001]
+    verification:
+      evidence: 'Amendment email processing in CHANGELOG 2026-06-15 Phase 3+4+5; 4 trigger-reason cases in test_tesco_pipeline_wiring.py; manual smoke T078 verified with real amendment emails.'
+  SC-002:
+    description: Refund email causes correct meal status transitions and refunded item display
+    requirements: [FR-006]
+    verification:
+      evidence: '6 refund processing cases in test_tesco_refund_processing.py; 5 pipeline wiring cases; 4 real refund emails processed in 30-day live run (CHANGELOG 2026-06-15); manual smoke T079 verified; 4 Spec 019 dashboard-client cases pass for refunded section rendering.'
+  SC-003:
+    description: Perishable item shows "Use today" section and perishable summary badge
+    requirements: [FR-003, FR-004, FR-005]
+    verification:
+      evidence: '5 shelf-life cases in test_tesco_shelf_life.py; 5 pipeline wiring cases; SHELF_LIFE_BY_ITEM 14-entry seed table; 4 Spec 019 dashboard-client cases pass; manual smoke T080 verified with real delivery data.'
+  SC-004:
+    description: Manual override persists across sync runs without auto-upgrading meal status
+    requirements: [FR-007, FR-009]
+    verification:
+      evidence: '7 manual override persistence cases all green; upsert dedup tested; defensive guard shipped 98db6e0; manual smoke T081 verified override persists across re-sync; SC-004 Acceptance 5 (no auto-upgrade from partial to covered) tested in persistence and pipeline wiring cases.'
+  SC-005:
+    description: Audit log receives one entry per invalidation, refund, and override
+    requirements: [FR-001, FR-006, FR-007]
+    verification:
+      evidence: 'Audit log assertions in invalidation tests (T021), refund processing tests (T031), and manual override persistence tests (T053); CHANGELOG 2026-06-15 Phase 6 confirms audit entries written by each operation.'

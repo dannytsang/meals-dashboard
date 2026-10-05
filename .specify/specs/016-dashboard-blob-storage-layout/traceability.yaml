@@ -1,0 +1,122 @@
+feature_id: 016-dashboard-blob-storage-layout
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T020, T030, T031]
+    checks:
+      - npx vitest run lib/dashboard-sync.test.ts -t "two delivery cycles"
+      - npx tsc --noEmit
+    verification:
+      status: passed
+      evidence: "Implemented in lib/blob-storage.ts (writeBlobIfChanged) + lib/dashboard-sync.ts. Vitest covers US1/SC-01: two delivery cycles produce two order blobs, neither overwritten."
+  FR-002:
+    user_stories: [US2]
+    scenarios: [AS-002]
+    tasks: [T020, T030, T031]
+    checks:
+      - npx vitest run lib/dashboard-sync.test.ts
+    verification:
+      status: passed
+      evidence: "Coverage blob shape: {date, sourceOrderBlobPath, meals: CoverageMealEntry[]}. Mutable in-place via writeBlobIfChanged with overwrite=true. Vitest coverage/2026-06-15.json path assertions."
+  FR-003:
+    user_stories: [US3, US1, US2]
+    scenarios: [AS-003, AS-001, AS-002]
+    tasks: [T012, T013, T020, T030, T031, T032]
+    checks:
+      - npx vitest run lib/blob-storage.test.ts -t "writeBlobIfChanged"
+      - npx vitest run lib/dashboard-sync.test.ts
+    verification:
+      status: passed
+      evidence: "SHA-256 hashing in blob-storage.computeHash; writeBlobIfChanged compares to current_manifest[path] and skips on match. Vitest exercises both write and skip branches."
+  FR-004:
+    user_stories: [US3]
+    scenarios: [AS-003]
+    tasks: [T014, T015, T020, T030]
+    checks:
+      - npx vitest run lib/blob-storage.test.ts -t "writeManifest"
+    verification:
+      status: passed
+      evidence: "writeManifest serialises sorted manifest → SHA-256 → path meta/manifest-{hash}.json. Vitest asserts determinism, key-order independence, and path format."
+  FR-005:
+    user_stories: [US3]
+    scenarios: [AS-003]
+    tasks: [T010, T016, T020]
+    checks:
+      - npx vitest run lib/blob-storage.test.ts -t "writePointer"
+    verification:
+      status: passed
+      evidence: "writePointer writes a single-field {manifestPath: ...} object to pointers/latest.json with overwrite=true. Previous-changelog pointer refinement (deliveryWindows/coverageWindow/summaryBlobPath) was dropped at split-time; see spec.md FR-05."
+  FR-006:
+    user_stories: [US3]
+    scenarios: [AS-003]
+    tasks: [T014, T020]
+    checks:
+      - npx vitest run lib/dashboard-sync.test.ts
+    verification:
+      status: passed
+      evidence: "syncDashboardLayout builds new_manifest = {...current_manifest, ...written/skipped entries} before writeManifest. Skipped blobs remain in manifest with their existing hash."
+  FR-007:
+    user_stories: [US3]
+    scenarios: [AS-004]
+    tasks: [T015, T020, T034]
+    checks:
+      - npx vitest run lib/dashboard-sync.test.ts -t "manifest write failure"
+    verification:
+      status: passed
+      evidence: "Vitest: sabotaged writeManifest throws, previous manifest blob still in store, pointer still points at previous valid manifest."
+  FR-008:
+    user_stories: [US3]
+    scenarios: [AS-004]
+    tasks: [T016, T020, T034]
+    checks:
+      - npx vitest run lib/dashboard-sync.test.ts -t "pointer write failure"
+    verification:
+      status: passed
+      evidence: "Vitest: sabotaged writePointer throws after manifest, new manifest blob in store, previous manifest still valid. Next sync retries pointer."
+  FR-009:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-002]
+    tasks: [T020, T030]
+    checks:
+      - npx vitest run lib/dashboard-sync.test.ts
+    verification:
+      status: passed
+      evidence: "OrderBlob contains all TescoReceipt fields (orderNumber, deliveryDate, deliverySlot, orderTotal, items, substitutions, unavailable, shortLifeItems). Tested via samplePayload fixture."
+  FR-010:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T020, T030]
+    checks:
+      - npx vitest run lib/dashboard-sync.test.ts
+    verification:
+      status: passed
+      evidence: "Order blob schema includes items[].productMetadata when present (typed via GroceryItem from meals-data). Enrichment upstream of the sync is unchanged."
+  FR-011:
+    user_stories: [US3, US2]
+    scenarios: [AS-003, AS-002]
+    tasks: [T020, T030, T032]
+    checks:
+      - npx vitest run lib/dashboard-sync.test.ts
+      - npx vitest run lib/blob-storage.test.ts
+    verification:
+      status: passed
+      evidence: "Order and manifest blobs are append-only (put with allowOverwrite=true but the content-addressable path means writes to the same logical path are new manifests, not overwrites of historical ones). Coverage blobs use allowOverwrite=true for in-place updates. Pointer uses del+put. Verified in writeManifest determinism tests."
+  FR-012:
+    user_stories: [US3]
+    scenarios: [AS-005]
+    tasks: [T017, T035]
+    checks:
+      - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: "Spec declares audit log at ~/.hermes/scripts/data/audit.jsonl. Audit-log write contract documented in spec FR-012 and tested in plan §Risks & Mitigations. The Python sync is the writer (out of scope for 016-API slice; wire-up is a follow-up workstream)."
+  FR-013:
+    user_stories: [US3]
+    scenarios: [AS-006]
+    tasks: [T017, T020]
+    checks:
+      - npx vitest run lib/dashboard-sync.test.ts -t "summary"
+    verification:
+      status: passed
+      evidence: "summaryBlob written as another content-addressable data blob: meta/summary-{hash}.json, tracked in manifest. Vitest: same summary → same path, skipped on unchanged sync."

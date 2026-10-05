@@ -1,0 +1,35 @@
+# Change Log: Dashboard Order History Retention
+
+Feature ID: `035-dashboard-order-history-retention`
+
+This changelog records material changes to the feature specification. It is not a log of every status transition, typo fix, formatting change, validator-only normalisation, or routine task checkbox update.
+
+Use this file only when historical context matters. Normal implementation runs should read `spec.md`, `plan.md`, and `tasks.md`; load this changelog for audits/status-history questions.
+
+## Entries
+
+### 2026-06-30 — Final (production deployed; chef-side housekeeping + log-line fix landed)
+
+- Change: Flipped `Status: Proposed` → `Status: Final` and `readiness: spec_only` → `readiness: already_satisfied`. Production deploy evidence captured at the chef-side real-sync step (see Evidence below). Two chef-side commits layered on top of the coder's `33b1ea2`:
+  - `e02415c` (FR-009 log-line fix): the `orders: published N (active: <id>, ...)` line was reading `orders[0]` (the oldest after deliveryDate-ascending sort) instead of the active receipt. Replaced with `max(orders, key=deliveryDate)` to find the actual active entry. Pure-log fix; no payload behaviour change.
+  - T051 housekeeping (in `98b2a37`): the six `expected_artifacts` entries (`spec.md`, `plan.md`, `tasks.md`, `CHANGELOG.md`, `scenarios.yaml`, `traceability.yaml`) were missing from `data-science/meals-check/skill.spec.yaml` after the coder's first pass — added them so the contractual pattern established by specs 033/034 is preserved. (Tester's `PASS_WITH_NOTES` flagged this gap.)
+- Status after change: `Final`.
+- Rationale: production evidence — the chef-side real sync (after merging `33b1ea2` + `e02415c`) successfully wrote `Written: 4 | Skipped: 5 | Total ops: 6` to Vercel Blob (3 historical + 1 active order blob) and Vercel aliased the new deploy to `https://meals-dashboard.vercel.app`. The FR-009 line read `orders: published 4 (active: 6521-8108-142, history: 3, cap: 6)`. Sidecar at `/home/hermes/.hermes/scripts/data/orders/previously_synced.json` is now 2.2 KB and atomic-write verified. The dashboard's "Previous delivery" chip will now render items from orders dated before 2026-06-30 (today) — spec 034's matcher handles the classification automatically because `deliveryDate < today` triggers the `previous` bucket.
+- Implementation impact: 4 chef-side commits across 3 repos. `meals-dashboard` origin/main at `e02415c` (Vercel auto-deployed; production URL aliased). `/home/hermes/.hermes/scripts` origin/main at `258752f` (defensive `.gitignore` for the sidecar). `Hermes-Skills` origin/main at `98b2a37` (spec body + skill contract). Frontend (lib/, components/, app/) was untouched throughout; 410/410 vitest baseline preserved. Tester verdict: `PASS_WITH_NOTES`. Pre-existing matcher regression (`test_firecrawl_search.py::test_curated_static_product_lookup_reads_real_database`) confirmed pre-existing and explicitly out of scope per spec 033 carve-out.
+- Evidence: dry-run with seeded sidecar (`ℹ orders: published 4 (active: 6521-8108-142, history: 3, cap: 6)`) and live sync (real Blob write: `Written: 4 | Skipped: 5 | Total ops: 6`, sidecar persisted at 2230 bytes). Spec validator clean (only pre-existing 031 warnings). Independent tester verification (V1..V10) all green. The dashboard's "Previous delivery" chip is now populated by the next meal-check cron — Danny can confirm at `https://meals-dashboard.vercel.app`.
+
+### 2026-06-30 — Proposed (caller hands off to coder profile)
+
+- Change: Flipped `Status: Draft` → `Status: Proposed` and `readiness: spec_only`. No Open Questions remained at Draft time (the chef profile set all defaults during authoring). The spec is ready for the `coder` profile to begin work on a feature branch in the Hermes-Skills scripts repo, NOT in `meals-dashboard` (spec 035 is a Python-only pipeline delta; the dashboard code is untouched).
+- Status after change: `Proposed`.
+- Rationale: `coder` hands-on is gated on `Proposed`. The previous Draft entry remains in this changelog as historical record.
+- Implementation impact: `spec.md`, `plan.md`, `tasks.md`, `index.yaml` change `status: Draft` → `status: Proposed`. `CHANGELOG.md` gains a new Proposed entry above the Draft entry. No runtime or code artefacts touched (the status flip is a governance event only; the Proposed entry is the trigger for coder hand-off).
+- Evidence: Draft was authored and committed in spec 035 commit `2b44abe` (7 files added, 646 insertions). The Proposed flip commit follows. Spec validator re-run after the flip returns only the pre-existing 031 traceability warnings (`FR-015`/`FR-016` missing mapping in spec 031); no errors or warnings attributable to spec 035. The chef profile's `tasks.md` is now visible to the coder profile as the explicit hand-off list (T010 → T070 with FR traceability per `traceability.yaml`).
+
+### 2026-06-30 — Draft (initial authoring)
+
+- Change: Authored the Draft from Danny's 2026-06-30 conversation reporting that the dashboard's "Previous delivery" chip renders an empty list. Root cause isolated to `scripts/sync-dashboard-data.py:1983-2011`, where `build_dashboard_payload` packs exactly one receipt into the published `orders: []` array despite Vercel Blob storing the full history (5 orders visible at the time of authoring). Spec 034 was correctly designed assuming "the loader already loads every order blob"; spec 035 closes the upstream gap by extending the publisher to retain the last N (default 6) receipts and pack them all into the payload.
+- Status after change: `Draft`.
+- Rationale: Danny confirmed the symptom (`"The order items by category does not seem to show previous order"`) and selected Track 1 — full SDD spec for proper change management. The architectural choice (small gitignored sidecar JSON, FIFO cap, pure `assemble_orders` helper) keeps the blast radius small while restoring the dashboard feature Danny paid for in spec 034.
+- Implementation impact: None yet (this is a Draft). When implemented, the spec touches `scripts/sync-dashboard-data.py` (new helpers + CLI flags + integration into `build_dashboard_payload`), adds `scripts/tests/test_sync_dashboard_history.py` (9+ new pytest cases), and updates `scripts/.gitignore` (or the appropriate `data/orders/` ignore pattern) plus `software-development/spec-driven-skills/skills/data-science/meals-check/skill.spec.yaml` (10 new expected_artifacts entries + runtime_state addition). The meals-dashboard repo is **untouched**.
+- Evidence: Danny's report in the 2026-06-30 conversation ("The order items by category does not seem to show previous order"); the verified-working state of spec 034 (production deploy `22b00c8`, `tsc --noEmit` clean, 410/410 vitest green); the upstream-only delta in `sync-dashboard-data.py` (no dashboard code change required); the existence of 5 historical order blobs in Vercel Blob (`6521-8108-142`, `6521-0808-9408`, `6521-1507-9804`, `6521-0407-9401`, `6521-2506-1510`) confirmed via the chef profile's Blob verification harness.

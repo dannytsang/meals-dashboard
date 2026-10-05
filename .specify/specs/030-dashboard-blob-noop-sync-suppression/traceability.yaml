@@ -1,0 +1,77 @@
+# Machine-readable requirement traceability for 030-dashboard-blob-noop-sync-suppression.
+feature_id: 030-dashboard-blob-noop-sync-suppression
+requirements:
+  FR-001:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-004]
+    tasks: [T005, T013, T014]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002]
+    tasks: [T006, T007, T013, T015]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002]
+    tasks: [T008, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-004:
+    user_stories: [US2]
+    scenarios: [AS-004, AS-005, AS-006]
+    tasks: [T009, T010, T011, T014, T015, T016, T017]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-003]
+    tasks: [T003, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-006:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-002, AS-003, AS-004]
+    tasks: [T004, T013, T014]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-007:
+    user_stories: [US2]
+    scenarios: [AS-007]
+    tasks: [T012, T018]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-008:
+    user_stories: [US2]
+    scenarios: [AS-005, AS-006]
+    tasks: [T011, T016, T017]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-009:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-002, AS-004, AS-005, AS-006, AS-007]
+    tasks: [T013, T014, T015, T016, T017, T018, T019, T020, T021]
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  # Non-functional requirements are tracked in spec.md text + tasks.md + scenarios.yaml rationale blocks.
+  # The validator only permits FR-NNN keys.

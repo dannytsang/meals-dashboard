@@ -1,0 +1,167 @@
+# Machine-readable scenario coverage for 028-dashboard-blob-head-read-savings.
+feature_id: 028-dashboard-blob-head-read-savings
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-003, FR-004, NFR-001]
+    expected: |
+      Given a VercelBlobStorageClient with a valid token and a pointer blob at 'pointers/latest.json',
+      When `readPointer()` is called,
+      Then `head('pointers/latest.json', { token })` is called exactly once,
+      `list()` is called exactly zero times,
+      the pointer JSON body is fetched from `headResult.url`,
+      and the returned PointerContents object matches the blob content.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/blob-storage.test.ts -v
+      manual: |
+        Trigger a meals-check sync. Inspect Vercel function logs for
+        `/api/dashboard-sync`. Verify the log entries show a `head()` call
+        for the pointer lookup and zero `list()` calls in the route handler
+        invocation path.
+      rationale: |
+        Headline use case — readPointer uses head() instead of list(),
+        saving 1 Vercel Blob Advanced Operation per sync run.
+    integration_isolation: mocked @vercel/blob SDK + mocked fetch in vitest.
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-003, FR-004, FR-005, NFR-001]
+    expected: |
+      Given a VercelBlobStorageClient with a valid token and a manifest blob at the path returned by `readPointer()`,
+      When `readManifest(manifestPath)` is called with that path,
+      Then `head(manifestPath, { token })` is called exactly once,
+      `list()` is called exactly zero times,
+      the manifest JSON body is fetched from `headResult.url`,
+      and the returned Manifest object passes the shape validation (every value is a string).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/blob-storage.test.ts -v
+      manual: |
+        Trigger a meals-check sync. Inspect Vercel function logs for
+        `/api/dashboard-sync`. Verify the log entries show a `head()` call
+        for the manifest lookup and zero `list()` calls in the route handler
+        invocation path. Confirm the response JSON contains a valid
+        `manifestPath` field.
+      rationale: |
+        Headline use case — readManifest uses head() instead of list(),
+        saving 1 Vercel Blob Advanced Operation per sync run.
+    integration_isolation: mocked @vercel/blob SDK + mocked fetch in vitest.
+  AS-003:
+    type: negative
+    requirements: [FR-004, FR-006, NFR-002]
+    expected: |
+      Given a VercelBlobStorageClient with a valid token and no pointer blob at 'pointers/latest.json' (initial sync scenario),
+      When `readPointer()` is called,
+      Then `head('pointers/latest.json', { token })` returns `null` (per @vercel/blob@2.4.0 source: `if (response.status === 404) return null;`),
+      `readPointer()` returns `null`,
+      `list()` is called exactly zero times,
+      and the calling code (syncDashboardLayout) treats this as `isInitialSync = true`.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/blob-storage.test.ts -v
+      manual: |
+        Delete the pointer blob from Vercel Blob storage (or test on a fresh
+        store). Trigger a sync. Verify the sync proceeds in initial-sync mode
+        and writes a new pointer + manifest + data blobs. Confirm zero
+        `list()` calls in the route handler log.
+      rationale: |
+        Null-on-miss equivalence — head() returns null on 404 the same
+        way list() returns an empty array on no-match. Behavioural
+        equivalence with the prior list()-based implementation.
+    integration_isolation: mocked @vercel/blob SDK + mocked fetch in vitest.
+  AS-004:
+    type: negative
+    requirements: [FR-004, FR-005]
+    expected: |
+      Given a VercelBlobStorageClient with a valid token and a manifest blob whose JSON content has no `manifestPath` string field (corrupt state),
+      When `readPointer()` is called,
+      Then `head()` returns the metadata,
+      the body is fetched and parsed,
+      and the validation `if (!res || typeof res.manifestPath !== 'string') return null;` returns `null`.
+      No exception is raised. The calling code treats this as `isInitialSync = true`.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/blob-storage.test.ts -v
+      manual: |
+        Manually overwrite the pointer blob in Vercel Blob with invalid
+        JSON (no `manifestPath` field). Trigger a sync. Verify the sync
+        proceeds in initial-sync mode and rewrites the pointer.
+      rationale: |
+        Existing defensive validation is preserved — corrupt pointer
+        JSON returns null, same as before.
+    integration_isolation: mocked @vercel/blob SDK + mocked fetch in vitest.
+  AS-005:
+    type: positive
+    requirements: [FR-006, NFR-002]
+    expected: |
+      Given a VercelBlobStorageClient and a coverage blob at 'coverage/2026-06-18.json',
+      When `readJsonBlob('coverage/2026-06-18.json')` is called (e.g. by `invalidateCoverageForOrder`),
+      Then `list({ prefix: 'coverage/2026-06-18.json', token })` is called exactly once,
+      `head()` is called exactly zero times for this read path,
+      and the JSON body is fetched from the matched blob's URL.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/blob-storage.test.ts -v
+      manual: |
+        Trigger a coverage invalidation flow (cancel a Tesco order, wait
+        for the next sync). Inspect Vercel logs. Verify `list()` is still
+        called for coverage blob reads (FR-006 — readJsonBlob unchanged).
+      rationale: |
+        Regression guard — FR-006 keeps readJsonBlob unchanged. The
+        swap applies only to readPointer and readManifest.
+    integration_isolation: mocked @vercel/blob SDK + mocked fetch in vitest.
+  AS-006:
+    type: positive
+    requirements: [NFR-001, NFR-003]
+    expected: |
+      After implementation, `git diff main -- lib/blob-storage.ts` shows ONLY:
+        - the imports line gains `head`
+        - `readPointer()` body changes from `readJsonBlob(POINTER_PATH)` to direct `head()` + `fetch()`
+        - `readManifest()` body changes from `readJsonBlob(manifestPath)` to direct `head()` + `fetch()`
+      No other lines change. `readJsonBlob`, `listPaths`, `computeHash`,
+      `writeBlobIfChanged`, `writeManifest`, `writePointer`, and the
+      InMemoryBlobStorageClient are all UNCHANGED.
+      No new files in lib/. No new files in app/. No new files in components/.
+      No package.json changes. No .env changes.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && bash -c 'git diff --stat main -- lib/blob-storage.ts'
+      manual: |
+        Run the git diff command. Verify the output shows exactly two
+        hunks: the imports line and the two method bodies. Verify no
+        other lines are touched.
+      rationale: |
+        Minimal-diff constraint — NFR-001. The reviewer should see a
+        tiny, surgical change. Anything larger suggests scope creep.
+    integration_isolation: no external services required.
+  AS-007:
+    type: positive
+    requirements: [NFR-002]
+    expected: |
+      After implementation, the full vitest suite passes:
+        - `npx vitest run lib/blob-storage.test.ts -v` — 5 new tests pass + all existing tests pass
+        - `npx vitest run lib/dashboard-sync.test.ts -v` — regression check passes
+        - `npx vitest run lib/dashboard-data.test.ts -v` — regression check passes
+        - `npx tsc --noEmit` — zero TypeScript errors
+        - `npm run build` — Next.js production build succeeds
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/blob-storage.test.ts lib/dashboard-sync.test.ts lib/dashboard-data.test.ts && npx tsc --noEmit && npm run build
+      manual: |
+        Run each command in sequence. Confirm all green.
+      rationale: |
+        Regression guard — the swap must not break any existing test.
+    integration_isolation: local test runner only.
+  AS-008:
+    type: positive
+    requirements: [NFR-003]
+    expected: |
+      After implementation, no new dependencies, env vars, runtime costs,
+      Vercel Functions, or Route Handlers exist.
+        - `package.json` dependencies unchanged
+        - `package-lock.json` unchanged
+        - `.env`, `.env.example`, `vercel.json` unchanged
+        - `app/api/` directory contains the same files as before
+        - `lib/` directory contains the same files as before
+        - `scripts/sync-dashboard-data.py` unchanged (Python sync pipeline not affected by the read-side swap)
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && bash -c 'git diff --stat main -- package.json package-lock.json app/ scripts/sync-dashboard-data.py'
+      manual: |
+        Run the git diff command. Verify all paths show zero lines changed.
+      rationale: |
+        Bounded change — NFR-003. The swap is purely a method replacement
+        inside one module.
+    integration_isolation: no external services required.

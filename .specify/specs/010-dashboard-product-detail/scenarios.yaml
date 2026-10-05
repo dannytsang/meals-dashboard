@@ -1,0 +1,278 @@
+feature_id: 010-dashboard-product-detail
+scenarios:
+  AS-001:
+    type: manual
+    requirements:
+    - FR-001
+    expected: FR-001 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 010-dashboard-product-detail/spec.md, tasks.md, and CHANGELOG.md for FR-001.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-002:
+    type: manual
+    requirements:
+    - FR-002
+    expected: FR-002 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 010-dashboard-product-detail/spec.md, tasks.md, and CHANGELOG.md for FR-002.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-003:
+    type: manual
+    requirements:
+    - FR-003
+    expected: FR-003 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 010-dashboard-product-detail/spec.md, tasks.md, and CHANGELOG.md for FR-003.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-004:
+    type: manual
+    requirements:
+    - FR-004
+    expected: FR-004 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 010-dashboard-product-detail/spec.md, tasks.md, and CHANGELOG.md for FR-004.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-005:
+    type: manual
+    requirements:
+    - FR-005
+    expected: FR-005 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 010-dashboard-product-detail/spec.md, tasks.md, and CHANGELOG.md for FR-005.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-006:
+    type: manual
+    requirements:
+    - FR-006
+    expected: FR-006 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 010-dashboard-product-detail/spec.md, tasks.md, and CHANGELOG.md for FR-006.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-007:
+    type: manual
+    requirements:
+    - FR-007
+    expected: FR-007 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 010-dashboard-product-detail/spec.md, tasks.md, and CHANGELOG.md for FR-007.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-008:
+    type: manual
+    requirements:
+    - FR-008
+    expected: FR-008 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 010-dashboard-product-detail/spec.md, tasks.md, and CHANGELOG.md for FR-008.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-024:
+    type: positive
+    requirements:
+    - FR-003
+    expected: |
+      When generated pre-enriched Tesco product metadata is
+      unavailable or incomplete, the Product Info Modal MUST show
+      the truthful placeholder text ("Product information not
+      available in generated data") rather than fall back to a
+      static curated map, a hand-coded substring-match, or a
+      slow client-side web search. The contract is "if we have
+      the data, show it; if we don't, say so" — never invent
+      product details.
+    verification:
+      automated: |
+        # The static-DB fallback is removed. Bundle grep:
+        grep -rn "productDatabase\|findProductInfo" /home/hermes/workspace/meals-dashboard --include='*.ts' --include='*.tsx'
+        # MUST return zero matches outside the deleted/stubbed
+        # lib/product-database.ts itself. If the grep returns any
+        # call site in components/ or lib/ other than the
+        # stub, AS-024 fails — the static-DB fallback has crept
+        # back in.
+        #
+        # The placeholder path is the contract:
+        grep -n "Product information not available" /home/hermes/workspace/meals-dashboard/components/dashboard-client.tsx
+        # MUST match at least one line in the modal's product-info
+        # render path.
+      manual: |
+        Click an order item whose productMetadata is absent (or
+        whose description field is empty). Confirm the modal
+        shows "Product information not available in generated
+        data" rather than a substring-match guess from a
+        hand-curated map. The category-icon emoji (FR-004) and the
+        loading/unavailable states (FR-008) remain; the
+        product-specific fields (description, storage,
+        preparation) are the ones that fall back to the
+        placeholder.
+    rationale: |
+      Danny asked on 2026-06-22: "i don't understand why it has
+      the fallback product-database.ts. It should use the per
+      product data and if none exist, then show place holder
+      information like no product description found for
+      example". The 38-entry curated map encoded a silently-
+      inventing contract: when the per-product data was missing,
+      the dashboard would substring-match against a hand-coded
+      map and return plausible-looking product details. The
+      contract should be: if we have the data, show it; if we
+      don't, say so. The 16-key emoji category-icon map and the
+      loading/unavailable states are preserved because they are
+      honest UI affordances, not invented product content.
+    integration_isolation: no external services required; the
+      verification is a code-grep and a manual DOM observation.
+  AS-025:
+    type: manual
+    requirements:
+    - FR-010
+    expected: |
+      Rev 5 (2026-06-23). When spec 022's signed `meals_debug_mode`
+      cookie is effectively verified-on, the Product Detail Modal
+      surfaces a debug chip showing the product-resolution chain
+      (tpnc, productBlobPath, descriptionSource ∈ {apollo,
+      firecrawl, placeholder}, imageSource, storageSource,
+      preparationSource, freshness). When debug mode is off, the
+      chip is absent from the DOM. The chip's data source is the
+      spec 031 product-resolution panel payload.
+    verification:
+      automated: |
+        # 1. Spec-022 gate check — chip's debug data source is
+        #    gated by the existing verifyDebugCookie helper; no
+        #    parallel gate is introduced.
+        grep -n "verifyDebugCookie\|isDebugModeEnabled" /home/hermes/workspace/meals-dashboard/components/dashboard-client.tsx | head
+        # MUST match: the chip's render condition references one
+        # of these helpers (or an equivalent server-side cookie
+        # verification). A second cookie-verification helper MUST
+        # NOT be introduced.
+        #
+        # 2. Bundle grep invariant — chip's debug code lives only
+        #    inside spec-022-gated code paths.
+        grep -rn "DebugProductResolutionChip\|product-resolution-chip\|ProductResolutionDebug" /home/hermes/workspace/meals-dashboard --include='*.ts' --include='*.tsx'
+        # MUST return matches only inside spec-022-gated code
+        # paths (i.e. only the new chip file and any spec-031
+        # payload helper that is itself spec-022-gated).
+        #
+        # 3. Off-state invariant — chip is absent from main-app
+        #    HTML when debug cookie is unset.
+        curl -s --cookie "" https://meals-dashboard.vercel.app/ | grep -c "DebugProductResolutionChip\|product-resolution-chip"
+        # MUST be 0. With the signed cookie set, the chip's data
+        # is fetched lazily from the spec-031 product-resolution
+        # endpoint; it does not appear in __NEXT_DATA__ on the
+        # main dashboard page.
+      manual: |
+        With the signed `meals_debug_mode=1` cookie set, open the
+        dashboard and click an Apollo-backed order item. Confirm
+        the modal shows the debug chip with `descriptionSource:
+        apollo`, the item's `tpnc`, `productBlobPath`, and
+        `product.lastFetched`. Click an order item whose
+        description comes from Firecrawl fallback and confirm
+        the chip shows `descriptionSource: firecrawl` with the
+        Firecrawl `lastFetched` timestamp. Click an item that
+        falls through to the placeholder and confirm the chip
+        shows `descriptionSource: placeholder` and names which
+        upstream sources were absent or empty. Clear the debug
+        cookie (or use a tampered cookie) and reload; confirm the
+        chip is gone and the modal renders identically to the
+        pre-Rev-5 layout.
+      rationale: |
+        Danny asked on 2026-06-23: "When debug mode is on, i want
+        to be able to see debug information on products". Spec
+        031 already exposes the product-resolution payload on
+        `/debug`, but the round-trip from modal to `/debug` and
+        back is friction. Surfacing the chip inline on the modal
+        collapses the loop. The chip inherits the spec-022 OIDC
+        + signed-cookie gate so the security boundary is
+        unchanged: no debug payload reaches the DOM when the gate
+        is off. No new npm dependencies; no second debug
+        framework.
+    integration_isolation: gated by spec-022 server-side cookie
+      verification; manual verification requires the signed
+      `meals_debug_mode=1` cookie.
+  AS-026:
+    type: manual
+    requirements:
+    - FR-011
+    expected: |
+      Rev 5.1 (2026-06-23). The debug chip additionally surfaces
+      `expectedProductBlobPath` (derived per the spec 021 Key
+      Entities convention `products/{tpnc}.json`) and
+      `productBlobPathMatch: true | false | null`. When the
+      values match, the chip shows `expected: products/<tpnc>.json
+      ✓ match`. When they do not match, the chip shows `expected:
+      products/<tpnc>.json ✗ found <actual>` so convention drift
+      is visible inline. When tpnc is unknown, the chip shows
+      `expected: (unknown — tpnc not resolved)` and
+      `productBlobPathMatch: null`. The matcher is sourced from
+      spec 031 Rev 3 (FR-005 / FR-006); the chip MUST NOT
+      hardcode the convention.
+    verification:
+      automated: |
+        # 1. Spec-031 Rev 3 invariant — chip reads from the
+        #    spec-031 product-resolution helper, not a hardcoded
+        #    convention string in the chip's render code.
+        grep -rn "products/{tpnc}.json\|products/\${tpnc}\.json" /home/hermes/workspace/meals-dashboard --include='*.ts' --include='*.tsx'
+        # MUST return matches only inside the spec-031 matcher
+        # helper (the helper that backs spec 031 Rev 3 FR-005 /
+        # FR-006). The chip's render code MUST import the helper,
+        # not duplicate the convention string.
+        #
+        # 2. Bundle grep invariant — chip's match logic lives
+        #    only inside spec-022-gated code paths.
+        grep -rn "expectedProductBlobPath\|productBlobPathMatch" /home/hermes/workspace/meals-dashboard --include='*.ts' --include='*.tsx'
+        # MUST return matches only inside spec-022-gated code
+        # paths (i.e. the chip file + the spec-031 matcher
+        # helper, both gated by spec-022).
+        #
+        # 3. Off-state invariant — chip is absent from main-app
+        #    HTML when debug cookie is unset (Rev 5 invariant
+        #    preserved by Rev 5.1).
+        curl -s --cookie "" https://meals-dashboard.vercel.app/ | grep -c "expectedProductBlobPath"
+        # MUST be 0.
+      manual: |
+        With the signed `meals_debug_mode=1` cookie set, open
+        the dashboard and click an order item whose tpnc is
+        resolved and whose `productBlobPath` is at the canonical
+        `products/<tpnc>.json` path. Confirm the chip shows
+        `expected: products/<tpnc>.json ✓ match`. Seed or find
+        an item whose `productBlobPath` has drifted (or override
+        via test fixture) and confirm the chip shows
+        `expected: products/<tpnc>.json ✗ found <actual>` so the
+        drift is visible inline. Click an item whose tpnc could
+        not be resolved (e.g. an older order item with no
+        enrichment metadata) and confirm the chip shows
+        `expected: (unknown — tpnc not resolved)` with
+        `productBlobPathMatch: null` — NOT `false`. Clear the
+        debug cookie and reload; confirm the chip is gone and
+        the modal renders identically to the pre-Rev-5 layout.
+      rationale: |
+        Danny asked on 2026-06-23: "does the debug contain
+        information such as expected blob storage path for
+        product meta data?". The convention from spec 021 Key
+        Entities is `products/{tpnc}.json`. Surfacing the
+        expected path alongside the actual `productBlobPath`
+        with a match flag closes the convention-drift blind
+        spot: today the chip shows only the path that was
+        chosen, leaving drift invisible unless the operator
+        knows the expected-path rule. When the values match,
+        the operator sees a green checkmark; when they don't,
+        the operator sees the actual path inline. When tpnc is
+        unknown, the chip reports `null` (not `false`) — a
+        missing tpnc is a different problem from a wrong path.
+        The matcher is sourced from spec 031 Rev 3; the chip
+        MUST NOT hardcode the convention.
+    integration_isolation: gated by spec-022 server-side cookie
+      verification and spec-031 Rev 3 product-resolution
+      payload; manual verification requires the signed
+      `meals_debug_mode=1` cookie and a drifted-path fixture
+      or test item.

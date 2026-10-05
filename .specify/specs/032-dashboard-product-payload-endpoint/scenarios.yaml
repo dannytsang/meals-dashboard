@@ -1,0 +1,50 @@
+# Machine-readable scenario coverage for 032-dashboard-product-payload-endpoint.
+feature_id: 032-dashboard-product-payload-endpoint
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-003, FR-007]
+    expected: |
+      Given a product-only payload, when `/api/dashboard-products-sync` runs, then it writes product blobs and `meta/products-manifest-*.json`, updates the pointer's `productsManifestPath`, and leaves orders, coverage, and summary blobs untouched.
+    verification:
+      automated: Route test with an in-memory Blob client and a seeded pointer.
+      manual: Inspect the route response or logs from a safe preview publish.
+      rationale: |
+        Product writes must be isolated from the main dashboard state so a backfill cannot erase published order data.
+    integration_isolation: in-memory Blob client; no real Vercel Blob calls.
+
+  AS-002:
+    type: positive
+    requirements: [FR-004, FR-006, FR-007]
+    expected: |
+      Given the full sync pipeline runs with changed products, when it executes, then it makes two POST calls in order: first `/api/dashboard-sync`, then `/api/dashboard-products-sync`; the product payload is not embedded in the main payload.
+    verification:
+      automated: Pipeline-level call-order test with request spies.
+      manual: Read the sync logs from a controlled preview run.
+      rationale: |
+        The blast radius is reduced only if the product payload is separate from the main publish.
+    integration_isolation: stubbed HTTP client or fetch spy; no external network calls.
+
+  AS-003:
+    type: positive
+    requirements: [FR-005, FR-007]
+    expected: |
+      Given the backfill script has an existing list of products or a cache snapshot, when it updates product data, then it can call the product endpoint directly without loading `dashboard_cache.json`.
+    verification:
+      automated: Script test asserting the backfill request body is product-only.
+      manual: Confirm the backfill run no longer requires a dashboard cache payload.
+      rationale: |
+        Backfill should be an isolated product writer, not a disguised full dashboard republish.
+    integration_isolation: mocked product endpoint; no dashboard cache dependency.
+
+  AS-004:
+    type: negative
+    requirements: [FR-001, FR-002, FR-003, FR-006]
+    expected: |
+      Given the product endpoint fails after a successful main dashboard sync, when the pipeline completes, then the dashboard publish remains intact and the run reports a product-update failure or partial success rather than rolling back the main publish.
+    verification:
+      automated: Failure-injection test that forces the second call to fail after the first call succeeds.
+      manual: Not required unless a production incident needs confirmation.
+      rationale: |
+        A product-update failure must never be able to invalidate the already-published dashboard state.
+    integration_isolation: in-memory route stubs; no production Blob calls.

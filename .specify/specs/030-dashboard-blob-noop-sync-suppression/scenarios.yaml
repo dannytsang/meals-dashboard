@@ -1,0 +1,111 @@
+# Machine-readable scenario coverage for 030-dashboard-blob-noop-sync-suppression.
+feature_id: 030-dashboard-blob-noop-sync-suppression
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-003, FR-005, FR-006, FR-009]
+    expected: |
+      Given an existing pointer references the deterministic manifest path for
+      the incoming payload and all data/product hashes match the current
+      manifest, When the split-layout sync runs in non-dry-run mode, Then no
+      data blobs are written, `writeManifest()` is not called, `writePointer()`
+      is not called, and the result indicates deliberate no-op suppression.
+    verification:
+      automated: Targeted `lib/dashboard-sync.test.ts` case with spy methods on the in-memory client.
+      manual: Inspect sync result/log text from a no-op run.
+      rationale: |
+        This is the primary Advanced Operation saving path: a no-op sync should
+        not spend manifest and pointer writes just to republish identical state.
+    integration_isolation: in-memory Blob client with spies; no real Vercel Blob calls.
+
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-003, FR-006, FR-009]
+    expected: |
+      Given product blobs are present and the computed products-manifest path
+      equals the pointer's current products-manifest path after null
+      normalisation, When the rest of the payload is unchanged and the sync
+      runs, Then the pointer is not rewritten solely to repeat the same
+      products-manifest path.
+    verification:
+      automated: Product-aware no-op test using a seeded products manifest.
+      manual: Inspect no-op sync response for unchanged `productsManifestPath`.
+      rationale: |
+        Product metadata is the largest variable write surface, so the pointer
+        equality check must include products-manifest state.
+    integration_isolation: in-memory Blob client; no external services required.
+
+  AS-003:
+    type: positive
+    requirements: [FR-005, FR-006]
+    expected: |
+      Given a true no-op sync is detected, When the dashboard-sync route or
+      sync logs report the result, Then the result includes explicit no-op
+      suppression metadata and is not indistinguishable from a failed sync or
+      dry-run-only result.
+    verification:
+      automated: Route or result-shape test if route metadata changes; otherwise sync-result unit test.
+      manual: Read the sync output from a no-op run.
+      rationale: |
+        Cost savings must be auditable without guessing from missing Blob usage.
+    integration_isolation: local route/result test; no production Blob calls required.
+
+  AS-004:
+    type: positive
+    requirements: [FR-001, FR-004, FR-006, FR-009]
+    expected: |
+      Given at least one order, coverage, summary, product, or
+      products-manifest blob hash differs from the current manifest, When the
+      sync runs, Then changed blobs are written as before, the manifest write
+      method is called, the pointer write method is called, and no-op
+      suppression metadata is false or absent.
+    verification:
+      automated: Changed-payload test with spies for write calls.
+      manual: Run a sync after a safe payload change and inspect response/logs.
+      rationale: |
+        The optimisation must never hide fresh dashboard data behind an old pointer.
+    integration_isolation: in-memory Blob client with one changed hash.
+
+  AS-005:
+    type: positive
+    requirements: [FR-004, FR-008, FR-009]
+    expected: |
+      Given no `pointers/latest.json` blob exists, When the sync runs, Then the
+      run is treated as initial sync, the manifest and pointer are written, and
+      no no-op suppression occurs.
+    verification:
+      automated: Missing-pointer test on an empty in-memory client.
+      manual: Inspect first-sync behaviour in a disposable or preview Blob store if needed.
+      rationale: |
+        Bootstrap must publish state even if the payload is internally stable.
+    integration_isolation: empty in-memory Blob client.
+
+  AS-006:
+    type: negative
+    requirements: [FR-004, FR-008, FR-009]
+    expected: |
+      Given a pointer exists but reading its referenced manifest returns empty
+      or missing state, When the sync runs, Then the sync does not treat the
+      run as a true no-op and writes the manifest and pointer to recover the
+      published state.
+    verification:
+      automated: Seed pointer without the manifest and assert publication writes occur.
+      manual: Not required unless production corruption is suspected.
+      rationale: |
+        A broken published state must be repaired, not optimised away.
+    integration_isolation: in-memory Blob client with pointer-only seed.
+
+  AS-007:
+    type: positive
+    requirements: [FR-007, FR-009]
+    expected: |
+      Given sync is invoked with dry-run enabled, When the payload is unchanged
+      or changed, Then no data blob, manifest, or pointer writes occur; dry-run
+      result may describe whether writes would be suppressed but does not
+      mutate Blob state.
+    verification:
+      automated: Dry-run regression test covering unchanged and changed inputs.
+      manual: Not required.
+      rationale: |
+        Cost optimisation must not weaken the existing dry-run safety contract.
+    integration_isolation: in-memory Blob client; side-effect assertions only.

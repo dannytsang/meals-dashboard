@@ -1,0 +1,113 @@
+feature_id: 034-dashboard-order-items-previous-next-delivery
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-006, AS-007, AS-011]
+    tasks: [T010, T020, T032, T040, T070]
+    checks:
+      - npm run test -- dashboard-client
+      - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+      - grep -r "classifyOrderItemsByDelivery" lib/item-utils.ts
+    verification:
+      status: proposed
+      evidence: null
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-003, AS-004, AS-005, AS-008, AS-010]
+    tasks: [T030, T033, T070]
+    checks:
+      - npm run test -- dashboard-client
+    verification:
+      status: proposed
+      evidence: null
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-010]
+    tasks: [T031, T070]
+    checks:
+      - npm run test -- dashboard-client
+    verification:
+      status: proposed
+      evidence: null
+  FR-004:
+    user_stories: [US1]
+    scenarios: [AS-002, AS-003, AS-005, AS-015]
+    tasks: [T034, T070]
+    checks:
+      - npm run test -- dashboard-client
+    verification:
+      status: proposed
+      evidence: null
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-004, AS-012, AS-013, AS-015]
+    tasks: [T035, T070]
+    checks:
+      - npm run test -- dashboard-client
+    verification:
+      status: proposed
+      evidence: null
+  FR-006:
+    user_stories: [US1]
+    scenarios: [AS-005, AS-008, AS-014]
+    tasks: [T036, T070]
+    checks:
+      - npm run test -- dashboard-client
+    verification:
+      status: proposed
+      evidence: null
+  FR-007:
+    user_stories: [US1]
+    scenarios: [AS-006]
+    tasks: [T032, T070]
+    checks:
+      - npm run test -- dashboard-client
+    verification:
+      status: proposed
+      evidence: null
+  FR-008:
+    user_stories: [US1]
+    scenarios: [AS-009, AS-010]
+    tasks: [T032, T040, T070]
+    checks:
+      - npm run test -- dashboard-client
+    verification:
+      status: proposed
+      evidence: null
+  FR-009:
+    user_stories: [US1]
+    scenarios: [AS-007, AS-008]
+    tasks: [T060, T070]
+    checks:
+      - npm run test -- dashboard-client
+      - manual: preview URL with ?delivery_date_offset=1
+    verification:
+      status: proposed
+      evidence: null
+  FR-010:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T050, T070]
+    checks:
+      - manual: preview URL with debug cookie set
+    verification:
+      status: proposed
+      evidence: null
+  FR-011:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: proposed
+      evidence: null
+  FR-012:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-007, AS-009, AS-010, AS-014, AS-015]
+    tasks: [T051, T052, T070]
+    checks:
+      - npm run test -- dashboard-client
+    verification:
+      status: proposed
+      evidence: null

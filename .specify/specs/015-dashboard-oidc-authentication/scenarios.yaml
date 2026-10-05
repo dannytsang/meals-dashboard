@@ -1,0 +1,178 @@
+feature_id: 015-dashboard-oidc-authentication
+scenarios:
+  AS-001:
+    type: manual
+    requirements:
+    - FR-001
+    expected: FR-001 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-001.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-002:
+    type: manual
+    requirements:
+    - FR-002
+    expected: FR-002 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-002.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-003:
+    type: manual
+    requirements:
+    - FR-003
+    expected: FR-003 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-003.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-004:
+    type: manual
+    requirements:
+    - FR-004
+    expected: FR-004 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-004.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-005:
+    type: manual
+    requirements:
+    - FR-005
+    expected: FR-005 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-005.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-006:
+    type: positive
+    requirements:
+    - FR-015
+    - FR-016
+    expected: Unauthenticated login page uses meals-dashboard dark theme styling when
+      dark mode is active.
+    verification:
+      automated: dashboard component/e2e/theme check to be added during implementation
+      manual: null
+      rationale: null
+    integration_isolation: dashboard UI/auth page test
+  AS-007:
+    type: positive
+    requirements:
+    - FR-015
+    - FR-016
+    expected: Unauthenticated login page uses meals-dashboard light theme styling
+      when light mode is active.
+    verification:
+      automated: dashboard component/e2e/theme check to be added during implementation
+      manual: null
+      rationale: null
+    integration_isolation: dashboard UI/auth page test
+  AS-008:
+    type: negative
+    requirements:
+    - FR-017
+    expected: Login page does not import private meal/order data and does not expose
+      secrets/session values.
+    verification:
+      automated: static scan/tests to be added during implementation
+      manual: null
+      rationale: null
+    integration_isolation: dashboard build/static scan
+  AS-009:
+    type: positive
+    requirements:
+    - FR-018
+    expected: Themed login page preserves Authentik/NextAuth redirect/callback/fail-closed
+      behaviour.
+    verification:
+      automated: unauthenticated redirect smoke and auth tests
+      manual: null
+      rationale: null
+    integration_isolation: auth route smoke
+  AS-010:
+    type: manual
+    requirements:
+    - FR-010
+    expected: FR-010 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-010.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-011:
+    type: manual
+    requirements:
+    - FR-011
+    expected: FR-011 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-011.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-012:
+    type: manual
+    requirements:
+    - FR-012
+    expected: FR-012 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-012.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-013:
+    type: manual
+    requirements:
+    - FR-013
+    expected: FR-013 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-013.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-014:
+    type: manual
+    requirements:
+    - FR-014
+    expected: FR-014 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 015-dashboard-oidc-authentication/spec.md, tasks.md, and CHANGELOG.md
+        for FR-014.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-015:
+    type: manual
+    requirements:
+    - FR-023
+    expected: The themed unauthenticated login page primary action displays exactly `Login to continue` and still initiates the Authentik sign-in flow.
+    verification:
+      automated: Dashboard auth-signin-page tests assert the exact visible copy and preserve the existing signIn authentik callback behaviour.
+      manual: Visit `/auth/signin` in light and dark mode and confirm the primary button reads `Login to continue`.
+      rationale: Danny explicitly requested this button copy; it should match the sibling trips-dashboard primary sign-in action while preserving the existing auth flow.
+    integration_isolation: Copy-only login page UI change; no private dashboard data import or OIDC secret exposure.

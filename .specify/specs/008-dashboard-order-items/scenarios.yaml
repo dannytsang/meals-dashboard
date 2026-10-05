@@ -1,0 +1,152 @@
+feature_id: 008-dashboard-order-items
+scenarios:
+  AS-001:
+    type: manual
+    requirements:
+    - FR-001
+    expected: FR-001 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-001.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-002:
+    type: manual
+    requirements:
+    - FR-002
+    expected: FR-002 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-002.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-003:
+    type: manual
+    requirements:
+    - FR-003
+    expected: FR-003 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-003.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-004:
+    type: manual
+    requirements:
+    - FR-004
+    expected: FR-004 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-004.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-005:
+    type: manual
+    requirements:
+    - FR-005
+    expected: FR-005 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-005.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-006:
+    type: manual
+    requirements:
+    - FR-006
+    expected: FR-006 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-006.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-007:
+    type: manual
+    requirements:
+    - FR-007
+    expected: FR-007 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-007.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-008:
+    type: manual
+    requirements:
+    - FR-008
+    expected: FR-008 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-008.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-009:
+    type: manual
+    requirements:
+    - FR-009
+    expected: FR-009 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-009.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-010:
+    type: manual
+    requirements:
+    - FR-010
+    expected: FR-010 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-010.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-011:
+    type: manual
+    requirements:
+    - FR-011
+    expected: FR-011 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 008-dashboard-order-items/spec.md, tasks.md, and CHANGELOG.md for FR-011.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-012:
+    type: manual
+    requirements:
+    - FR-012
+    expected: Typing or deleting characters in the Order Items by Category search field immediately updates the visible item list on the client.
+    verification:
+      automated: Dashboard component/helper tests cover immediate search-state changes without submit or server calls.
+      manual: In the dashboard, type into the Order Items by Category search field and confirm rows update per keystroke with no navigation or reload.
+      rationale: The user explicitly requested client-side search that starts filtering as soon as typing begins.
+    integration_isolation: Client-side UI state only; no meals-check pipeline or generated-data mutation.
+  AS-013:
+    type: manual
+    requirements:
+    - FR-013
+    expected: Search, category chips, matched-state filter, sort direction, and Show all/Collapse compose into one deterministic visible item result.
+    verification:
+      automated: Dashboard helper tests cover search combined with active category, matched/unmatched filter, sort direction, blank-search reset, and visible-count behaviour.
+      manual: Activate a category, matched/unmatched filter, sort direction, and search query; confirm visible rows are the combined intersection ordered by the chosen sort.
+      rationale: Search must not become a separate mode that bypasses the existing match, sort, or category controls.
+    integration_isolation: Client-side derivation over loaded receipt items only.
+  AS-014:
+    type: manual
+    requirements:
+    - FR-014
+    expected: Any dynamic loading or virtualisation windows the final derived result instead of filtering only the currently rendered subset.
+    verification:
+      automated: If dynamic loading or virtualisation is introduced, helper tests prove filtering/searching/sorting run before rendering-window selection.
+      manual: With a query that matches an item outside the initial visible window, confirm the item appears after search rather than being missed because it was not rendered initially.
+      rationale: Danny wants client-side search while recognising dynamic loading may be the optimum loading-performance path; this pins the architecture boundary.
+    integration_isolation: Rendering optimisation only; no server-side search or data-fetch contract change.
+  AS-015:
+    type: manual
+    requirements:
+    - FR-015
+    expected: The search clear button empties only the search query and preserves all other Order Items by Category controls.
+    verification:
+      automated: Dashboard component/helper tests cover a non-empty search query with active category, matched-state, sort, and visible-count state, then clear the query and assert those other states are preserved.
+      manual: Type a search query, activate a category chip and matched-state/sort control, click the clear button, and confirm the search text clears while the other controls remain active.
+      rationale: Danny explicitly requested a clear button for the search box; preserving the other controls prevents it from behaving like a broad reset.
+    integration_isolation: Client-side UI state only; no generated-data mutation.
