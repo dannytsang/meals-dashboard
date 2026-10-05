@@ -1,0 +1,163 @@
+# Machine-readable requirement traceability for 023-dashboard-logged-in-user-chip.
+feature_id: 023-dashboard-logged-in-user-chip
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-010]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-002:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-002, AS-003]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-006]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-004:
+    user_stories: [US1, US3]
+    scenarios: [AS-006]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-005:
+    user_stories: [US3]
+    scenarios: [AS-007]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-006:
+    user_stories: [US4]
+    scenarios: [AS-005]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-007:
+    user_stories: [US4]
+    scenarios: [AS-005]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-008:
+    user_stories: [US2]
+    scenarios: [AS-004]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-009:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-010:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-002, AS-003]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-011:
+    user_stories: [US1]
+    scenarios: [AS-009]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-012:
+    user_stories: [US1]
+    scenarios: [AS-008]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-013:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-006]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-014:
+    user_stories: [US1, US2]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-006]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-015:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-006, AS-007, AS-008, AS-009]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-016:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-009]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-017:
+    user_stories: [US3]
+    scenarios: [AS-005]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-018:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-006, AS-007, AS-008, AS-009, AS-010]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-019:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-006, AS-007, AS-008, AS-009, AS-010]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-020:
+    user_stories: [US2]
+    scenarios: [AS-010]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null

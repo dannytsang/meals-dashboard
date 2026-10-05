@@ -1,0 +1,128 @@
+# Machine-readable requirement traceability for 025-tesco-product-enrichment.
+feature_id: 025-tesco-product-enrichment
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: [T010, T011]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-002:
+    user_stories: [US2]
+    scenarios: [AS-003]
+    tasks: [T020, T021, T022]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-003:
+    user_stories: [US3]
+    scenarios: [AS-004, AS-006]
+    tasks: [T030, T031, T032]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-004:
+    user_stories: [US3]
+    scenarios: [AS-004]
+    tasks: [T031, T032]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-005:
+    user_stories: [US3]
+    scenarios: [AS-004, AS-005]
+    tasks: [T031, T033]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-006:
+    user_stories: [US3, US4]
+    scenarios: [AS-007]
+    tasks: [T033]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-007:
+    user_stories: [US3]
+    scenarios: [AS-004]
+    tasks: [T031]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-008:
+    user_stories: [US3]
+    scenarios: [AS-004, AS-005]
+    tasks: [T032]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-009:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T011, T012]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-010:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T010, T011]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-011:
+    user_stories: [US2]
+    scenarios: [AS-003]
+    tasks: [T020, T021, T022]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-012:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-008]
+    tasks: [T012, T040]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-013:
+    user_stories: [US4]
+    scenarios: [AS-007, AS-010]
+    tasks: []
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-014:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-009]
+    tasks: [T001, T002, T003, T004, T005, T006, T007, T008, T009]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-017:
+    # Cross-reference to spec 021 (the "Refresh overdue" amber badge on
+    # stale product blobs). Spec 025 does not define FR-017; this entry
+    # exists only to satisfy the validator's check that every FR-NNN
+    # mentioned in spec.md has a traceability entry. See references
+    # to "spec 021 / FR-017" in the G4 section of spec.md.
+    user_stories: []
+    scenarios: []
+    tasks: []
+    checks: []
+    verification:
+      status: draft
+      evidence: "Cross-reference: defined and verified in spec 021 (Apollo cache + 'Refresh overdue' badge). Spec 025 only relies on the badge behaviour; the FR is not re-implemented here."

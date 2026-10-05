@@ -1,0 +1,384 @@
+feature_id: 015-dashboard-oidc-authentication
+requirements:
+  FR-001:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-001
+    tasks:
+    - T010
+    - T011
+    - T012
+    - T035
+    - T036
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-002:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-002
+    tasks:
+    - T013
+    - T030
+    - T042
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-003:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-003
+    tasks:
+    - T012
+    - T014
+    - T030
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-004:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-004
+    tasks:
+    - T002
+    - T004
+    - T032
+    - T043
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-005:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-005
+    tasks:
+    - T005
+    - T011
+    - T040
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-006:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-006
+    tasks:
+    - T005
+    - T011
+    - T040
+    - T046
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-007:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-007
+    tasks:
+    - T003
+    - T012
+    - T041
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-008:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-008
+    tasks:
+    - T020
+    - T024
+    - T034
+    - T045
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-009:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-009
+    tasks:
+    - T021
+    - T022
+    - T031
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-010:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-010
+    tasks:
+    - T022
+    - T030
+    - T042
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-011:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-011
+    tasks:
+    - T024
+    - T034
+    - T045
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-012:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-012
+    tasks:
+    - T031
+    - T035
+    - T036
+    - T043
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-013:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-013
+    tasks:
+    - T023
+    - T036
+    - T041
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-014:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-014
+    tasks:
+    - T033
+    - T042
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-015:
+    user_stories:
+    - US3
+    scenarios:
+    - AS-006
+    - AS-007
+    - AS-008
+    - AS-009
+    tasks:
+    - T050
+    - T051
+    - T052
+    - T053
+    - T055
+    checks:
+    - npm test -- --run
+    - npm run build
+    - npm run scan:static-private-data
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-016:
+    user_stories:
+    - US3
+    scenarios:
+    - AS-006
+    - AS-007
+    - AS-008
+    - AS-009
+    tasks:
+    - T050
+    - T051
+    - T052
+    - T053
+    - T055
+    checks:
+    - npm test -- --run
+    - npm run build
+    - npm run scan:static-private-data
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-017:
+    user_stories:
+    - US3
+    scenarios:
+    - AS-006
+    - AS-007
+    - AS-008
+    - AS-009
+    tasks:
+    - T054
+    - T055
+    checks:
+    - npm test -- --run
+    - npm run build
+    - npm run scan:static-private-data
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-018:
+    user_stories:
+    - US3
+    scenarios:
+    - AS-006
+    - AS-007
+    - AS-008
+    - AS-009
+    tasks:
+    - T054
+    - T055
+    checks:
+    - npm test -- --run
+    - npm run build
+    - npm run scan:static-private-data
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 OIDC/themed sign-in verification evidence.
+  FR-019:
+    user_stories:
+    - US4
+    scenarios:
+    - AS-010
+    tasks:
+    - T060
+    checks:
+    - npm test -- --run
+    - npm run build
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: pending
+      evidence: Pending implementation of sign-out button in dashboard header.
+  FR-020:
+    user_stories:
+    - US4
+    scenarios:
+    - AS-011
+    tasks:
+    - T060
+    - T061
+    checks:
+    - npm test -- --run
+    - npm run build
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: pending
+      evidence: Pending implementation of sign-out button in dashboard header.
+  FR-021:
+    user_stories:
+    - US4
+    scenarios:
+    - AS-013
+    tasks:
+    - T060
+    - T062
+    checks:
+    - npm test -- --run
+    - npm run build
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: pending
+      evidence: Pending implementation of sign-out button in dashboard header.
+  FR-022:
+    user_stories:
+    - US4
+    scenarios:
+    - AS-010
+    - AS-011
+    tasks:
+    - T060
+    - T063
+    checks:
+    - npm test -- --run
+    - npm run build
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py
+      data-science/meals-check
+    verification:
+      status: pending
+      evidence: Pending implementation of sign-out button in dashboard header.
+  FR-023:
+    user_stories:
+    - US3
+    scenarios:
+    - AS-015
+    tasks:
+    - T070
+    - T071
+    - T072
+    checks:
+    - npm test -- --run
+    - npm run build
+    - npm run scan:static-private-data
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: planned
+      evidence: Pending implementation of login button copy update in the meals-dashboard repo.

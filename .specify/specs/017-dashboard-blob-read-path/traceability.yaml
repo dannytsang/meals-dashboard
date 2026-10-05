@@ -1,0 +1,67 @@
+feature_id: 017-dashboard-blob-read-path
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T010, T011, T012, T013, T014]
+    checks:
+      - npx vitest run lib/dashboard-data.test.ts -t "SC-01"
+    verification:
+      status: passed
+      evidence: "Implemented in lib/dashboard-data.ts getDashboardData: readPointer() → readManifest(pointer.manifestPath) → readJsonBlob() for summary + coverage + orders. Vitest covers happy-path composition."
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T012]
+    checks:
+      - npx vitest run lib/dashboard-data.test.ts
+    verification:
+      status: passed
+      evidence: "coverageWindow parameter (default: today + 14 days) filters coverage blob paths. Only coverage blobs whose dates fall within the window are fetched. Page-level date range is passed via options.coverageWindow."
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-002, AS-003]
+    tasks: [T010, T011, T014, T023, T024]
+    checks:
+      - npx vitest run lib/dashboard-data.test.ts -t "missing-blob fallback"
+    verification:
+      status: passed
+      evidence: "Each blob read is wrapped in null-tolerant path: null results become empty arrays/null fields. Vitest covers missing coverage, missing order, and empty legacy fallback."
+  FR-004:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-004]
+    tasks: [T013, T014, T022]
+    checks:
+      - npx vitest run lib/dashboard-data.test.ts -t "composes two delivery windows"
+    verification:
+      status: passed
+      evidence: "Order blobs whose date falls within coverageWindow are fetched; items compose into latestOrder. Vitest covers US1/FR-06 with two delivery windows (Bolognese + Salad + Salmon)."
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T012, T014]
+    checks:
+      - npx vitest run lib/dashboard-data.test.ts
+    verification:
+      status: passed
+      evidence: "Summary blob path resolved via manifest entry matching meta/summary-*; fetched in Promise.all alongside coverage and order blobs."
+  FR-006:
+    user_stories: [US1]
+    scenarios: [AS-004]
+    tasks: [T015, T022]
+    checks:
+      - npx vitest run lib/dashboard-data.test.ts -t "composes two delivery windows"
+    verification:
+      status: passed
+      evidence: "Vitest covers two-delivery-window composition. deliveryWindows array contains one entry per visible order blob; latestOrder picks the most recent by delivery date."
+  FR-007:
+    user_stories: [US1]
+    scenarios: [AS-005]
+    tasks: [T010, T011, T012, T013, T014, T025, T033]
+    checks:
+      - npx tsc --noEmit
+      - npm run build
+      - npm run scan:static-private-data
+    verification:
+      status: passed
+      evidence: "All Blob reads happen in lib/dashboard-data.ts (server-only via 'server-only' import + 'use server' equivalent). New /api/dashboard-sync route is also server-only. Static-bundle scan passes (no private data in client chunks)."

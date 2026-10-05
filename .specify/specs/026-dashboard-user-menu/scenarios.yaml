@@ -1,0 +1,328 @@
+# Machine-readable scenario coverage for 026-dashboard-user-menu.
+# Validator requires `verification.rationale` inside `verification:` (not at scenario level).
+feature_id: 026-dashboard-user-menu
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001]
+    expected: |
+      Given an authenticated session, When the dashboard renders, Then
+      the UserChip is rendered as a <button type="button"> with
+      data-testid="user-menu-trigger", aria-haspopup="menu",
+      aria-expanded="false", and aria-controls="user-menu-panel". The
+      chip text content ("👤 Welcome, <userName>") is preserved from
+      spec 023 unchanged.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in to https://meals-dashboard.vercel.app; inspect the
+        chip with DevTools; confirm <button>, aria-haspopup, aria-expanded.
+      rationale: "Trigger ARIA is the headline FR-001 contract — without it the menu pattern is not announced to assistive tech."
+    integration_isolation: uses mocked session; no live Authentik required.
+  AS-002:
+    type: positive
+    requirements: [FR-001, FR-002, FR-003]
+    expected: |
+      Given the menu is closed, When the user clicks the trigger, Then
+      the menu opens: aria-expanded flips to "true", the dropdown
+      panel becomes visible, and focus moves into the dropdown.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; click chip; observe panel appears and focus moves
+        into it.
+      rationale: "Open-on-click is the spec's headline behaviour — the menu is useless without it."
+    integration_isolation: uses mocked state; no live network.
+  AS-003:
+    type: positive
+    requirements: [FR-001]
+    expected: |
+      Given the menu is open, When the user clicks the trigger again,
+      Then the menu closes: aria-expanded flips to "false", the panel
+      hides, and focus returns to the trigger.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; click chip again; observe panel hides.
+      rationale: "Toggle-on-trigger is the symmetric inverse of open-on-click; without it the trigger is broken."
+    integration_isolation: uses mocked state; no live network.
+  AS-004:
+    type: positive
+    requirements: [FR-008]
+    expected: |
+      Given the menu is open, When the user clicks anywhere outside the
+      dropdown AND outside the trigger, Then the menu closes
+      immediately.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; click empty page area; observe menu closes.
+      rationale: "Click-outside is the standard menu dismiss behaviour; without it the menu is sticky and confusing."
+    integration_isolation: uses mocked events; no live network.
+  AS-005:
+    type: positive
+    requirements: [FR-009, FR-011]
+    expected: |
+      Given the menu is open and focus is anywhere inside the dropdown,
+      When the user presses Escape, Then the menu closes and focus
+      returns to the trigger.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; press Escape; observe menu closes and focus
+        is back on chip.
+      rationale: "Escape-to-close + focus return is the canonical ARIA menu pattern."
+    integration_isolation: uses mocked events; no live network.
+  AS-006:
+    type: positive
+    requirements: [FR-010]
+    expected: |
+      Given the menu is open, When the user clicks any of the menu
+      rows, Then the row's underlying action fires (Debug toggle, Theme
+      toggle, or Sign out) and the menu closes immediately afterwards.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; click Theme; observe theme flips and menu
+        closes.
+      rationale: "Row-click-closes is the standard menu row behaviour; without it users have to manually dismiss after every action."
+    integration_isolation: uses mocked fetch/localStorage; no live network.
+  AS-007:
+    type: positive
+    requirements: [FR-005]
+    expected: |
+      Given the meals_debug_mode signed cookie is unset or tampered
+      (server treats it as unset, debugOn=false), When the dashboard
+      renders, Then the Debug menu item IS rendered (always-visible
+      per FR-005 Rev 2) with aria-checked="false" and an "off" state
+      indicator. The menu contains identity header, Debug, Theme, and
+      Sign out rows in DOM order.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in with debug cookie unset; open menu; confirm Debug row
+        is present with aria-checked="false" and "off" badge; only
+        identity header, Debug, Theme, and Sign out remain.
+      rationale: "Always-visible Debug row is the first-time-enablement path the pre-spec-026 inline DebugToggle provided. Without this scenario, a clean-slate user would have no UI affordance to enable debug mode for the first time."
+    integration_isolation: uses mocked debugOn prop; no live cookie set required.
+  AS-008:
+    type: positive
+    requirements: [FR-005, FR-013]
+    expected: |
+      Given the meals_debug_mode signed cookie is unset or tampered
+      (debugOn=false) and the user opens the menu and clicks the Debug
+      row, When the click handler runs, Then it POSTs to
+      /api/debug/toggle with { value: '1' } to enable debug mode. On
+      success aria-checked flips to 'true' and router.refresh() runs;
+      on HTTP error the optimistic update reverts.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in with debug cookie unset; open menu; click Debug row;
+        observe POST /api/debug/toggle with { value: '1' } and the row
+        state flips to on after success.
+      rationale: "First-time-enablement click is the bootstrap path that Rev 1 closed; Rev 2 explicitly tests that clicking the off-state row POSTs the enable value."
+    integration_isolation: mocks fetch with controlled 200/500 responses.
+  AS-009:
+    type: positive
+    requirements: [FR-005, FR-013]
+    expected: |
+      Given the meals_debug_mode signed cookie is set to '1'
+      (debugOn=true), When the dashboard renders, Then the Debug menu
+      item is rendered with aria-checked="true". Clicking the row
+      POSTs to /api/debug/toggle with { value: '0' }; on success the
+      row state updates to aria-checked="false" and router.refresh()
+      runs.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Set debug cookie via curl or prior click; reload; open menu;
+        click Debug row; observe POST with { value: '0' } and the row
+        state flips to off after success.
+      rationale: "Disable-from-on parity with the inline DebugToggle is the central contract — behaviour must match in both directions."
+    integration_isolation: mocks router.refresh; the underlying /api/debug/toggle endpoint is already covered by spec 022 tests.
+  AS-010:
+    type: positive
+    requirements: [FR-013]
+    expected: |
+      Given the menu is open and the Debug row is in a pending state
+      (POST in flight), When the user clicks the row again, Then the
+      click is ignored (button disabled) until the POST resolves.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Set debug cookie; throttle network; click Debug row; click
+        again; observe second click ignored.
+      rationale: "Disabled-while-pending prevents double-fire race when the network is slow."
+    integration_isolation: mocks fetch with delay.
+  AS-010:
+    type: positive
+    requirements: [FR-003]
+    expected: |
+      Given the menu is open, When the identity header row is
+      inspected, Then it shows the literal label "Signed in as "
+      followed by the same display value the chip shows. The row is
+      non-interactive (aria-hidden="true"); it MUST NOT be focusable.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; inspect identity header row in DevTools;
+        confirm wording and aria-hidden.
+      rationale: "Identity header row visibility + non-interactivity is the menu's self-explanatory affordance."
+    integration_isolation: uses mocked userName.
+  AS-011:
+    type: positive
+    requirements: [FR-007]
+    expected: |
+      Given the menu is open, When the user clicks Sign out, Then the
+      NextAuth sign-out flow runs and the user is redirected to the
+      sign-in page. The menu MUST close before navigation starts.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; click Sign out; observe redirect to
+        /auth/signin.
+      rationale: "Sign out flow parity with inline SignOutButton is the spec's hard rule."
+    integration_isolation: mocks window.location.assign; the NextAuth sign-out endpoint is owned by spec 015.
+  AS-012:
+    type: positive
+    requirements: [FR-006]
+    expected: |
+      Given the menu is open, When the user clicks the Theme row, Then
+      the theme flips (light ↔ dark) and the change persists across
+      reloads. The row's icon updates from Sun to Moon (or equivalent
+      per spec 012) reflecting the new state. The menu closes after
+      the click.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; click Theme; reload; confirm theme
+        persists.
+      rationale: "Theme toggle parity with inline ThemeToggle is the spec's hard rule — same helper, same localStorage key."
+    integration_isolation: mocks localStorage; the underlying theme logic is owned by spec 012.
+  AS-013:
+    type: positive
+    requirements: [FR-011, FR-015]
+    expected: |
+      Given the menu is open, When the user uses Tab/Shift+Tab to
+      navigate between menu rows, Then focus moves in DOM order:
+      identity header (skipped — non-interactive), Debug, Theme, Sign out. Escape returns focus to the trigger.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; Tab through rows; confirm focus order;
+        press Escape; confirm focus returns to chip.
+      rationale: "Keyboard navigation is the canonical ARIA menu pattern; without it the menu is mouse-only."
+    integration_isolation: uses mocked DOM focus.
+  AS-014:
+    type: positive
+    requirements: [FR-001]
+    expected: |
+      Given the trigger has focus, When the user presses Enter or
+      Space, Then the menu opens (same as a click).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; focus chip via keyboard; press Enter; observe menu
+        opens.
+      rationale: "Keyboard activation is the standard button behaviour; without it the trigger is keyboard-broken."
+    integration_isolation: uses mocked events; no live network.
+  AS-015:
+    type: positive
+    requirements: [FR-003, FR-018]
+    expected: |
+      Given the dropdown is rendered, When inspected with axe /
+      Lighthouse, Then no ARIA violation is reported for the trigger /
+      panel / rows. The panel has role="menu" and each row has
+      role="menuitem" (or role="menuitemcheckbox" for the Debug row).
+      The trigger's aria-controls references the panel's id.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; inspect ARIA in DevTools; run Lighthouse
+        accessibility audit.
+      rationale: "ARIA correctness is the menu pattern's central accessibility contract."
+    integration_isolation: component tests assert roles directly; full axe scan is manual.
+  AS-016:
+    type: positive
+    requirements: [FR-019]
+    expected: |
+      Given the menu is open, When the panel is inspected, Then it
+      uses backgroundColor: var(--bg-secondary), border: 1px solid
+      var(--border-color), color: var(--text-primary), and
+      border-radius: 8px. The panel has min-width: 220px and is
+      anchored to the right edge of the trigger.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/user-menu.test.tsx -v
+      manual: |
+        Sign in; open menu; inspect panel in DevTools; toggle theme;
+        confirm readability.
+      rationale: "Visual treatment matching the existing chip aesthetic prevents the menu from looking out of place."
+    integration_isolation: uses jsdom; visual confirmation is manual.
+  AS-017:
+    type: positive
+    requirements: [FR-022]
+    expected: |
+      Given the dashboard renders, When the header action row is
+      inspected, Then it contains <UserMenu userName={userName}
+      debugOn={!!debugOn} /> and <DemoModeChip /> as separate
+      siblings. The standalone <UserChip />, <DebugToggle />,
+      <ThemeToggle />, and <SignOutButton /> elements MUST NOT appear
+      in the header.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client.test.ts -v
+      manual: |
+        Sign in; inspect dashboard-client.tsx action row; confirm
+        <UserMenu /> replaces the four standalone components.
+      rationale: "Integration test for the wire-up — guarantees FR-022 is not regressed by future changes."
+    integration_isolation: source-grep based; production deploy is the visual confirmation.
+  AS-018:
+    type: positive
+    requirements: [FR-014]
+    expected: |
+      Given the dashboard renders, When demo mode is active, Then
+      <DemoModeChip /> remains visible as a separate sibling of
+      <UserMenu />, regardless of whether the menu is open or closed.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client.test.ts -v
+      manual: |
+        Set demo mode; open menu; close menu; confirm DemoModeChip
+        stays visible.
+      rationale: "DemoModeChip is a data-mode signal — must not be hidden by the menu."
+    integration_isolation: source-grep + manual demo-mode toggle.
+  AS-019:
+    type: positive
+    requirements: [FR-020]
+    expected: |
+      Given the dashboard production build, When the JS bundle is
+      grepped for "localStorage.getItem('meals_debug_mode')",
+      hard-coded menu coordinates (numeric top/left values), and
+      "window.confirm", Then there are zero hits in chip-related or
+      menu-related code (the helpers in lib/user-menu.ts use localStorage
+      under the 'meals-theme' key only).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx next build && grep -r "meals_debug_mode" .next/static/chunks/ | grep -v "/api/debug/" | wc -l
+      manual: |
+        Build dashboard; grep production bundle; confirm no leaks.
+      rationale: "Privacy + minimal-bundle contract — debug cookie must not be touched outside the spec-022 endpoint."
+    integration_isolation: build artefact inspection.
+  AS-020:
+    type: positive
+    requirements: [FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-022]
+    expected: |
+      Given the production deployment at https://meals-dashboard.vercel.app,
+      When a user signs in with an Authentik account, Then the chip
+      is a button; clicking it opens a dropdown with identity header
+      + Debug + Theme + Sign out; click outside and
+      Escape both close the menu; Theme flips and persists; Sign out
+      redirects to /auth/signin; chip text matches spec 023 wording.
+    verification:
+      automated: null
+      manual: |
+        Sign in to https://meals-dashboard.vercel.app with an Authentik
+        account; click chip; confirm rows; click Theme; click outside;
+        press Escape; with debug cookie set, click Debug row; click
+        Sign out; observe sign-in page. Repeat with a second Authentik
+        account.
+      rationale: "End-to-end production verification is the gate for spec Final status per the Promotion Criteria block. All AS-NNN above pass in their component/integration tests; this scenario is the live consumer check."
+    integration_isolation: production-only manual verification.

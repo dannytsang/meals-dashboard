@@ -1,0 +1,1537 @@
+{
+  "destination_root": ".specify/specs",
+  "entries": [
+    {
+      "mode": 509,
+      "path": "specs",
+      "type": "directory"
+    },
+    {
+      "mode": 509,
+      "path": "specs/004-dashboard-sync",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/004-dashboard-sync/CHANGELOG.md",
+      "sha256": "bf44e95c109b6f664144b918330395a9c3de923a2caa85e7794d28f6ba352121",
+      "size": 10974,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/004-dashboard-sync/plan.md",
+      "sha256": "bff1ace0e14cea0a3ae0beb50bc133c9fc2b78504a803c88dc1c3963c3a9d265",
+      "size": 5021,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/004-dashboard-sync/scenarios.yaml",
+      "sha256": "05e7c7f17680cdd68d1b86d2aa10582c07f379bdb383e11374419375163c1824",
+      "size": 5337,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/004-dashboard-sync/spec.md",
+      "sha256": "3af7ccd0c3b1be27929e2aca4d110e9f7b741b9401cf3060467bcbd8d2bbdb2b",
+      "size": 13603,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/004-dashboard-sync/tasks.md",
+      "sha256": "975fdad0a00ec7e35a1ba2e555f8bdcb33f5550acb04ce35ff967de75233e5a5",
+      "size": 3886,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/004-dashboard-sync/traceability.yaml",
+      "sha256": "5077ead1725a7453fcc06fd7e826df23e55958ef700977b6d58d6463c222ea05",
+      "size": 5793,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/006-dashboard-summary-filters",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/006-dashboard-summary-filters/CHANGELOG.md",
+      "sha256": "59339c2b0f0fba383edff88b088e590e3950efc51360bb1caff1a6b720d8cdcd",
+      "size": 2265,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/006-dashboard-summary-filters/plan.md",
+      "sha256": "a1955a36b48897365ec412a4898fae93d7113a76fcc717ab3c396063cf5f53b6",
+      "size": 2855,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/006-dashboard-summary-filters/scenarios.yaml",
+      "sha256": "5e7873d681cb53fdd4aae15e7059328a512c679ad1e1b1ebf14166c6e280e715",
+      "size": 2478,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/006-dashboard-summary-filters/spec.md",
+      "sha256": "bd7b3ca70b1af7675eaee8524cfecf9830060f60b9dfb8ef15ffbd0b75b40afa",
+      "size": 6038,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/006-dashboard-summary-filters/tasks.md",
+      "sha256": "2bd14b0b27399d058b7a7844ded8bfbb3ba4cb8109c3760b9dd7fb9adecfa6e2",
+      "size": 1513,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/006-dashboard-summary-filters/traceability.yaml",
+      "sha256": "4700ed2a57adce67fe6ff306b0848067ca0a6a63e2c0a4b51c987c58868ccc5b",
+      "size": 1888,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/007-dashboard-meal-cards",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/007-dashboard-meal-cards/CHANGELOG.md",
+      "sha256": "3d21c03bbf12fec5a24bd2c80d1eb27eb36e4b856cd42bc142026676a5069f32",
+      "size": 25743,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/007-dashboard-meal-cards/plan.md",
+      "sha256": "cf901f61b0d6775f3f94a153dfe1e886b4e2db5ddc50fd27ec9063a2d8b1364d",
+      "size": 9213,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/007-dashboard-meal-cards/scenarios.yaml",
+      "sha256": "3d54010660ebd3556ceb658a025a9139831f2ce478397623dd612a3d7bcf8a08",
+      "size": 13907,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/007-dashboard-meal-cards/spec.md",
+      "sha256": "c81aa3eba01026e53b09a62934d163d65fa20de969fb412d8766126631e9830a",
+      "size": 32166,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/007-dashboard-meal-cards/tasks.md",
+      "sha256": "e600c94104dc3bc9cd9dee27c16e7f09d96f5d8d0618e2f0ed882b636976a881",
+      "size": 12072,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/007-dashboard-meal-cards/traceability.yaml",
+      "sha256": "b4ab4319c0eda27ffb271685354cb0610bdb3c758cb070eab665b50748058daa",
+      "size": 8456,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/008-dashboard-order-items",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/008-dashboard-order-items/CHANGELOG.md",
+      "sha256": "a174d4e7bf1768ff88c04bcaa968059ebd07f083b17686b79e5dd5ab90f6618a",
+      "size": 10711,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/008-dashboard-order-items/plan.md",
+      "sha256": "5f9ba27f0e498cf5e8f0f02c1625117441928e5580128afe89d6c3668ea87934",
+      "size": 6331,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/008-dashboard-order-items/scenarios.yaml",
+      "sha256": "32b47f7beaa508096e65c9efe61be498e1786e5dca4b5a9908f3e5e6ea58db28",
+      "size": 8503,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/008-dashboard-order-items/spec.md",
+      "sha256": "f720655be479fff6fa7cdc01c69f3d45b30076d0cf6815c48b2b73157e6d0a70",
+      "size": 19620,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/008-dashboard-order-items/tasks.md",
+      "sha256": "ca03da142755b23bae7dc83ec8df348e9c3d31fd0047142b6fb168aa49d69f83",
+      "size": 5502,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/008-dashboard-order-items/traceability.yaml",
+      "sha256": "b34d8765c3cd9b302f8b914b04f088e481d81ad9658cb8658b2224a0b84d851b",
+      "size": 4652,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/010-dashboard-product-detail",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/010-dashboard-product-detail/CHANGELOG.md",
+      "sha256": "6ac4bdeec64d04a0d6582e5412ec9042ceb8b40386e95d4f86fe35d57d66e3c7",
+      "size": 28113,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/010-dashboard-product-detail/plan.md",
+      "sha256": "f276851adcfaf8723c13e1384a93f8446cf182d02e579bb08217558e3bf87b51",
+      "size": 7495,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/010-dashboard-product-detail/scenarios.yaml",
+      "sha256": "7283a9928b342f006c753955295c9cf9942f9cb8a8df7d56107c091634918458",
+      "size": 14542,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/010-dashboard-product-detail/spec.md",
+      "sha256": "2c29f3c68140b7f5900aa3126bf1174c26d7424ba4e1d08b3da8cb6b54d65335",
+      "size": 21586,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/010-dashboard-product-detail/tasks.md",
+      "sha256": "8b1ee554ee3b1b471c79a285a441f1b84cda04b3141148b7d2eb3f4e6e3acd16",
+      "size": 17517,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/010-dashboard-product-detail/traceability.yaml",
+      "sha256": "bf146c48f1d766af16020549f7046cfadd9d70b7577b3d2aae6bfffcfa86e646",
+      "size": 6697,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/011-dashboard-meal-card-matcher-accuracy",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/011-dashboard-meal-card-matcher-accuracy/CHANGELOG.md",
+      "sha256": "a934caa4f83b337ab185d6da603ebc38cd17541874527ce970da4af0861d1aa2",
+      "size": 7614,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/011-dashboard-meal-card-matcher-accuracy/plan.md",
+      "sha256": "b808305256b8be9cd6d83ed471f6ccf51cb880177ade35740cff2e83ea193431",
+      "size": 4986,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/011-dashboard-meal-card-matcher-accuracy/scenarios.yaml",
+      "sha256": "e74b3319c8ac083aff0bebffb75ea4c5b7a4644a8036da770c76391426a92b4f",
+      "size": 6286,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/011-dashboard-meal-card-matcher-accuracy/spec.md",
+      "sha256": "634b627d1911482e5c842262c5d6d7b6cbb31a925cb15748a30bacb8d120c22e",
+      "size": 12998,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/011-dashboard-meal-card-matcher-accuracy/tasks.md",
+      "sha256": "966e356056038fe9102a5ed06518e7722854fe72f7bce64965832fe3eb0d7b0a",
+      "size": 5020,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/011-dashboard-meal-card-matcher-accuracy/traceability.yaml",
+      "sha256": "a75dcff8ca44c96e74a2296c18e19a0efe101ae547b4cf61209367562194fb9e",
+      "size": 4542,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/012-dashboard-theme-toggle",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/012-dashboard-theme-toggle/CHANGELOG.md",
+      "sha256": "093653d18dccc22cdb543ce74937adc732bd4a3d1f1a8843061a5eb81b8b43cf",
+      "size": 1894,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/012-dashboard-theme-toggle/plan.md",
+      "sha256": "3961ba832e6190a8bd50c51d815dd6d25a760349cb94597f46c446c863095c1c",
+      "size": 2257,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/012-dashboard-theme-toggle/scenarios.yaml",
+      "sha256": "ac1d8193ebf53c13252226c7a8defe291a13f7b25b48cca3a2734d842c34db59",
+      "size": 2460,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/012-dashboard-theme-toggle/spec.md",
+      "sha256": "881120448f3be75b30cff8d5e15d673d000af42d11a18082c40081e7712e311c",
+      "size": 4722,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/012-dashboard-theme-toggle/tasks.md",
+      "sha256": "4753c1af0480d75e67809c0c2d9e1a27b37d505e115b4b7d5fc4e2c77183aef7",
+      "size": 314,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/012-dashboard-theme-toggle/traceability.yaml",
+      "sha256": "6322b22e4d2c84e9aa70926066cdd53194d938f8649529b535c5dfabe7e16973",
+      "size": 1658,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/013-dashboard-expiry-timeline",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/013-dashboard-expiry-timeline/CHANGELOG.md",
+      "sha256": "989b576d406ef754145af93c0ab47dd816b3d906b77e97de76d3a541b7a41881",
+      "size": 1318,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/013-dashboard-expiry-timeline/plan.md",
+      "sha256": "cadb26bac658b676afcfaf1209e20069da5255897d6583f5b61182459652c4b5",
+      "size": 2744,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/013-dashboard-expiry-timeline/scenarios.yaml",
+      "sha256": "db91da03dd60ac8d36f00c63c5a975917b9a33086646bd95276e1eb61fd56a00",
+      "size": 3448,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/013-dashboard-expiry-timeline/spec.md",
+      "sha256": "85f55a0c13b967c6f7b81eea2b6f94301d7d67736e64facb770934407e504e08",
+      "size": 6783,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/013-dashboard-expiry-timeline/tasks.md",
+      "sha256": "3f2005afd4a56645e0ba78b4f31521d5f433453c808e9406a59148fed44b5e28",
+      "size": 320,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/013-dashboard-expiry-timeline/traceability.yaml",
+      "sha256": "b9564f498f9d99bd3a9cce44da4755be87f321515b17423c65b6b6477d12dd2b",
+      "size": 2303,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/015-dashboard-oidc-authentication",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/015-dashboard-oidc-authentication/CHANGELOG.md",
+      "sha256": "9fd3e307bef947e55274a43c0410589b46503f70035b5fc9cfe3658e162fe0ee",
+      "size": 13931,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/015-dashboard-oidc-authentication/plan.md",
+      "sha256": "224b801f34b654307592ca101f97f0826b014da4f93471848a3368e471606670",
+      "size": 7640,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/015-dashboard-oidc-authentication/scenarios.yaml",
+      "sha256": "521a7885dd934bda8b05bc289e8de706a84244e057168746be5c94e14b04081d",
+      "size": 7349,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/015-dashboard-oidc-authentication/spec.md",
+      "sha256": "08fb051ac346c5157f1e3a4762174554f24662fd5f12c73ea142536c68b815f3",
+      "size": 21757,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/015-dashboard-oidc-authentication/tasks.md",
+      "sha256": "38993ab6b3bbadb658abf0e6c3b1d02289b735444815e77dee1bef9778b73145",
+      "size": 8705,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/015-dashboard-oidc-authentication/traceability.yaml",
+      "sha256": "21a627b11a21401ce1a441c2d683a32bc218ac4e832572855f1801b6887a5a2a",
+      "size": 9617,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/016-dashboard-blob-storage-layout",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/016-dashboard-blob-storage-layout/CHANGELOG.md",
+      "sha256": "b617d59777d5ca9dc4b6b42e0d8123f232e4221e50ba3ab68835471aeaa9d4d5",
+      "size": 13220,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/016-dashboard-blob-storage-layout/plan.md",
+      "sha256": "4196a29fb5a7f931f3ed744904078713b4710e25d2779cfd0e36a83d29c0f4e8",
+      "size": 7763,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/016-dashboard-blob-storage-layout/scenarios.yaml",
+      "sha256": "1de09ed340c3e2d6b4a10c60163080bcf3a5ff605f71c4713e0440b9f2959936",
+      "size": 3107,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/016-dashboard-blob-storage-layout/spec.md",
+      "sha256": "412541153ee4f65a20155a342c5178f92ee1976133703ac2ad6dc04f11b1abe5",
+      "size": 20948,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/016-dashboard-blob-storage-layout/tasks.md",
+      "sha256": "f1108cb6912704b87effb6fa079c76eb6dc52111096b96df05a35df8b723fb3d",
+      "size": 4884,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/016-dashboard-blob-storage-layout/traceability.yaml",
+      "sha256": "d230c7f5ec8cc5f1fe7ecb4c0eadbdbb3ed09a17ac5562d9680a206059ead773",
+      "size": 5580,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/017-dashboard-blob-read-path",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/017-dashboard-blob-read-path/CHANGELOG.md",
+      "sha256": "87724c03fc2f069e4ec3f64e9e22addecc90ebd38d0382e594c32a579820a100",
+      "size": 7750,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/017-dashboard-blob-read-path/plan.md",
+      "sha256": "e26eb3f0bfc6bfa71fb46cc5d9466bb4e9bda398ee72339d7a9f8869086a4d86",
+      "size": 6043,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/017-dashboard-blob-read-path/scenarios.yaml",
+      "sha256": "24fec0a4b1d91648a92de80004dc0fb7622ee685fd792c3e4f331c5ae69040de",
+      "size": 2328,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/017-dashboard-blob-read-path/spec.md",
+      "sha256": "2fa797d5b5d6bcaf527f8c95f5a469a69de4f0593966b63bbe1ba34d0eaf688b",
+      "size": 8408,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/017-dashboard-blob-read-path/tasks.md",
+      "sha256": "4b1b7ea0eba7a505960bcd989505218ec50c40026d609c8cf578b38db5c1ca23",
+      "size": 3831,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/017-dashboard-blob-read-path/traceability.yaml",
+      "sha256": "d1e413f8da7229091d7b71a23224c55efe6961507e1b063a55d5b3fc0383ef3b",
+      "size": 2962,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/018-dashboard-order-status-tracking",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/018-dashboard-order-status-tracking/CHANGELOG.md",
+      "sha256": "3e48d92b4716375390eecc2f01bbdc1f4342225c52549bc1f50b515d951a5019",
+      "size": 13889,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/018-dashboard-order-status-tracking/plan.md",
+      "sha256": "6bb8128ca6606d49ed2524066931c3f8c313b57fdb464c979f112e46524e2e77",
+      "size": 8865,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/018-dashboard-order-status-tracking/scenarios.yaml",
+      "sha256": "06f4fcb545564f4db2b0757a3afa6c8c018744dd33a3829828ac61f82eac0f6a",
+      "size": 3956,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/018-dashboard-order-status-tracking/spec.md",
+      "sha256": "02f84d84a584a271ecbf8ce27f00b283093850de97ad9c60f26958e9ae59fe23",
+      "size": 14604,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/018-dashboard-order-status-tracking/tasks.md",
+      "sha256": "a584189ae9219b6f9258adf6bd364f88d5b81cb26a8207e2b1462fc4b31be34f",
+      "size": 7580,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/018-dashboard-order-status-tracking/traceability.yaml",
+      "sha256": "f68b6f73391d03380b5f8b7177b80744b9df53689289803d0f199b4932631a73",
+      "size": 6155,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/019-dashboard-coverage-invalidation-refunds-perishables",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/019-dashboard-coverage-invalidation-refunds-perishables/CHANGELOG.md",
+      "sha256": "06954ab130e3c006983c3c0915a48676069fc0fd9ee5d736f41ae874fc0ea76e",
+      "size": 24070,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/019-dashboard-coverage-invalidation-refunds-perishables/plan.md",
+      "sha256": "2474992def6d810a1762618ae16ba04f885d5b0fdd29299727060eba906ac5e9",
+      "size": 9502,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/019-dashboard-coverage-invalidation-refunds-perishables/scenarios.yaml",
+      "sha256": "5157cb948773b4a793d15e6673eca965fdd12f4a003e9f21e67aa09305d4e63b",
+      "size": 4695,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/019-dashboard-coverage-invalidation-refunds-perishables/spec.md",
+      "sha256": "7b0df4241b46c64328bf766a50bcb1e2b0002c1fcde9d5794ba87878ba05bdb7",
+      "size": 22232,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/019-dashboard-coverage-invalidation-refunds-perishables/tasks.md",
+      "sha256": "9c9ea4ce81d287e23a32dd9798c66d4d7f32abfb9dc0623fc170c0d9e53487dc",
+      "size": 14562,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/019-dashboard-coverage-invalidation-refunds-perishables/traceability.yaml",
+      "sha256": "490d0429984c7f970f31e7a59c856965eabd2e274908c4ceda3a4d7e9c594376",
+      "size": 7718,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/020-dashboard-grocy-pantry-coverage",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/020-dashboard-grocy-pantry-coverage/CHANGELOG.md",
+      "sha256": "8bcf3257f1bb7b2813436322832a02b9352b13b87f3ac75a7a6b6037fee1fcd7",
+      "size": 6249,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/020-dashboard-grocy-pantry-coverage/plan.md",
+      "sha256": "9825faaca26485f4ff94d8dc4c964cc3a5a2e795148f3503f54b754d2fc71d92",
+      "size": 6916,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/020-dashboard-grocy-pantry-coverage/scenarios.yaml",
+      "sha256": "4473225003bd4b0bbd80f97d1a7a0ec472c91db8f2d15d8f969bc14e7e0a87c6",
+      "size": 3773,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/020-dashboard-grocy-pantry-coverage/spec.md",
+      "sha256": "9599be583c4bb67848c1938067fd732106835c2bef40c6eb3426615e363d5f7b",
+      "size": 11085,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/020-dashboard-grocy-pantry-coverage/tasks.md",
+      "sha256": "995557d6f1d78db4078ac18337ccbd3bef1efd2c13e8d7f7f876178c18a443ba",
+      "size": 3168,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/020-dashboard-grocy-pantry-coverage/traceability.yaml",
+      "sha256": "2d34e7974783ea4e969c88aee202676462aadf0e54d6d3bea04494b1424e8c7e",
+      "size": 3900,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/021-dashboard-product-enrichment-tesco-apollo",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/021-dashboard-product-enrichment-tesco-apollo/CHANGELOG.md",
+      "sha256": "ac412bf31bd997db3de6826d3f00296a2552f96f507df341c748612066d2ca60",
+      "size": 4957,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/021-dashboard-product-enrichment-tesco-apollo/plan.md",
+      "sha256": "96c40ac60cce6a8c6cb271b2d16bfb5fe6afe0961523a6fea7b5680120fd2223",
+      "size": 7479,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/021-dashboard-product-enrichment-tesco-apollo/scenarios.yaml",
+      "sha256": "0d52b8f4fbb3768610b90f9eb21994d5253f3584df55faf3eff9285e0c6a5e5f",
+      "size": 5804,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/021-dashboard-product-enrichment-tesco-apollo/spec.md",
+      "sha256": "304da06b21fcc1cec999de31aaca7b6f109bf707ec91ab21bda97fd7aee553a9",
+      "size": 16508,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/021-dashboard-product-enrichment-tesco-apollo/tasks.md",
+      "sha256": "25b3094ff6da2d59863e3b0b2f1ab96bc7e12003ffcd38910b3b2f9bda6b8124",
+      "size": 3484,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/021-dashboard-product-enrichment-tesco-apollo/traceability.yaml",
+      "sha256": "6f45f72c3cb820cc289ecc94a5332156297f5eb0559214403d89ce5b43b56b68",
+      "size": 2756,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/022-dashboard-debug-mode",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/022-dashboard-debug-mode/CHANGELOG.md",
+      "sha256": "fc0e3c5d5cee83195ab8e9cffbbc60a3f4bfc3bab0c7f27c2aa48d8fd21df9b2",
+      "size": 21938,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/022-dashboard-debug-mode/plan.md",
+      "sha256": "a2c2f920d11b7f558fe19fc97619f44fad35a3819f349d76eab74322a8ae8574",
+      "size": 14584,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/022-dashboard-debug-mode/references",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/022-dashboard-debug-mode/references/dashboard-debug-mode.md",
+      "sha256": "22b71c73731f63295159607d3730d5296ee8132cfa8f40ae31f533dcf5ecf29e",
+      "size": 7312,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/022-dashboard-debug-mode/scenarios.yaml",
+      "sha256": "99a61d4cd5bbe5d3a207ee2aadd1bd8d05da01952d7309c708d396f6857b6e1d",
+      "size": 17797,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/022-dashboard-debug-mode/spec.md",
+      "sha256": "6fb9931fbb9a3611a4bd473c832d811491ce3e968301545566e201f6567f3a9f",
+      "size": 42087,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/022-dashboard-debug-mode/tasks.md",
+      "sha256": "8b36c3996f83445c41d5ead1806e0a3306364bf0394999ff325be0e0ca5bbeae",
+      "size": 10510,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/022-dashboard-debug-mode/traceability.yaml",
+      "sha256": "369bd38a07391c76cebc7189db6d82727a657c88c864bd2e48cd7d9eaf06355f",
+      "size": 8916,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/023-dashboard-logged-in-user-chip",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/023-dashboard-logged-in-user-chip/CHANGELOG.md",
+      "sha256": "0d56b06ebf7685b51f08791d629bc31c402d978f8f2ffe42f576a9b75f9b961c",
+      "size": 10048,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/023-dashboard-logged-in-user-chip/plan.md",
+      "sha256": "8287ba66f87b6adb52cf82810ae4b0408db4f37174b871dcfe57f6fc2238a479",
+      "size": 10839,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/023-dashboard-logged-in-user-chip/scenarios.yaml",
+      "sha256": "3ba8a3502784c2023d694b144cf8e8ee68e415d2eb2d43599ed6915fc15f25ba",
+      "size": 9623,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/023-dashboard-logged-in-user-chip/spec.md",
+      "sha256": "aec18c58a2b03ea0ee7b87ff947c2dec0a97971c5becfdc3bf024e4ba5930fe2",
+      "size": 27987,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/023-dashboard-logged-in-user-chip/tasks.md",
+      "sha256": "ed19a6b230bb80c2f1092cf25b6eec1e1ab8b43b377bc2b1a1c8f3b7038134cf",
+      "size": 6879,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/023-dashboard-logged-in-user-chip/traceability.yaml",
+      "sha256": "394fdbb40cb5f06ae1b8a1be831e93262b43fbeafcc1e08930270925bf4c1cb2",
+      "size": 3488,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/024-dashboard-static-fixture-mode-for-preview",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/024-dashboard-static-fixture-mode-for-preview/CHANGELOG.md",
+      "sha256": "ef6c63f315e2dcaaefa6c0269a43e754028e55e968e44d47bd5529a97a140521",
+      "size": 14607,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/024-dashboard-static-fixture-mode-for-preview/plan.md",
+      "sha256": "3d1a109a3d0f7fab60439e3a1360bdbdfd7c5020b9b34e2bcc30400b220d2218",
+      "size": 15232,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/024-dashboard-static-fixture-mode-for-preview/scenarios.yaml",
+      "sha256": "ff999714234e2981eaa583af6c09a5a7f606eb77ce79f31466fba5efb54ae9bc",
+      "size": 11257,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/024-dashboard-static-fixture-mode-for-preview/spec.md",
+      "sha256": "1d7005720e6171526cc5fb0e8368485b8e96bac23bc8624c33589c32123fa9e9",
+      "size": 42957,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/024-dashboard-static-fixture-mode-for-preview/tasks.md",
+      "sha256": "d9740d6d182b9694cffa303126a020682ac5f7b96cced3a26a268bb664b9dc3c",
+      "size": 9559,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/024-dashboard-static-fixture-mode-for-preview/traceability.yaml",
+      "sha256": "310ff0906f0d818f0862de2a28ef7fc112e9d5e4ff8dbf189fd1739c4a30c966",
+      "size": 4113,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/025-tesco-product-enrichment",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/025-tesco-product-enrichment/CHANGELOG.md",
+      "sha256": "4bd9201c702e2ac2e4ee71489bc338cb88af14ca14748d2f6e436b33c2767bae",
+      "size": 10612,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/025-tesco-product-enrichment/plan.md",
+      "sha256": "a40b5c842d7eed5130d1745cf96b95dde727cd3141db8390d38d77aa6944a0b6",
+      "size": 5946,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/025-tesco-product-enrichment/references",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/025-tesco-product-enrichment/references/tesco-product-enrichment-sources.md",
+      "sha256": "a1794727ba707234a40ae5337c0f5d46449160191af8cadebc4e50c55f352107",
+      "size": 21841,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/025-tesco-product-enrichment/scenarios.yaml",
+      "sha256": "960bf8ab45564e9a692d66c77fd6bf4a9cb02fe5ca115b76e747cb851e9d2064",
+      "size": 12973,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/025-tesco-product-enrichment/spec.md",
+      "sha256": "c0cbe7fa2b764dca3f58b507904139f9793800193e7664e940e200937578851b",
+      "size": 47581,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/025-tesco-product-enrichment/tasks.md",
+      "sha256": "11781499d033623e9cae35e171d6612ce4ff5711d66b729b01b61bf5811ab54d",
+      "size": 6040,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/025-tesco-product-enrichment/traceability.yaml",
+      "sha256": "80b816c4fc8f1f5d3841b0170193b64d533cd84565cf3031402f2702a8bc2316",
+      "size": 3061,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/026-dashboard-user-menu",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/026-dashboard-user-menu/CHANGELOG.md",
+      "sha256": "45f2fd22a03c9a48f3a0c6dc85f5829b1b0ee115e0170133049fca54bf31a1dd",
+      "size": 17642,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/026-dashboard-user-menu/plan.md",
+      "sha256": "8854b3dd58b6677d3df5e99e0c3d3672bc20dd7519292e598dbd09f3a61327ab",
+      "size": 4126,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/026-dashboard-user-menu/scenarios.yaml",
+      "sha256": "573516894db7787831b27085eb75446728d76e6fdd18f1c09d34e06bda65578c",
+      "size": 17227,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/026-dashboard-user-menu/spec.md",
+      "sha256": "888cb50fe6782c2406f1e2aad9629b6a646234cfd7474110e61e6ab3acbc50a7",
+      "size": 42437,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/026-dashboard-user-menu/tasks.md",
+      "sha256": "a1390c216000d31b1576cbfafd1929830d6373d1ac354cca8facd641a8b93a39",
+      "size": 3769,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/026-dashboard-user-menu/traceability.yaml",
+      "sha256": "389913c48871f04f54b09fba024d6822c9a136a235dc9198c011bb22a5b05151",
+      "size": 12293,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/027-dashboard-firecrawl-search-fallback",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/027-dashboard-firecrawl-search-fallback/CHANGELOG.md",
+      "sha256": "67936103b0c49e3a2859bf1ecb93a2c72254a766decbbda823532a03326e7898",
+      "size": 21059,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/027-dashboard-firecrawl-search-fallback/plan.md",
+      "sha256": "7e675addbb0a9a7d7f765db607963cd701ebc3e929889b5bc245a5fe2280eff8",
+      "size": 13059,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/027-dashboard-firecrawl-search-fallback/scenarios.yaml",
+      "sha256": "1386edabc04c4eba92057cda6670ae7b79270c01be1c362b685367eaeb9b1fbc",
+      "size": 16698,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/027-dashboard-firecrawl-search-fallback/spec.md",
+      "sha256": "f743b864d6655d5f04419e964b04cf38139648365cdb30e5d9f5e167fdcfef19",
+      "size": 39450,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/027-dashboard-firecrawl-search-fallback/tasks.md",
+      "sha256": "38e3d17a30b6b10d2fadef47ad03f7b1157711917ef9272e9e90280ab0d94d28",
+      "size": 6748,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/027-dashboard-firecrawl-search-fallback/traceability.yaml",
+      "sha256": "2bb70f11bc4e63267829deb07b3b8ea07b3b3b2ae3a666839cb0cb7d21ab3054",
+      "size": 3302,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/028-dashboard-blob-head-read-savings",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/028-dashboard-blob-head-read-savings/CHANGELOG.md",
+      "sha256": "f4ca00b1b3db069888e92cdaf5b761d84ca535b3ece4facf45a7ff5a4b5d4613",
+      "size": 9720,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/028-dashboard-blob-head-read-savings/plan.md",
+      "sha256": "95a6499039dae3756a798f56cdecdba49692990c4042c778a537e2e8268f4595",
+      "size": 12411,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/028-dashboard-blob-head-read-savings/scenarios.yaml",
+      "sha256": "7756eb1d225232f8987d5ecbab25b22a55dcbd0f092b19553c1e6e83e94c424d",
+      "size": 9205,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/028-dashboard-blob-head-read-savings/spec.md",
+      "sha256": "ba4f9f5b643f354642041bb1401ac3e31b2031468ee7b095d4abe910f1929aa5",
+      "size": 16150,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/028-dashboard-blob-head-read-savings/tasks.md",
+      "sha256": "4bdb35bb65bbed495942b0ba86940743ec42ed8e8b8bd9ec7d182a2960cb8156",
+      "size": 8311,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/028-dashboard-blob-head-read-savings/traceability.yaml",
+      "sha256": "088b0ee0f66008d2834914569fc80f59e64f0a9f4b38fed7ea602149aaf5dc8c",
+      "size": 1547,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/029-dashboard-blob-error-surface",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/029-dashboard-blob-error-surface/CHANGELOG.md",
+      "sha256": "3e077800e1f97ae4e0c819dac5ae1bc9d59fd635f85ae317f79fa78506687818",
+      "size": 4772,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/029-dashboard-blob-error-surface/plan.md",
+      "sha256": "7208e1572f0a74da1cdd18d50645b1e59adf3793b86a9d63b3048a5b6b320c94",
+      "size": 4162,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/029-dashboard-blob-error-surface/scenarios.yaml",
+      "sha256": "8b862247fb7b2bf255a44fbd82519e1f798ba15ff098a690e175dc1a89fb0881",
+      "size": 6651,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/029-dashboard-blob-error-surface/spec.md",
+      "sha256": "ea4ab793d035a0f731e04640253280d78ad3dea2854bc001f6e2fa3407ad4828",
+      "size": 12755,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/029-dashboard-blob-error-surface/tasks.md",
+      "sha256": "793538fd2860b0cfed4d55a400d75e482d6ff28098d63c6d6e6148b536adeb69",
+      "size": 2668,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/029-dashboard-blob-error-surface/traceability.yaml",
+      "sha256": "4255501561ed66be47e990d9e8073c1ff286415a085998b39897b99d04491509",
+      "size": 2167,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/030-dashboard-blob-noop-sync-suppression",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/030-dashboard-blob-noop-sync-suppression/CHANGELOG.md",
+      "sha256": "d039d97570bd07fd3a9e25478c099a430152d90d0643f10cd5a12a3c91374723",
+      "size": 2143,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/030-dashboard-blob-noop-sync-suppression/plan.md",
+      "sha256": "f94d11b82b979ccc5a128e09363f5834a32b546dcaa6e6d3cc15c642f2d298ad",
+      "size": 4877,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/030-dashboard-blob-noop-sync-suppression/scenarios.yaml",
+      "sha256": "457cfd2e0d004259300896e935153edc0784606ba364453c36c51568a5e6c977",
+      "size": 5345,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/030-dashboard-blob-noop-sync-suppression/spec.md",
+      "sha256": "f0e4c7032af09c6b3bef014ced8a99103ec45f1c69750a95317ab68f49c1fc0f",
+      "size": 12517,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/030-dashboard-blob-noop-sync-suppression/tasks.md",
+      "sha256": "f0c95fa7a4eecaaf0ee76b569ab233036c30a641f51c87ffc927e29d7119e1b9",
+      "size": 2747,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/030-dashboard-blob-noop-sync-suppression/traceability.yaml",
+      "sha256": "34573ea1cd9bf26e82e384916a96c6b20ca68b8c04ea6bd7f9a2341d49b70326",
+      "size": 1975,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/031-dashboard-debug-observability-panels",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/031-dashboard-debug-observability-panels/CHANGELOG.md",
+      "sha256": "55f02409e719614827158200cf35c7808514f9a601078be67d7624d6567a8e1b",
+      "size": 2778,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/031-dashboard-debug-observability-panels/plan.md",
+      "sha256": "c28694a46897235322b84a04a48c83e259ecaaa38c99aa07bc97164edccc6d6a",
+      "size": 8399,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/031-dashboard-debug-observability-panels/scenarios.yaml",
+      "sha256": "ed41e24573f79b4b67770e503b7df1a10286c103be81a01439061e4782ea4196",
+      "size": 8740,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/031-dashboard-debug-observability-panels/spec.md",
+      "sha256": "94b825e709fd0ee6fd3d51783eb749cb2a04ce369982869ceec2c2bbcf64fcc7",
+      "size": 29853,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/031-dashboard-debug-observability-panels/tasks.md",
+      "sha256": "51b86af535de68ed6570b352e5c77bfb0d5f08d7a14486efb4590fca0450d6db",
+      "size": 4129,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/031-dashboard-debug-observability-panels/traceability.yaml",
+      "sha256": "bceb91fdd56cbceecc302326ef2a1a319fbf7cbafcb34554bb16418d8758686d",
+      "size": 3138,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/032-dashboard-product-payload-endpoint",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/032-dashboard-product-payload-endpoint/CHANGELOG.md",
+      "sha256": "48b2bb0459784ed3fdc0c215beea476a4d3440b64581757b1bb58466ac7640b3",
+      "size": 5790,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/032-dashboard-product-payload-endpoint/plan.md",
+      "sha256": "96f73d383454f396b6ff8b93bc56eb9037c7952dc5148154b59b7f24a19e7ea2",
+      "size": 1660,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/032-dashboard-product-payload-endpoint/scenarios.yaml",
+      "sha256": "ac86c9daf41c146352653576c668e4088790eeab6e6ceec125e3b3ea96c24782",
+      "size": 2989,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/032-dashboard-product-payload-endpoint/spec.md",
+      "sha256": "f630119c487d9bf3bb88864e740ebcae91ab62a92a044533dd3e00a32e0ebedf",
+      "size": 10866,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/032-dashboard-product-payload-endpoint/tasks.md",
+      "sha256": "f9a57fb1dac2f5bed55c2314272573d535ce063509301ba692ec9acfb35a86d2",
+      "size": 1066,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/032-dashboard-product-payload-endpoint/traceability.yaml",
+      "sha256": "3d5457b4dec851b11a1bc15dbb88c3b101465b99f89cb458a603890db506d979",
+      "size": 1511,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/033-dashboard-matcher-snack-and-doughnut-false-positives",
+      "type": "directory"
+    },
+    {
+      "mode": 436,
+      "path": "specs/033-dashboard-matcher-snack-and-doughnut-false-positives/CHANGELOG.md",
+      "sha256": "ff53c7322f6bb0ffe4d6596eed56a6c629babb1fdd8e80759fe2cf468faca452",
+      "size": 15922,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/033-dashboard-matcher-snack-and-doughnut-false-positives/plan.md",
+      "sha256": "3eef07384beecee5a6ed945f1116eba666d31b387147979e80d7449e9afeb411",
+      "size": 11458,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/033-dashboard-matcher-snack-and-doughnut-false-positives/scenarios.yaml",
+      "sha256": "72fb3600a3e84e722f30ea82a9caea05ca281702b6613006894e317beb17e859",
+      "size": 8501,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/033-dashboard-matcher-snack-and-doughnut-false-positives/spec.md",
+      "sha256": "0d7abf42ae548b0dda2d9b2b3b05c729cf6d93bb5017cec54f0022955d56cf65",
+      "size": 19435,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/033-dashboard-matcher-snack-and-doughnut-false-positives/tasks.md",
+      "sha256": "b4714fd48ecb360a6d5337813a77c0c9378be9619d9caa08db0ccc1522bef666",
+      "size": 9988,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/033-dashboard-matcher-snack-and-doughnut-false-positives/traceability.yaml",
+      "sha256": "ca07ec9ba0a53ce6c5b1ed488c9c28f48e57b1aed701b70a0419a2949c3fc677",
+      "size": 2110,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/034-dashboard-order-items-previous-next-delivery",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/034-dashboard-order-items-previous-next-delivery/CHANGELOG.md",
+      "sha256": "2d406d351539d423fc6a3712b7a70e23c736c0d82d3125b5f4291958774ffc68",
+      "size": 9758,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/034-dashboard-order-items-previous-next-delivery/plan.md",
+      "sha256": "d26cd96d19189bfe1ee6d9c7fa1c51d8478ec88acc61d5e6b186802e25448cca",
+      "size": 9585,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/034-dashboard-order-items-previous-next-delivery/scenarios.yaml",
+      "sha256": "dd1426795d215b5fdb55abced617d819d4acb4532959121db797614fb42324a1",
+      "size": 18910,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/034-dashboard-order-items-previous-next-delivery/spec.md",
+      "sha256": "5f3bb621bd1d4ace8f51496306c970d4773207c30621545e484a4cfdbbe22ab8",
+      "size": 33798,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/034-dashboard-order-items-previous-next-delivery/tasks.md",
+      "sha256": "2576c4adba87303bbe29375812dfd403a769e938b48169ccd9a6047e3e13a48b",
+      "size": 8937,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/034-dashboard-order-items-previous-next-delivery/traceability.yaml",
+      "sha256": "0ff9631b46cdb73bc1944e2d15092e5c46fe0569246e5961991fc771b4f7739e",
+      "size": 2992,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/035-dashboard-order-history-retention",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/035-dashboard-order-history-retention/CHANGELOG.md",
+      "sha256": "50aaae6d8e546c08d015635f5b9724d853041ff443b8c1f3a8dae9855db40fc4",
+      "size": 7049,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/035-dashboard-order-history-retention/plan.md",
+      "sha256": "bc31d75de015a0fb85fbb64d125db7329d0c393423bf80735ffd770cf3abe1d3",
+      "size": 8805,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/035-dashboard-order-history-retention/scenarios.yaml",
+      "sha256": "9087995a8e4c69ca057f24405665b6023dbd160dd19f97d0efbc1c3f40bacc8a",
+      "size": 8131,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/035-dashboard-order-history-retention/spec.md",
+      "sha256": "3cef3175c5594c22ef4eb9743b90c04f030d43fe6c15ee5f3618de8406e16018",
+      "size": 15844,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/035-dashboard-order-history-retention/tasks.md",
+      "sha256": "17a206100795cae98d11e4d62df6b0245a314633950c628afb7f3ec1d46f7c4b",
+      "size": 7029,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/035-dashboard-order-history-retention/traceability.yaml",
+      "sha256": "4e6f58047051499d9e99f4104660f92d8e68490c5d3fcf373b520cb6cdd39380",
+      "size": 4305,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/036-dashboard-delivery-day-last-receipt-publication",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/036-dashboard-delivery-day-last-receipt-publication/CHANGELOG.md",
+      "sha256": "19efa1bf1a0416589069a06858d4733a1a9e7be32e3f4c008b2c80d2f2da5c36",
+      "size": 6537,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/036-dashboard-delivery-day-last-receipt-publication/plan.md",
+      "sha256": "1dabd9d9330fb33333fda2ce13b9c19a51a1d6e1b2ffeb5883b0f695339402d5",
+      "size": 6711,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/036-dashboard-delivery-day-last-receipt-publication/scenarios.yaml",
+      "sha256": "e4ab72ab21fb40fb51dbe6f2807227b56200a5e32b0a8e69b5f41dda5333b60e",
+      "size": 5123,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/036-dashboard-delivery-day-last-receipt-publication/spec.md",
+      "sha256": "a4f8bb4855f8fc69b2d1795a9813f77c25481cc79e48fc8f78f34a98a58dfc68",
+      "size": 19455,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/036-dashboard-delivery-day-last-receipt-publication/tasks.md",
+      "sha256": "df094de26447dbd867f8b20f153741fd41688175dcb9b10d29b2693927ab9895",
+      "size": 8392,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/036-dashboard-delivery-day-last-receipt-publication/traceability.yaml",
+      "sha256": "fea001b18ddd55b9ba7b0a63abf43f4418e490d85550a63235bbc4885db409e4",
+      "size": 6645,
+      "type": "file"
+    },
+    {
+      "mode": 509,
+      "path": "specs/037-dashboard-order-items-delivery-filter-empty-state-fallback",
+      "type": "directory"
+    },
+    {
+      "mode": 384,
+      "path": "specs/037-dashboard-order-items-delivery-filter-empty-state-fallback/CHANGELOG.md",
+      "sha256": "688510263fd34570384a9ca6900b77e3e7796fb528dc04e8d8287c4566439a18",
+      "size": 5112,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/037-dashboard-order-items-delivery-filter-empty-state-fallback/plan.md",
+      "sha256": "bca8b8ec381f99009d2e9f04d73b16432a6327f8709996e0d6fd9238ae17da6c",
+      "size": 8480,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/037-dashboard-order-items-delivery-filter-empty-state-fallback/scenarios.yaml",
+      "sha256": "c5d8454e19dded2cef63c5afa7e637eed21df6342d699ab02a0ae150ebcbead4",
+      "size": 11317,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/037-dashboard-order-items-delivery-filter-empty-state-fallback/spec.md",
+      "sha256": "ed8a4af123ed0dfa90cb307f4e6b4d806ab7f735787219cd31de3ff512f5d9bb",
+      "size": 30429,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/037-dashboard-order-items-delivery-filter-empty-state-fallback/tasks.md",
+      "sha256": "3e94002bd7ab9b802458c8dac9cb3a09bbee5935a235cc151a335c2fb86dadce",
+      "size": 10838,
+      "type": "file"
+    },
+    {
+      "mode": 384,
+      "path": "specs/037-dashboard-order-items-delivery-filter-empty-state-fallback/traceability.yaml",
+      "sha256": "c8c4ac13ce5f4f3f9faacb99a1912cbc845d7fef484857fc5dae03de1c8b7f27",
+      "size": 6298,
+      "type": "file"
+    },
+    {
+      "mode": 436,
+      "path": "specs/index.yaml",
+      "sha256": "c8301e6a310bb79621d294c46eb3be7278696118090ecd3436d0e242c7258132",
+      "size": 14931,
+      "type": "file"
+    }
+  ],
+  "features": [
+    "004-dashboard-sync",
+    "006-dashboard-summary-filters",
+    "007-dashboard-meal-cards",
+    "008-dashboard-order-items",
+    "010-dashboard-product-detail",
+    "011-dashboard-meal-card-matcher-accuracy",
+    "012-dashboard-theme-toggle",
+    "013-dashboard-expiry-timeline",
+    "015-dashboard-oidc-authentication",
+    "016-dashboard-blob-storage-layout",
+    "017-dashboard-blob-read-path",
+    "018-dashboard-order-status-tracking",
+    "019-dashboard-coverage-invalidation-refunds-perishables",
+    "020-dashboard-grocy-pantry-coverage",
+    "021-dashboard-product-enrichment-tesco-apollo",
+    "022-dashboard-debug-mode",
+    "023-dashboard-logged-in-user-chip",
+    "024-dashboard-static-fixture-mode-for-preview",
+    "025-tesco-product-enrichment",
+    "026-dashboard-user-menu",
+    "027-dashboard-firecrawl-search-fallback",
+    "028-dashboard-blob-head-read-savings",
+    "029-dashboard-blob-error-surface",
+    "030-dashboard-blob-noop-sync-suppression",
+    "031-dashboard-debug-observability-panels",
+    "032-dashboard-product-payload-endpoint",
+    "033-dashboard-matcher-snack-and-doughnut-false-positives",
+    "034-dashboard-order-items-previous-next-delivery",
+    "035-dashboard-order-history-retention",
+    "036-dashboard-delivery-day-last-receipt-publication",
+    "037-dashboard-order-items-delivery-filter-empty-state-fallback"
+  ],
+  "schema_version": 1,
+  "source": {
+    "commit": "e1cbe3dba90bbba92bbc1a0f26968381524c0ada",
+    "repository": "ssh://git@turk.ratfish-delta.ts.net:222/TsangHQ/Hermes-Skills.git",
+    "root": "data-science/meals-check/.specify/specs"
+  }
+}

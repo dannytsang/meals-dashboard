@@ -1,0 +1,117 @@
+# Machine-readable requirement traceability for 031-dashboard-debug-observability-panels.
+feature_id: 031-dashboard-debug-observability-panels
+requirements:
+  FR-001:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-001, AS-004, AS-009]
+    tasks: [T001, T005, T006, T012, T018, T024]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003]
+    tasks: [T004, T008, T009, T010, T011]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-003:
+    user_stories: [US2]
+    scenarios: [AS-004, AS-005]
+    tasks: [T012, T013, T014, T015, T016]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-004:
+    user_stories: [US2]
+    scenarios: [AS-002]
+    tasks: [T012, T017]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-005:
+    user_stories: [US3]
+    scenarios: [AS-006, AS-007, AS-008]
+    tasks: [T018, T019, T020, T023]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-006:
+    user_stories: [US3]
+    scenarios: [AS-007, AS-008]
+    tasks: [T020, T021, T022]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-007:
+    user_stories: [US4]
+    scenarios: [AS-009, AS-010]
+    tasks: [T024, T025, T026]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-008:
+    user_stories: [US1, US2, US3]
+    scenarios: [AS-001, AS-002, AS-003, AS-006, AS-007, AS-008, AS-011]
+    tasks: [T002, T003, T008, T012, T019, T027, T028, T034, T035]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-009:
+    user_stories: [US2, US3, US4]
+    scenarios: [AS-004, AS-005, AS-006, AS-007, AS-008, AS-009, AS-010]
+    tasks: [T006, T007, T011, T016, T023, T026, T034]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-010:
+    user_stories: [US1, US2, US3]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-011]
+    tasks: [T004, T009, T014, T019, T027, T028, T029, T034, T035]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-011:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-001, AS-002, AS-004, AS-006, AS-009]
+    tasks: [T002, T003, T012, T018, T024]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-012:
+    user_stories: [US1, US2, US3, US4]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-006, AS-007, AS-008, AS-009, AS-010, AS-011]
+    tasks: [T027, T028, T029, T030, T031, T032, T033, T034, T035, T036]
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-013:
+    user_stories: [US2]
+    scenarios: [AS-004]
+    tasks: []
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  FR-014:
+    user_stories: [US2]
+    scenarios: [AS-004, AS-005]
+    tasks: []
+    checks: []
+    verification:
+      status: draft
+      evidence: null
+  # Non-functional requirements are tracked in spec.md text + tasks.md + scenarios.yaml rationale blocks.
+  # The validator only permits FR-NNN keys.

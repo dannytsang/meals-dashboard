@@ -1,0 +1,202 @@
+feature_id: 004-dashboard-sync
+requirements:
+  FR-001:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-001
+    tasks:
+    - T001
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-002:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-002
+    tasks:
+    - T002
+    - T020
+    - T030
+    - T031
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-003:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-003
+    tasks:
+    - T003
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-004:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-004
+    tasks:
+    - T004
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-005:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-005
+    tasks:
+    - T005
+    - T020
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-006:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-006
+    tasks:
+    - T011
+    - T021
+    - T022
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-007:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-007
+    tasks:
+    - T040
+    - T041
+    - T042
+    - T043
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-008:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-008
+    tasks:
+    - T040
+    - T041
+    - T042
+    - T043
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-009:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-009
+    tasks:
+    - T050
+    - T051
+    - T053
+    - T054
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-010:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-010
+    tasks:
+    - T050
+    - T052
+    - T053
+    - T054
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for 2026-06-14 dashboard sync/product enrichment verification evidence.
+  FR-011:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-011
+    tasks:
+    - T055
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See 2026-06-14 matched-item price retention CHANGELOG.md entry, tasks.md T055, and dashboard sync/product modal verification evidence.
+  FR-012:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-012
+    tasks:
+    - T160
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See 2026-06-14 Blob migration CHANGELOG.md entry and dashboard API route implementation.
+  FR-013:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-012
+    tasks:
+    - T161
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See 2026-06-14 Blob migration CHANGELOG.md entry and lib/dashboard-data.ts implementation.
+  FR-014:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-012
+    tasks:
+    - T162
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See 2026-06-14 Blob migration CHANGELOG.md entry and .gitignore update.
+  FR-015:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-012
+    tasks:
+    - T163
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See 2026-06-14 Blob migration CHANGELOG.md entry and sync script implementation.

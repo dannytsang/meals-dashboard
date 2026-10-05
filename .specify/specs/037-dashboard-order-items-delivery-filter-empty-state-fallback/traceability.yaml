@@ -1,0 +1,164 @@
+# Machine-readable requirement traceability for 037-dashboard-order-items-delivery-filter-empty-state-fallback.
+feature_id: 037-dashboard-order-items-delivery-filter-empty-state-fallback
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-009]
+    tasks: [T030, T040, T070]
+    checks:
+      - grep -n "fallbackPreferenceOrder" components/dashboard-client.tsx
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "previous_with_zero_items_falls_back_to_next"
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "next_with_zero_items_falls_back_to_all"
+    verification:
+      status: proposed
+      evidence: null
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-004]
+    tasks: [T030, T040]
+    checks:
+      - grep -n 'data-testid="delivery-filter-fallback-notice"' components/dashboard-client.tsx
+      - grep -n 'aria-live="polite"' components/dashboard-client.tsx
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "renders_swap_explanation"
+    verification:
+      status: proposed
+      evidence: null
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-005]
+    tasks: [T030, T040]
+    checks:
+      - grep -n "setItem.*meals-dashboard:order-items-delivery-filter" components/dashboard-client.tsx
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "fallback_persists_across_reload"
+    verification:
+      status: proposed
+      evidence: null
+  FR-004:
+    user_stories: [US1]
+    scenarios: [AS-006]
+    tasks: [T030, T050]
+    checks:
+      - grep -n "hasFallbackRunRef.current = false" components/dashboard-client.tsx
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "explicit_click_overrides_fallback"
+    verification:
+      status: proposed
+      evidence: null
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-009]
+    tasks: [T030]
+    checks:
+      - grep -n "activeGroups.length === 0\|nextGroups.length === 0\|previousGroups.length === 0" components/dashboard-client.tsx
+      - cd /home/hermes/workspace/meals-dashboard && npx tsc --noEmit
+    verification:
+      status: proposed
+      evidence: null
+  FR-006:
+    user_stories: [US1]
+    scenarios: [AS-008]
+    tasks: [T040]
+    checks:
+      - grep -n "isDemoMode()" components/dashboard-client.tsx
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "fallback_skipped_in_demo_mode"
+    verification:
+      status: proposed
+      evidence: null
+  FR-007:
+    user_stories: [US1]
+    scenarios: [AS-010]
+    tasks: [T030]
+    checks:
+      - grep -n "hasFallbackRunRef" components/dashboard-client.tsx
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "fallback_does_not_refire_on_state_change"
+    verification:
+      status: proposed
+      evidence: null
+  FR-008:
+    user_stories: [US1]
+    scenarios: [AS-007]
+    tasks: [T050, T060]
+    checks:
+      - grep -n "fallbackApplied:" components/dashboard-client.tsx
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx -t "fallback_applied_field_present_in_debug_chip"
+    verification:
+      status: proposed
+      evidence: null
+  FR-009:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-006, AS-007, AS-008, AS-009, AS-010]
+    tasks: [T060]
+    checks:
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx --collect-only
+    verification:
+      status: proposed
+      evidence: null
+  FR-010:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T080]
+    checks:
+      - grep -n "037-dashboard-order-items-delivery-filter-empty-state-fallback" data-science/meals-check/skill.spec.yaml
+      - grep -n "037-dashboard-order-items-delivery-filter-empty-state-fallback" data-science/meals-check/.specify/specs/index.yaml
+    verification:
+      status: proposed
+      evidence: null
+non_functional:
+  NFR-001:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T060]
+    checks:
+      - grep -c "fallbackPreferenceOrder" components/dashboard-client.tsx
+      - time cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client-delivery-filter-fallback.test.tsx
+    verification:
+      status: proposed
+      evidence: null
+  NFR-002:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T060]
+    checks:
+      - grep -rn "localStorage" components/dashboard-client.tsx
+      - grep -rn "searchParams.set" components/dashboard-client.tsx
+    verification:
+      status: proposed
+      evidence: null
+  NFR-003:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T030, T040]
+    checks:
+      - grep -n 'role="status"' components/dashboard-client.tsx
+      - grep -n 'aria-live="polite"' components/dashboard-client.tsx
+    verification:
+      status: proposed
+      evidence: null
+  NFR-004:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T060]
+    checks:
+      - cd /home/hermes/workspace/meals-dashboard && npx vitest run
+      - grep -rn "PreviousDeliveryBadge\|NextDeliveryBadge\|renderDeliverySubHeading" components/dashboard-client.tsx
+    verification:
+      status: proposed
+      evidence: null
+  NFR-005:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-007]
+    tasks: [T060]
+    checks:
+      - grep -n 'data-testid="delivery-filter-fallback-notice"' components/dashboard-client.tsx
+      - grep -n "fallbackApplied:" components/dashboard-client.tsx
+    verification:
+      status: proposed
+      evidence: null
+  NFR-006:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - grep -rn "fallback\|fallbackApplied" components/ lib/ app/ --include="*.tsx" --include="*.ts"
+    verification:
+      status: proposed
+      evidence: null

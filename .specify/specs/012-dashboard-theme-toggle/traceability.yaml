@@ -1,0 +1,57 @@
+feature_id: 012-dashboard-theme-toggle
+requirements:
+  FR-001:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-001
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-002:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-002
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-003:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-003
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-004:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-004
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-005:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-005
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.

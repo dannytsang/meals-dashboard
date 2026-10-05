@@ -1,0 +1,105 @@
+feature_id: 036-dashboard-delivery-day-last-receipt-publication
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-005]
+    expected: |
+      Given a new Tesco receipt email arrives for order_number 6521-XXXX-YYYY
+      with delivery_date today,
+      When the matcher cron fires on the delivery day,
+      Then a Blob write commits to orders/<delivery_date>/<order_number>.json
+      with the full OrderBlob (items, status, refund_amount, substitutions,
+      unavailable, short_life_items, slot, orderTotal).
+    verification:
+      automated: python3 -m pytest scripts/tests/test_publish_extra_order.py -v -k "test_publish_extra_order_writes_canonical_blob_path"
+      manual: |
+        Live delivery-day cron run; confirm Blob path exists after the run.
+      rationale: |
+        The user-visible symptom Danny reported: today's groceries should show
+        on the dashboard's Previous-delivery chip from the next cron tick, not
+        next sync. The Blob write is the contract surface.
+    integration_isolation: pipeline integration; live Blob write required for full validation.
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-005]
+    expected: |
+      Given the matcher found a last_email for delivery day,
+      When sync_dashboard_data.py runs (via sync_dashboard() at end of tesco_meal_check.py),
+      Then the publisher publishes BOTH the new day's OrderBlob AND the existing
+      chosen receipt's OrderBlob (as today's orders array).
+    verification:
+      automated: python3 -m pytest scripts/tests/test_publish_extra_order.py -v -k "test_publish_extra_order_appends_to_orders_array"
+      manual: |
+        Run the matcher cron; confirm Blob write logs show 2 orders.
+      rationale: |
+        The chosen receipt (next delivery) is still the user-planning anchor;
+        the extra-order is the just-arrived delivery. Both go into today's
+        payload so the dashboard's validOrders includes both.
+    integration_isolation: pipeline + dashboard payload.
+  AS-003:
+    type: positive
+    requirements: [FR-003]
+    expected: |
+      Given the matcher found NO last_email (no new receipt today),
+      When the publisher runs,
+      Then spec 036 adds no extra-order Blob write — behaviour is identical
+      to today's spec 035 baseline.
+    verification:
+      automated: python3 -m pytest scripts/tests/test_publish_extra_order.py -v -k "test_publish_extra_order_with_no_last_email_is_no_op"
+      manual: |
+        Run on a non-delivery day; confirm only one OrderBlob write.
+      rationale: |
+        Negative case: the new path is conditional on last_email presence.
+        A non-delivery-day run must not regress.
+    integration_isolation: unit test + Blob invariant.
+  AS-004:
+    type: negative
+    requirements: [FR-009]
+    expected: |
+      Given the user invokes the publisher with a --extra-order pointing to
+      a malformed JSON file,
+      When the publisher runs,
+      Then it MUST log a warning, skip the extra-order write, and proceed
+      with the main payload as usual.
+    verification:
+      automated: python3 -m pytest scripts/tests/test_publish_extra_order.py -v -k "test_publish_extra_order_with_malformed_json_warns_and_continues"
+      manual: |
+        Run with garbage JSON; confirm warning logged and main write succeeded.
+      rationale: |
+        Robustness: malformed extra-order input must not break the publish
+        path. Main write is the primary deliverable.
+    integration_isolation: unit test.
+  AS-005:
+    type: positive
+    requirements: [FR-007]
+    expected: |
+      Given the matcher cron fires twice in 30 minutes on the same delivery day,
+      When the second invocation runs,
+      Then the publisher MUST NOT re-publish if the Blob hash matches —
+      Vercel Blob's no-op suppression (spec 030) kicks in for the extra-order
+      write.
+    verification:
+      automated: python3 -m pytest scripts/tests/test_publish_extra_order.py -v -k "test_publish_extra_order_noop_suppression"
+      manual: |
+        Run sync-dashboard-data.py twice with the same --extra-order; second
+        run logs "up-to-date" instead of writing.
+      rationale: |
+        Cost control: Vercel Blob's Advanced Operations quota is finite.
+        Idempotent re-runs must not double-count.
+    integration_isolation: unit test.
+  AS-006:
+    type: positive
+    requirements: [FR-006]
+    expected: |
+      Given the publisher publishes an extra-order via --extra-order,
+      When the sidecar persistence runs,
+      Then the extra order's orderId + deliveryDate are appended to
+      previously_synced.json (FIFO + cap=6 eviction per spec 035).
+    verification:
+      automated: python3 -m pytest scripts/tests/test_publish_extra_order.py -v -k "test_publish_extra_order_participates_in_sidecar"
+      manual: |
+        Run the matcher; check the sidecar JSON contains the new entry.
+      rationale: |
+        The extra-order ages naturally into the historical set on subsequent
+        syncs; future syncs retain it under the same spec 035 cap logic.
+    integration_isolation: unit test + sidecar inspection.

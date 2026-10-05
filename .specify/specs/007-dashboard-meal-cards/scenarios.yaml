@@ -1,0 +1,338 @@
+feature_id: 007-dashboard-meal-cards
+scenarios:
+  AS-001:
+    type: manual
+    requirements:
+    - FR-001
+    expected: FR-001 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-001.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-002:
+    type: manual
+    requirements:
+    - FR-002
+    expected: FR-002 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-002.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-003:
+    type: manual
+    requirements:
+    - FR-003
+    expected: FR-003 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-003.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-004:
+    type: manual
+    requirements:
+    - FR-004
+    expected: FR-004 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-004.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-005:
+    type: manual
+    requirements:
+    - FR-005
+    expected: FR-005 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-005.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-006:
+    type: manual
+    requirements:
+    - FR-006
+    expected: FR-006 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-006.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-007:
+    type: manual
+    requirements:
+    - FR-007
+    expected: FR-007 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-007.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-008:
+    type: manual
+    requirements:
+    - FR-008
+    expected: FR-008 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-008.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-009:
+    type: manual
+    requirements:
+    - FR-009
+    expected: FR-009 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-009.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-010:
+    type: manual
+    requirements:
+    - FR-010
+    expected: FR-010 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-010.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-011:
+    type: manual
+    requirements:
+    - FR-011
+    expected: FR-011 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-011.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-012:
+    type: manual
+    requirements:
+    - FR-012
+    expected: FR-012 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-012.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-013:
+    type: manual
+    requirements:
+    - FR-013
+    expected: FR-013 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-013.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-014:
+    type: manual
+    requirements:
+    - FR-014
+    expected: FR-014 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-014.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-015:
+    type: manual
+    requirements:
+    - FR-015
+    expected: FR-015 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-015.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-016:
+    type: manual
+    requirements:
+    - FR-016
+    expected: FR-016 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-016.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-017:
+    type: manual
+    requirements:
+    - FR-017
+    expected: FR-017 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-017.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-018:
+    type: manual
+    requirements:
+    - FR-018
+    expected: FR-018 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-018.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-019:
+    type: manual
+    requirements:
+    - FR-019
+    expected: FR-019 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-019.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-020:
+    type: manual
+    requirements:
+    - FR-020
+    expected: FR-020 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-020.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-021:
+    type: manual
+    requirements:
+    - FR-021
+    expected: FR-021 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-021.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-022:
+    type: manual
+    requirements:
+    - FR-022
+    expected: FR-022 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-022.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-023:
+    type: manual
+    requirements:
+    - FR-023
+    expected: FR-023 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-023.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-024:
+    type: manual
+    requirements:
+    - FR-024
+    expected: FR-024 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-024.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-025:
+    type: manual
+    requirements:
+    - FR-025
+    expected: FR-025 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-025.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-026:
+    type: manual
+    requirements:
+    - FR-026
+    expected: Expected Items visually matches Matched Items title and row treatment,
+      including aligned row/background width.
+    verification:
+      automated: null
+      manual: Review 007-dashboard-meal-cards/spec.md, tasks.md, and CHANGELOG.md
+        for FR-026.
+      rationale: Brownfield governance backfill; concrete implementation checks remain
+        in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-027:
+    type: positive
+    requirements:
+    - FR-027
+    expected: Individual Meal Card and Meal Detail Overlay coverage status text reads
+      only Missing, Partial, or Complete and does not show Green, Amber, or Red.
+    verification:
+      automated: components/dashboard-client.test.ts and lib/dashboard-ui-utils.test.ts
+        coverage to be added during implementation
+      manual: null
+      rationale: null
+    integration_isolation: dashboard unit/static tests; no external services
+  AS-028:
+    type: positive
+    requirements:
+    - FR-011
+    expected: Meal Detail Overlay matched item rows align item name, quantity, and
+      price as columns and show a matched-items total row.
+    verification:
+      automated: components/dashboard-client.test.ts and lib/item-utils.test.ts
+      manual: null
+      rationale: null
+    integration_isolation: dashboard unit/static tests; no external services

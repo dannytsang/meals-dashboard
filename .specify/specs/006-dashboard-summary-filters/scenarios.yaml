@@ -1,0 +1,52 @@
+feature_id: 006-dashboard-summary-filters
+scenarios:
+  AS-001:
+    type: manual
+    requirements:
+    - FR-001
+    expected: FR-001 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 006-dashboard-summary-filters/spec.md, tasks.md, and CHANGELOG.md for FR-001.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-002:
+    type: manual
+    requirements:
+    - FR-002
+    expected: FR-002 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 006-dashboard-summary-filters/spec.md, tasks.md, and CHANGELOG.md for FR-002.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-003:
+    type: manual
+    requirements:
+    - FR-003
+    expected: FR-003 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 006-dashboard-summary-filters/spec.md, tasks.md, and CHANGELOG.md for FR-003.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-004:
+    type: manual
+    requirements:
+    - FR-004
+    expected: FR-004 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 006-dashboard-summary-filters/spec.md, tasks.md, and CHANGELOG.md for FR-004.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill
+  AS-005:
+    type: manual
+    requirements:
+    - FR-005
+    expected: FR-005 is covered by the feature contract and linked task/evidence trail.
+    verification:
+      automated: null
+      manual: Review 006-dashboard-summary-filters/spec.md, tasks.md, and CHANGELOG.md for FR-005.
+      rationale: Brownfield governance backfill; concrete implementation checks remain in feature plan/tasks and changelog evidence.
+    integration_isolation: manual governance traceability backfill

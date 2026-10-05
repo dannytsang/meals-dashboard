@@ -1,0 +1,159 @@
+feature_id: 035-dashboard-order-history-retention
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-007]
+    expected: |
+      Given the sync has run at least once with a receipt whose orderId is 6521-AAAA-0001
+      and deliveryDate is today - 7 days,
+      When the sync runs again with a new receipt whose orderId is 6521-BBBB-0002 and
+      deliveryDate is today + 2 days,
+      Then the published orders[] array MUST contain BOTH entries (in deliveryDate
+      ascending order), and the Blob write MUST succeed.
+    verification:
+      automated: python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v -k "test_build_dashboard_payload_includes_historical_orders"
+      manual: |
+        Run the sync twice in succession with two synthetic receipts (one previous,
+        one next). Inspect the published Blob via the chef profile's harness and
+        confirm orders[] contains 2 entries.
+      rationale: |
+        The single most important behavioural assertion of the feature. If this is
+        green, the dashboard's Previous chip will repopulate.
+    integration_isolation: unit test + Blob write; no external services.
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-006]
+    expected: |
+      Given a previously_synced OrderBlob[] JSON sidecar containing N historical
+      entries (where N < cap),
+      When build_dashboard_payload is called,
+      Then orders[] MUST contain all N historical entries PLUS the active receipt
+      (so orders.length == N + 1).
+    verification:
+      automated: python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v -k "test_assemble_orders_merges_active_and_historical_distinct_ids"
+      manual: |
+        Pre-seed data/orders/previously_synced.json with 3 entries via the cron
+        pipeline, then run a new sync with a 4th receipt. Confirm the published
+        orders[] contains 4 entries.
+      rationale: |
+        Confirms the merge is additive and does not collapse existing history.
+    integration_isolation: unit test; tmp_path fixture.
+  AS-003:
+    type: positive
+    requirements: [FR-003, FR-005]
+    expected: |
+      Given the previously_synced sidecar already contains cap (default 6) historical
+      entries,
+      When the sync runs with a newer active receipt,
+      Then the oldest entry MUST be evicted (FIFO) so the sidecar returns to cap
+      size (and orders.length == cap + 1).
+    verification:
+      automated: python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v -k "test_assemble_orders_caps_at_max_plus_active"
+      manual: |
+        Run the sync 10 times with 10 distinct receipts at the default cap of 6.
+        Confirm the published orders[] contains exactly 7 entries (6 historical
+        + 1 active) and the sidecar JSON on disk contains exactly 6 entries.
+      rationale: |
+        Pins the cap and the FIFO eviction policy so future drift is caught.
+    integration_isolation: unit test; tmp_path fixture.
+  AS-004:
+    type: positive
+    requirements: [FR-004]
+    expected: |
+      Given the active receipt's orderId already exists in the historical sidecar
+      (re-sync of the same order),
+      When the sync runs,
+      Then the existing historical entry MUST be replaced in-place with the new
+      payload, the sidecar's size MUST NOT grow, and orders[] MUST contain the
+      merged entry only once.
+    verification:
+      automated: python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v -k "test_assemble_orders_replaces_duplicate_orderId_with_active"
+      manual: |
+        Re-run the sync with the same orderId; confirm orders[] does not grow.
+      rationale: |
+        Amending an order (re-processing after a correction) does not double-count.
+    integration_isolation: unit test; tmp_path fixture.
+  AS-005:
+    type: positive
+    requirements: [FR-002, FR-007]
+    expected: |
+      Given the dashboard has loaded with validOrders.length == 2 (one previous,
+      one next),
+      When the user taps the "Previous delivery" chip,
+      Then the Order Items by Category section MUST render the previous-order
+      items (each with Prev · {DD MMM} badge per spec 034 FR-004), and the count
+      MUST match the historical sidecar count.
+    verification:
+      automated: not automated in this spec (covered by spec 034's regression suite, which stays green by spec)
+      manual: |
+        After deployment, load the Vercel preview URL, tap Previous delivery,
+        confirm items render.
+      rationale: |
+        This is the user-visible behaviour the spec exists to fix.
+    integration_isolation: end-to-end manual on Vercel preview.
+  AS-006:
+    type: positive
+    requirements: [FR-003, FR-005]
+    expected: |
+      Given the retention cap is configured to 6 in sync-dashboard-data.py,
+      When the sync has run 10 times in close succession with 10 distinct receipts,
+      Then the published orders[] MUST contain exactly 7 entries (6 historical + 1
+      active), and the historical sidecar on disk MUST contain exactly 6 entries.
+    verification:
+      automated: python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v -k "test_max_history_override_parametrised and 6"
+      manual: |
+        Loop the sync 10x with synthetic receipts; check sidecar size.
+      rationale: |
+        Pins the retention cap behaviour explicitly.
+    integration_isolation: unit test.
+  AS-007:
+    type: positive
+    requirements: [FR-008]
+    expected: |
+      Given the Python sync is invoked with --no-history (a debug-only CLI flag),
+      When the payload is assembled,
+      Then orders[] MUST contain exactly the active receipt (legacy single-order
+      behaviour), and the historical sidecar MUST NOT be updated. This flag exists
+      for parity with the pre-spec 035 behaviour and for rollback safety; it is not
+      part of the default flow.
+    verification:
+      automated: python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v -k "test_build_dashboard_payload_with_no_history_flag_returns_single_element"
+      manual: |
+        Run the sync with --no-history and confirm orders[] has length 1.
+      rationale: |
+        Provides a debug / rollback escape hatch without removing the new behaviour.
+    integration_isolation: unit test.
+  AS-008:
+    type: negative
+    requirements: [FR-001, FR-007]
+    expected: |
+      Given the historical sidecar JSON is unreadable or absent (e.g. due to a
+      crash mid-write or an interrupted first run),
+      When build_dashboard_payload is called,
+      Then the sync MUST log a non-fatal warning, treat the sidecar as empty,
+      re-seed it from the active receipt alone, and the publish MUST NOT fail.
+    verification:
+      automated: python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v -k "test_load_historical_orders_returns_empty_on_corrupt_json"
+      manual: |
+        Delete data/orders/previously_synced.json, run the sync, confirm it
+        succeeds and creates a new sidecar with the active receipt.
+      rationale: |
+        Resilience: corrupt-sidecar recovery MUST NOT block the publish path.
+    integration_isolation: unit test.
+  AS-009:
+    type: positive
+    requirements: [FR-007, FR-008] # spec 034 cross-references are documented in rationale, not as spec-035 FRs
+    expected: |
+      Given the spec 034 regression suite runs against the new payload shape,
+      When npx vitest run -- dashboard-client.order-items executes,
+      Then every existing acceptance scenario from spec 034's regression suite
+      MUST remain green, no test edits required.
+    verification:
+      automated: not automated in this spec (the spec 034 regression acceptance scenario suite covers this; this spec's obligation is "no test edits required")
+      manual: |
+        Run the full vitest suite manually as a smoke test.
+      rationale: |
+        Negative coverage (cross-spec): spec 035 changes the payload shape; the
+        spec 034 regression suite MUST stay green without edits. If it
+        breaks, it flags a contract drift between spec 034 and spec 035.
+    integration_isolation: end-to-end via vitest.

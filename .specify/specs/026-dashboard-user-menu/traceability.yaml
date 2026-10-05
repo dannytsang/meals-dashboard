@@ -1,0 +1,211 @@
+# Machine-readable requirement traceability for 026-dashboard-user-menu.
+# Validator requires FR-\d{3} keys only; NFRs live in spec.md only.
+feature_id: 026-dashboard-user-menu
+requirements:
+  FR-001:
+    title: "Trigger renders as <button> with menu ARIA"
+    user_stories: [US1, US5]
+    scenarios: [AS-001, AS-002, AS-003, AS-016, AS-018]
+    tasks: [T005, T014, T015]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx renders <button type=\"button\"> with aria-haspopup, aria-expanded, aria-controls; dashboard-client.tsx wires <UserMenu userName={userName} debugOn={!!debugOn} /> in the action row; components/user-menu.test.tsx asserts these attributes; components/dashboard-client.test.ts asserts the new structure."
+  FR-002:
+    title: "Chevron-down icon next to chip text inside trigger"
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: [T005, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx renders lucide-react ChevronDown inside the trigger button; rotates 180° via CSS transform when open; aria-hidden=true."
+  FR-003:
+    title: "Dropdown panel with role='menu' and aria-labelledby"
+    user_stories: [US1, US3, US5]
+    scenarios: [AS-002, AS-011, AS-017, AS-018]
+    tasks: [T007, T008, T009, T010, T011, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx renders <div id=\"user-menu-panel\" role=\"menu\" aria-labelledby={triggerId}>; rows are <button role=\"menuitem\"> or <button role=\"menuitemcheckbox\">; identity header row is <div aria-hidden=\"true\">."
+  FR-004:
+    title: "Panel position absolutely below trigger, right-aligned, z-index 60"
+    user_stories: [US6]
+    scenarios: [AS-020]
+    tasks: [T007, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx sets position: absolute, top: calc(100% + 6px), right: 0, minWidth: 220px, zIndex: 60 on the panel; wrapper is position: relative; components/user-menu.test.tsx asserts these style properties."
+  FR-005:
+    title: "Debug menu row is always-visible and reflects the cookie via aria-checked (FR-005 Rev 2)"
+    user_stories: [US2]
+    scenarios: [AS-007, AS-008, AS-009]
+    tasks: [T009, T009a, T014]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx renders the DebugMenuRow without a `debugOn && ...` guard; aria-checked is set from the server-rendered debugOn prop; clicking POSTs { value: '1' } when off, { value: '0' } when on (per FR-005 Rev 2, FR-013); components/user-menu.test.tsx asserts the row is present with aria-checked='false' when debugOn=false and POSTs { value: '1' } to enable, and with aria-checked='true' when debugOn=true and POSTs { value: '0' } to disable. Server-side cookie verification on each POST is preserved by spec 022 Rev 3's effectiveDebugMode helper and the /api/debug/toggle endpoint."
+  FR-006:
+    title: "Theme menu row reuses toggleTheme() helper"
+    user_stories: [US4]
+    scenarios: [AS-013]
+    tasks: [T002, T010, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "lib/user-menu.ts exports toggleTheme(); components/theme-toggle.tsx is refactored to call toggleTheme(); components/user-menu.tsx calls toggleTheme() from ThemeMenuRow; lib/user-menu.test.ts asserts the helper behaviour; components/user-menu.test.tsx asserts the row invokes toggleTheme."
+  FR-007:
+    title: "Sign out menu row reuses signOut() helper"
+    user_stories: [US3, US4]
+    scenarios: [AS-012, AS-014]
+    tasks: [T003, T011, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "lib/user-menu.ts exports signOut(); components/sign-out-button.tsx is refactored to call signOut(); components/user-menu.tsx calls signOut() from SignOutMenuRow; menu closes before navigation; lib/user-menu.test.ts asserts the helper behaviour; components/user-menu.test.tsx asserts the row invokes signOut."
+  FR-008:
+    title: "Click-outside closes the menu"
+    user_stories: [US1]
+    scenarios: [AS-004]
+    tasks: [T006, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx registers a mousedown listener on document via useEffect while open; listener checks event.target against triggerRef/panelRef and calls setOpen(false) when outside; listener is removed on close/unmount; components/user-menu.test.tsx asserts this behaviour."
+  FR-009:
+    title: "Escape key closes the menu and returns focus to trigger"
+    user_stories: [US1, US5]
+    scenarios: [AS-005]
+    tasks: [T006, T012, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx registers a keydown listener on document while open; on Escape calls setOpen(false) and triggerRef.current?.focus(); components/user-menu.test.tsx asserts this behaviour."
+  FR-010:
+    title: "Menu closes after any menu row is activated"
+    user_stories: [US1, US4]
+    scenarios: [AS-006]
+    tasks: [T009, T010, T011, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "Each menu row's onClick calls setOpen(false) after invoking the underlying action; for Sign out the close happens before navigation; components/user-menu.test.tsx asserts panel hides after row click."
+  FR-011:
+    title: "Focus moves into menu on open and back to trigger on close"
+    user_stories: [US5]
+    scenarios: [AS-005, AS-015]
+    tasks: [T012, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx uses useRef for the first interactive row; on open focuses that ref; on close returns focus to triggerRef; components/user-menu.test.tsx asserts document.activeElement transitions correctly."
+  FR-012:
+    title: "Menu component is a thin client wrapper around server-rendered UserChip"
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002]
+    tasks: [T005, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx is marked 'use client'; it imports UserChip from '@/components/user-chip' and renders <UserChip userName={userName} /> inside its <button> trigger; UserChip's server-rendered text derivation is unchanged."
+  FR-013:
+    title: "Debug menu row toggle behaviour matches spec 022 (both directions, per FR-005 Rev 2)"
+    user_stories: [US2]
+    scenarios: [AS-008, AS-009, AS-010]
+    tasks: [T001, T009, T009a, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "lib/user-menu.ts exports toggleDebug(); components/debug-toggle.tsx is refactored to call toggleDebug(); UserMenu's DebugMenuRow uses the same helper with optimistic update + revert on error + router.refresh() on success; disabled while pending; clicking POSTs { value: '1' } to enable (off state, per AS-008) or { value: '0' } to disable (on state, per AS-009); components/user-menu.test.tsx asserts both directions; lib/user-menu.test.ts asserts the helper."
+  FR-014:
+    title: "DemoModeChip remains a separate sibling, not inside the menu"
+    user_stories: [US2, US6]
+    scenarios: [AS-022]
+    tasks: [T014, T015]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/dashboard-client.tsx renders <DemoModeChip /> as a separate sibling of <UserMenu /> in the action row; components/dashboard-client.test.ts asserts this placement."
+  FR-015:
+    title: "New module components/user-menu.tsx + tests; existing modules preserved"
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002]
+    tasks: [T005, T013, T015]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.tsx is new; components/user-menu.test.tsx is new; components/user-chip.tsx, components/debug-toggle.tsx, components/theme-toggle.tsx, components/sign-out-button.tsx are unchanged in behaviour (their internals may delegate to lib/user-menu.ts per FR-016)."
+  FR-016:
+    title: "Extract toggleDebug/toggleTheme/signOut into lib/user-menu.ts"
+    user_stories: [US2, US4]
+    scenarios: [AS-008, AS-012, AS-013, AS-014]
+    tasks: [T001, T002, T003, T004]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "lib/user-menu.ts exports the three pure helpers; each is unit-tested in lib/user-menu.test.ts; the inline components (debug-toggle, theme-toggle, sign-out-button) are updated to call the same helpers; UserMenu rows call the same helpers."
+  FR-017:
+    title: "Vitest tests for components/user-menu.test.tsx + lib/user-menu.test.ts"
+    user_stories: [US1, US2, US3, US4, US5, US6]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-006, AS-007, AS-008, AS-009, AS-010, AS-011, AS-012, AS-013, AS-014, AS-015, AS-016, AS-017, AS-018, AS-019, AS-020]
+    tasks: [T004, T009a, T013]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/user-menu.test.tsx covers (a) trigger attributes, (b) trigger text, (c) click toggles open, (d) Escape closes, (e) click outside closes, (f) click trigger closes, (g) Debug row always present with aria-checked='false' when debugOn=false (per FR-005 Rev 2 + T009a), (h) Debug row present with aria-checked='true' when debugOn=true, (i) Debug row click POSTs { value: '1' } to enable from off state, (j) Debug row click POSTs { value: '0' } to disable from on state, (k) Theme row always present + flips, (l) Sign out row always present + navigates, (m) focus returns to trigger on Escape, (n) focus moves into menu on open. lib/user-menu.test.ts covers the three pure helpers."
+  FR-018:
+    title: "No changes to OIDC, NextAuth, middleware, Vercel Blob layout, sync script, debug cookie helper"
+    user_stories: [US1]
+    scenarios: [AS-024]
+    tasks: [T014]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "git diff against main shows no modifications to lib/auth.ts, middleware.ts, app/api/dashboard-data/route.ts, scripts/sync-dashboard-data.py, or any /api/debug/* files. Spec-022 Rev 3 signed-cookie helper is reused unchanged."
+  FR-019:
+    title: "Cross-dashboard wording parity clause"
+    user_stories: [US1, US3]
+    scenarios: [AS-001, AS-011]
+    tasks: [T005, T008]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "Chip text matches spec 023 wording (👤 Welcome, <userName>); identity header row reads 'Signed in as <userName>'; menu row labels are 'Debug mode' / 'Theme' / 'Sign out'. When trips-dashboard later adopts the pattern, this clause triggers a coordinated update."
+  FR-020:
+    title: "skill.spec.yaml updated for new spec dir + source files"
+    user_stories: [US1]
+    scenarios: [AS-024]
+    tasks: [T016]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "skill.spec.yaml expected_artifacts: includes 026-dashboard-user-menu/{spec,plan,tasks,CHANGELOG,scenarios,traceability} plus components/user-menu.tsx, components/user-menu.test.tsx, lib/user-menu.ts, lib/user-menu.test.ts."
+  FR-021:
+    title: "No new npm dependencies"
+    user_stories: [US1]
+    scenarios: [AS-024]
+    tasks: [T005]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "package.json diff against main shows no new dependencies; lucide-react and React hooks already in the project are reused."
+  FR-022:
+    title: "dashboard-client.tsx header action row uses <UserMenu />"
+    user_stories: [US1, US2]
+    scenarios: [AS-021, AS-022]
+    tasks: [T014, T015]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/dashboard-client.tsx replaces <UserChip /> + <DebugToggle /> + <ThemeToggle /> + <SignOutButton /> with <UserMenu userName={userName} debugOn={!!debugOn} />; <DemoModeChip /> remains a separate sibling; components/dashboard-client.test.ts asserts the new structure."
+  FR-023:
+    title: "Inline components preserved as reusable units; no longer in main header"
+    user_stories: [US1]
+    scenarios: [AS-024]
+    tasks: [T014]
+    checks: []
+    verification:
+      status: proposed
+      evidence: "components/debug-toggle.tsx, components/theme-toggle.tsx, components/sign-out-button.tsx remain in the codebase and unit-testable; dashboard-client.tsx no longer renders them in the top-right header (only <UserMenu /> does)."

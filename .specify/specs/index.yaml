@@ -1,0 +1,457 @@
+features:
+- id: 004-dashboard-sync
+  name: Dashboard Sync
+  status: Final
+  path: 004-dashboard-sync/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs: []
+  last_reviewed_at: 2026-06-14
+- id: 006-dashboard-summary-filters
+  name: Dashboard Summary Filters
+  status: Final
+  path: 006-dashboard-summary-filters/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs: []
+  last_reviewed_at: 2026-06-13
+- id: 007-dashboard-meal-cards
+  name: Dashboard Meal Cards
+  status: Final
+  path: 007-dashboard-meal-cards/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs: []
+  last_reviewed_at: 2026-06-16
+- id: 008-dashboard-order-items
+  name: Dashboard Order Items
+  status: Final
+  path: 008-dashboard-order-items/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs: []
+  last_reviewed_at: 2026-06-20
+- id: 010-dashboard-product-detail
+  name: Dashboard Product Detail
+  status: Final
+  path: 010-dashboard-product-detail/spec.md
+  target_skill: data-science/meals-check
+  readiness: satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 021-dashboard-product-enrichment-tesco-apollo
+  - 022-dashboard-debug-mode
+  - 025-tesco-product-enrichment
+  - 027-dashboard-firecrawl-search-fallback
+  - 031-dashboard-debug-observability-panels
+  last_reviewed_at: '2026-06-27'
+- id: 011-dashboard-meal-card-matcher-accuracy
+  name: Dashboard Meal Card Matcher Accuracy
+  status: Final
+  path: 011-dashboard-meal-card-matcher-accuracy/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs: []
+  last_reviewed_at: 2026-06-14
+- id: 012-dashboard-theme-toggle
+  name: Dashboard Theme Toggle
+  status: Final
+  path: 012-dashboard-theme-toggle/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs: []
+  last_reviewed_at: 2026-06-13
+- id: 013-dashboard-expiry-timeline
+  name: Dashboard Expiry Timeline
+  status: Final
+  path: 013-dashboard-expiry-timeline/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs: []
+  last_reviewed_at: 2026-06-13
+- id: 015-dashboard-oidc-authentication
+  name: Dashboard OIDC Authentication
+  status: Final
+  path: 015-dashboard-oidc-authentication/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs: []
+  last_reviewed_at: 2026-06-20
+- id: 016-dashboard-blob-storage-layout
+  name: Dashboard Blob Storage Layout
+  status: Final
+  path: 016-dashboard-blob-storage-layout/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 017-dashboard-blob-read-path
+  - 018-dashboard-order-status-tracking
+  - 019-dashboard-coverage-invalidation-refunds-perishables
+  - 020-dashboard-grocy-pantry-coverage
+  last_reviewed_at: 2026-06-15
+- id: 017-dashboard-blob-read-path
+  name: Dashboard Blob Read Path
+  status: Final
+  path: 017-dashboard-blob-read-path/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on:
+  - 016-dashboard-blob-storage-layout
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 016-dashboard-blob-storage-layout
+  - 018-dashboard-order-status-tracking
+  - 019-dashboard-coverage-invalidation-refunds-perishables
+  - 020-dashboard-grocy-pantry-coverage
+  last_reviewed_at: 2026-06-15
+- id: 018-dashboard-order-status-tracking
+  name: Dashboard Order Status Tracking
+  status: Final
+  path: 018-dashboard-order-status-tracking/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on:
+  - 016-dashboard-blob-storage-layout
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 019-dashboard-coverage-invalidation-refunds-perishables
+  last_reviewed_at: 2026-06-15
+- id: 019-dashboard-coverage-invalidation-refunds-perishables
+  name: Dashboard Coverage Invalidation, Refunds, Perishables, and Manual Override
+  status: Final
+  path: 019-dashboard-coverage-invalidation-refunds-perishables/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on:
+  - 016-dashboard-blob-storage-layout
+  - 018-dashboard-order-status-tracking
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 018-dashboard-order-status-tracking
+  - 020-dashboard-grocy-pantry-coverage
+  last_reviewed_at: 2026-06-16
+- id: 020-dashboard-grocy-pantry-coverage
+  name: Dashboard Grocy Pantry Coverage
+  status: Final
+  path: 020-dashboard-grocy-pantry-coverage/spec.md
+  target_skill: data-science/meals-check
+  readiness: in_progress
+  depends_on:
+  - 016-dashboard-blob-storage-layout
+  - 019-dashboard-coverage-invalidation-refunds-perishables
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 019-dashboard-coverage-invalidation-refunds-perishables
+  last_reviewed_at: 2026-06-15
+- id: 021-dashboard-product-enrichment-tesco-apollo
+  name: "Dashboard Product Enrichment from Tesco Apollo Cache \u2014 Separate Product\
+    \ Blob Architecture"
+  status: Final
+  path: 021-dashboard-product-enrichment-tesco-apollo/spec.md
+  target_skill: data-science/meals-check
+  readiness: in_progress
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 010-dashboard-product-detail
+  - 027-dashboard-firecrawl-search-fallback
+  - 032-dashboard-product-payload-endpoint
+  last_reviewed_at: '2026-06-23'
+- id: 022-dashboard-debug-mode
+  name: Dashboard Debug Mode
+  status: Final
+  path: 022-dashboard-debug-mode/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 008-dashboard-order-items
+  - 010-dashboard-product-detail
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  last_reviewed_at: '2026-06-22'
+- id: 023-dashboard-logged-in-user-chip
+  name: Dashboard Logged-In User Chip
+  status: Final
+  path: 023-dashboard-logged-in-user-chip/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 015-dashboard-oidc-authentication
+  - 022-dashboard-debug-mode
+  last_reviewed_at: '2026-06-17'
+- id: 024-dashboard-static-fixture-mode-for-preview
+  name: Dashboard Static Fixture Mode for Preview
+  status: Final
+  path: 024-dashboard-static-fixture-mode-for-preview/spec.md
+  target_skill: data-science/meals-check
+  readiness: deferred_correction
+  pending_work: "Login-page demo-banner correction; spec.md pending note and T125; not implemented"
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 022-dashboard-debug-mode
+  last_reviewed_at: '2026-06-27'
+- id: 025-tesco-product-enrichment
+  name: Tesco Product Enrichment — Source-of-Truth Investigation
+  status: Draft
+  path: 025-tesco-product-enrichment/spec.md
+  target_skill: data-science/meals-check
+  readiness: spec_only
+  depends_on:
+  - 021-dashboard-product-enrichment-tesco-apollo
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 010-dashboard-product-detail
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 021-dashboard-product-enrichment-tesco-apollo
+  last_reviewed_at: '2026-06-17'
+- id: 026-dashboard-user-menu
+  name: Dashboard User Menu
+  status: Final
+  path: 026-dashboard-user-menu/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 012-dashboard-theme-toggle
+  - 015-dashboard-oidc-authentication
+  - 022-dashboard-debug-mode
+  - 023-dashboard-logged-in-user-chip
+  - 024-dashboard-static-fixture-mode-for-preview
+  last_reviewed_at: '2026-06-20'
+- id: 027-dashboard-firecrawl-search-fallback
+  name: Dashboard Firecrawl Search Fallback for Product Description
+  status: Final
+  path: 027-dashboard-firecrawl-search-fallback/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on:
+  - 021-dashboard-product-enrichment-tesco-apollo
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 010-dashboard-product-detail
+  - 025-tesco-product-enrichment
+  last_reviewed_at: '2026-06-20'
+- id: 028-dashboard-blob-head-read-savings
+  name: Dashboard Blob `head()` Read Savings
+  status: Final
+  path: 028-dashboard-blob-head-read-savings/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on:
+  - 016-dashboard-blob-storage-layout
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 017-dashboard-blob-read-path
+  - 027-dashboard-firecrawl-search-fallback
+  last_reviewed_at: '2026-06-27'
+- id: 029-dashboard-blob-error-surface
+  name: Dashboard Blob Error Surface
+  status: Final
+  path: 029-dashboard-blob-error-surface/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 017-dashboard-blob-read-path
+  - 024-dashboard-static-fixture-mode-for-preview
+  - 028-dashboard-blob-head-read-savings
+  last_reviewed_at: '2026-06-27'
+- id: 030-dashboard-blob-noop-sync-suppression
+  name: Dashboard Blob No-op Sync Suppression
+  status: Final
+  path: 030-dashboard-blob-noop-sync-suppression/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on:
+  - 016-dashboard-blob-storage-layout
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 017-dashboard-blob-read-path
+  - 021-dashboard-product-enrichment-tesco-apollo
+  - 028-dashboard-blob-head-read-savings
+  - 029-dashboard-blob-error-surface
+  last_reviewed_at: '2026-06-20'
+- id: 031-dashboard-debug-observability-panels
+  name: Dashboard Debug Observability Panels
+  status: Draft
+  path: 031-dashboard-debug-observability-panels/spec.md
+  target_skill: data-science/meals-check
+  readiness: pending
+  depends_on:
+  - 022-dashboard-debug-mode
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 010-dashboard-product-detail
+  - 024-dashboard-static-fixture-mode-for-preview
+  - 026-dashboard-user-menu
+  - 027-dashboard-firecrawl-search-fallback
+  - 029-dashboard-blob-error-surface
+  last_reviewed_at: '2026-06-23'
+- id: 032-dashboard-product-payload-endpoint
+  name: Dashboard Product Payload Endpoint and Split Full Sync
+  status: Final
+  path: 032-dashboard-product-payload-endpoint/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 004-dashboard-sync
+  - 016-dashboard-blob-storage-layout
+  - 021-dashboard-product-enrichment-tesco-apollo
+  - 030-dashboard-blob-noop-sync-suppression
+  last_reviewed_at: '2026-06-27'
+- id: 033-dashboard-matcher-snack-and-doughnut-false-positives
+  name: Dashboard Matcher Snack and Confectionery False Positives
+  status: Final
+  path: 033-dashboard-matcher-snack-and-doughnut-false-positives/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on: []
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 011-dashboard-meal-card-matcher-accuracy
+  last_reviewed_at: 2026-06-30
+- id: 034-dashboard-order-items-previous-next-delivery
+  name: Dashboard Order Items — Previous / Next Delivery
+  status: Final
+  path: 034-dashboard-order-items-previous-next-delivery/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on:
+  - 008-dashboard-order-items
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 018-dashboard-order-status-tracking
+  - 022-dashboard-debug-mode
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 008-dashboard-order-items
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 018-dashboard-order-status-tracking
+  - 022-dashboard-debug-mode
+  - 024-dashboard-static-fixture-mode-for-preview
+  - 035-dashboard-order-history-retention
+  last_reviewed_at: 2026-06-30
+- id: 035-dashboard-order-history-retention
+  name: Dashboard Order History Retention
+  status: Final
+  path: 035-dashboard-order-history-retention/spec.md
+  target_skill: data-science/meals-check
+  readiness: already_satisfied
+  depends_on:
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 030-dashboard-blob-noop-sync-suppression
+  - 034-dashboard-order-items-previous-next-delivery
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 030-dashboard-blob-noop-sync-suppression
+  - 034-dashboard-order-items-previous-next-delivery
+  - 036-dashboard-delivery-day-last-receipt-publication
+  last_reviewed_at: 2026-06-30
+- id: 036-dashboard-delivery-day-last-receipt-publication
+  name: Dashboard Delivery-Day Last-Receipt Publication
+  status: Final
+  path: 036-dashboard-delivery-day-last-receipt-publication/spec.md
+  target_skill: data-science/meals-check
+  readiness: production
+  depends_on:
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 030-dashboard-blob-noop-sync-suppression
+  - 034-dashboard-order-items-previous-next-delivery
+  - 035-dashboard-order-history-retention
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 016-dashboard-blob-storage-layout
+  - 017-dashboard-blob-read-path
+  - 030-dashboard-blob-noop-sync-suppression
+  - 034-dashboard-order-items-previous-next-delivery
+  - 035-dashboard-order-history-retention
+  last_reviewed_at: 2026-07-01
+- id: 037-dashboard-order-items-delivery-filter-empty-state-fallback
+  name: Dashboard Order Items Delivery-Filter Empty-State Fallback
+  status: Proposed
+  path: 037-dashboard-order-items-delivery-filter-empty-state-fallback/spec.md
+  target_skill: data-science/meals-check
+  readiness: spec_only
+  depends_on:
+  - 034-dashboard-order-items-previous-next-delivery
+  conflicts_with: []
+  supersedes: []
+  related_specs:
+  - 008-dashboard-order-items
+  - 018-dashboard-order-status-tracking
+  - 019-dashboard-coverage-invalidation-refunds-perishables
+  - 022-dashboard-debug-mode
+  - 024-dashboard-static-fixture-mode-for-preview
+  last_reviewed_at: 2026-07-05

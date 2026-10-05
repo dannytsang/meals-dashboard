@@ -1,0 +1,225 @@
+# Machine-readable scenario coverage for 024-dashboard-static-fixture-mode-for-preview.
+feature_id: 024-dashboard-static-fixture-mode-for-preview
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-003, FR-005, FR-023, FR-006, FR-011, FR-012, NFR-007]
+    expected: |
+      With BLOB_READ_WRITE_TOKEN unset (or empty) in the runtime
+      environment, the dashboard renders successfully without calling
+      @vercel/blob. The render uses the bundled fixture dataset from
+      lib/fixtures/dashboard-fixture.json via StaticFixtureReader. No
+      network request to Vercel Blob is made. The demo banner is
+      visible at the top of the page.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/fixtures/static-fixture-reader.test.ts -v
+      manual: |
+        Deploy to preview with BLOB_READ_WRITE_TOKEN unset. Open preview
+        URL. Confirm dashboard renders. Inspect DevTools network panel;
+        assert no requests to blob.vercel-storage.com. Confirm banner
+        is visible.
+      rationale: Headline use case — preview must render without blob
+        storage credentials.
+    integration_isolation: no external services required; uses bundled JSON.
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-014, FR-015, US2]
+    expected: |
+      With BLOB_READ_WRITE_TOKEN set, the dashboard reads from Vercel
+      Blob exactly as today. StaticFixtureReader is NEVER instantiated.
+      The demo banner is NOT rendered. The header chip is NOT rendered.
+      VercelBlobStorageClient is instantiated as today. The dashboard
+      root element carries data-demo-mode="false".
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client.test.ts -v
+      manual: |
+        Deploy to production with BLOB_READ_WRITE_TOKEN set. Confirm
+        dashboard reads from blob. Inspect DevTools; assert no fixture
+        JSON content in served HTML or JS bundle. Confirm no banner,
+        no chip, root element carries data-demo-mode="false".
+      rationale: Production regression test.
+    integration_isolation: requires a populated blob namespace.
+  AS-003:
+    type: positive
+    requirements: [FR-016, US6]
+    expected: |
+      With demo mode active, the dashboard renders a permanent
+      site-wide banner at the top of the page. The banner uses an
+      amber background, contains the literal text "DEMO MODE —
+      showing sample data. Live data unavailable.", and the prefix
+      emoji "⚠️". The banner is sticky (does not scroll away), has
+      no dismiss button, and has role="status" with
+      aria-label="Demo mode — sample data, not real data".
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/demo-mode-banner.test.tsx -v
+      manual: |
+        Deploy to preview with BLOB_READ_WRITE_TOKEN unset. Confirm
+        banner is visible at top of page. Inspect DOM; assert
+        data-testid, data-demo-mode, role, aria-label. Confirm
+        no dismiss button. Scroll page; confirm banner stays at top.
+      rationale: Banner contract verification — primary signal that
+        data is fake.
+    integration_isolation: no external services required.
+  AS-004:
+    type: positive
+    requirements: [FR-017, US6]
+    expected: |
+      With demo mode active, the dashboard header renders a "Demo"
+      chip. The chip uses an amber background matching the banner,
+      contains the literal text "Demo", and carries
+      data-testid="demo-mode-chip" and data-demo-mode="true". The
+      chip is positioned in the top-right header flex row.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/demo-mode-chip.test.tsx -v
+      manual: |
+        Deploy to preview with BLOB_READ_WRITE_TOKEN unset. Confirm
+        chip is visible. Inspect DOM; assert data-testid, data-demo-mode.
+      rationale: Header chip contract verification — secondary signal.
+    integration_isolation: no external services required.
+  AS-005:
+    type: positive
+    requirements: [FR-007, FR-008, FR-009, FR-010, US5]
+    expected: |
+      The fixture data is trip-derived and realistic. Item names
+      come from the curated UK name pool (e.g. "Sam Patel", "Chen Wei"
+      — no "Demo" prefix, no "Sample" prefix). The fixture contains
+      7 meals across 8 days, with 1 explicit gap day. Order total is
+      42.42. dataGeneratedAt is "2026-01-01T00:00:00Z". Dates are
+      within a recent week. Locations are from a curated pool.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/fixtures/scripts/generate-fixture.test.ts -v
+      manual: |
+        Open preview with demo mode. Confirm: names are realistic
+        (not "Demo" or "Sample"); 7 meals visible in Week Meals grid;
+        1 day shows 0% coverage (gap day); order total is 42.42;
+        dataGeneratedAt is 2026-01-01.
+      rationale: Trip-derived realistic fixture — anti-confusion
+        invariant (data looks like a real trip, but is clearly
+        synthetic via the obvious-fake sentinels).
+    integration_isolation: no external services required.
+  AS-006:
+    type: positive
+    requirements: [FR-004, FR-013, US4]
+    expected: |
+      With BLOB_READ_WRITE_TOKEN unset and the bundled fixture
+      missing (e.g. build failure), the dashboard renders an empty
+      state with a "No data configured" notice. HTTP 200, no
+      exception logged.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/fixtures/empty-dashboard-reader.test.ts -v
+      manual: |
+        Delete lib/fixtures/dashboard-fixture.json. Deploy to preview
+        with BLOB_READ_WRITE_TOKEN unset. Confirm dashboard renders
+        empty state with notice; HTTP 200; no 500.
+      rationale: Misconfiguration graceful-fallback contract.
+    integration_isolation: no external services required.
+  AS-007:
+    type: boundary
+    requirements: [FR-023, US2]
+    expected: |
+      A partial credential triggers demo mode (fails closed). If
+      BLOB_READ_WRITE_TOKEN is set but BLOB_STORE_ID is unset (or
+      vice versa), the dashboard routes to demo mode. A stale
+      token could silently auth and read garbage, so partial
+      credentials are treated as missing.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/runtime-mode.test.ts -v
+      manual: |
+        Deploy to preview with only BLOB_READ_WRITE_TOKEN set
+        (BLOB_STORE_ID unset). Confirm demo mode activates, banner
+        renders. Repeat with only BLOB_STORE_ID set.
+      rationale: Fails-closed credential detection.
+    integration_isolation: no external services required.
+  AS-008:
+    type: positive
+    requirements: [FR-018, US2]
+    expected: |
+      With BLOB_READ_WRITE_TOKEN set, the dashboard root element
+      carries data-demo-mode="false". With BLOB_READ_WRITE_TOKEN
+      unset, the root element carries data-demo-mode="true". The
+      data-demo-mode attribute is observable from DevTools without
+      depending on the banner or chip text.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client.test.ts -v
+      manual: |
+        Inspect dashboard HTML in both modes. Confirm
+        data-demo-mode attribute is present and reflects the active
+        mode.
+      rationale: DevTools-observable runtime mode.
+    integration_isolation: no external services required.
+  AS-009:
+    type: positive
+    requirements: [FR-019, NFR-008]
+    expected: |
+      The build-time generator produces byte-identical output across
+      consecutive runs. Running `node lib/fixtures/scripts/generate-fixture.mjs`
+      twice produces dashboard-fixture.json files with the same
+      shasum. The generator uses a seeded RNG (constant seed 42)
+      and applies no system entropy.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/fixtures/scripts/generate-fixture.test.ts -v
+      manual: |
+        Run the generator twice in sequence; shasum both outputs;
+        assert equality.
+      rationale: Determinism contract — fixture is reproducible
+        across builds and machines.
+    integration_isolation: no external services required.
+  AS-010:
+    type: positive
+    requirements: [FR-014, FR-015, US2]
+    expected: |
+      The sync script (scripts/sync-dashboard-data.py), OIDC
+      configuration (spec 015), and debug-mode helper (spec 022) are
+      NOT modified by this spec. VercelBlobStorageClient and
+      InMemoryBlobStorageClient are NOT modified. The DashboardDataReader
+      interface is NOT modified.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run -v
+      manual: |
+        git diff against main; assert only additive changes to
+        lib/dashboard-data.ts (no), lib/blob-storage.ts (no),
+        scripts/sync-dashboard-data.py (no), lib/auth.ts (no),
+        lib/debug-mode.ts (no).
+      rationale: Non-regression of existing modules.
+    integration_isolation: no external services required.
+  AS-011:
+    type: positive
+    requirements: [FR-016, US7]
+    expected: |
+      With BLOB_READ_WRITE_TOKEN unset (demo mode) AND
+      MEALS_DEBUG_MODE=1, the dashboard renders the demo banner and
+      header chip, and the debug chips from spec 022 are hidden.
+      Demo mode wins over debug mode because debug toggles have
+      nothing to point at when the data is fake.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-client.test.ts -v
+      manual: |
+        Deploy to preview with BLOB_READ_WRITE_TOKEN unset AND
+        MEALS_DEBUG_MODE=1. Confirm demo banner and chip are
+        visible. Confirm debug chips (from spec 022) are NOT visible.
+      rationale: Demo mode wins over debug mode (data mode is
+        dominant signal).
+    integration_isolation: requires a populated dashboard with the
+      spec 022 implementation for the debug-shell exclusion check.
+  AS-012:
+    type: positive
+    requirements: [FR-007, FR-010, US5]
+    expected: |
+      The fixture's 7 meals exercise the dashboard's full coverage
+      surface. The fixture includes at least one covered meal, one
+      partial meal, and one missing meal. The 1 explicit gap day
+      (a date with no meals) renders as 0% coverage in the Week
+      Meals grid. The order has orderStatus: "active" and the
+      orderTotal is 42.42.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/fixtures/scripts/generate-fixture.test.ts -v
+      manual: |
+        Open preview with demo mode. Inspect Week Meals grid;
+        confirm 1 day shows 0% coverage (gap day), at least one
+        day shows 100% coverage, and other days show partial
+        coverage. Inspect latestOrder; confirm orderTotal is
+        42.42 and orderStatus is "active".
+      rationale: Fixture exercises the dashboard's full surface
+        (the trip-derived approach gives realistic-looking data
+        for debugging).
+    integration_isolation: no external services required.

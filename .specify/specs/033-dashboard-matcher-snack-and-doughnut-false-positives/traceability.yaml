@@ -1,0 +1,62 @@
+# Machine-readable requirement traceability for 033-dashboard-matcher-snack-and-doughnut-false-positives.
+feature_id: 033-dashboard-matcher-snack-and-doughnut-false-positives
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-005, AS-007]
+    tasks: [T020, T030]
+    checks:
+      - python3 -m unittest test_tesco_matcher -v
+      - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: proposed
+      evidence: null
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-002, AS-006]
+    tasks: [T021, T030]
+    checks:
+      - python3 -m unittest test_tesco_matcher -v
+      - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: proposed
+      evidence: null
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-003]
+    tasks: [T022, T030]
+    checks:
+      - python3 -m unittest test_tesco_matcher -v
+      - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: proposed
+      evidence: null
+  FR-004:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: [T023, T030]
+    checks:
+      - python3 -m unittest test_tesco_matcher -v
+      - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: proposed
+      evidence: null
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003, AS-007, AS-008]
+    tasks: [T010, T030]
+    checks:
+      - python3 -m unittest test_tesco_matcher -v
+    verification:
+      status: proposed
+      evidence: null
+  FR-006:
+    user_stories: [US1]
+    scenarios: [AS-004, AS-008]
+    tasks: [T040, T041]
+    checks:
+      - python3 tesco_meal_check.py --days 30 --output both
+      - python3 -m unittest test_tesco_matcher test_tesco_meal_check_windows test_tesco_report_display test_scheduled_meals_check test_tesco_completed_meals -v
+    verification:
+      status: proposed
+      evidence: null

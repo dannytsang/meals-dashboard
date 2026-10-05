@@ -1,0 +1,139 @@
+# Machine-readable requirement traceability for 021-dashboard-product-enrichment-tesco-apollo.
+feature_id: 021-dashboard-product-enrichment-tesco-apollo
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-004:
+    user_stories: [US1]
+    scenarios: [AS-002, AS-006]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-005]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-006:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-007:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-008:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-009:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-010:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-011:
+    user_stories: [US1]
+    scenarios: [AS-004]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-012:
+    user_stories: [US1]
+    scenarios: [AS-004]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-013:
+    user_stories: [US1]
+    scenarios: [AS-005]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-014:
+    user_stories: [US2]
+    scenarios: [AS-007]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-015:
+    user_stories: [US2]
+    scenarios: [AS-006, AS-007]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-016:
+    user_stories: [US1]
+    scenarios: [AS-005]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null
+  FR-017:
+    user_stories: [US1]
+    scenarios: [AS-008]
+    tasks: []
+    checks: []
+    verification:
+      status: proposed
+      evidence: null

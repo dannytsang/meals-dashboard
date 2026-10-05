@@ -1,0 +1,115 @@
+# Machine-readable scenario coverage for 021-dashboard-product-enrichment-tesco-apollo.
+feature_id: 021-dashboard-product-enrichment-tesco-apollo
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013]
+    expected: |
+      On first enrichment, the pipeline searches Tesco by item name, resolves
+      the tpnc, fetches the product page, extracts the Apollo cache JSON,
+      maps all fields (title/description/storage/preparation/ingredients/allergens/
+      nutrition/brand/category/imageUrl) to the ProductBlob shape, and writes
+      products/{tpnc}.json to Vercel Blob. The order blob item carries
+      productBlobPath instead of productMetadata. Subsequent enrichments of the
+      same tpnc skip search and use the tpnc key.
+    verification:
+      automated: null
+      manual: |
+        Run sync against a real Tesco order. Inspect Vercel Blob to confirm
+        products/{tpnc}.json written. Verify order blob has productBlobPath
+        and no embedded productMetadata. Confirm dashboard modal renders fields.
+      rationale: Full pipeline exercised end-to-end with live Tesco access.
+    integration_isolation: no external services required for unit/integration; manual test needs live Tesco.
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-004, FR-007, FR-008, FR-009, FR-010]
+    expected: |
+      The product blob written to products/{tpnc}.json contains all 16 required
+      fields: tpnc, gtin, tpnb, title, description, storage, preparation,
+      ingredients, allergens, nutrition (markdown table), brand, category,
+      imageUrl, productUrl, source, lastFetched. No field is fabricated.
+    verification:
+      automated: python3 -m pytest scripts/test_backfill_tesco_product_metadata.py -v
+      manual: Inspect Vercel Blob for a written products/{tpnc}.json and
+        verify all fields present and non-null where expected.
+      rationale: Field mapping tested via unit tests with mocked Apollo data.
+    integration_isolation: Uses mocked HTTP responses; no live Tesco required.
+  AS-003:
+    type: positive
+    requirements: [FR-003]
+    expected: |
+      The products manifest (meta/products-manifest-{hash}.json) is updated
+      whenever a product blob is written or refreshed. The top-level
+      pointers/latest.json includes productsManifestPath.
+    verification:
+      automated: null
+      manual: |
+        Inspect pointers/latest.json after a sync run. Verify productsManifestPath
+        field present. Inspect the referenced products manifest to confirm tpnc
+        entries map to correct blob paths.
+      rationale: Manifest consistency requires integration environment to verify.
+    integration_isolation: no external services required for unit tests.
+  AS-004:
+    type: boundary
+    requirements: [FR-012]
+    expected: |
+      Product blobs within the 21-day freshness window are used without
+      re-fetching. Product blobs older than 21 days trigger a re-fetch and
+      overwrite of products/{tpnc}.json with updated lastFetched.
+    verification:
+      automated: python3 -m pytest scripts/test_backfill_tesco_product_metadata.py -v
+      manual: Set clock past TTL window; re-run sync; inspect blob lastFetched updated.
+      rationale: TTL boundary tested via unit tests.
+    integration_isolation: Uses mocked TTL via time patching.
+  AS-005:
+    type: boundary
+    requirements: [FR-013, FR-016]
+    expected: |
+      On non-200 response, network error, JSON parse failure, or missing
+      ProductType entity, the pipeline logs a warning, does not write a
+      product blob, and does not crash. MEALS_PRODUCT_ENRICHMENT=0 skips
+      all enrichment silently.
+    verification:
+      automated: python3 -m pytest scripts/test_backfill_tesco_product_metadata.py -v
+      manual: Inject a 403 response; verify no product blob written, warning logged, sync completes.
+      rationale: Error paths tested in unit tests.
+    integration_isolation: Uses mocked HTTP responses.
+  AS-006:
+    type: positive
+    requirements: [FR-014, FR-015]
+    expected: |
+      The backfill script iterates all cache entries, resolves tpnc from URL
+      or name search, fetches product page, writes products/{tpnc}.json,
+      updates products manifest. Unmatched entries recorded with reason.
+      Summary printed: upgraded/already-complete/unmatched. Exit 0.
+    verification:
+      automated: python3 -m pytest scripts/test_backfill_tesco_product_metadata.py -v
+      manual: Run backfill against real cache; inspect Vercel Blob for products/ blobs.
+      rationale: Backfill paths tested in unit tests.
+    integration_isolation: Uses mocked HTTP for unit tests.
+  AS-007:
+    type: negative
+    requirements: [FR-011]
+    expected: |
+      No field is fabricated. If Apollo cache lacks a field, the product blob
+      field is empty string (or null for tpnc/gtin/tpnb).
+    verification:
+      automated: grep -n "no.fabrication\|not fabricated\|leave.*empty" scripts/sync-dashboard-data.py
+      manual: null
+      rationale: No-fabrication invariant asserted in test suite.
+    integration_isolation: No external services required.
+  AS-008:
+    type: positive
+    requirements: [FR-017]
+    expected: |
+      The dashboard modal renders Storage, Preparation, Ingredients,
+      Allergens (amber warning style), and Nutrition (markdown table) as
+      separate sections when data is available, sourced from the resolved
+      productMetadata shape.
+    verification:
+      automated: null
+      manual: |
+        Open dashboard product modal for an item with known product data.
+        Inspect modal to confirm all five sections render correctly.
+      rationale: UI render requires live dashboard environment.
+    integration_isolation: no external services required.

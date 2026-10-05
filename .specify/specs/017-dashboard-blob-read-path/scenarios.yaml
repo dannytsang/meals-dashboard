@@ -1,0 +1,48 @@
+feature_id: 017-dashboard-blob-read-path
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-004, FR-005]
+    expected: The dashboard reads pointer → manifest → summary + coverage + order blobs, and renders the same data the old single-blob layout provided.
+    verification:
+      automated: lib/dashboard-data.test.ts::getDashboardData — split layout
+      manual: null
+      rationale: null
+    integration_isolation: in-memory Blob client; no live Vercel Blob calls
+  AS-002:
+    type: negative
+    requirements: [FR-003]
+    expected: When a coverage blob is missing, the dashboard renders an empty coverage list without crashing; latestOrder and mealsCheckSummary still resolve if their blobs are present.
+    verification:
+      automated: lib/dashboard-data.test.ts::getDashboardData — missing coverage blob fallback
+      manual: null
+      rationale: null
+    integration_isolation: in-memory Blob client with empty coverage payload
+  AS-003:
+    type: boundary
+    requirements: [FR-003]
+    expected: When the pointer is missing (first-ever install or before first sync), the dashboard falls back to the legacy single-blob layout; if neither exists, returns the empty state.
+    verification:
+      automated: lib/dashboard-data.test.ts::getDashboardData — empty state + legacy fallback
+      manual: null
+      rationale: null
+    integration_isolation: in-memory Blob client with no pointer
+  AS-004:
+    type: positive
+    requirements: [FR-004, FR-006]
+    expected: A two-week render that spans two delivery cycles composes items from both order blobs and surfaces two delivery windows to the UI.
+    verification:
+      automated: lib/dashboard-data.test.ts::getDashboardData — composes two delivery windows
+      manual: null
+      rationale: null
+    integration_isolation: in-memory Blob client with two order blobs + two coverage blobs
+  AS-005:
+    type: integration-isolated
+    requirements: [FR-007]
+    expected: The client bundle does not import @vercel/blob and does not contain Blob URLs or private data sentinels. All Blob reads are server-side.
+    verification:
+      automated: npm run scan:static-private-data
+      automated: npm run build
+      manual: null
+      rationale: null
+    integration_isolation: Next.js static-bundle scan + production build

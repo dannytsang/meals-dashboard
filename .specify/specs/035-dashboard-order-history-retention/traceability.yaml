@@ -1,0 +1,153 @@
+feature_id: 035-dashboard-order-history-retention
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-008]
+    tasks: [T010, T020, T040, T050, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v
+      - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+      - grep -rn "load_historical_orders\|persist_historical_orders" scripts/sync-dashboard-data.py
+    verification:
+      status: proposed
+      evidence: null
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-005]
+    tasks: [T010, T020, T031, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v
+      - grep -rn "assemble_orders" scripts/sync-dashboard-data.py
+    verification:
+      status: proposed
+      evidence: null
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-003, AS-006]
+    tasks: [T020, T030, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v
+      - grep -rn "MAX_HISTORICAL_ORDERS" scripts/sync-dashboard-data.py
+    verification:
+      status: proposed
+      evidence: null
+  FR-004:
+    user_stories: [US1]
+    scenarios: [AS-004]
+    tasks: [T010, T020, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v
+    verification:
+      status: proposed
+      evidence: null
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-003, AS-006]
+    tasks: [T010, T020, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v
+    verification:
+      status: proposed
+      evidence: null
+  FR-006:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: [T010, T020, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v
+    verification:
+      status: proposed
+      evidence: null
+  FR-007:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-005, AS-008, AS-009]
+    tasks: [T031, T041, T050, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v
+      - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: proposed
+      evidence: null
+  FR-008:
+    user_stories: [US1]
+    scenarios: [AS-007, AS-009]
+    tasks: [T030, T041, T042, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v
+      - python3 scripts/sync-dashboard-data.py --help
+    verification:
+      status: proposed
+      evidence: null
+  FR-009:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T031, T070]
+    checks:
+      - grep -rn "orders: published" scripts/sync-dashboard-data.py
+    verification:
+      status: proposed
+      evidence: null
+  FR-010:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003, AS-004, AS-005, AS-006, AS-007, AS-008, AS-009]
+    tasks: [T040, T041, T042, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v --collect-only
+    verification:
+      status: proposed
+      evidence: null
+non_functional:
+  NFR-001:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - time npx tsc --noEmit
+    verification:
+      status: proposed
+      evidence: null
+  NFR-002:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - manual timing of sync invocation
+    verification:
+      status: proposed
+      evidence: null
+  NFR-003:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - manual payload size inspection
+    verification:
+      status: proposed
+      evidence: null
+  NFR-004:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T070]
+    checks:
+      - diff env-prefix assumption scan
+    verification:
+      status: proposed
+      evidence: null
+  NFR-005:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T020, T070]
+    checks:
+      - python3 -m pytest scripts/tests/test_sync_dashboard_history.py -v -k "pure"
+    verification:
+      status: proposed
+      evidence: null
+  NFR-006:
+    user_stories: [US1]
+    scenarios: []
+    tasks: [T050, T070]
+    checks:
+      - git check-ignore data/orders/previously_synced.json
+    verification:
+      status: proposed
+      evidence: null

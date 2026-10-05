@@ -1,0 +1,79 @@
+feature_id: 013-dashboard-expiry-timeline
+requirements:
+  FR-001:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-001
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-002:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-002
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-003:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-003
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-004:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-004
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-005:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-005
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-006:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-006
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.
+  FR-007:
+    user_stories:
+    - US1
+    scenarios:
+    - AS-007
+    tasks: []
+    checks:
+    - python software-development/spec-driven-skills/scripts/validate_spec_skill.py data-science/meals-check
+    verification:
+      status: passed
+      evidence: See feature CHANGELOG.md and tasks.md for verification evidence.

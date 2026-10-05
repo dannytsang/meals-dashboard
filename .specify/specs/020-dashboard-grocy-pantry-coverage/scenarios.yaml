@@ -1,0 +1,84 @@
+# Machine-readable scenario coverage for 020-dashboard-grocy-pantry-coverage.
+feature_id: 020-dashboard-grocy-pantry-coverage
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-004, FR-006]
+    expected: |
+      A meal plan item in Grocy but not in the Tesco order is matched
+      with source="grocy" and the 🏠 badge appears in the dashboard.
+    verification:
+      automated: python3 -m pytest ~/.hermes/scripts/test_tesco_matcher.py -v
+      manual: null
+      rationale: Direct test of Tier 3 Grocy matching with grocy_stock parameter.
+    integration_isolation: Uses mocked grocy_stock; no live Grocy required.
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-006]
+    expected: |
+      When an item is in both the Tesco order and Grocy, the order item
+      is matched first (source="order") and Grocy is not consulted for it.
+    verification:
+      automated: python3 -m pytest ~/.hermes/scripts/test_tesco_matcher.py -v
+      manual: null
+      rationale: Order items processed in Tier 1/2 before Grocy Tier 3 runs.
+    integration_isolation: No external services required.
+  AS-003:
+    type: positive
+    requirements: [FR-001, FR-002]
+    expected: |
+      A Grocy-matched item shows source="grocy" in the matched_items array.
+    verification:
+      automated: grep -n "source.*grocy" ~/.hermes/scripts/tesco_matcher.py
+      manual: null
+      rationale: Code inspection confirms source field set on Grocy Tier 3 match.
+    integration_isolation: No external services required.
+  AS-004:
+    type: positive
+    requirements: [FR-003]
+    expected: |
+      The 🏠 "In pantry" badge appears next to any matched item with source="grocy"
+      in the meal detail card.
+    verification:
+      automated: grep -n "source.*grocy" /home/hermes/workspace/meals-dashboard/components/meal-list.tsx
+      manual: Dashboard UI review of meal detail overlay
+      rationale: UI render confirmed by source===grocy conditional in meal-list.tsx.
+    integration_isolation: No external services required.
+  AS-005:
+    type: positive
+    requirements: [FR-005]
+    expected: |
+      A Grocy-matched item does NOT have use_by_warning set, even if it
+      would otherwise qualify as a short-life item.
+    verification:
+      automated: grep -n "use_by_warning.*grocy\|grocy.*use_by_warning" ~/.hermes/scripts/tesco_meal_check.py
+      manual: null
+      rationale: Conditional check match.get("source") != "grocy" gates use_by_warning.
+    integration_isolation: No external services required.
+  AS-006:
+    type: positive
+    requirements: [FR-008]
+    expected: |
+      A Grocy item that does not match any meal requirement is ignored
+      (does not appear in matched_items or unmatched_items).
+    verification:
+      automated: python3 -m pytest ~/.hermes/scripts/test_tesco_matcher.py -v
+      manual: null
+      rationale: Tier 3 iterates over meal components; unmatched Grocy items never appended.
+    integration_isolation: Uses mocked grocy_stock; no live Grocy required.
+  AS-007:
+    type: boundary
+    requirements: [FR-007]
+    expected: |
+      When Grocy is unreachable (network error, auth failure, schema mismatch),
+      the sync completes successfully with a warning logged; pantry items are
+      treated as missing and order-only coverage is reported.
+    verification:
+      automated: python3 -m unittest test_grocy_client -v
+      manual: |
+        1. Stop Grocy service or use wrong API key.
+        2. Run tesco_meal_check.py --days 30.
+        3. Verify sync completes and warning appears in logs.
+        4. Verify dashboard still renders with order-only coverage.
+      rationale: Fail-soft behaviour requires live environment to verify.
+    integration_isolation: Requires live Grocy instance to test.

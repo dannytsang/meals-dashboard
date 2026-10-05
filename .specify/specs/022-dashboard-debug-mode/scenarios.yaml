@@ -1,0 +1,321 @@
+# Machine-readable scenario coverage for 022-dashboard-debug-mode (Rev 3).
+feature_id: 022-dashboard-debug-mode
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-017, NFR-005, NFR-006]
+    expected: |
+      With the `meals_debug_mode` cookie unset OR tampered (no valid
+      HMAC), GET /debug returns 404 (or 410) for an authenticated user
+      — the OIDC middleware redirects unauthenticated users to signin
+      first (307). Every /api/debug/* route (including /api/debug/toggle)
+      returns 404 for authenticated users with the cookie unset. The
+      main dashboard HTML, JS chunks, and __NEXT_DATA__ contain no
+      debug-mode strings (DEBUG:, latestOrder=, unmatchedItems=,
+      displayItems=, cats=, dataGen=, /debug, /api/debug,
+      meals_debug_mode, MEALS_DEBUG_MODE, isDebugModeEnabled,
+      envEnabled); OIDC auth still applies (NFR-005). A tampered
+      cookie (unsigned or wrong-signature) is treated as unset
+      (NFR-006).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/debug-mode.test.ts lib/debug-cookie.test.ts -v
+      manual: |
+        Build with the cookie unset; deploy; curl /debug and
+        /api/debug/items-by-category and -X POST /api/debug/toggle → 404
+        (or 307 to OIDC signin if no session); curl -H
+        "Cookie: meals_debug_mode=1.<forged-sig>" /debug → 404; grep
+        served HTML/JS for debug-mode tokens → no hits; confirm
+        middleware redirects unauthenticated requests to sign-in.
+    rationale: The off-state is the security boundary; both automated and
+      manual verification are required.
+    integration_isolation: no external services required; uses Next.js test
+      harness with mocked auth.
+  AS-002:
+    type: positive
+    requirements: [FR-001, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008]
+    expected: |
+      With the `meals_debug_mode` cookie signed as "1" (HMAC verified),
+      GET /debug returns 200 with the debug shell; GET /api/debug/items-by-category
+      returns 200 with the ItemsByCategoryDiagnostic JSON containing every
+      FR-004 field (latestOrder, latestOrderStatus, latestOrderBlobPath,
+      receiptItemsLength, unmatchedItemsLength, displayItemsLength,
+      showCount, filter, cats, dataGen, coverageWindow, pointerPath,
+      manifestPath, fetchedAt); refresh button re-fetches all panels in
+      parallel; footer shows the cookie's signed-decoded value, the
+      VERCEL_DEPLOYMENT_ID, and a curl example.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/debug-cookie.test.ts app/api/debug/items-by-category/route.test.ts app/api/debug/toggle/route.test.ts -v
+      manual: |
+        Sign in; click the Debug toggle in the header; curl /debug → 200;
+        curl /api/debug/items-by-category → 200 with all FR-004 fields;
+        navigate to /debug in a browser and confirm panel renders,
+        refresh button works, footer shows correct values.
+    rationale: The on-state is the operator-facing feature; both automated
+      and manual verification are required.
+    integration_isolation: requires a populated dashboard (real data) for
+      realistic verification.
+  AS-003:
+    type: positive
+    requirements: [FR-005, FR-008]
+    expected: |
+      Each debug panel is rendered as a collapsible card showing variable
+      name, type (string/number/array/null/object), formatted value, and
+      a Copy-as-JSON affordance. Null and empty values render with
+      visually distinct chips (NULL, 0, [], {}) so the culprit is
+      obvious at a glance.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/items-by-category-debug-panel.test.tsx -v
+      manual: |
+        Open /debug; confirm each variable has a labelled chip, type
+        indicator, value, and Copy-as-JSON button. Click Copy-as-JSON
+        and confirm clipboard contains the raw JSON.
+    rationale: Visual contract is best verified manually; type/value
+      rendering has unit coverage.
+    integration_isolation: no external services required for unit tests.
+  AS-004:
+    type: positive
+    requirements: [FR-002, FR-008, FR-009, NFR-006]
+    expected: |
+      With the `meals_debug_mode` cookie signed as "1", the main
+      dashboard renders a debug chip next to the Order Items by
+      Category heading. The chip label is "displayItems: <N>".
+      Clicking the chip opens the same items-by-category panel as on
+      /debug. With the cookie unset OR tampered, the chip is NOT
+      rendered — a tampered cookie is treated as unset (NFR-006).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/dashboard-debug-chips.test.tsx -v
+      manual: |
+        Sign in with the cookie unset, navigate to / → no chip visible.
+        Click the toggle in the header to set the cookie, reload → chip
+        visible; click → panel opens. Click the toggle off, reload →
+        chip gone. Set cookie to a tampered value (e.g.
+        "meals_debug_mode=1.bogus") in devtools, reload → chip gone
+        (cookie is rejected by verifyDebugCookie).
+    rationale: Chip behaviour is conditional on the cookie only; the
+      tampered-cookie state must be verified. Tampered-cookie
+      rejection is part of the security boundary.
+    integration_isolation: no external services required.
+  AS-005:
+    type: boundary
+    requirements: [FR-001, FR-012, NFR-006]
+    expected: |
+      The `verifyDebugCookie` helper accepts cookies with the format
+      `<value>.<base64url-hmac-sha256>` where the HMAC is computed
+      with `NEXTAUTH_SECRET` as the key. It returns `{ value: '0' | '1' }`
+      for valid cookies and `null` for: unset, empty, missing
+      signature, malformed signature, wrong-signature (tampered value
+      or wrong secret), or wrong value character.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/debug-cookie.test.ts -v
+      manual: |
+        Set the cookie to each invalid form (unset, empty, no sig,
+        bogus sig, wrong value); confirm /debug returns 404 and the
+        toggle shows the off state.
+    rationale: The cookie format and tamper-rejection is the core
+      contract of the helper.
+    integration_isolation: no external services required.
+  AS-006:
+    type: positive
+    requirements: [FR-004]
+    expected: |
+      When latestOrder is null, latestOrderStatus correctly reports the
+      reason: pointer_missing (pointer blob absent), no_order_blob (no
+      order blobs in manifest), or window_filtered (orders exist but
+      none in the current coverage window). When latestOrder is
+      non-null, latestOrderStatus is "ok".
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run app/api/debug/items-by-category/route.test.ts -v
+      manual: |
+        With the cookie set, point dashboard at fixtures covering each
+        null reason; confirm latestOrderStatus matches.
+    rationale: The status reason field is the whole point of the
+      diagnostic that motivated this spec.
+    integration_isolation: uses fixture data; no live Tesco required.
+  AS-007:
+    type: negative
+    requirements: [FR-017, NFR-004]
+    expected: |
+      Debug mode does not write to Vercel Blob, localStorage,
+      sessionStorage, IndexedDB, or service-worker cache. The only
+      debug-related persistence is the `meals_debug_mode` cookie, which
+      is the per-user switch (signed, HttpOnly, SameSite=Lax, 30-day
+      Max-Age, Secure in production). Debug surface data itself is
+      read-only and ephemeral.
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/debug-mode-no-persistence.test.ts -v
+      manual: |
+        Open /debug; inspect Application tab in devtools for any new
+        localStorage / sessionStorage / IndexedDB entries; assert
+        none. The meals_debug_mode cookie will appear — that is
+        expected. Inspect network for blob writes; assert none.
+    rationale: The no-persistence invariant is part of the security
+      boundary; the cookie is the documented exception.
+    integration_isolation: no external services required.
+  AS-008:
+    type: positive
+    requirements: [FR-013, NFR-002]
+    expected: |
+      `next build` succeeds cleanly with no warnings about unreachable
+      code or unused imports in debug modules. With the cookie unset
+      (the default), the production JS bundle MUST NOT contain debug
+      render code reachable from the main page entry point. The
+      bundle MUST also be grep-clean for the literal strings
+      `meals_debug_mode`, `MEALS_DEBUG_MODE`, `isDebugModeEnabled`,
+      and `envEnabled` so the feature is absent from the production
+      bundle. (Rev 3: the second build with the env-var set is no
+      longer required because the env-var is gone.)
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx tsc --noEmit && npx next build
+      manual: |
+        Build with the cookie unset (env-var also unset, naturally);
+        grep production JS bundle for /debug, /api/debug, DEBUG:,
+        latestOrder=, meals_debug_mode, MEALS_DEBUG_MODE,
+        isDebugModeEnabled, envEnabled; assert no hits outside
+        legitimate contexts (test files, debug-mode source files).
+    rationale: Tree-shaking is best verified by manual bundle
+      inspection; tsc + next build are the type/build gates. The
+      grep-clean invariant is the Rev 3 production evidence
+      captured in the spec's Promotion Criteria block.
+    integration_isolation: no external services required.
+  AS-009:
+    type: positive
+    requirements: [FR-014, FR-015]
+    expected: |
+      lib/debug-mode.test.ts covers the `effectiveDebugMode` contract:
+      unset → false, signed "1" → true, signed "0" → false, tampered
+      → false, unsigned → false, empty → false, null/undefined → false.
+      lib/debug-cookie.test.ts covers: round-trip sign/verify, tampered
+      value rejection, tampered signature rejection, malformed
+      rejection, unset, secret rotation, weird inputs. An integration
+      test mounts /api/debug/items-by-category with the cookie unset
+      (asserts 404) and with the cookie set (asserts 200 and the
+      expected FR-004 JSON shape). An integration test mounts
+      /api/debug/toggle with body "1" (asserts 200, the cookie is
+      set, and the response body has the new effective state).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run lib/debug-mode.test.ts lib/debug-cookie.test.ts app/api/debug/items-by-category/route.test.ts app/api/debug/toggle/route.test.ts -v
+      manual: null
+    rationale: Test coverage is the test.
+    integration_isolation: no external services required.
+  AS-010:
+    type: positive
+    requirements: [FR-001, FR-008, FR-009]
+    expected: |
+      The dashboard header renders a Debug toggle button (Bug icon)
+      next to the Theme and Sign-out buttons. Initial state reflects
+      the cookie (server-rendered). Clicking the toggle POSTs to
+      /api/debug/toggle, optimistically updates the button's visual
+      state, and router.refresh()es the page so the server-rendered
+      header/chips/footer pick up the new cookie. Clicking again
+      clears the cookie. The toggle is always interactive when
+      rendered (no env-var-driven disabled state, per Rev 3).
+    verification:
+      automated: cd /home/hermes/workspace/meals-dashboard && npx vitest run components/debug-toggle.test.tsx app/api/debug/toggle/route.test.ts -v
+      manual: |
+        Sign in; open dashboard; locate toggle in header (initially
+        off); click; confirm chips appear and toggle changes to
+        amber; click again; confirm chips disappear and toggle
+        changes to dimmed. Hard-reload between clicks; toggle state
+        persists. The toggle is always clickable (no
+        "disabled in this deployment" state).
+    rationale: The toggle is the Rev 2 user-facing surface; the
+      always-interactive contract is the Rev 3 simplification.
+      Server state must match the cookie (no client-only state).
+    integration_isolation: no external services required for unit tests.
+  AS-024:
+    type: positive
+    requirements: [FR-020]
+    expected: |
+      Operator-facing references docs reflect the cookie-only design.
+      The spec-dir `references/dashboard-debug-mode.md` and the
+      meals-dashboard repo's `references/dashboard-debug-mode.md`
+      contain zero references to `MEALS_DEBUG_MODE`, `isDebugModeEnabled`,
+      `envEnabled`, the "two-level switch" matrix, "deployment gate",
+      "kill switch", or "env dominates" wording. The enablement section
+      leads with the per-user signed cookie as the only gate. The
+      "kill switch" instructions describe a non-env-var path (revert
+      the merge / delete the toggle component / patch middleware).
+    verification:
+      automated: |
+        # The only legitimate mentions of these strings in a
+        # cookie-only references doc are in two contexts:
+        #   1. Attestation that the strings are NOT in the bundle
+        #      ("no `MEALS_DEBUG_MODE` string in the served JS")
+        #   2. Troubleshooting that says "if you see this in
+        #      operator-facing copy, file a spec bug"
+        # Both contexts are bounded — the references doc is
+        # cookie-only; the env-var is named only to deny its
+        # existence. AS-024's automated check must therefore be a
+        # structural audit, not a raw grep.
+        #
+        # 1. The enablement section MUST lead with the cookie.
+        head -n 25 /home/hermes/workspace/Hermes-Skills/data-science/meals-check/.specify/specs/022-dashboard-debug-mode/references/dashboard-debug-mode.md
+        #    First non-blank line after the frontmatter MUST
+        #    mention the cookie. (Per Rev 4: lead with the cookie.)
+        #
+        # 2. The "kill switch" instructions MUST NOT describe an
+        #    env-var path. They MUST describe revert-the-merge /
+        #    delete-the-toggle / patch-middleware.
+        grep -A 6 "kill switch" /home/hermes/workspace/Hermes-Skills/data-science/meals-check/.specify/specs/022-dashboard-debug-mode/references/dashboard-debug-mode.md
+        #    MUST NOT contain "MEALS_DEBUG_MODE" as a kill switch.
+        #
+        # 3. The code-repo references doc must be reconciled to
+        #    match the spec-dir doc. (Code-repo T120, chef profile
+        #    cannot commit to meals-dashboard.)
+        grep -E 'MEALS_DEBUG_MODE' /home/hermes/workspace/meals-dashboard/references/dashboard-debug-mode.md
+        #    MUST return zero matches in a non-attestation context.
+        #    (Attestation line "MEALS_DEBUG_MODE was removed in
+        #    Rev 3" is acceptable; references to it as a feature
+        #    are not.)
+      manual: |
+        Open both references docs; confirm the enablement section
+        leads with the cookie. The Rev 4 audit was triggered by a
+        stale doc — the next audit must be caught by this scenario.
+    rationale: The 2026-06-22 operator confusion ("the toggle does not
+      change anything") was caused by stale operator-facing copy that
+      described the Rev 2 two-level switch after Rev 3 removed the
+      env-var. The references docs are now an explicit contract, not a
+      courtesy — FR-020 captures this. Without the spec, the next
+      docs drift is invisible until the operator gets confused again.
+    integration_isolation: no external services required; pure docs
+      verification.
+  AS-025:
+    type: positive
+    requirements: [FR-021]
+    expected: |
+      The in-header Debug toggle (in the user menu) is rendered for
+      authenticated users regardless of whether the
+      `meals_debug_mode` cookie is currently set. The toggle's
+      *visual state* (off/on) reflects the cookie. The toggle's
+      *visibility* does not depend on the cookie. An authenticated
+      user with an unset cookie can see the Debug row in the user
+      menu and click it to enable debug mode for the first time,
+      without having to reach for `curl /api/debug/toggle` or
+      pre-set the cookie in devtools.
+    verification:
+      automated: |
+        # Manual: sign in to the dashboard, open the user menu, confirm
+        # the Debug row is present regardless of cookie state.
+        # Automated: there is no clean unit test for "is this row in
+        # the menu" without a DOM render; the contract is captured by
+        # the spec wording and by the implementation of
+        # components/user-menu.tsx.
+        grep -n 'debugOn' /home/hermes/workspace/meals-dashboard/components/user-menu.tsx
+        # The row must be rendered unconditionally (e.g. not inside
+        # `{debugOn && <DebugRow ... />}`).
+      manual: |
+        Sign in to the dashboard. Open devtools; delete the
+        `meals_debug_mode` cookie. Open the user menu. The Debug
+        row is visible. Click it. The cookie is set, the inline chip
+        appears, and /debug returns 200. The toggle is the
+        first-time-enablement affordance.
+    rationale: |
+      This closes the spec-026-style pitfall (a control that gates
+      its own visibility cannot be discovered by a user who has not
+      yet set the gate). The toggle is the user-facing on/off switch
+      AND the discoverable entry point; both must be present for the
+      user to enable debug mode for the first time. Without FR-021,
+      a future migration of the toggle to a conditional menu row
+      would silently close the first-time-enablement path.
+    integration_isolation: no external services required; the
+      verification is a DOM-observation and a code-grep.

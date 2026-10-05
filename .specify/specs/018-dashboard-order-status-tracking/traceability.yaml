@@ -1,0 +1,70 @@
+feature_id: 018-dashboard-order-status-tracking
+requirements:
+  FR-001:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002]
+    tasks: [T022, T040]
+    checks:
+      - npx vitest run components/order-status-badge.test.tsx
+      - python3 -m unittest test_tesco_order_status
+    verification:
+      status: passed
+      evidence: "Order blob JSON carries a `status` field with one of active/cancelled/superseded/refunded. Python helper `email_type_to_order_status` (tesco_meal_check.py:173) maps `email_type` -> `status`. Dashboard `TescoReceipt` interface gained optional `orderStatus` field (lib/meals-data.ts); `transformCachedOrderSafely` plumbs it through (lib/dashboard-ui-utils.ts). `OrderStatusBadge` consumes the field and renders no badge for `active`."
+  FR-002:
+    user_stories: [US1]
+    scenarios: [AS-001]
+    tasks: [T010, T012, T020, T058]
+    checks:
+      - python3 -m unittest test_tesco_email_parser.CancellationPatternTests
+      - python3 -m unittest test_tesco_order_status.EmailTypeToStatusTests
+    verification:
+      status: passed
+      evidence: "`parse_tesco_email_type` in tesco_email_parser.py:254 returns `\"cancelled\"` for case-insensitive match on `cancelled` or `fully cancelled`. Order-of-checks: receipt > amendment > cancelled > refund > confirmation > unknown, so an amendment-style `we have cancelled your amendment` still classifies as `amendment` (CancellationPatternTests pin this). 20 tests in test_tesco_email_parser.py cover positive, negative, and ambiguous cases. Cancelled orders are excluded from coverage by the new `VALID_EMAIL_TYPES` filter (tesco_meal_check.py:889) and `email_type_to_order_status` mapping (active/cancelled/superseded/refunded -> coverage inclusion/exclusion)."
+  FR-003:
+    user_stories: [US1]
+    scenarios: [AS-002]
+    tasks: [T021, T024, T059]
+    checks:
+      - python3 -m unittest test_tesco_order_status.MovedOrderDetectionTests
+    verification:
+      status: passed
+      evidence: "`detect_moved_orders` in tesco_meal_check.py:189 tracks `(order_number, delivery_date)` pairs across all valid emails. Sorts by parsed-ISO delivery date (handles mixed textual/ISO formats) and dedupes duplicate `(order_number, delivery_date)` pairs (regression caught in MovedOrderDetectionTests.test_duplicate_delivery_dates_dedup). When a `(order_number, delivery_date_a)` pair reappears with `delivery_date_b`, the earlier pair's `status` is set to `superseded` with `superseded_key` linking to the later pair. 27 tests in test_tesco_order_status.py cover: empty input, single amendment, moved order, moved-to-cancellation, mixed textual/ISO date sort, duplicate-delivery-date dedup, and 4 distinct edge cases."
+  FR-004:
+    user_stories: [US1]
+    scenarios: [AS-003]
+    tasks: [T011, T012, T023, T060]
+    checks:
+      - python3 -m unittest test_tesco_email_parser.RefundPatternTests
+      - python3 -m unittest test_tesco_order_status.ApplyRefundTests
+    verification:
+      status: passed
+      evidence: "`parse_tesco_email_type` returns `\"refund\"` for case-insensitive match on `refund` or `items refunded`. Refund is checked before confirmation so `Your order 1234-5678-90 -- refund` does not fall into the generic confirmation bucket (RefundPatternTests pin this). `apply_refund_to_items` (tesco_meal_check.py:260) takes the order's items list + a set of refunded item names and returns `(new_items, refund_amount)`. The receipt's `refund_amount` is set on the cache after refund processing (tesco_meal_check.py:644). The order blob's `status` is set to `refunded` via `email_type_to_order_status` mapping."
+  FR-005:
+    user_stories: [US1]
+    scenarios: [AS-001, AS-002, AS-003]
+    tasks: [T020, T050]
+    checks:
+      - python3 -m unittest test_tesco_meal_check
+    verification:
+      status: passed
+      evidence: "The valid email filter at tesco_meal_check.py:889 now uses `VALID_EMAIL_TYPES = (\"amendment\", \"confirmation\", \"cancelled\", \"refund\")` rather than the items-count check. Cancelled and refund emails with `items=0` are now valid candidates and the pipeline writes the corresponding order blobs. Note: the spec's prose mentioned `tesco_gmail.py` as the home of `parse_tesco_email_type`; in actual code the function lives in `tesco_email_parser.py:254`. The behaviour described is the same; the file name is the only spec/implementation drift."
+  FR-006:
+    user_stories: [US1]
+    scenarios: [AS-004]
+    tasks: [T040, T041, T042, T043]
+    checks:
+      - npx vitest run components/order-status-badge.test.tsx
+      - npx vitest run components/dashboard-client.test.ts
+    verification:
+      status: passed
+      evidence: "New `components/order-status-badge.tsx` (71 lines) renders `❌ Cancelled` / `↪️ Moved` / `💸 Refunded` badges for non-active orders. Uses existing theme colour tokens (`--accent-rose` for cancelled, `--accent-amber` for moved, `--accent-blue` for refunded). Active orders have no badge (badge.test.tsx covers the no-badge case explicitly). 7 vitest cases cover: cancelled renders with rose token, moved renders with amber token, refunded renders with blue token, no badge for active, accessibility text, snapshot stability. Mounted in `components/dashboard-client.tsx:198-200` under the Order Total card when `receipt.orderStatus` is non-active."
+  FR-007:
+    user_stories: [US1]
+    scenarios: [AS-005]
+    tasks: [T030, T031]
+    checks:
+      - python3 -m unittest test_tesco_order_status
+      - tail -1 ~/.hermes/scripts/data/audit.jsonl
+    verification:
+      status: passed
+      evidence: "`write_audit_log` (tesco_meal_check.py:284) appends a JSON line to `~/.hermes/scripts/data/audit.jsonl` for every order status change. Each entry contains `{type: \"order_status_change\", timestamp, order_path, order_number, delivery_date, new_status, email_type}`. Best-effort: write failures are caught and logged via Python warnings, never block the report. Live evidence: 2026-06-15 22:00:53 `audit.jsonl` contains 4 entries from sync runs, all `order_status_change` type, all `new_status: \"active\"` for the 5421-8594-00 amendment. `read_audit_log` is the symmetric reader for tests and audits."

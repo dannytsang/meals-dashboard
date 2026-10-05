@@ -1,0 +1,182 @@
+# Machine-readable scenario coverage for 031-dashboard-debug-observability-panels.
+feature_id: 031-dashboard-debug-observability-panels
+scenarios:
+  AS-001:
+    type: positive
+    requirements: [FR-001, FR-002, FR-008, FR-010, FR-012]
+    expected: |
+      Given debug mode is effectively on and Blob credentials are present,
+      When `/debug` loads,
+      Then the runtime-context panel reports live mode, `blobCredentialsState: complete`,
+      verified-on cookie state, the Blob reader path, and safe deployment/request context.
+    verification:
+      automated: Route/component test for the runtime-context payload and panel rendering in live mode.
+      manual: Open `/debug` on a healthy live-mode deployment and inspect the panel.
+      rationale: |
+        The first thing Danny needs to know is whether the dashboard is in the
+        expected runtime mode before chasing downstream symptoms.
+    integration_isolation: mocked request/runtime context; no real Blob or auth secrets exposed.
+
+  AS-002:
+    type: positive
+    requirements: [FR-002, FR-004, FR-008, FR-010, FR-012]
+    expected: |
+      Given debug mode is effectively on and Blob credentials are absent or incomplete,
+      When `/debug` loads,
+      Then the runtime/Blob panels report demo mode, `blobCredentialsState: incomplete`,
+      fixture reader path, and that live Blob reads were intentionally bypassed.
+    verification:
+      automated: Runtime-mode fixture-path test with absent/incomplete Blob credentials.
+      manual: Open a demo-mode deployment and inspect the debug panels.
+      rationale: |
+        Demo mode should explain itself clearly; otherwise operators mistake the
+        fixture path for a broken live read path.
+    integration_isolation: mocked env/runtime mode; no real Blob calls.
+
+  AS-003:
+    type: negative
+    requirements: [FR-002, FR-008, FR-010, FR-012]
+    expected: |
+      Given the incoming debug cookie is malformed or tampered,
+      When the server evaluates the request,
+      Then the runtime-context payload reports a safe `tampered` state and no
+      raw cookie signature or secret material is exposed.
+    verification:
+      automated: Tampered-cookie helper/route test.
+      manual: Optional manual devtools cookie manipulation in a preview environment.
+      rationale: |
+        A tampered cookie is diagnostically different from an intentionally-off
+        cookie, and the dashboard should say so without leaking the signature.
+    integration_isolation: mocked cookie input only.
+
+  AS-004:
+    type: positive
+    requirements: [FR-001, FR-003, FR-009, FR-010, FR-012]
+    expected: |
+      Given live mode and a healthy dashboard read,
+      When the Blob read/freshness panel renders,
+      Then it shows `pointerPath`, `manifestPath`, `productsManifestPath`,
+      selected `orderBlobPath`, selected `coverageBlobPaths`, selected
+      `productBlobPath` when applicable, per-stage read status fields,
+      and freshness timestamps/ages.
+    verification:
+      automated: Route/panel test with a healthy mocked dashboard data load.
+      manual: Inspect `/debug` on a healthy live-mode deployment.
+      rationale: |
+        Operators need to see the actual storage provenance and freshness state,
+        not infer it from empty UI.
+    integration_isolation: mocked dashboard data reader / Blob client.
+
+  AS-005:
+    type: negative
+    requirements: [FR-003, FR-009, FR-010, FR-012]
+    expected: |
+      Given live mode and a captured Blob read failure,
+      When the Blob read/freshness panel renders,
+      Then it includes a sanitised error object naming the failing stage/resource,
+      preserving useful status text such as 403 Forbidden, and keeping the
+      per-stage read-status fields intelligible.
+    verification:
+      automated: Mock a live-mode Blob failure and assert sanitised failure provenance.
+      manual: Safe simulated failure in preview if needed.
+      rationale: |
+        Spec 029 made the main-page error visible; this panel makes the failure
+        diagnosable without opening logs.
+    integration_isolation: mocked failing Blob reader; no real credentials exposed.
+
+  AS-006:
+    type: positive
+    requirements: [FR-005, FR-006, FR-008, FR-009, FR-012]
+    expected: |
+      Given a selected grocery item whose description comes from Apollo,
+      When the product-resolution panel renders,
+      Then it reports the item identity, `tpnc`, `productBlobPath` when present,
+      `descriptionSource: apollo`, and downstream fallbacks not chosen.
+    verification:
+      automated: Product-resolution route/panel test with Apollo-backed data.
+      manual: Select a known Apollo-rich product and inspect the panel.
+      rationale: |
+        Apollo remains the primary source, so the panel must make the normal
+        happy path obvious.
+    integration_isolation: mocked product-resolution helper.
+
+  AS-007:
+    type: positive
+    requirements: [FR-005, FR-006, FR-008, FR-009, FR-012]
+    expected: |
+      Given a selected grocery item with empty Apollo description but populated
+      Firecrawl snippet,
+      When the product-resolution panel renders,
+      Then it reports `descriptionSource: firecrawl`, `tpnc`, `productBlobPath`,
+      and Firecrawl freshness metadata.
+    verification:
+      automated: Product-resolution route/panel test with Firecrawl-backed description.
+      manual: Select a known Firecrawl-filled product and inspect the panel.
+      rationale: |
+        This is the core explanation gap introduced by spec 027's fallback layer.
+    integration_isolation: mocked product blob / resolution helper.
+
+  AS-008:
+    type: negative
+    requirements: [FR-005, FR-006, FR-008, FR-009, FR-012]
+    expected: |
+      Given a selected grocery item still falls through to the placeholder,
+      When the product-resolution panel renders,
+      Then it reports `descriptionSource: placeholder`, identifies the missing
+      upstream sources that led there, and exposes field-level source outcomes
+      for `image`, `storage`, and `preparation` where available.
+    verification:
+      automated: Product-resolution route/panel test with no Apollo, no curated-static, and no Firecrawl snippet.
+      manual: Inspect a placeholder case in preview if available.
+      rationale: |
+        The panel is most valuable when something is missing; it should explain
+        why the placeholder appeared rather than simply restating it.
+    integration_isolation: mocked empty-resolution helper.
+
+  AS-009:
+    type: positive
+    requirements: [FR-001, FR-007, FR-009, FR-012]
+    expected: |
+      Given the current candidate latest order exists but falls outside the active
+      coverage window,
+      When the items-by-category provenance panel renders,
+      Then it reports the candidate order path/date, the coverage-window inputs,
+      the chosen filter state, and an explicit window-filter reason rather than
+      only `latestOrder: null`.
+    verification:
+      automated: Regression test seeded with the original window-filtered order shape.
+      manual: Inspect `/debug` in a fixture reproducing the 2026-06-17 incident.
+      rationale: |
+        This is the original regression that justified debug mode and should now
+        be fully diagnosable from the panel itself.
+    integration_isolation: mocked dashboard data reproducing the filtered-order case.
+
+  AS-010:
+    type: positive
+    requirements: [FR-007, FR-009, FR-012]
+    expected: |
+      Given the items-by-category surface is healthy,
+      When the panel renders,
+      Then it still reports the chosen order, receipt-item count, unmatched-item count,
+      display-item count, current filter, selected categories, and coverage-window
+      inputs in copyable JSON form.
+    verification:
+      automated: Existing-panel regression test with healthy data plus new additive assertions.
+      manual: Inspect `/debug` on a normal dashboard state.
+      rationale: |
+        The panel extension must stay additive and preserve the successful happy path.
+    integration_isolation: mocked healthy items-by-category payload.
+
+  AS-011:
+    type: negative
+    requirements: [FR-008, FR-010]
+    expected: |
+      Given the main dashboard is loaded with debug mode effectively off,
+      When HTML, `__NEXT_DATA__`, and the main client bundle are inspected,
+      Then none of the new panel payloads or secret-bearing debug data are present.
+    verification:
+      automated: Existing spec-022 gating/bundle regression coverage extended for the new panels.
+      manual: Build/grep inspection if needed.
+      rationale: |
+        Expanding debug mode must not erode the original off-state security contract.
+    integration_isolation: build/test inspection only.
